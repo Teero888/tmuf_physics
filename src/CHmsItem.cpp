@@ -45,3 +45,27 @@ void __thiscall CHmsItem::SetCollisionGroup(CHmsItem *this,
   }
   return;
 }
+
+/* public: void __thiscall CHmsItem::AddForce(class GmVec3 const &) */
+
+void __thiscall CHmsItem::AddForce(CHmsItem *this, GmVec3 *param_1)
+
+{
+  ulong uVar1;
+  int *piVar2;
+  ulong uVar3;
+
+  uVar1 = CFastBuffer<>::GetCount((CFastBuffer<> *)(this + 0x34));
+  uVar3 = 0;
+  if (uVar1 != 0) {
+    do {
+      piVar2 = (int *)CFastBuffer<>::operator[](
+          (CFastBuffer<> *)(CFastBuffer<> *)(this + 0x34), uVar3);
+      if (*(CHmsDyna **)(*piVar2 + 0x58) != (CHmsDyna *)0x0) {
+        CHmsDyna::AddLocalForce(*(CHmsDyna **)(*piVar2 + 0x58), param_1);
+      }
+      uVar3 = uVar3 + 1;
+    } while (uVar3 < uVar1);
+  }
+  return;
+}

@@ -71,3 +71,36 @@ void __thiscall CMwTimerAdapter::SetRelativeSpeed(CMwTimerAdapter *this,
   }
   return;
 }
+
+/* private: void __thiscall CMwTimerAdapter::Resync(void) */
+
+void __thiscall CMwTimerAdapter::Resync(CMwTimerAdapter *this)
+
+{
+  int iVar1;
+  int iVar2;
+  ulong uVar3;
+  DWORD DVar4;
+
+  uVar3 = CMwTimer::GetElapsedTimeSinceInit(*(CMwTimer **)this);
+  iVar1 = *(int *)(this + 0xc);
+  iVar2 = *(int *)(this + 4);
+  DVar4 = timeGetTime();
+  *(int *)(this + 4) =
+      *(int *)(this + 4) + (int)(DVar4 + ((iVar1 - iVar2) - uVar3)) / 2;
+  return;
+}
+
+/* private: void __thiscall CMwTimerAdapter::ComputeTimeAtHumanTick(void) */
+
+void __thiscall CMwTimerAdapter::ComputeTimeAtHumanTick(CMwTimerAdapter *this)
+
+{
+  ulong *puVar1;
+  ulong uVar2;
+
+  puVar1 = CMwTimer::GetTickTime(*(CMwTimer **)this);
+  uVar2 = ConvertHumanToGame(this, *puVar1);
+  *(ulong *)(this + 0x14) = uVar2;
+  return;
+}
