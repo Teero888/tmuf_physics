@@ -88,7 +88,7 @@ Ignore these for now, we will clean up later
 - `CGameDialogs::HideDialogs`
 ----------------------------------------
 
-Missing stuff
+Missing symbols
 ----------------------------------------
 - `CGameControlCardManager::SetGetDataTypeInfosFromNodCallBack`
 - `CGameNetwork::SetPlayerInfoType`
@@ -214,12 +214,6 @@ Missing stuff
 - `GmBoxAligned::Union`
 - `GmFrustum::GetVertices4AtZ`
 - `GmMap2::GmMap2`
-- `GmOctree::Build`
-- `GmSurf::ClipSegment`
-- `GmSurf::ClipSegment2`
-- `GmSurf::ClipSegment3`
-- `GmSurf::CreateDefaultData`
-- `GmSurf::GetBoundingBox`
 - `GmSurfBox::GmSurfBox`
 - `GmSurfEllipsoid::GmSurfEllipsoid`
 - `GmSurfMesh::Archive`
@@ -248,27 +242,10 @@ Missing stuff
 - `SZone::SZone`
 - `SZone::UpdateStaticCollisionTrees`
 - `VertexCache::~VertexCache`
+-------------------------------
 
-- `CGameCtnApp::SNationConfig`
-- `CGameCtnChallenge::SHeaderCommunity`
-- `CGameCtnMasterServer::SMedalsInfo`
-- `SSimulationWheel::SState`
-- `SStringParam::SStringParam`
-- `SHmsSphereBufferContact::SHmsSphereBufferContact`
-- `SCachedValue::SCachedValue`
-- `SContext::SContext`
-- `GmVec3::STri_PosTexTgt`
-- `CSystemFidParameters::SParam_Id`
-- `CHmsCollisionManager::SColOctreeCell`
-- `CHmsDyna::SHistoryPoint`
-- `CHmsDyna::SPredictionTypeVector`
-- `CMwNod::SManuallyLoadedFid`
-- `CPlugTree::SVolatileTreePointer`
-- `CSceneVehicleCar::SVehicleCarState`
-- `CHmsDyna::EPredictionType`
-- `CHmsItem::ECollisionGroup`
-- `CHmsItem::ESaveStateVersion`
-- `CPlugTree::EVolatileTreeType`
-- `GmSurf::EGmSurfType`
 
+Missing structs/classes:
+-------------------------------
+- all
 -------------------------------------
