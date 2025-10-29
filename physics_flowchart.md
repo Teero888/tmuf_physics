@@ -15,21 +15,10 @@ CMwTimer::s_CounterSwitchCount
 - ReadCurMapLatestEventsFromHarware
 - InternalGatherLatestInputs
 
-# missing functions
+# missing symbols
 
-- `CClassicArchive::DoBool`
-- `CClassicArchive::DoData`
-- `CClassicArchive::DoNat16`
-- `CClassicArchive::DoNat8`
-- `CClassicArchive::DoNatural`
-- `CClassicArchive::DoReal`
-- `CClassicArchive::MwDoNodRef`
-- `CClassicArchive::WriteNatural`
-- `CClassicI18n::GetTranslatedStringInternal`
-- `CClassicI18n::TheClassicI18n`
-- `CClassicLog::AddLogStringInFile`
-- `CClassicLog::s_IsOutputToFileEnable`
-- `CClassicLog::s_LogStringToAdd`
+CFast.* are template types. i will do them later.
+----------------------------------------
 - `CFastArray::ArchiveCountAndNods`
 - `CFastArray::CFastArray`
 - `CFastArray::CopyFromFastArray`
@@ -90,13 +79,18 @@ CMwTimer::s_CounterSwitchCount
 - `CFastStringInt::SetLength`
 - `CFastStringInt::SetString`
 - `CFastStringInt::s_Null`
+----------------------------------------
+
+Ignore these for now, we will clean up later
+----------------------------------------
 - `CGameApp::GetBasicDialogs`
-- `CGameControlCardManager::SetGetDataTypeInfosFromNodCallBack`
-- `CGameCtnApp::SNationConfig`
-- `CGameCtnChallenge::SHeaderCommunity`
-- `CGameCtnMasterServer::SMedalsInfo`
 - `CGameDialogs::DoMessage`
 - `CGameDialogs::HideDialogs`
+----------------------------------------
+
+Missing stuff
+----------------------------------------
+- `CGameControlCardManager::SetGetDataTypeInfosFromNodCallBack`
 - `CGameNetwork::SetPlayerInfoType`
 - `CGamePlayerCameraSet::PlayerGameMobilIdSet`
 - `CGamePlayerInfo::CGamePlayerInfo`
@@ -104,12 +98,6 @@ CMwTimer::s_CounterSwitchCount
 - `CGamePlayground::UpdateFromSettings`
 - `CGameRace::SetStatus`
 - `CHmsCamera::s_AsyncPrevDeltaT`
-- `CHmsCollisionManager::SColOctreeCell`
-- `CHmsDyna::EPredictionType`
-- `CHmsDyna::SHistoryPoint`
-- `CHmsDyna::SPredictionTypeVector`
-- `CHmsItem::ECollisionGroup`
-- `CHmsItem::ESaveStateVersion`
 - `CHmsItem::SetIsForcePointDynamicCollisionResponse`
 - `CHmsItem::s_CollisionGroupPairs`
 - `CHmsShadowGroup::CHmsShadowGroup`
@@ -127,23 +115,6 @@ CMwTimer::s_CounterSwitchCount
 - `CMwId::CreateFromLocalIndex`
 - `CMwId::GetName`
 - `CMwId::SetLocalName`
-- `CMwNod::CMwNod`
-- `CMwNod::Chunk`
-- `CMwNod::CreateByMwClassId`
-- `CMwNod::DependantSendMwIsKilled`
-- `CMwNod::GetChunkInfo`
-- `CMwNod::MwAddDependant`
-- `CMwNod::MwAddRef`
-- `CMwNod::MwForceRef`
-- `CMwNod::MwRelease`
-- `CMwNod::OnCrashDump`
-- `CMwNod::Param_Set`
-- `CMwNod::SManuallyLoadedFid`
-- `CMwNod::StaticGetClassInfo`
-- `CMwNod::VirtualParam_Get`
-- `CMwNod::VirtualParam_Set`
-- `CMwNod::VirtualParam_Sub`
-- `CMwNod::~CMwNod`
 - `CMwNodRef::MwSetNod`
 - `CMwParamClass::SetValue`
 - `CMwParamFastBuffer::GetValue`
@@ -176,8 +147,6 @@ CMwTimer::s_CounterSwitchCount
 - `CPlugSurface::ComputeCollision`
 - `CPlugTree::CIteratorShader`
 - `CPlugTree::CIteratorVisual`
-- `CPlugTree::EVolatileTreeType`
-- `CPlugTree::SVolatileTreePointer`
 - `CPlugTreeMapShaderFill::SubTree`
 - `CPlugTreeVisualMip::AddLevel`
 - `CPlugTreeVisualMip::CPlugTreeVisualMip`
@@ -198,7 +167,6 @@ CMwTimer::s_CounterSwitchCount
 - `CPlugVisualSprite::m_MwClassInfo_CPlugVisualSprite`
 - `CScanner::CScanner`
 - `CScene2d::OnNodLoaded`
-- `CSceneVehicleCar::SVehicleCarState`
 - `CSystemArchiveNod::Compare`
 - `CSystemArchiveNod::Duplicate`
 - `CSystemArchiveNod::LoadFromFid`
@@ -217,7 +185,6 @@ CMwTimer::s_CounterSwitchCount
 - `CSystemFidParameters::Empty`
 - `CSystemFidParameters::GetCurrentParameters`
 - `CSystemFidParameters::GetParamValue`
-- `CSystemFidParameters::SParam_Id`
 - `CSystemFidParameters::~CSystemFidParameters`
 - `CTrackManiaNetwork::Hack_ResetAfterValidation`
 - `CTrackManiaRace::ActionFakeFinishLine`
@@ -252,7 +219,6 @@ CMwTimer::s_CounterSwitchCount
 - `GmSurf::ClipSegment2`
 - `GmSurf::ClipSegment3`
 - `GmSurf::CreateDefaultData`
-- `GmSurf::EGmSurfType`
 - `GmSurf::GetBoundingBox`
 - `GmSurfBox::GmSurfBox`
 - `GmSurfEllipsoid::GmSurfEllipsoid`
@@ -262,29 +228,47 @@ CMwTimer::s_CounterSwitchCount
 - `GmSurfPolygon::GmSurfPolygon`
 - `GmSurfSphere::GmSurfSphere`
 - `GmVec2::operator`
-- `GmVec3::STri_PosTexTgt`
 - `GxTexCoordSet::Alloc`
 - `GxTexCoordSet::s_ByteSizeByKinds`
 - `GxTexCoordSet::s_DefaultZW_11`
-- `SCachedValue::SCachedValue`
-- `SContext::SContext`
+- `SGroup::SGroup`
+- `SGroup::~SGroup`
 - `SGroup::AddCorpus`
 - `SGroup::ClearAllStatic`
 - `SGroup::ComputeIsToPerformCollisions`
 - `SGroup::ComputeNonStaticCorpusInfos`
 - `SGroup::RemoveCorpus`
-- `SGroup::SGroup`
 - `SGroup::UpdateStaticCollisionTrees`
-- `SGroup::~SGroup`
 - `SHmsSphereBufferContact::MergeAndAddToCollisions`
-- `SHmsSphereBufferContact::SHmsSphereBufferContact`
 - `SHmsSphereBufferContact::s_SphereContactMergeThreshold`
 - `SPlugGpuLoadFx::~SPlugGpuLoadFx`
 - `SRpcPlayerQuickInfo::Reset`
 - `SRpcPlayerQuickInfo::~SRpcPlayerQuickInfo`
-- `SSimulationWheel::SState`
-- `SStringParam::SStringParam`
 - `STmValidateParam::operator`
 - `SZone::SZone`
 - `SZone::UpdateStaticCollisionTrees`
 - `VertexCache::~VertexCache`
+
+- `CGameCtnApp::SNationConfig`
+- `CGameCtnChallenge::SHeaderCommunity`
+- `CGameCtnMasterServer::SMedalsInfo`
+- `SSimulationWheel::SState`
+- `SStringParam::SStringParam`
+- `SHmsSphereBufferContact::SHmsSphereBufferContact`
+- `SCachedValue::SCachedValue`
+- `SContext::SContext`
+- `GmVec3::STri_PosTexTgt`
+- `CSystemFidParameters::SParam_Id`
+- `CHmsCollisionManager::SColOctreeCell`
+- `CHmsDyna::SHistoryPoint`
+- `CHmsDyna::SPredictionTypeVector`
+- `CMwNod::SManuallyLoadedFid`
+- `CPlugTree::SVolatileTreePointer`
+- `CSceneVehicleCar::SVehicleCarState`
+- `CHmsDyna::EPredictionType`
+- `CHmsItem::ECollisionGroup`
+- `CHmsItem::ESaveStateVersion`
+- `CPlugTree::EVolatileTreeType`
+- `GmSurf::EGmSurfType`
+
+-------------------------------------
