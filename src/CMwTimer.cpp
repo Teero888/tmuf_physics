@@ -71,7 +71,8 @@ void __thiscall CMwTimer::InitTimer(CMwTimer *this)
   *(undefined4 *)(this + 4) = 100;
   *(undefined4 *)(this + 0x28) = 0;
   *(undefined4 *)(this + 0x2c) = 0;
-  CMwTimer_CalibrateStart();
+  // TODO: I DONT THINK THIS DOES ANYTHING BUT BE CAREFUL FUTURE ME
+  // CMwTimer_CalibrateStart();
   return;
 }
 
@@ -150,7 +151,8 @@ void __thiscall CMwTimer::Tick(CMwTimer *this)
   puVar3 = GetTickTime(this);
   uVar2 = *puVar3;
   if ((DAT_00d73ab8 == 0) && (DAT_00d3590c < uVar2)) {
-    iVar4 = CMwTimer_CalibrateEnd_ShouldSwitchOff();
+    iVar4 = 0; // CMwTimer_CalibrateEnd_ShouldSwitchOff();TODO: I DONT THINK
+               // THIS DOES ANYTHING BUT BE CAREFUL
     uVar5 = GetElapsedTimeSinceInit(this);
     if (iVar4 == 0) {
       if (*(int *)(this + 0x24) != 0) {
@@ -180,7 +182,8 @@ void __thiscall CMwTimer::Tick(CMwTimer *this)
     GetElapsedTimeSinceInit(this);
     uVar5 = GetElapsedTimeSinceInit(this);
     DAT_00d3590c = uVar5 + 90000;
-    CMwTimer_CalibrateStart();
+    // TODO: I DONT THINK THIS DOES ANYTHING BUT BE CAREFUL FUTURE ME
+    // CMwTimer_CalibrateStart();
   }
   uVar5 = GetElapsedTimeSinceInit(this);
   *(int *)(this + 0x2c) = *(int *)(this + 0x2c) + 1;

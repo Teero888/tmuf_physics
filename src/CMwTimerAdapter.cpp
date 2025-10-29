@@ -104,3 +104,29 @@ void __thiscall CMwTimerAdapter::ComputeTimeAtHumanTick(CMwTimerAdapter *this)
   *(ulong *)(this + 0x14) = uVar2;
   return;
 }
+
+/* public: unsigned long __thiscall CMwTimerAdapter::ConvertHumanToGame(unsigned
+ * long)const  */
+
+ulong __thiscall CMwTimerAdapter::ConvertHumanToGame(CMwTimerAdapter *this,
+                                                     ulong param_1)
+
+{
+  uint uVar1;
+  ulong uVar2;
+  undefined4 in_EDX;
+  int iVar3;
+  ulonglong uVar4;
+
+  if (param_1 != *(ulong *)(this + 0xc)) {
+    uVar4 = __ftol2_sse(this, in_EDX);
+    uVar1 = (uint)uVar4;
+    uVar2 = uVar1 + *(uint *)(this + 0x10);
+    iVar3 = ((int)uVar1 >> 0x1f) + (uint)CARRY4(uVar1, *(uint *)(this + 0x10));
+    if (((1 < iVar3) || (0 < iVar3)) || ((iVar3 < 1 && (iVar3 < 0)))) {
+      uVar2 = 0;
+    }
+    return uVar2;
+  }
+  return *(ulong *)(this + 0x10);
+}

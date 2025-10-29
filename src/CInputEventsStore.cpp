@@ -423,36 +423,6 @@ CScanner *__thiscall CInputEventsStore::CScanner::CScanner(
   return this;
 }
 
-/* public: class CInputEventsStore::CScanner __thiscall
-   CInputPort::GetEvents(unsigned long,unsigned long) */
-
-CScanner *__thiscall CInputPort::GetEvents(CInputPort *this, CScanner *param_1,
-                                           ulong param_2, ulong param_3)
-
-{
-  InternalGatherLatestInputs(this);
-  CInputEventsStore::Lock((CInputEventsStore *)(this + 0x40), param_3);
-  CInputEventsStore::Scan((CInputEventsStore *)(this + 0x40), param_1, param_2,
-                          param_3);
-  return param_1;
-}
-
-/* public: class CInputEventsStore::CScanner __thiscall
- * CInputPort::GetEventsNotTimed(void) */
-
-CScanner *__thiscall CInputPort::GetEventsNotTimed(CInputPort *this,
-                                                   CScanner *param_1)
-
-{
-  InternalGatherLatestInputs(this);
-  *(int *)(this + 0x38) = *(int *)(this + 0x38) + 1;
-  CInputEventsStore::Lock((CInputEventsStore *)(this + 0x40),
-                          *(int *)(this + 0x38) - 1);
-  CInputEventsStore::Scan((CInputEventsStore *)(this + 0x40), param_1,
-                          *(int *)(this + 0x38) - 2, *(int *)(this + 0x38) - 1);
-  return param_1;
-}
-
 /* public: int __thiscall CInputEventsStore::CScanner::GetNext(struct
    SMwTimedValueInstant<struct SInputEvent> &) */
 
