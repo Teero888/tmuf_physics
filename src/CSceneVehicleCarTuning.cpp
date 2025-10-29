@@ -2379,7 +2379,7 @@ void __thiscall CSceneVehicleCarTuning::OnNodLoaded(
 
 /* public: virtual unsigned long __thiscall
  *CSceneVehicleCarTuning::VirtualParam_Get(class CMwStack ,class CMwValueStd *)
-*/
+ */
 
 ulong __thiscall CSceneVehicleCarTuning::VirtualParam_Get(
     CSceneVehicleCarTuning *this, CMwStack *param_1, CMwValueStd *param_2)

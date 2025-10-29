@@ -3288,7 +3288,7 @@ void __thiscall CPlugTree::InternalSetMwId(CPlugTree *this, CMwId *param_1)
 }
 
 /* protected: int __thiscall CPlugTree::IsEqual(struct SPlugTreeOptimGroup
-   *,struct SPlugTreeOptimCriteria const &,struct SPlugTreeOptimTravel const &)
+ *,struct SPlugTreeOptimCriteria const &,struct SPlugTreeOptimTravel const &)
  */
 
 int __thiscall CPlugTree::IsEqual(CPlugTree *this, SPlugTreeOptimGroup *param_1,
@@ -3793,7 +3793,7 @@ CPlugTree *__cdecl CPlugTree::MakeQuad2D(CPlug *param_1, float param_2,
 }
 
 /* public: int __thiscall CPlugTree::MergePrimitivesInTree(class CPlugShader
-   *,class CFastBuffer<class CPlugVisual *> &) */
+ *,class CFastBuffer<class CPlugVisual *> &) */
 
 int __thiscall CPlugTree::MergePrimitivesInTree(CPlugTree *this,
                                                 CPlugShader *param_1,

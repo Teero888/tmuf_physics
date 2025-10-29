@@ -2340,9 +2340,8 @@ SZone *__thiscall CHmsCollisionManager::SZone::SZone(
   puStack_8 = &LAB_00a9572f;
   local_c = ExceptionList;
   ExceptionList = &local_c;
-  `eh_vector_constructor_iterator'(this,0x44,5,SGroup::SGroup,SGroup::~SGroup); iVar4 = 0;
-  local_4 = 0;
-  GmMap2<>::GmMap2<>((GmMap2<> *)(this + 0x154));
+  `eh_vector_constructor_iterator'(this,0x44,5,SGroup::SGroup,SGroup::~SGroup); iVar4 = 0; local_4 = 0; GmMap2<>:: GmMap2<>(
+      (GmMap2<> *)(this + 0x154));
   CFastBuffer<>::CFastBuffer<>((CFastBuffer<> *)(this + 0x1a0));
   *(undefined4 *)(this + 0x178) = 0xff7fffff;
   *(undefined4 *)(this + 0x17c) = 0xff7fffff;
