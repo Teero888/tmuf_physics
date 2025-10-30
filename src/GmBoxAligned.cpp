@@ -66,14 +66,14 @@ void __thiscall GmBoxAligned::GetMax(GmBoxAligned *this, float *param_1)
   return;
 }
 
-/* public: class GmVec3 __thiscall GmBoxAligned::GetMax(void)const  */
+/* public: class GmVec3 __thiscall GmBoxAligned::GetMin(void)const  */
 
-void __thiscall GmBoxAligned::GetMax(GmBoxAligned *this, float *param_1)
+void __thiscall GmBoxAligned::GetMin(GmBoxAligned *this, float *param_1)
 
 {
-  *param_1 = *(float *)(this + 0xc) + *(float *)this;
-  param_1[1] = *(float *)(this + 0x10) + *(float *)(this + 4);
-  param_1[2] = *(float *)(this + 0x14) + *(float *)(this + 8);
+  *param_1 = *(float *)this - *(float *)(this + 0xc);
+  param_1[1] = *(float *)(this + 4) - *(float *)(this + 0x10);
+  param_1[2] = *(float *)(this + 8) - *(float *)(this + 0x14);
   return;
 }
 
