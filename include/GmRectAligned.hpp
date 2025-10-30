@@ -7,6 +7,7 @@ class GmScaleTrans2;
 class GmBoxAligned;
 class GmVec2;
 class GmFrustum;
+class CClassicArchive;
 
 class GmRectAligned {
   // TODO: this is an assumption, check if correct

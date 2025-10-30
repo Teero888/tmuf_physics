@@ -1,3 +1,6 @@
+// BUG: I MESSED UP COPYING THESE SO THERE ARE DUPLICATES OF SOME FUNCTIONS
+// RECOPY THEM IF I HAVE TIME
+
 
 /* public: __thiscall CClassicArchive::CClassicArchive(void) */
 

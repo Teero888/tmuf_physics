@@ -8,6 +8,7 @@ class GmIso4;
 class GmFrustum;
 class GmBoxOriented;
 class GmCone3;
+class CClassicArchive;
 
 class GmBoxAligned {
   // TODO: this is an assumption, check if correct

@@ -8,6 +8,7 @@ class GmVec4;
 class GmMat3;
 class GmTransQuat;
 class GmIso3;
+class CClassicArchive;
 
 class GmIso4 {
   // 3x3 matrix

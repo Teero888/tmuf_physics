@@ -8,6 +8,7 @@ class GmIso3;
 class GmIso4;
 class GmVec3;
 class GmVec4;
+class CClassicArchive;
 
 class GmMat4 {
   float m[16];

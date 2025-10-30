@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+class CClassicArchive;
+
 class GmIso3 {
   float AxeXx, AxeXy, AxeYx, AxeYy;
   float tx, ty;

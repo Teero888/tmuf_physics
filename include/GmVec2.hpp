@@ -4,6 +4,7 @@
 
 class GmIso3;
 class GmMat2;
+class CClassicArchive;
 
 class GmVec2 {
   float x, y;

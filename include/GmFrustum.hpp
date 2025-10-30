@@ -9,6 +9,7 @@ class GmRectAligned;
 class GmIso4;
 class GmVec3;
 class GmVec4;
+class CClassicArchive;
 
 class GmFrustum {
   // TODO: figure out fields and types

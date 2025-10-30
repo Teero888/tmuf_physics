@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 class GmVec3;
+class CClassicArchive;
 
 class GmMat3 {
   float m[9];
