@@ -9,7 +9,8 @@ class GmVec2;
 class GmFrustum;
 
 class GmRectAligned {
-  // TODO: figure out fields and types
+  // TODO: this is an assumption, check if correct
+  float x1, y1, x2, y2;
 
   void __thiscall Archive(CClassicArchive *param_1);
   void __thiscall GetLocalCoordinates(GmVec2 *param_1, GmVec2 *param_2);

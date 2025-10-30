@@ -6,7 +6,9 @@
 class GmRectAligned;
 
 class GmScaleTrans2 {
-  // TODO: figure out fields and types
+  // TODO: this is an assumption, check if correct
+  float ScaleX, ScaleY;
+  float TransX, TransY;
 
   void __thiscall LeftMult(GmScaleTrans2 *param_1);
   void __thiscall Mult(GmScaleTrans2 *param_1);

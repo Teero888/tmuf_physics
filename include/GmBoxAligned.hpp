@@ -1,16 +1,18 @@
 #ifndef GMBOXALIGNED_HPP
 #define GMBOXALIGNED_HPP
 
+#include "GmVec3.hpp"
 #include "typedefs.h"
 
-class GmVec3;
 class GmIso4;
 class GmFrustum;
 class GmBoxOriented;
 class GmCone3;
 
 class GmBoxAligned {
-  // TODO: figure out fields and types
+  // TODO: this is an assumption, check if correct
+  GmVec3 m_Center;
+  GmVec3 m_HalfDiag;
 
   void __thiscall ArchiveABox(CClassicArchive *param_1);
   void __thiscall ArchiveABoxOld1(CClassicArchive *param_1);
