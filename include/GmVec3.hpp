@@ -1,3 +1,6 @@
+#ifndef GMVEC3_HPP
+#define GMVEC3_HPP
+
 #include "GmMat4.hpp"
 #include "typedefs.h"
 
@@ -26,3 +29,5 @@ class GmVec3 {
   void __thiscall SetMult(GmVec3 *param_1, GmIso4 *param_2);
   void __thiscall SetMult(GmVec3 *param_1, GmMat4 *param_2);
 };
+
+#endif // GMVEC3_HPP

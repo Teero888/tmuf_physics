@@ -1,3 +1,6 @@
+#ifndef GMBOXALIGNED_HPP
+#define GMBOXALIGNED_HPP
+
 #include "GmBoxOriented.hpp"
 #include "GmCone3.hpp"
 #include "GmFrustum.hpp"
@@ -54,3 +57,5 @@ class GmBoxAligned {
 
   void __thiscall Union(GmBoxAligned *param_1);
 };
+
+#endif // GMBOXALIGNED_HPP

@@ -1,3 +1,6 @@
+#ifndef GMBOXORIENTED_HPP
+#define GMBOXORIENTED_HPP
+
 #include "GmBoxAligned.hpp"
 #include "GmIso4.hpp"
 #include "typedefs.h"
@@ -8,3 +11,5 @@ class GmBoxOriented {
   void __thiscall Set(GmBoxAligned *param_1);
   void __thiscall SetNull();
 };
+
+#endif // GMBOXORIENTED_HPP

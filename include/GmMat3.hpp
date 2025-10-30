@@ -1,3 +1,6 @@
+#ifndef GMMAT3_HPP
+#define GMMAT3_HPP
+
 #include "GmVec3.hpp"
 #include "typedefs.h"
 
@@ -63,3 +66,5 @@ class GmMat3 {
 
   void __thiscall Transpose();
 };
+
+#endif // GMMAT3_HPP

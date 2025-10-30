@@ -1,3 +1,6 @@
+#ifndef GMVEC4_HPP
+#define GMVEC4_HPP
+
 #include "GmIso4.hpp"
 #include "GmLine3.hpp"
 #include "GmVec3.hpp"
@@ -60,3 +63,5 @@ class GmVec4 {
   void __thiscall Sub(float param_1, float param_2, float param_3,
                       float param_4);
 };
+
+#endif // GMVEC4_HPP

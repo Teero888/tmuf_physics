@@ -1,3 +1,6 @@
+#ifndef GMTRANSQUAT_HPP
+#define GMTRANSQUAT_HPP
+
 #include "typedefs.h"
 
 class GmTransQuat {
@@ -5,3 +8,5 @@ class GmTransQuat {
   void __thiscall SetBlend(GmTransQuat *param_1, GmTransQuat *param_2,
                            float param_3);
 };
+
+#endif // GMTRANSQUAT_HPP

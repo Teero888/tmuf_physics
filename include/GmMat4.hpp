@@ -1,3 +1,6 @@
+#ifndef GMMAT4_HPP
+#define GMMAT4_HPP
+
 #include "GmFrustum.hpp"
 #include "GmIso3.hpp"
 #include "GmIso4.hpp"
@@ -47,3 +50,5 @@ class GmMat4 {
 
   void __thiscall Transpose();
 };
+
+#endif // GMMAT4_HPP

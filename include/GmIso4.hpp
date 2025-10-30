@@ -1,3 +1,6 @@
+#ifndef GMISO4_HPP
+#define GMISO4_HPP
+
 #include "GmMat3.hpp"
 #include "GmMat4.hpp"
 #include "GmTransQuat.hpp"
@@ -71,3 +74,5 @@ class GmIso4 {
 
   void __thiscall UScaleSetInverse(GmIso4 *param_1);
 };
+
+#endif // GMISO4_HPP

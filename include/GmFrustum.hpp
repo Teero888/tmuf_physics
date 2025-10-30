@@ -1,3 +1,6 @@
+#ifndef GMFRUSTUM_HPP
+#define GMFRUSTUM_HPP
+
 #include "GmIso4.hpp"
 #include "typedefs.h"
 
@@ -72,3 +75,5 @@ class GmFrustum {
 
   ulong __thiscall TestInter(GmBoxAligned *param_1, ulong param_2);
 };
+
+#endif // GMFRUSTUM_HPP

@@ -1,3 +1,6 @@
+#ifndef GMISO3_HPP
+#define GMISO3_HPP
+
 #include "typedefs.h"
 
 class GmIso3 {
@@ -18,3 +21,5 @@ class GmIso3 {
 
   void __thiscall SetMult(GmIso3 *param_1, GmIso3 *param_2);
 };
+
+#endif // GMISO3_HPP
