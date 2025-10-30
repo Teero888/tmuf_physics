@@ -1,8 +1,11 @@
 #ifndef GMVEC3_HPP
 #define GMVEC3_HPP
 
-#include "GmMat4.hpp"
 #include "typedefs.h"
+
+class GmIso4;
+class GmMat4;
+class GmMat3;
 
 class GmVec3 {
   float x, y, z;
