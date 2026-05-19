@@ -48,6 +48,17 @@ CClassicBuffer *__thiscall CClassicArchive::DetachBuffer(CClassicArchive *this,
   return pCVar1;
 }
 
+void __thiscall CClassicArchive::DoBool(CClassicArchive *this, CClassicArchive *param_1, int *param_2, ulong param_3)
+
+{
+  if (*(int *)(this + 8) != 0) {
+    WriteBool(this, param_1, param_2, param_3);
+    return;
+  }
+  ReadBool(this, param_1, param_2, param_3);
+  return;
+}
+
 /* public: void __thiscall CClassicArchive::DoData(void *,unsigned long) */
 
 void __thiscall CClassicArchive::DoData(CClassicArchive *this, void *param_1,
@@ -56,7 +67,6 @@ void __thiscall CClassicArchive::DoData(CClassicArchive *this, void *param_1,
 {
   if (*(int *)(this + 8) != 0) {
     WriteData(this, param_1, param_2);
-    return;
   }
   ReadData(this, param_1, param_2);
   return;
@@ -903,6 +913,15 @@ void __thiscall CClassicArchive::WriteLine(CClassicArchive *this)
   DAT_00d72e94 = DAT_00d72e94 + 2;
   CClassicBuffer::WriteAll(*(CClassicBuffer **)(this + 4), &DAT_00d71e88,
                            DAT_00d72e94);
+  return;
+}
+
+void __thiscall CClassicArchive::WriteMask(CClassicArchive *this, CClassicArchive *param_1, ulong *param_2, ulong param_3)
+
+{
+  int unaff_retaddr;
+
+  WriteNatural(this, param_1, param_2, 1, unaff_retaddr);
   return;
 }
 

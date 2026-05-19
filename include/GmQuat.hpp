@@ -1,17 +1,20 @@
-// Derived from: gbx-tools-3d/GbxTools3D/GbxTools3D/Serializers/MeshSerializer.cs
-// and gbx-tools-3d/GbxTools3D/GbxTools3D.Client/Components/Modules/GhostControls.razor.cs
+// PDB Verified Layout & Functions derived from ghidra/GmQuat.cpp
 
 #ifndef GMQUAT_HPP
 #define GMQUAT_HPP
 
 #include "typedefs.h"
 
+class CClassicArchive;
 class GmMat3;
 class GmVec3;
 
-class GmQuat {
+#pragma pack(push, 4)
+struct GmQuat {
 public:
   float w, x, y, z;
+
+  GmQuat() : w(1), x(0), y(0), z(0) {}
 
   void __thiscall ArchiveGmQuat(CClassicArchive *param_1);
   void __thiscall ArchiveGmQuatCompact(CClassicArchive *param_1);
@@ -19,10 +22,10 @@ public:
   void __thiscall GetRotation(float *param_1, GmVec3 *param_2);
   void __thiscall GetYawPitchRoll(float *param_1, float *param_2, float *param_3);
   void __thiscall Mult(GmQuat *param_1);
-  void __thiscall Normalize();
+  void __thiscall Normalize(void);
   void __thiscall Set(float param_1, GmVec3 *param_2);
   void __thiscall Set(GmMat3 *param_1);
-  void __thiscall SetIdentity();
+  void __thiscall SetIdentity(void);
   void __thiscall SetInverse(GmQuat *param_1);
   void __thiscall SetMult(GmQuat *param_1, GmQuat *param_2);
   void __thiscall SetRotation(float param_1, GmVec3 *param_2);
@@ -30,5 +33,6 @@ public:
   void __thiscall SetSquad(float param_1, float param_2, float param_3, float param_4, float *param_5, float *param_6, float *param_7, float param_8);
   void __thiscall SetYawPitchRoll(float param_1, float param_2, float param_3);
 };
+#pragma pack(pop)
 
 #endif // GMQUAT_HPP

@@ -1,36 +1,34 @@
-// Derived from: gbx-tools-3d/GbxTools3D/GbxTools3D/Serializers/MeshSerializer.cs
-// and gbx-tools-3d/GbxTools3D/GbxTools3D/Migrations/20250308030207_AddVehicles.Designer.cs
+// PDB Verified Layout & Functions derived from ghidra/GmIso4.cpp
 
 #ifndef GMISO4_HPP
 #define GMISO4_HPP
 
 #include "typedefs.h"
+#include "GmMat3.hpp"
+#include "GmVec3.hpp"
 
-class GmVec3;
+class CClassicArchive;
 class GmVec4;
-class GmMat3;
 class GmTransQuat;
 class GmIso3;
-class CClassicArchive;
 
-class GmIso4 {
+#pragma pack(push, 4)
+struct GmIso4 {
 public:
-  // 3x3 matrix
-  float AxeXx, AxeXy, AxeXz;
-  float AxeYx, AxeYy, AxeYz;
-  float AxeZx, AxeZy, AxeZz;
+  GmMat3 m_Rotation;    // Offset 0x00
+  GmVec3 m_Translation; // Offset 0x24
 
-  float tx, ty, tz;
+  GmIso4() : m_Rotation(), m_Translation() {}
 
   void __thiscall ArchiveGmIso4(CClassicArchive *param_1);
-  void __thiscall GetDir(GmVec3 *param_1);
-  void __thiscall GetPlaneEq(ulong param_1, GmVec4 *param_2);
-  void __thiscall Inverse();
-  ulong __thiscall IsNearlyEqual(GmIso4 *param_1);
+  void __thiscall GetDir(GmVec3 *param_1) const;
+  void __thiscall GetPlaneEq(ulong param_1, GmVec4 *param_2) const;
+  void __thiscall Inverse(void);
+  ulong __thiscall IsNearlyEqual(GmIso4 *param_1) const;
   void __thiscall LeftMult(GmIso4 *param_1);
   void __thiscall Mult(GmIso4 *param_1);
   void __thiscall MultInverse(GmIso4 *param_1);
-  void __thiscall NUGetIso4AndScale(GmIso4 *param_1, GmVec3 *param_2);
+  void __thiscall NUGetIso4AndScale(GmIso4 *param_1, GmVec3 *param_2) const;
   void __thiscall NUScaleSetInverse(GmIso4 *param_1);
   void __thiscall RotateX(float param_1);
   void __thiscall RotateY(float param_1);
@@ -39,7 +37,7 @@ public:
   void __thiscall Set(GmTransQuat *param_1);
   void __thiscall SetBlend(GmIso4 *param_1, GmIso4 *param_2, float param_3);
   void __thiscall SetColumn(ulong param_1, GmVec4 *param_2);
-  void __thiscall SetIdentity();
+  void __thiscall SetIdentity(void);
   void __thiscall SetInverse(GmIso4 *param_1);
   void __thiscall SetLookAt(GmVec3 *param_1, GmVec3 *param_2, GmVec3 *param_3);
   void __thiscall SetLookAt(GmVec3 *param_1, GmVec3 *param_2, ulong param_3);
@@ -52,5 +50,6 @@ public:
   void __thiscall SymmetryPlane(GmVec4 *param_1);
   void __thiscall UScaleSetInverse(GmIso4 *param_1);
 };
+#pragma pack(pop)
 
 #endif // GMISO4_HPP
