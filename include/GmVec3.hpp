@@ -1,3 +1,6 @@
+// Derived from: gbx-tools-3d/GbxTools3D/GbxTools3D.Client/Modules/Solid.cs
+// and gbx-tools-3d/GbxTools3D/GbxTools3D/Serializers/MeshSerializer.cs
+
 #ifndef GMVEC3_HPP
 #define GMVEC3_HPP
 
@@ -8,6 +11,7 @@ class GmMat4;
 class GmMat3;
 
 class GmVec3 {
+public:
   float x, y, z;
   static int __cdecl ComputeTriangleTangentUV(STri_PosTexTgt *param_1);
   static int __cdecl DoesRayIntersectTriangle(GmVec3 *param_1, GmVec3 *param_2,

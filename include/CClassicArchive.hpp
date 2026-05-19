@@ -1,3 +1,5 @@
+// Derived from: GbxDump/GbxDump/Archive.h and GbxDump/GbxDump/Archive.cpp
+
 #ifndef CCLASSICARCHIVE_HPP
 #define CCLASSICARCHIVE_HPP
 #include "typedefs.h"

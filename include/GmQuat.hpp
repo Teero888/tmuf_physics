@@ -1,3 +1,6 @@
+// Derived from: gbx-tools-3d/GbxTools3D/GbxTools3D/Serializers/MeshSerializer.cs
+// and gbx-tools-3d/GbxTools3D/GbxTools3D.Client/Components/Modules/GhostControls.razor.cs
+
 #ifndef GMQUAT_HPP
 #define GMQUAT_HPP
 
@@ -7,6 +10,7 @@ class GmMat3;
 class GmVec3;
 
 class GmQuat {
+public:
   float w, x, y, z;
 
   void __thiscall ArchiveGmQuat(CClassicArchive *param_1);

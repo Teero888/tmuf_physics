@@ -1,3 +1,6 @@
+// Derived from: gbx-tools-3d/GbxTools3D/GbxTools3D/Serializers/MeshSerializer.cs
+// and gbx-tools-3d/GbxTools3D/GbxTools3D/Migrations/20250308030207_AddVehicles.Designer.cs
+
 #ifndef GMISO4_HPP
 #define GMISO4_HPP
 
@@ -11,6 +14,7 @@ class GmIso3;
 class CClassicArchive;
 
 class GmIso4 {
+public:
   // 3x3 matrix
   float AxeXx, AxeXy, AxeXz;
   float AxeYx, AxeYy, AxeYz;
