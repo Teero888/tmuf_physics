@@ -12,7 +12,7 @@ struct CPlugSurface {
     int field_0x8; // accesses: 5
     undefined4 field_0xc; // accesses: 1
     byte _padding_0x10[4];
-    undefined4 field_0x14; // accesses: 8
+    CClassicArchive * field_0x14; // accesses: 8
     byte _padding_0x18[12];
     ushort field_0x24; // accesses: 2
     ushort field_0x26; // accesses: 2

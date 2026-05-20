@@ -12,7 +12,7 @@ struct CGameCtnReplayRecord {
     byte _padding_0x8[12];
     undefined4 field_0x14; // accesses: 1
     byte _padding_0x18[12];
-    undefined4 field_0x24; // accesses: 3
+    CFastString * field_0x24; // accesses: 3
     undefined4 field_0x28; // accesses: 1
     undefined4 field_0x2c; // accesses: 1
     byte _padding_0x30[12];
@@ -30,7 +30,7 @@ struct CGameCtnReplayRecord {
     byte _padding_0xf4[4];
     int field_0xf8; // accesses: 1
     byte _padding_0xfc[16];
-    undefined * field_0x10c; // accesses: 2
+    ulong field_0x10c; // accesses: 2
 
     // Member Functions
     CGameCtnGhost * __thiscall GetBestGhostStunts(CGameCtnReplayRecord *this,CGameCtnReplayRecord *param_1);

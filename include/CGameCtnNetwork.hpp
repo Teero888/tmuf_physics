@@ -12,7 +12,7 @@ struct CGameCtnNetwork {
     byte _padding_0x2c[8];
     uint field_0x34; // accesses: 2
     byte _padding_0x38[8];
-    undefined4 field_0x40; // accesses: 2
+    int field_0x40; // accesses: 2
     int field_0x44; // accesses: 1
     byte _padding_0x48[36];
     int field_0x6c; // accesses: 1
@@ -27,7 +27,7 @@ struct CGameCtnNetwork {
     byte _padding_0x8c[292];
     CNetMasterServer * field_0x1b0; // accesses: 2
     byte _padding_0x1b4[1092];
-    int field_0x5f8; // accesses: 9
+    int * field_0x5f8; // accesses: 9
 
     // Member Functions
     ulong __thiscall GetNbAutoSpectators(CGameCtnNetwork *this,CGameCtnNetwork *param_1);

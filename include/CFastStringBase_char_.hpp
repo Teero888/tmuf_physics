@@ -5,7 +5,7 @@
 
 struct CFastStringBase<char> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 10
+    wchar_t * field_0x4; // accesses: 10
 
     // Member Functions
     void __thiscall AllocAtLeast (CFastStringBase<char> *this,CFastStringBase<wchar_t> *param_1,ulong param_2,int param_3, SOldChars *param_4);

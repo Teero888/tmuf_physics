@@ -5,7 +5,7 @@
 
 struct CMwCmdBlock {
     byte _padding_0x0[68];
-    undefined4 field_0x44; // accesses: 8
+    int field_0x44; // accesses: 8
     uint field_0x48; // accesses: 7
     byte _padding_0x4c[72];
     code * field_0x94; // accesses: 1

@@ -19,7 +19,7 @@ struct CGameCtnMasterServer {
     int field_0x4; // accesses: 4
     byte _padding_0x8[4];
     CFastString * field_0xc; // accesses: 1
-    CSystemFid * field_0x10; // accesses: 2
+    CFastString * field_0x10; // accesses: 2
     undefined4 field_0x14; // accesses: 2
     byte _padding_0x18[24];
     ulong field_0x30; // accesses: 1

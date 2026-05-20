@@ -8,7 +8,7 @@ struct CSystemFidFile;
 struct CSystemCrashDump {
     byte _padding_0x0[4];
     undefined4 field_0x4; // accesses: 2
-    char * field_0x8; // accesses: 2
+    CSystemFidFile * field_0x8; // accesses: 2
     byte _padding_0xc[28];
     undefined4 field_0x28; // accesses: 2
 

@@ -5,7 +5,7 @@
 
 struct CMotionParticleType {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 4
+    float field_0x4; // accesses: 4
     float field_0x8; // accesses: 4
     byte _padding_0xc[24];
     int field_0x24; // accesses: 1

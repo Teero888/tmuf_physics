@@ -27,29 +27,29 @@ struct CHmsViewport {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 15
+    float field_0x4; // accesses: 15
     int field_0x8; // accesses: 9
     int field_0xc; // accesses: 6
-    undefined4 field_0x10; // accesses: 9
-    undefined4 field_0x14; // accesses: 11
-    undefined4 field_0x18; // accesses: 6
-    undefined4 field_0x1c; // accesses: 11
-    undefined4 field_0x20; // accesses: 6
-    undefined4 field_0x24; // accesses: 9
-    undefined4 field_0x28; // accesses: 4
-    undefined4 field_0x2c; // accesses: 5
-    undefined4 field_0x30; // accesses: 3
+    float field_0x10; // accesses: 9
+    GmFrustum * field_0x14; // accesses: 11
+    SNewTriangleVert * field_0x18; // accesses: 6
+    SNewTriangleVert * field_0x1c; // accesses: 11
+    int field_0x20; // accesses: 6
+    int field_0x24; // accesses: 9
+    int field_0x28; // accesses: 4
+    int field_0x2c; // accesses: 5
+    float field_0x30; // accesses: 3
     undefined4 field_0x34; // accesses: 1
-    undefined4 field_0x38; // accesses: 5
-    undefined4 field_0x3c; // accesses: 5
-    undefined4 field_0x40; // accesses: 13
-    undefined4 field_0x44; // accesses: 14
-    undefined4 field_0x48; // accesses: 18
-    undefined4 field_0x4c; // accesses: 2
+    float field_0x38; // accesses: 5
+    float field_0x3c; // accesses: 5
+    int field_0x40; // accesses: 13
+    SNewTriangleVert * field_0x44; // accesses: 14
+    ulong field_0x48; // accesses: 18
+    int field_0x4c; // accesses: 2
     undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 4
-    undefined4 field_0x58; // accesses: 2
-    undefined4 field_0x5c; // accesses: 3
+    int * field_0x54; // accesses: 4
+    float field_0x58; // accesses: 2
+    float field_0x5c; // accesses: 3
     undefined4 field_0x60; // accesses: 1
     undefined4 field_0x64; // accesses: 1
     undefined4 field_0x68; // accesses: 1
@@ -57,12 +57,12 @@ struct CHmsViewport {
     undefined4 field_0x70; // accesses: 1
     undefined4 field_0x74; // accesses: 1
     undefined4 field_0x78; // accesses: 1
-    undefined4 field_0x7c; // accesses: 2
+    SPlugFaceCull * field_0x7c; // accesses: 2
     undefined4 field_0x80; // accesses: 1
-    undefined4 field_0x84; // accesses: 5
+    int field_0x84; // accesses: 5
     undefined4 field_0x88; // accesses: 1
     int field_0x8c; // accesses: 1
-    undefined4 field_0x90; // accesses: 2
+    int field_0x90; // accesses: 2
     SPlugVisibleId * field_0x94; // accesses: 4
     byte _padding_0x98[4];
     undefined4 field_0x9c; // accesses: 11
@@ -109,7 +109,7 @@ struct CHmsViewport {
     undefined4 field_0x22c; // accesses: 1
     int field_0x230; // accesses: 1
     undefined4 field_0x234; // accesses: 5
-    void * field_0x238; // accesses: 6
+    int field_0x238; // accesses: 6
     undefined4 field_0x23c; // accesses: 1
     int field_0x240; // accesses: 2
     CHmsConfig * field_0x244; // accesses: 2
@@ -118,7 +118,7 @@ struct CHmsViewport {
     undefined4 field_0x250; // accesses: 1
     undefined4 field_0x254; // accesses: 1
     undefined4 field_0x258; // accesses: 1
-    CMwNod * field_0x25c; // accesses: 2
+    CMwCmd * field_0x25c; // accesses: 2
     undefined4 field_0x260; // accesses: 1
     byte _padding_0x264[36];
     undefined4 field_0x288; // accesses: 1
@@ -127,12 +127,12 @@ struct CHmsViewport {
     byte _padding_0x294[8];
     int field_0x29c; // accesses: 1
     byte _padding_0x2a0[4];
-    int field_0x2a4; // accesses: 8
-    int field_0x2a8; // accesses: 8
+    GmFrustum * field_0x2a4; // accesses: 8
+    CHmsPortal * field_0x2a8; // accesses: 8
     byte _padding_0x2ac[72];
     int field_0x2f4; // accesses: 1
     byte _padding_0x2f8[36];
-    int field_0x31c; // accesses: 9
+    undefined4 * field_0x31c; // accesses: 9
     undefined4 field_0x320; // accesses: 1
     undefined4 field_0x324; // accesses: 1
     undefined4 field_0x328; // accesses: 1
@@ -140,29 +140,29 @@ struct CHmsViewport {
     undefined4 field_0x330; // accesses: 1
     undefined4 field_0x334; // accesses: 1
     undefined4 field_0x338; // accesses: 1
-    undefined4 field_0x33c; // accesses: 3
+    ulong field_0x33c; // accesses: 3
     byte _padding_0x340[8];
     undefined4 field_0x348; // accesses: 1
-    undefined4 field_0x34c; // accesses: 3
+    int field_0x34c; // accesses: 3
     int field_0x350; // accesses: 1
     undefined4 field_0x354; // accesses: 1
     undefined4 field_0x358; // accesses: 8
     undefined4 field_0x35c; // accesses: 12
     byte _padding_0x360[36];
-    ushort field_0x384; // accesses: 3
-    ushort field_0x386; // accesses: 2
+    undefined2 field_0x384; // accesses: 3
+    undefined2 field_0x386; // accesses: 2
     undefined2 field_0x388; // accesses: 1
     undefined2 field_0x38a; // accesses: 1
-    undefined4 field_0x38c; // accesses: 20
+    CHmsViewport * field_0x38c; // accesses: 20
     byte _padding_0x390[36];
-    undefined4 field_0x3b4; // accesses: 4
+    ulong field_0x3b4; // accesses: 4
     undefined4 field_0x3b8; // accesses: 1
     undefined4 field_0x3bc; // accesses: 1
-    undefined4 field_0x3c0; // accesses: 5
+    int field_0x3c0; // accesses: 5
     byte _padding_0x3c4[80];
     undefined4 field_0x414; // accesses: 4
-    undefined4 field_0x418; // accesses: 3
-    undefined4 field_0x41c; // accesses: 2
+    int field_0x418; // accesses: 3
+    int field_0x41c; // accesses: 2
     undefined4 field_0x420; // accesses: 1
     undefined4 field_0x424; // accesses: 1
     undefined4 field_0x428; // accesses: 1
@@ -171,7 +171,7 @@ struct CHmsViewport {
     undefined4 field_0x434; // accesses: 1
     undefined4 field_0x438; // accesses: 1
     byte _padding_0x43c[12];
-    undefined4 field_0x448; // accesses: 4
+    int field_0x448; // accesses: 4
     undefined4 field_0x44c; // accesses: 1
     undefined4 field_0x450; // accesses: 1
     byte _padding_0x454[224];

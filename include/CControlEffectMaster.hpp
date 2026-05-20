@@ -8,13 +8,13 @@ struct CMwRefBuffer;
 
 struct CControlEffectMaster {
     byte _padding_0x0[4];
-    CMwNod * field_0x4; // accesses: 4
+    CControlEffectMaster * field_0x4; // accesses: 4
     byte _padding_0x8[24];
     CControlEffect * field_0x20; // accesses: 1
     CControlEffect * field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 8
-    undefined4 field_0x2c; // accesses: 3
-    undefined4 field_0x30; // accesses: 4
+    int field_0x28; // accesses: 8
+    CControlEffect * field_0x2c; // accesses: 3
+    CControlEffect * field_0x30; // accesses: 4
     CControlEffect * field_0x34; // accesses: 1
     CControlEffect * field_0x38; // accesses: 1
     CControlEffect * field_0x3c; // accesses: 1
@@ -26,7 +26,7 @@ struct CControlEffectMaster {
     byte _padding_0x54[72];
     uint field_0x9c; // accesses: 2
     byte _padding_0xa0[124];
-    undefined4 field_0x11c; // accesses: 7
+    int * field_0x11c; // accesses: 7
 
     // Member Functions
     CControlEffect * __thiscall GetEffect (CControlEffectMaster *this,CControlEffectMaster *param_1,EEffectMode param_2);

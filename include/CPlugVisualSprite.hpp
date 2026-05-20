@@ -27,8 +27,8 @@ struct CPlugVisualSprite {
     undefined4 field_0xa8; // accesses: 1
     undefined4 field_0xac; // accesses: 1
     undefined4 field_0xb0; // accesses: 9
-    ushort field_0xb4; // accesses: 5
-    ushort field_0xb6; // accesses: 4
+    undefined2 field_0xb4; // accesses: 5
+    undefined2 field_0xb6; // accesses: 4
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeBoundingBox (CPlugVisualSprite *this,CPlugVisualStrip *param_1,ulong param_2,ulong param_3);

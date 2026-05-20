@@ -10,14 +10,14 @@ struct CSystemConfig {
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1
     undefined * field_0x1c; // accesses: 1
-    undefined4 field_0x20; // accesses: 4
+    int field_0x20; // accesses: 4
     undefined4 field_0x24; // accesses: 6
     CSystemConfigDisplay * field_0x28; // accesses: 3
     undefined4 field_0x2c; // accesses: 2
     undefined4 field_0x30; // accesses: 1
     undefined4 field_0x34; // accesses: 1
     undefined4 field_0x38; // accesses: 1
-    undefined4 field_0x3c; // accesses: 5
+    int field_0x3c; // accesses: 5
     int field_0x40; // accesses: 5
     undefined4 field_0x44; // accesses: 3
     undefined * field_0x48; // accesses: 1
@@ -102,11 +102,11 @@ struct CSystemConfig {
     undefined * field_0x19c; // accesses: 1
     undefined4 field_0x1a0; // accesses: 1
     byte _padding_0x1a4[20];
-    undefined4 field_0x1b8; // accesses: 2
-    undefined4 field_0x1bc; // accesses: 2
-    undefined4 field_0x1c0; // accesses: 2
-    undefined4 field_0x1c4; // accesses: 2
-    undefined4 field_0x1c8; // accesses: 2
+    int field_0x1b8; // accesses: 2
+    int field_0x1bc; // accesses: 2
+    int field_0x1c0; // accesses: 2
+    int field_0x1c4; // accesses: 2
+    int field_0x1c8; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetAutoOrPresetTM(CSystemConfig *this,CSystemConfig *param_1);

@@ -9,7 +9,7 @@ struct CPlugShaderApply;
 
 struct CGameCtnArticle {
     byte _padding_0x0[36];
-    CPlugShaderApply * field_0x24; // accesses: 2
+    CPlugBitmap * field_0x24; // accesses: 2
     byte _padding_0x28[16];
     undefined4 field_0x38; // accesses: 1
     undefined4 field_0x3c; // accesses: 1

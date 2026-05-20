@@ -29,22 +29,22 @@ struct CSystemFid {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 13
-    undefined4 field_0x8; // accesses: 5
+    undefined * field_0x4; // accesses: 13
+    int field_0x8; // accesses: 5
     undefined4 field_0xc; // accesses: 2
     int field_0x10; // accesses: 1
-    undefined4 field_0x14; // accesses: 10
+    int * field_0x14; // accesses: 10
     int field_0x18; // accesses: 3
     undefined4 field_0x1c; // accesses: 3
-    undefined4 field_0x20; // accesses: 14
+    CPlugMaterial * field_0x20; // accesses: 14
     byte _padding_0x24[8];
     int field_0x2c; // accesses: 2
-    undefined4 field_0x30; // accesses: 8
+    int field_0x30; // accesses: 8
     byte _padding_0x34[48];
-    undefined4 field_0x64; // accesses: 6
-    CClassicArchive * field_0x68; // accesses: 44
-    CSystemFid * field_0x6c; // accesses: 9
-    undefined4 field_0x70; // accesses: 2
+    ulong field_0x64; // accesses: 6
+    uint * field_0x68; // accesses: 44
+    undefined4 * field_0x6c; // accesses: 9
+    CLoader * field_0x70; // accesses: 2
     byte _padding_0x74[12];
     uint field_0x80; // accesses: 3
     int field_0x84; // accesses: 3

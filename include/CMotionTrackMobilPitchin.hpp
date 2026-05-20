@@ -23,18 +23,18 @@ struct CMotionTrackMobilPitchin {
     float field_0x68; // accesses: 4
     float field_0x6c; // accesses: 3
     undefined4 field_0x70; // accesses: 2
-    undefined4 field_0x74; // accesses: 2
+    float field_0x74; // accesses: 2
     undefined4 field_0x78; // accesses: 2
     undefined4 field_0x7c; // accesses: 2
-    undefined4 field_0x80; // accesses: 2
+    float field_0x80; // accesses: 2
     undefined4 field_0x84; // accesses: 2
     GmMat2 * field_0x88; // accesses: 1
     float field_0x8c; // accesses: 2
     byte _padding_0x90[20];
     float field_0xa4; // accesses: 4
     float field_0xa8; // accesses: 1
-    undefined4 field_0xac; // accesses: 3
-    undefined4 field_0xb0; // accesses: 3
+    float field_0xac; // accesses: 3
+    float field_0xb0; // accesses: 3
     uint field_0xb4; // accesses: 2
 
     // Member Functions

@@ -6,7 +6,7 @@
 struct CSystemFileName {
     byte _padding_0x0[2];
     short field_0x2; // accesses: 2
-    undefined4 field_0x4; // accesses: 22
+    wchar_t * field_0x4; // accesses: 22
     short field_0x6; // accesses: 2
 
     // Member Functions

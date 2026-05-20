@@ -7,24 +7,24 @@ struct GmVec3;
 
 struct GmFrustum {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 9
-    undefined4 field_0x8; // accesses: 10
-    undefined4 field_0xc; // accesses: 9
-    undefined4 field_0x10; // accesses: 8
-    undefined4 field_0x14; // accesses: 9
-    undefined4 field_0x18; // accesses: 3
+    float field_0x4; // accesses: 9
+    float field_0x8; // accesses: 10
+    float field_0xc; // accesses: 9
+    float field_0x10; // accesses: 8
+    float field_0x14; // accesses: 9
+    float field_0x18; // accesses: 3
     float field_0x1c; // accesses: 3
-    undefined4 field_0x20; // accesses: 3
-    undefined4 field_0x24; // accesses: 3
-    undefined4 field_0x28; // accesses: 3
+    float field_0x20; // accesses: 3
+    float field_0x24; // accesses: 3
+    float field_0x28; // accesses: 3
     float field_0x2c; // accesses: 3
-    undefined4 field_0x30; // accesses: 2
+    float field_0x30; // accesses: 2
     float field_0x34; // accesses: 2
-    undefined4 field_0x38; // accesses: 2
+    float field_0x38; // accesses: 2
     float field_0x3c; // accesses: 2
-    undefined4 field_0x40; // accesses: 2
-    undefined4 field_0x44; // accesses: 2
-    undefined4 field_0x48; // accesses: 2
+    float field_0x40; // accesses: 2
+    float field_0x44; // accesses: 2
+    float field_0x48; // accesses: 2
     float field_0x4c; // accesses: 2
     undefined4 field_0x50; // accesses: 2
     undefined4 field_0x54; // accesses: 2

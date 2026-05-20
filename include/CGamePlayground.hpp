@@ -12,14 +12,14 @@ struct CGamePlayground {
     byte _padding_0x8[8];
     int field_0x10; // accesses: 2
     byte _padding_0x14[4];
-    undefined4 field_0x18; // accesses: 9
+    int field_0x18; // accesses: 9
     byte _padding_0x1c[4];
-    undefined4 field_0x20; // accesses: 3
+    int field_0x20; // accesses: 3
     byte _padding_0x24[12];
     undefined4 field_0x30; // accesses: 6
     undefined4 field_0x34; // accesses: 6
     byte _padding_0x38[12];
-    undefined4 field_0x44; // accesses: 8
+    int * field_0x44; // accesses: 8
     undefined4 field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
 

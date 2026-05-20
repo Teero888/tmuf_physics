@@ -9,7 +9,7 @@ struct CPlugShader {
     byte _padding_0x8[12];
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1
-    undefined4 field_0x1c; // accesses: 19
+    int field_0x1c; // accesses: 19
     undefined4 field_0x20; // accesses: 6
     undefined4 field_0x24; // accesses: 2
     undefined2 field_0x28; // accesses: 2

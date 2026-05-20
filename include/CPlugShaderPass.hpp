@@ -10,8 +10,8 @@ struct CPlugShaderPass {
     byte _padding_0x0[44];
     int field_0x2c; // accesses: 1
     byte _padding_0x30[4];
-    undefined4 field_0x34; // accesses: 7
-    undefined4 field_0x38; // accesses: 8
+    CPlugShader * field_0x34; // accesses: 7
+    EGxBlendFactor field_0x38; // accesses: 8
     byte _padding_0x3c[8];
     undefined4 field_0x44; // accesses: 1
     undefined4 field_0x48; // accesses: 1

@@ -7,8 +7,8 @@ struct GmVec3;
 
 struct GxColor {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 16
-    undefined4 field_0x8; // accesses: 19
+    float field_0x4; // accesses: 16
+    GxColor * field_0x8; // accesses: 19
     GmVec3 * field_0xc; // accesses: 1
 
     // Member Functions

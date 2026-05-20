@@ -15,14 +15,14 @@ struct CGameControlCameraMaster {
     };
 
     byte _padding_0x0[20];
-    undefined4 field_0x14; // accesses: 4
+    int field_0x14; // accesses: 4
     byte _padding_0x18[80];
-    undefined4 field_0x68; // accesses: 13
-    undefined4 field_0x6c; // accesses: 5
-    undefined4 field_0x70; // accesses: 4
+    int * field_0x68; // accesses: 13
+    ulong field_0x6c; // accesses: 5
+    int field_0x70; // accesses: 4
     undefined4 field_0x74; // accesses: 1
     byte _padding_0x78[4];
-    int field_0x7c; // accesses: 2
+    int * field_0x7c; // accesses: 2
     byte _padding_0x80[4];
     int field_0x84; // accesses: 1
 

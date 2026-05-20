@@ -32,16 +32,17 @@ struct CHmsItem {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 56
-    undefined4 field_0x8; // accesses: 11
+    int field_0x4; // accesses: 56
+    GmMat3 * field_0x8; // accesses: 11
     undefined4 field_0xc; // accesses: 6
-    undefined4 field_0x10; // accesses: 7
-    undefined4 field_0x14; // accesses: 21
-    undefined4 field_0x18; // accesses: 116
-    undefined4 field_0x1c; // accesses: 69
-    ushort field_0x20; // accesses: 28
+    int * field_0x10; // accesses: 7
+    CPlugSolid * field_0x14; // accesses: 21
+    ulong field_0x18; // accesses: 116
+    ushort field_0x1c; // accesses: 69
+    byte _padding_0x1e[2];
+    undefined2 field_0x20; // accesses: 28
     byte _padding_0x22[2];
-    undefined4 field_0x24; // accesses: 10
+    int * field_0x24; // accesses: 10
     byte _padding_0x28[4];
     int field_0x2c; // accesses: 1
     undefined4 field_0x30; // accesses: 1
@@ -49,8 +50,8 @@ struct CHmsItem {
     byte _padding_0x38[8];
     undefined4 field_0x40; // accesses: 2
     undefined4 field_0x44; // accesses: 3
-    undefined4 field_0x48; // accesses: 4
-    undefined4 field_0x4c; // accesses: 4
+    int field_0x48; // accesses: 4
+    int field_0x4c; // accesses: 4
     undefined4 field_0x50; // accesses: 1
     undefined4 field_0x54; // accesses: 3
     int field_0x58; // accesses: 4

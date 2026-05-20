@@ -9,7 +9,7 @@ struct CGameControlCard {
     byte _padding_0x100[124];
     undefined4 field_0x17c; // accesses: 1
     byte _padding_0x180[60];
-    int field_0x1bc; // accesses: 3
+    int * field_0x1bc; // accesses: 3
     byte _padding_0x1c0[8];
     CGameControlCard * field_0x1c8; // accesses: 1
 

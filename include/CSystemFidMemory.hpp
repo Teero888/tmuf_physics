@@ -9,8 +9,8 @@ struct CSystemFidMemory {
     byte _padding_0x1c[80];
     undefined4 field_0x6c; // accesses: 1
     byte _padding_0x70[4];
-    undefined4 field_0x74; // accesses: 3
-    undefined4 field_0x78; // accesses: 2
+    undefined4 * field_0x74; // accesses: 3
+    int field_0x78; // accesses: 2
 
     // Member Functions
     void __thiscall CSystemFidMemory(CSystemFidMemory *this,CSystemFidMemory *param_1);

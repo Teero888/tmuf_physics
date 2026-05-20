@@ -24,8 +24,8 @@ struct CGameNetPlayerInfo {
     undefined4 field_0x64; // accesses: 2
     undefined4 field_0x68; // accesses: 1
     undefined4 field_0x6c; // accesses: 1
-    undefined4 field_0x70; // accesses: 2
-    undefined4 field_0x74; // accesses: 2
+    int field_0x70; // accesses: 2
+    int field_0x74; // accesses: 2
     byte _padding_0x78[4];
     undefined4 field_0x7c; // accesses: 1
     undefined4 field_0x80; // accesses: 1

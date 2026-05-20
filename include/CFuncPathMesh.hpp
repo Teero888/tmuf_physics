@@ -9,7 +9,7 @@ struct CVisionVisualKeeper;
 
 struct CFuncPathMesh {
     byte _padding_0x0[40];
-    CVisionVisualKeeper * field_0x28; // accesses: 7
+    int * field_0x28; // accesses: 7
     CPfmMeshInterface * field_0x2c; // accesses: 3
 
     // Member Functions

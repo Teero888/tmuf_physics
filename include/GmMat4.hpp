@@ -5,17 +5,17 @@
 
 struct GmMat4 {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 17
-    undefined4 field_0x8; // accesses: 17
-    undefined4 field_0xc; // accesses: 17
-    undefined4 field_0x10; // accesses: 11
-    undefined4 field_0x14; // accesses: 11
-    undefined4 field_0x18; // accesses: 9
-    undefined4 field_0x1c; // accesses: 6
-    undefined4 field_0x20; // accesses: 6
-    undefined4 field_0x24; // accesses: 6
-    undefined4 field_0x28; // accesses: 6
-    undefined4 field_0x2c; // accesses: 6
+    float field_0x4; // accesses: 17
+    float field_0x8; // accesses: 17
+    float field_0xc; // accesses: 17
+    float field_0x10; // accesses: 11
+    float field_0x14; // accesses: 11
+    float field_0x18; // accesses: 9
+    float field_0x1c; // accesses: 6
+    float field_0x20; // accesses: 6
+    float field_0x24; // accesses: 6
+    float field_0x28; // accesses: 6
+    float field_0x2c; // accesses: 6
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetFrustumProjection(void *this,GmMat4 *param_1,GmFrustum *param_2,ulong param_3);

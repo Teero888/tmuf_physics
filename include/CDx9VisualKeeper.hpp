@@ -5,14 +5,14 @@
 
 struct CDx9VisualKeeper {
     byte _padding_0x0[1];
-    ushort field_0x1; // accesses: 5
+    undefined2 field_0x1; // accesses: 5
     undefined2 field_0x2; // accesses: 2
-    SNormalDec3N * field_0x4; // accesses: 48
+    undefined2 field_0x4; // accesses: 48
     undefined2 field_0x6; // accesses: 2
-    undefined4 field_0x8; // accesses: 19
+    int field_0x8; // accesses: 19
     undefined4 field_0xc; // accesses: 4
     float field_0x10; // accesses: 1
-    float field_0x14; // accesses: 3
+    int * field_0x14; // accesses: 3
     float field_0x18; // accesses: 1
     byte _padding_0x1c[52];
     int field_0x50; // accesses: 4

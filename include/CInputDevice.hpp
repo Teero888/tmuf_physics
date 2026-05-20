@@ -5,7 +5,7 @@
 
 struct CInputDevice {
     byte _padding_0x0[4];
-    float field_0x4; // accesses: 3
+    ulong field_0x4; // accesses: 3
     float field_0x8; // accesses: 3
 
     // Member Functions

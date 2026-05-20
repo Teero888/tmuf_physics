@@ -44,7 +44,7 @@ struct CVisionViewportDx9 {
         byte _padding_0x0[20];
         CVisionViewportDx9 * field_0x14; // accesses: 1
         byte _padding_0x18[12];
-        undefined4 field_0x24; // accesses: 2
+        int field_0x24; // accesses: 2
         byte _padding_0x28[536];
         int field_0x240; // accesses: 1
         byte _padding_0x244[1696];
@@ -60,80 +60,80 @@ struct CVisionViewportDx9 {
     byte _padding_0x0[1];
     undefined2 field_0x1; // accesses: 1
     undefined2 field_0x2; // accesses: 1
-    undefined4 field_0x4; // accesses: 56
-    undefined4 field_0x8; // accesses: 43
-    undefined4 field_0xc; // accesses: 46
-    undefined4 field_0x10; // accesses: 18
-    undefined4 field_0x14; // accesses: 134
-    undefined4 field_0x18; // accesses: 26
-    undefined4 field_0x1c; // accesses: 44
-    undefined4 field_0x20; // accesses: 46
+    float field_0x4; // accesses: 56
+    SCasterCat * field_0x8; // accesses: 43
+    float field_0xc; // accesses: 46
+    int field_0x10; // accesses: 18
+    _D3DFORMAT field_0x14; // accesses: 134
+    CPlugBitmapRender field_0x18; // accesses: 26
+    GmVec3 * field_0x1c; // accesses: 44
+    float field_0x20; // accesses: 46
     ushort field_0x22; // accesses: 10
-    undefined4 field_0x24; // accesses: 53
+    IDirect3DSurface9 * field_0x24; // accesses: 53
     ushort field_0x26; // accesses: 8
-    undefined4 field_0x28; // accesses: 37
-    undefined4 field_0x2c; // accesses: 22
-    undefined4 field_0x30; // accesses: 14
+    CVisionViewport * field_0x28; // accesses: 37
+    float field_0x2c; // accesses: 22
+    float field_0x30; // accesses: 14
     uint field_0x31; // accesses: 26
     uint field_0x32; // accesses: 3
     uint field_0x33; // accesses: 5
-    undefined4 field_0x34; // accesses: 15
-    undefined4 field_0x38; // accesses: 15
+    int field_0x34; // accesses: 15
+    int field_0x38; // accesses: 15
     undefined1 * field_0x39; // accesses: 6
     char field_0x3a; // accesses: 4
     int field_0x3b; // accesses: 1
-    undefined4 field_0x3c; // accesses: 25
-    undefined4 field_0x40; // accesses: 11
-    undefined4 field_0x44; // accesses: 8
-    CPlugFileGen * field_0x48; // accesses: 22
-    undefined4 field_0x4c; // accesses: 10
+    CVisionViewport * field_0x3c; // accesses: 25
+    int field_0x40; // accesses: 11
+    float field_0x44; // accesses: 8
+    float field_0x48; // accesses: 22
+    CSystemArchiveNod * field_0x4c; // accesses: 10
     char field_0x4d; // accesses: 5
     byte _padding_0x4e[2];
     float field_0x50; // accesses: 15
-    undefined4 field_0x54; // accesses: 14
+    SCasterCat * field_0x54; // accesses: 14
     short field_0x56; // accesses: 1
-    undefined4 field_0x58; // accesses: 14
-    undefined4 field_0x5c; // accesses: 23
-    undefined4 field_0x60; // accesses: 14
-    undefined4 field_0x64; // accesses: 6
-    undefined4 field_0x68; // accesses: 8
+    int field_0x58; // accesses: 14
+    GmFrustum * field_0x5c; // accesses: 23
+    float field_0x60; // accesses: 14
+    float field_0x64; // accesses: 6
+    float field_0x68; // accesses: 8
     int field_0x6c; // accesses: 11
     int field_0x70; // accesses: 5
-    CPlugBitmapRenderWater * field_0x74; // accesses: 22
-    uint field_0x78; // accesses: 4
+    SCasterCat * field_0x74; // accesses: 22
+    float field_0x78; // accesses: 4
     float field_0x7c; // accesses: 7
-    float field_0x80; // accesses: 8
+    CVisionViewport * field_0x80; // accesses: 8
     int field_0x84; // accesses: 7
     undefined4 field_0x88; // accesses: 1
     undefined4 field_0x8c; // accesses: 1
-    undefined4 field_0x90; // accesses: 3
-    undefined4 field_0x94; // accesses: 6
-    undefined4 field_0x98; // accesses: 3
+    int field_0x90; // accesses: 3
+    int field_0x94; // accesses: 6
+    float field_0x98; // accesses: 3
     CPlugShader * field_0x9c; // accesses: 4
-    uint field_0xa0; // accesses: 40
-    undefined4 field_0xa4; // accesses: 7
+    float field_0xa0; // accesses: 40
+    float field_0xa4; // accesses: 7
     int field_0xa8; // accesses: 2
-    undefined4 field_0xac; // accesses: 20
-    undefined4 field_0xb0; // accesses: 17
+    float field_0xac; // accesses: 20
+    CPlugBitmapRender field_0xb0; // accesses: 17
     int field_0xb4; // accesses: 3
     float field_0xb8; // accesses: 1
     int field_0xbc; // accesses: 4
     float field_0xc0; // accesses: 1
-    CPlugBitmapRenderWater field_0xc4; // accesses: 22
-    GmIso4 * field_0xc8; // accesses: 4
-    uint field_0xcc; // accesses: 17
-    undefined4 field_0xd0; // accesses: 4
+    CPlugBitmapRender field_0xc4; // accesses: 22
+    float field_0xc8; // accesses: 4
+    float field_0xcc; // accesses: 17
+    CHmsCorpusLight * field_0xd0; // accesses: 4
     undefined4 field_0xd4; // accesses: 1
     byte _padding_0xd8[4];
     code * field_0xdc; // accesses: 2
     byte _padding_0xe0[8];
-    int field_0xe8; // accesses: 2
+    ulong field_0xe8; // accesses: 2
     int field_0xec; // accesses: 2
     int field_0xf0; // accesses: 3
     float field_0xf4; // accesses: 1
     IDirect3DSurface9 * field_0xf8; // accesses: 1
     int field_0xfc; // accesses: 2
-    undefined4 field_0x100; // accesses: 2
+    int field_0x100; // accesses: 2
     int field_0x104; // accesses: 7
     byte _padding_0x108[20];
     float field_0x11c; // accesses: 1
@@ -155,7 +155,7 @@ struct CVisionViewportDx9 {
     int field_0x238; // accesses: 2
     byte _padding_0x23c[12];
     int field_0x248; // accesses: 5
-    CSystemConfig * field_0x24c; // accesses: 4
+    int field_0x24c; // accesses: 4
     byte _padding_0x250[84];
     int field_0x2a4; // accesses: 5
     int field_0x2a8; // accesses: 5
@@ -164,39 +164,39 @@ struct CVisionViewportDx9 {
     byte _padding_0x2bc[60];
     int field_0x2f8; // accesses: 1
     byte _padding_0x2fc[24];
-    undefined4 field_0x314; // accesses: 2
+    int field_0x314; // accesses: 2
     undefined4 field_0x318; // accesses: 1
     byte _padding_0x31c[16];
     int field_0x32c; // accesses: 3
     byte _padding_0x330[32];
-    undefined4 field_0x350; // accesses: 2
+    CHmsCamera * field_0x350; // accesses: 2
     byte _padding_0x354[48];
     undefined2 field_0x384; // accesses: 14
-    ushort field_0x386; // accesses: 12
-    undefined4 field_0x388; // accesses: 26
-    ushort field_0x38a; // accesses: 19
+    undefined2 field_0x386; // accesses: 12
+    SGxPixRect * field_0x388; // accesses: 26
+    undefined2 field_0x38a; // accesses: 19
     undefined4 field_0x38c; // accesses: 2
     byte _padding_0x390[48];
-    undefined4 field_0x3c0; // accesses: 5
+    SRenderShaderParam * field_0x3c0; // accesses: 5
     byte _padding_0x3c4[80];
     uint field_0x414; // accesses: 41
     undefined4 field_0x418; // accesses: 2
-    undefined4 field_0x41c; // accesses: 6
+    int field_0x41c; // accesses: 6
     undefined4 field_0x420; // accesses: 4
     undefined4 field_0x424; // accesses: 5
     undefined4 field_0x428; // accesses: 4
     undefined4 field_0x42c; // accesses: 6
     undefined4 field_0x430; // accesses: 2
-    undefined4 field_0x434; // accesses: 3
+    int field_0x434; // accesses: 3
     uint field_0x438; // accesses: 1
     byte _padding_0x43c[12];
-    undefined4 field_0x448; // accesses: 3
-    undefined4 field_0x44c; // accesses: 6
+    CMwId * field_0x448; // accesses: 3
+    int field_0x44c; // accesses: 6
     undefined4 field_0x450; // accesses: 5
     byte _padding_0x454[24];
     int field_0x46c; // accesses: 4
     byte _padding_0x470[664];
-    undefined4 field_0x708; // accesses: 7
+    int * field_0x708; // accesses: 7
     byte _padding_0x70c[268];
     undefined4 field_0x818; // accesses: 1
     byte _padding_0x81c[4];
@@ -215,8 +215,8 @@ struct CVisionViewportDx9 {
     undefined4 field_0x858; // accesses: 3
     undefined4 field_0x85c; // accesses: 3
     undefined4 field_0x860; // accesses: 3
-    undefined4 field_0x864; // accesses: 2
-    undefined4 field_0x868; // accesses: 11
+    CPlugBitmapRender * field_0x864; // accesses: 2
+    CMwNod * field_0x868; // accesses: 11
     byte _padding_0x86c[36];
     undefined4 field_0x890; // accesses: 1
     undefined4 field_0x894; // accesses: 1
@@ -231,17 +231,17 @@ struct CVisionViewportDx9 {
     byte _padding_0x8b8[16];
     undefined4 field_0x8c8; // accesses: 1
     byte _padding_0x8cc[24];
-    undefined4 field_0x8e4; // accesses: 12
-    undefined4 field_0x8e8; // accesses: 9
-    undefined4 field_0x8ec; // accesses: 4
+    SNewTriangleVert * field_0x8e4; // accesses: 12
+    CMwId * field_0x8e8; // accesses: 9
+    GmFrustum * field_0x8ec; // accesses: 4
     byte _padding_0x8f0[20];
-    undefined4 field_0x904; // accesses: 8
+    SNewTriangleVert * field_0x904; // accesses: 8
     undefined4 field_0x908; // accesses: 1
     undefined4 field_0x90c; // accesses: 1
     undefined4 field_0x910; // accesses: 1
-    undefined4 field_0x914; // accesses: 3
+    int field_0x914; // accesses: 3
     undefined4 field_0x918; // accesses: 3
-    undefined4 field_0x91c; // accesses: 12
+    ulong field_0x91c; // accesses: 12
     undefined4 field_0x920; // accesses: 7
     undefined4 field_0x924; // accesses: 1
     undefined4 field_0x928; // accesses: 1
@@ -257,19 +257,19 @@ struct CVisionViewportDx9 {
     undefined4 field_0x9a4; // accesses: 1
     undefined4 field_0x9a8; // accesses: 1
     byte _padding_0x9ac[76];
-    undefined4 field_0x9f8; // accesses: 63
+    GmIso4 * field_0x9f8; // accesses: 63
     byte _padding_0x9fc[60];
     undefined4 field_0xa38; // accesses: 1
     undefined4 field_0xa3c; // accesses: 1
     undefined4 field_0xa40; // accesses: 1
     undefined4 field_0xa44; // accesses: 1
     undefined4 field_0xa48; // accesses: 1
-    undefined4 field_0xa4c; // accesses: 5
+    int * field_0xa4c; // accesses: 5
     undefined4 field_0xa50; // accesses: 2
     undefined4 field_0xa54; // accesses: 5
     undefined4 field_0xa58; // accesses: 3
-    undefined4 field_0xa5c; // accesses: 4
-    undefined4 field_0xa60; // accesses: 8
+    int field_0xa5c; // accesses: 4
+    int field_0xa60; // accesses: 8
     float field_0xa64; // accesses: 2
     float field_0xa68; // accesses: 5
     float field_0xa6c; // accesses: 5
@@ -306,11 +306,11 @@ struct CVisionViewportDx9 {
     CPlugFileGPUV * field_0x1538; // accesses: 2
     byte _padding_0x153c[100];
     undefined4 field_0x15a0; // accesses: 1
-    undefined4 field_0x15a4; // accesses: 4
+    int field_0x15a4; // accesses: 4
     undefined4 field_0x15a8; // accesses: 3
     undefined4 field_0x15ac; // accesses: 1
     byte _padding_0x15b0[36];
-    undefined4 field_0x15d4; // accesses: 8
+    int field_0x15d4; // accesses: 8
     byte _padding_0x15d8[12];
     undefined4 field_0x15e4; // accesses: 1
     byte _padding_0x15e8[8];

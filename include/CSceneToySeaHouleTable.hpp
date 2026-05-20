@@ -7,7 +7,7 @@ struct GmField2;
 
 struct CSceneToySeaHouleTable {
     byte _padding_0x0[112];
-    void * field_0x70; // accesses: 6
+    int field_0x70; // accesses: 6
     byte _padding_0x74[4];
     GmField2 * field_0x78; // accesses: 2
     int field_0x7c; // accesses: 4

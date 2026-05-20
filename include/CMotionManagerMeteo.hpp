@@ -10,7 +10,7 @@ struct CSystemFileMemMapped;
 struct CMotionManagerMeteo {
     byte _padding_0x0[28];
     CSystemFileMemMapped * field_0x1c; // accesses: 2
-    int field_0x20; // accesses: 2
+    CInputPortDx8 * field_0x20; // accesses: 2
     byte _padding_0x24[8];
     int field_0x2c; // accesses: 1
     byte _padding_0x30[132];

@@ -12,13 +12,13 @@ struct GmIso4;
 
 struct CTrackManiaEditorInterface {
     byte _padding_0x0[20];
-    int field_0x14; // accesses: 7
-    GmIso4 * field_0x18; // accesses: 7
+    undefined4 * field_0x14; // accesses: 7
+    int field_0x18; // accesses: 7
     byte _padding_0x1c[12];
     CScene2d * field_0x28; // accesses: 2
     byte _padding_0x2c[8];
     int field_0x34; // accesses: 5
-    undefined4 field_0x38; // accesses: 10
+    int field_0x38; // accesses: 10
     byte _padding_0x3c[12];
     undefined4 field_0x48; // accesses: 2
     byte _padding_0x4c[12];
@@ -27,12 +27,12 @@ struct CTrackManiaEditorInterface {
     int field_0x60; // accesses: 2
     int field_0x64; // accesses: 3
     byte _padding_0x68[8];
-    undefined4 field_0x70; // accesses: 11
-    int field_0x74; // accesses: 2
+    int field_0x70; // accesses: 11
+    ulong field_0x74; // accesses: 2
     ulong field_0x78; // accesses: 1
     uint field_0x7c; // accesses: 2
     uint field_0x80; // accesses: 2
-    CControlContainer * field_0x84; // accesses: 4
+    CFastString * field_0x84; // accesses: 4
 
     // Member Functions
     CGameCtnArticle * __thiscall GetCurrentArticle (CTrackManiaEditorInterface *this,CTrackManiaEditorInterface *param_1);

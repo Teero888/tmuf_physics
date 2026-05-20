@@ -15,10 +15,10 @@ struct CPlugMaterial {
 
     byte _padding_0x0[20];
     undefined4 field_0x14; // accesses: 2
-    undefined4 field_0x18; // accesses: 6
-    undefined4 field_0x1c; // accesses: 4
+    CPlugShader * field_0x18; // accesses: 6
+    int * field_0x1c; // accesses: 4
     byte _padding_0x20[8];
-    undefined4 field_0x28; // accesses: 2
+    int field_0x28; // accesses: 2
     undefined4 field_0x2c; // accesses: 2
 
     // Member Functions

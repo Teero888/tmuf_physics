@@ -10,7 +10,7 @@ struct CScene {
     int field_0x18; // accesses: 5
     byte _padding_0x1c[52];
     undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 2
+    CSceneToySea * field_0x54; // accesses: 2
     byte _padding_0x58[68];
     undefined4 field_0x9c; // accesses: 2
 

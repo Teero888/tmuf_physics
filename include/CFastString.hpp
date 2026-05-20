@@ -7,11 +7,11 @@ struct SStringParam;
 
 struct CFastString {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 59
-    undefined4 field_0x8; // accesses: 4
+    CFastString * field_0x4; // accesses: 59
+    int field_0x8; // accesses: 4
     undefined1 * field_0xc; // accesses: 2
-    undefined4 field_0x10; // accesses: 5
-    undefined4 field_0x14; // accesses: 6
+    int field_0x10; // accesses: 5
+    int field_0x14; // accesses: 6
     char * field_0x18; // accesses: 3
 
     // Member Functions

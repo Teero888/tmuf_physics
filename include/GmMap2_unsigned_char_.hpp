@@ -5,7 +5,7 @@
 
 struct GmMap2<unsigned_char> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 6
+    int field_0x4; // accesses: 6
 
     // Member Functions
     GmVec3 __thiscall GetValue(void *this,CFuncColorGradient *param_1,float param_2);

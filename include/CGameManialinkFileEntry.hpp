@@ -8,7 +8,7 @@ struct CGameManialinkFileEntry {
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 9
     undefined4 field_0x2c; // accesses: 9
-    undefined4 field_0x30; // accesses: 2
+    ulong field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 1
     undefined * field_0x38; // accesses: 1
 

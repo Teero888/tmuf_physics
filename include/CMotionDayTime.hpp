@@ -9,7 +9,7 @@ struct CMotionDayTime {
     byte _padding_0x0[20];
     uint field_0x14; // accesses: 2
     byte _padding_0x18[12];
-    undefined4 field_0x24; // accesses: 3
+    CMotionDayTime * field_0x24; // accesses: 3
     undefined4 field_0x28; // accesses: 1
     undefined4 field_0x2c; // accesses: 1
     byte _padding_0x30[104];

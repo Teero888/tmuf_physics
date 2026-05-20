@@ -8,13 +8,13 @@ struct SStringParam;
 struct CClassicI18n {
     byte _padding_0x0[2];
     ushort field_0x2; // accesses: 1
-    undefined4 field_0x4; // accesses: 23
-    undefined4 field_0x8; // accesses: 7
-    undefined4 field_0xc; // accesses: 8
+    wchar_t * field_0x4; // accesses: 23
+    int field_0x8; // accesses: 7
+    int field_0xc; // accesses: 8
     byte _padding_0x10[8];
     undefined4 field_0x18; // accesses: 5
-    undefined4 field_0x1c; // accesses: 10
-    undefined4 field_0x20; // accesses: 8
+    int field_0x1c; // accesses: 10
+    ulong field_0x20; // accesses: 8
     undefined4 field_0x24; // accesses: 3
 
     // Member Functions

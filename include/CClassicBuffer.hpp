@@ -8,7 +8,7 @@ struct CClassicBuffer {
     undefined4 field_0x4; // accesses: 1
     undefined4 field_0x8; // accesses: 1
     CClassicBuffer * field_0xc; // accesses: 1
-    uint field_0x10; // accesses: 3
+    SLadderResult * field_0x10; // accesses: 3
 
     // Member Functions
     /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall IsEqualBuffer (CClassicBuffer *this,CClassicBufferMemory *param_1,CClassicBufferMemory *param_2);

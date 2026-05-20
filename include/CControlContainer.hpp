@@ -10,7 +10,7 @@ struct CControlContainer {
     byte _padding_0x0[24];
     int field_0x18; // accesses: 1
     byte _padding_0x1c[80];
-    CControlContainer * field_0x6c; // accesses: 3
+    int field_0x6c; // accesses: 3
     CMwCmd * field_0x70; // accesses: 1
     byte _padding_0x74[28];
     undefined4 field_0x90; // accesses: 1
@@ -20,7 +20,7 @@ struct CControlContainer {
     byte _padding_0x100[32];
     undefined4 field_0x120; // accesses: 2
     undefined4 field_0x124; // accesses: 1
-    undefined4 field_0x128; // accesses: 2
+    ulong field_0x128; // accesses: 2
     undefined4 field_0x12c; // accesses: 1
     undefined4 field_0x130; // accesses: 1
     undefined4 field_0x134; // accesses: 1
@@ -28,7 +28,7 @@ struct CControlContainer {
     undefined * field_0x13c; // accesses: 1
     undefined4 field_0x140; // accesses: 1
     byte _padding_0x144[8];
-    undefined4 field_0x14c; // accesses: 3
+    int field_0x14c; // accesses: 3
     undefined4 field_0x150; // accesses: 1
     undefined4 field_0x154; // accesses: 1
     byte _padding_0x158[164];

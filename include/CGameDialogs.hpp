@@ -7,7 +7,7 @@ struct CMwNod;
 
 struct CGameDialogs {
     byte _padding_0x0[20];
-    undefined4 field_0x14; // accesses: 4
+    int field_0x14; // accesses: 4
     byte _padding_0x18[12];
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1

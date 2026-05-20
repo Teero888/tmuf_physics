@@ -5,8 +5,8 @@
 
 struct CFastBufferWheel<class_GmVec3> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 5
-    undefined4 field_0x8; // accesses: 3
+    int field_0x4; // accesses: 5
+    float field_0x8; // accesses: 3
     undefined4 field_0xc; // accesses: 1
     undefined4 field_0x10; // accesses: 1
 

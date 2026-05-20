@@ -20,11 +20,11 @@ struct CHmsCorpus {
     undefined4 field_0x3c; // accesses: 1
     undefined4 field_0x40; // accesses: 1
     undefined4 field_0x44; // accesses: 1
-    undefined4 field_0x48; // accesses: 6
+    int field_0x48; // accesses: 6
     undefined4 field_0x4c; // accesses: 2
     undefined4 field_0x50; // accesses: 1
     undefined4 field_0x54; // accesses: 1
-    undefined4 field_0x58; // accesses: 20
+    int field_0x58; // accesses: 20
     byte _padding_0x5c[716];
     int field_0x328; // accesses: 1
     int field_0x32c; // accesses: 1

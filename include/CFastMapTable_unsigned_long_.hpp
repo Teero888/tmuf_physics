@@ -15,9 +15,9 @@ struct CFastMapTable<unsigned_long> {
     };
 
     byte _padding_0x0[4];
-    void * field_0x4; // accesses: 11
+    int field_0x4; // accesses: 11
     int field_0x8; // accesses: 9
-    undefined4 field_0xc; // accesses: 9
+    ulong field_0xc; // accesses: 9
 
     // Member Functions
     CFastString __thiscall GetElem (CFastMapTable<unsigned_long> *this,CVirtualisedBuffer<class_CFastString> *param_1, ulong param_2);

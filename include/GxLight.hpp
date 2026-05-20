@@ -5,13 +5,13 @@
 
 struct GxLight {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 2
+    float field_0x4; // accesses: 2
+    float field_0x8; // accesses: 2
     byte _padding_0xc[12];
-    undefined4 field_0x18; // accesses: 4
-    undefined4 field_0x1c; // accesses: 4
-    undefined4 field_0x20; // accesses: 4
-    GxLight * field_0x24; // accesses: 3
+    float field_0x18; // accesses: 4
+    float field_0x1c; // accesses: 4
+    float field_0x20; // accesses: 4
+    float field_0x24; // accesses: 3
     float field_0x28; // accesses: 2
     float field_0x2c; // accesses: 2
     float field_0x30; // accesses: 2

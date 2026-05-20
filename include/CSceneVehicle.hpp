@@ -45,26 +45,26 @@ struct CSceneVehicle {
 
     struct SVehicleState {
         byte _padding_0x0[4];
-        undefined4 field_0x4; // accesses: 3
-        undefined4 field_0x8; // accesses: 3
-        undefined4 field_0xc; // accesses: 3
-        undefined4 field_0x10; // accesses: 3
+        float field_0x4; // accesses: 3
+        float field_0x8; // accesses: 3
+        float field_0xc; // accesses: 3
+        float field_0x10; // accesses: 3
         undefined4 field_0x14; // accesses: 2
-        undefined4 field_0x18; // accesses: 3
+        float field_0x18; // accesses: 3
         undefined4 field_0x1c; // accesses: 2
-        undefined4 field_0x20; // accesses: 3
-        undefined4 field_0x24; // accesses: 3
-        undefined4 field_0x28; // accesses: 3
-        undefined4 field_0x2c; // accesses: 3
-        undefined4 field_0x30; // accesses: 3
+        float field_0x20; // accesses: 3
+        float field_0x24; // accesses: 3
+        float field_0x28; // accesses: 3
+        float field_0x2c; // accesses: 3
+        float field_0x30; // accesses: 3
         byte _padding_0x34[48];
         undefined4 field_0x64; // accesses: 2
         undefined4 field_0x68; // accesses: 2
-        undefined4 field_0x6c; // accesses: 4
-        undefined4 field_0x70; // accesses: 4
-        undefined4 field_0x74; // accesses: 4
-        undefined4 field_0x78; // accesses: 3
-        undefined4 field_0x7c; // accesses: 3
+        float field_0x6c; // accesses: 4
+        float field_0x70; // accesses: 4
+        float field_0x74; // accesses: 4
+        float field_0x78; // accesses: 3
+        float field_0x7c; // accesses: 3
 
         // Member Functions
         void __thiscall VehicleStateReset(void *this,SVehicleState *param_1);
@@ -109,62 +109,62 @@ struct CSceneVehicle {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 11
-    undefined4 field_0x8; // accesses: 21
-    undefined4 field_0xc; // accesses: 3
+    int * field_0x4; // accesses: 11
+    GmVec4 * field_0x8; // accesses: 21
+    float field_0xc; // accesses: 3
     int field_0x10; // accesses: 4
-    undefined4 field_0x14; // accesses: 7
+    int field_0x14; // accesses: 7
     short field_0x16; // accesses: 1
     int field_0x18; // accesses: 14
     byte _padding_0x1c[4];
     undefined4 field_0x20; // accesses: 1
-    undefined4 field_0x24; // accesses: 5
-    CHmsItem * field_0x28; // accesses: 12
+    CFuncKeysReal * field_0x24; // accesses: 5
+    int field_0x28; // accesses: 12
     int field_0x2c; // accesses: 1
     SPlugFaceCull * field_0x30; // accesses: 26
     byte _padding_0x34[4];
     undefined4 field_0x38; // accesses: 3
-    undefined4 field_0x3c; // accesses: 3
+    CMotionEmitterParticles * field_0x3c; // accesses: 3
     undefined4 field_0x40; // accesses: 1
     undefined4 field_0x44; // accesses: 1
-    undefined4 field_0x48; // accesses: 20
-    undefined4 field_0x4c; // accesses: 16
-    CSceneVehicleGlider * field_0x50; // accesses: 15
-    CSceneVehicleGlider * field_0x54; // accesses: 4
-    CSceneVehicleGlider * field_0x58; // accesses: 16
-    undefined4 field_0x5c; // accesses: 10
-    undefined4 field_0x60; // accesses: 25
-    undefined4 field_0x64; // accesses: 24
-    undefined4 field_0x68; // accesses: 23
-    undefined4 field_0x6c; // accesses: 8
-    undefined4 field_0x70; // accesses: 8
-    undefined4 field_0x74; // accesses: 5
-    undefined4 field_0x78; // accesses: 6
-    undefined4 field_0x7c; // accesses: 7
-    undefined4 field_0x80; // accesses: 3
-    undefined4 field_0x84; // accesses: 3
-    undefined4 field_0x88; // accesses: 3
-    undefined4 field_0x8c; // accesses: 3
-    undefined4 field_0x90; // accesses: 6
-    undefined4 field_0x94; // accesses: 6
+    int * field_0x48; // accesses: 20
+    float field_0x4c; // accesses: 16
+    int field_0x50; // accesses: 15
+    float field_0x54; // accesses: 4
+    int field_0x58; // accesses: 16
+    int field_0x5c; // accesses: 10
+    CMwNod * field_0x60; // accesses: 25
+    CMwNod * field_0x64; // accesses: 24
+    CMotionDayTime * field_0x68; // accesses: 23
+    float field_0x6c; // accesses: 8
+    int field_0x70; // accesses: 8
+    int field_0x74; // accesses: 5
+    int field_0x78; // accesses: 6
+    int field_0x7c; // accesses: 7
+    int field_0x80; // accesses: 3
+    float field_0x84; // accesses: 3
+    int field_0x88; // accesses: 3
+    int field_0x8c; // accesses: 3
+    CPlugVisual * field_0x90; // accesses: 6
+    int field_0x94; // accesses: 6
     undefined4 field_0x98; // accesses: 5
     byte _padding_0x9c[4];
-    undefined4 field_0xa0; // accesses: 4
-    undefined4 field_0xa4; // accesses: 5
-    undefined4 field_0xa8; // accesses: 5
+    code * field_0xa0; // accesses: 4
+    CPlugTreeVisualMip * field_0xa4; // accesses: 5
+    int field_0xa8; // accesses: 5
     undefined4 field_0xac; // accesses: 2
-    undefined4 field_0xb0; // accesses: 3
+    int field_0xb0; // accesses: 3
     undefined4 field_0xb4; // accesses: 2
-    undefined4 field_0xb8; // accesses: 4
+    int field_0xb8; // accesses: 4
     undefined4 field_0xbc; // accesses: 2
     undefined4 field_0xc0; // accesses: 2
     undefined4 field_0xc4; // accesses: 2
     undefined4 field_0xc8; // accesses: 2
     undefined4 field_0xcc; // accesses: 2
-    undefined4 field_0xd0; // accesses: 2
+    float field_0xd0; // accesses: 2
     byte _padding_0xd4[132];
-    undefined4 field_0x158; // accesses: 3
-    undefined4 field_0x15c; // accesses: 2
+    float field_0x158; // accesses: 3
+    float field_0x15c; // accesses: 2
     byte _padding_0x160[4];
     float field_0x164; // accesses: 2
     float field_0x168; // accesses: 1
@@ -172,8 +172,8 @@ struct CSceneVehicle {
     byte _padding_0x170[8];
     float field_0x178; // accesses: 1
     byte _padding_0x17c[120];
-    undefined4 field_0x1f4; // accesses: 2
-    undefined4 field_0x1f8; // accesses: 4
+    float field_0x1f4; // accesses: 2
+    int field_0x1f8; // accesses: 4
     uint field_0x1fc; // accesses: 2
     byte _padding_0x200[4];
     undefined4 field_0x204; // accesses: 2
@@ -186,28 +186,28 @@ struct CSceneVehicle {
     byte _padding_0x244[4];
     undefined4 field_0x248; // accesses: 3
     byte _padding_0x24c[20];
-    undefined4 field_0x260; // accesses: 16
-    undefined4 field_0x264; // accesses: 15
-    undefined4 field_0x268; // accesses: 20
-    undefined4 field_0x26c; // accesses: 16
-    undefined4 field_0x270; // accesses: 18
-    undefined4 field_0x274; // accesses: 16
-    undefined4 field_0x278; // accesses: 18
-    undefined4 field_0x27c; // accesses: 16
-    undefined4 field_0x280; // accesses: 16
-    undefined4 field_0x284; // accesses: 16
-    undefined4 field_0x288; // accesses: 17
-    undefined4 field_0x28c; // accesses: 7
+    int field_0x260; // accesses: 16
+    int field_0x264; // accesses: 15
+    int field_0x268; // accesses: 20
+    int field_0x26c; // accesses: 16
+    int field_0x270; // accesses: 18
+    int field_0x274; // accesses: 16
+    int field_0x278; // accesses: 18
+    int field_0x27c; // accesses: 16
+    int field_0x280; // accesses: 16
+    int field_0x284; // accesses: 16
+    int field_0x288; // accesses: 17
+    int field_0x28c; // accesses: 7
     byte _padding_0x290[8];
-    undefined4 field_0x298; // accesses: 7
+    int field_0x298; // accesses: 7
     byte _padding_0x29c[8];
-    undefined4 field_0x2a4; // accesses: 2
-    undefined4 field_0x2a8; // accesses: 3
+    int field_0x2a4; // accesses: 2
+    int field_0x2a8; // accesses: 3
     byte _padding_0x2ac[36];
-    undefined4 field_0x2d0; // accesses: 8
+    CSceneVehicle * field_0x2d0; // accesses: 8
     undefined4 field_0x2d4; // accesses: 3
-    undefined4 field_0x2d8; // accesses: 12
-    undefined4 field_0x2dc; // accesses: 4
+    CPlugBitmapRenderLightFromMap * field_0x2d8; // accesses: 12
+    int field_0x2dc; // accesses: 4
 
     // Member Functions
     /* WARNING (jumptable): Unable to track spacebase fully for stack */ /* WARNING: Type propagation algorithm not settling */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicle::VisualUpdateAsync(CSceneVehicle *this,CSceneVehicle *param_1);

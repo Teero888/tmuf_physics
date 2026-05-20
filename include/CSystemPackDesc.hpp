@@ -8,9 +8,9 @@ struct CSystemFid;
 
 struct CSystemPackDesc {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 4
-    undefined4 field_0x8; // accesses: 3
-    undefined4 field_0xc; // accesses: 2
+    int field_0x4; // accesses: 4
+    CFastString * field_0x8; // accesses: 3
+    int field_0xc; // accesses: 2
     byte _padding_0x10[8];
     int field_0x18; // accesses: 1
     byte _padding_0x1c[12];
@@ -18,13 +18,13 @@ struct CSystemPackDesc {
     int field_0x2c; // accesses: 1
     int field_0x30; // accesses: 1
     byte _padding_0x34[20];
-    undefined4 field_0x48; // accesses: 6
+    int field_0x48; // accesses: 6
     int field_0x4c; // accesses: 1
     int field_0x50; // accesses: 2
     byte _padding_0x54[20];
     undefined4 field_0x68; // accesses: 1
     byte _padding_0x6c[12];
-    int field_0x78; // accesses: 3
+    int * field_0x78; // accesses: 3
 
     // Member Functions
     SNat128 __cdecl ComputeChecksum (ulong param_1,ulong param_2,ulong param_3,ulong param_4,uchar *param_5);

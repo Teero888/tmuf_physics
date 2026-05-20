@@ -45,15 +45,15 @@ struct CTrackMania {
     byte _padding_0x26c[4];
     int field_0x270; // accesses: 1
     byte _padding_0x274[416];
-    CTrackManiaEditor * field_0x414; // accesses: 3
+    int * field_0x414; // accesses: 3
     int field_0x418; // accesses: 5
     byte _padding_0x41c[232];
     ulong field_0x504; // accesses: 1
     CTrackMania * field_0x508; // accesses: 1
     byte _padding_0x50c[52];
-    undefined4 field_0x540; // accesses: 2
+    int field_0x540; // accesses: 2
     undefined2 * field_0x544; // accesses: 1
-    undefined4 field_0x548; // accesses: 2
+    int field_0x548; // accesses: 2
     undefined2 * field_0x54c; // accesses: 1
 
     // Member Functions

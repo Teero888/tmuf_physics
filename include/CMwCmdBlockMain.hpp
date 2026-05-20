@@ -12,8 +12,8 @@ struct CMwCmdBlockMain {
     byte _padding_0x18[48];
     uint field_0x48; // accesses: 4
     byte _padding_0x4c[32];
-    int field_0x6c; // accesses: 3
-    int field_0x70; // accesses: 3
+    int * field_0x6c; // accesses: 3
+    undefined4 * field_0x70; // accesses: 3
 
     // Member Functions
     void __thiscall Run(CMwCmdBlockMain *this,CMwCmdExpStringConcat *param_1);

@@ -5,11 +5,11 @@
 
 struct GmIso3 {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 3
-    undefined4 field_0x8; // accesses: 3
-    undefined4 field_0xc; // accesses: 3
-    undefined4 field_0x10; // accesses: 6
-    undefined4 field_0x14; // accesses: 6
+    float field_0x4; // accesses: 3
+    float field_0x8; // accesses: 3
+    float field_0xc; // accesses: 3
+    float field_0x10; // accesses: 6
+    float field_0x14; // accesses: 6
 
     // Member Functions
     void __thiscall ArchiveGmIso3(void *this,GmIso3 *param_1,CClassicArchive *param_2);

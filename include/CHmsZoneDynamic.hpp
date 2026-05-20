@@ -8,38 +8,38 @@ struct GmMat3;
 
 struct CHmsZoneDynamic {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 3
-    int field_0x8; // accesses: 9
-    undefined4 field_0xc; // accesses: 5
+    float field_0x4; // accesses: 3
+    int * field_0x8; // accesses: 9
+    int * field_0xc; // accesses: 5
     float field_0x10; // accesses: 2
-    void * field_0x14; // accesses: 9
-    void * field_0x18; // accesses: 6
-    undefined4 field_0x1c; // accesses: 8
-    undefined4 field_0x20; // accesses: 8
-    undefined4 field_0x24; // accesses: 13
+    float field_0x14; // accesses: 9
+    float field_0x18; // accesses: 6
+    float field_0x1c; // accesses: 8
+    float field_0x20; // accesses: 8
+    int field_0x24; // accesses: 13
     float field_0x28; // accesses: 9
     float field_0x2c; // accesses: 11
     float field_0x30; // accesses: 4
-    float field_0x34; // accesses: 12
-    ushort field_0x36; // accesses: 4
+    undefined2 field_0x34; // accesses: 12
+    undefined2 field_0x36; // accesses: 4
     float field_0x38; // accesses: 8
-    undefined4 field_0x3c; // accesses: 4
+    int field_0x3c; // accesses: 4
     byte _padding_0x40[8];
-    int field_0x48; // accesses: 22
+    ulong field_0x48; // accesses: 22
     byte _padding_0x4c[12];
-    void * field_0x58; // accesses: 11
+    int field_0x58; // accesses: 11
     byte _padding_0x5c[172];
     float * field_0x108; // accesses: 2
     byte _padding_0x10c[16];
     float field_0x11c; // accesses: 1
     float field_0x120; // accesses: 1
     byte _padding_0x124[16];
-    int field_0x134; // accesses: 4
-    int field_0x138; // accesses: 3
+    int * field_0x134; // accesses: 4
+    int * field_0x138; // accesses: 3
     byte _padding_0x13c[28];
     int field_0x158; // accesses: 1
     byte _padding_0x15c[12];
-    void * field_0x168; // accesses: 10
+    int field_0x168; // accesses: 10
     byte _padding_0x16c[448];
     int field_0x32c; // accesses: 3
     byte _padding_0x330[16];

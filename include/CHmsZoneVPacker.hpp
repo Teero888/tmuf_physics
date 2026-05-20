@@ -20,33 +20,33 @@ struct CHmsZoneVPacker {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 13
+    int field_0x4; // accesses: 13
     undefined4 field_0x8; // accesses: 5
-    undefined4 field_0xc; // accesses: 7
-    undefined4 field_0x10; // accesses: 12
-    undefined4 field_0x14; // accesses: 11
-    undefined4 field_0x18; // accesses: 8
-    undefined4 field_0x1c; // accesses: 10
+    int field_0xc; // accesses: 7
+    int field_0x10; // accesses: 12
+    int field_0x14; // accesses: 11
+    float field_0x18; // accesses: 8
+    SHmsVPackerCreate * field_0x1c; // accesses: 10
     ushort field_0x20; // accesses: 2
     byte _padding_0x22[2];
-    undefined4 field_0x24; // accesses: 5
+    CHmsZoneVPacker * field_0x24; // accesses: 5
     undefined4 field_0x28; // accesses: 2
     undefined4 field_0x2c; // accesses: 2
     undefined4 field_0x30; // accesses: 1
     byte _padding_0x34[20];
-    CHmsItem * field_0x48; // accesses: 5
+    int field_0x48; // accesses: 5
     int field_0x4c; // accesses: 2
     byte _padding_0x50[8];
-    undefined4 field_0x58; // accesses: 4
+    int field_0x58; // accesses: 4
     byte _padding_0x5c[4];
-    void * field_0x60; // accesses: 6
+    CHmsZoneVPacker * field_0x60; // accesses: 6
     byte _padding_0x64[8];
     int field_0x6c; // accesses: 2
     byte _padding_0x70[4];
     undefined4 field_0x74; // accesses: 2
     undefined4 field_0x78; // accesses: 2
     undefined4 field_0x7c; // accesses: 2
-    undefined4 field_0x80; // accesses: 6
+    float field_0x80; // accesses: 6
     undefined1 * field_0x84; // accesses: 1
     undefined4 field_0x88; // accesses: 1
     byte _padding_0x8c[16];
@@ -63,21 +63,21 @@ struct CHmsZoneVPacker {
     undefined4 field_0xe0; // accesses: 1
     undefined4 field_0xe4; // accesses: 3
     undefined4 field_0xe8; // accesses: 2
-    undefined4 field_0xec; // accesses: 8
-    undefined4 field_0xf0; // accesses: 13
+    int * field_0xec; // accesses: 8
+    CHmsZoneVPacker * field_0xf0; // accesses: 13
     undefined4 field_0xf4; // accesses: 4
     undefined4 field_0xf8; // accesses: 27
     byte _padding_0xfc[40];
-    undefined4 field_0x124; // accesses: 4
+    CHmsZoneVPacker * field_0x124; // accesses: 4
     byte _padding_0x128[96];
-    void * field_0x188; // accesses: 3
-    void * field_0x18c; // accesses: 3
+    CHmsZoneVPacker * field_0x188; // accesses: 3
+    int field_0x18c; // accesses: 3
     undefined4 field_0x190; // accesses: 2
-    undefined4 field_0x194; // accesses: 3
+    int field_0x194; // accesses: 3
     CPlugVolumeProjector * field_0x198; // accesses: 3
     byte _padding_0x19c[4];
     CHmsVPackerCell * field_0x1a0; // accesses: 5
-    SFlags * field_0x1a4; // accesses: 2
+    int field_0x1a4; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall AddNewLight (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpusLight *param_2);

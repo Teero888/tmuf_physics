@@ -6,9 +6,9 @@
 struct CMotionManaged {
     byte _padding_0x0[20];
     int field_0x14; // accesses: 1
-    undefined4 field_0x18; // accesses: 10
+    int * field_0x18; // accesses: 10
     undefined4 field_0x1c; // accesses: 1
-    undefined4 field_0x20; // accesses: 9
+    int field_0x20; // accesses: 9
     byte _padding_0x24[96];
     code * field_0x84; // accesses: 1
 

@@ -37,14 +37,14 @@ struct CGameMasterServer {
     int field_0x14; // accesses: 1
     byte _padding_0x18[8];
     CFastStringInt * field_0x20; // accesses: 1
-    TiXmlNode * field_0x24; // accesses: 2
+    TiXmlText * field_0x24; // accesses: 2
     char * field_0x28; // accesses: 1
     byte _padding_0x2c[8];
     undefined4 field_0x34; // accesses: 3
     TiXmlNode * field_0x38; // accesses: 2
     TiXmlElement * field_0x3c; // accesses: 2
     byte _padding_0x40[8];
-    CSystemFid * field_0x48; // accesses: 3
+    int field_0x48; // accesses: 3
     byte _padding_0x4c[300];
     undefined4 field_0x178; // accesses: 2
     byte _padding_0x17c[8];

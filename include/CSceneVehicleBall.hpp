@@ -36,7 +36,7 @@ struct CSceneVehicleBall {
     };
 
     byte _padding_0x0[40];
-    CHmsItem * field_0x28; // accesses: 2
+    int field_0x28; // accesses: 2
     byte _padding_0x2c[36];
     undefined4 field_0x50; // accesses: 1
     undefined4 field_0x54; // accesses: 1

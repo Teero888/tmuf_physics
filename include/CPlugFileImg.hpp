@@ -8,16 +8,16 @@ struct CPlugFileImg {
     undefined2 field_0x2; // accesses: 2
     undefined2 field_0x4; // accesses: 6
     byte _padding_0x6[2];
-    undefined4 field_0x8; // accesses: 2
+    ulong field_0x8; // accesses: 2
     undefined4 field_0xc; // accesses: 8
     byte _padding_0x10[4];
     undefined4 field_0x14; // accesses: 1
-    undefined4 field_0x18; // accesses: 9
-    undefined4 field_0x1c; // accesses: 11
-    undefined4 field_0x20; // accesses: 6
+    ulong field_0x18; // accesses: 9
+    ulong field_0x1c; // accesses: 11
+    ulong field_0x20; // accesses: 6
     undefined4 field_0x24; // accesses: 33
-    undefined4 field_0x28; // accesses: 19
-    undefined4 field_0x2c; // accesses: 4
+    uchar * field_0x28; // accesses: 19
+    ulong field_0x2c; // accesses: 4
     undefined4 field_0x30; // accesses: 1
 
     // Member Functions

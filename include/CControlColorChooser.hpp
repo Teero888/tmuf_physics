@@ -30,7 +30,7 @@ struct CControlColorChooser {
     undefined4 field_0x18c; // accesses: 8
     undefined4 field_0x190; // accesses: 8
     undefined4 field_0x194; // accesses: 8
-    undefined4 field_0x198; // accesses: 4
+    float field_0x198; // accesses: 4
     byte _padding_0x19c[4];
     int * field_0x1a0; // accesses: 4
     CPlugFileGen * field_0x1a4; // accesses: 4

@@ -9,10 +9,10 @@ struct CPlugShader;
 
 struct CMotionShader {
     byte _padding_0x0[44];
-    CMwNod * field_0x2c; // accesses: 5
+    CPlugMaterial * field_0x2c; // accesses: 5
     CPlugShader * field_0x30; // accesses: 3
     byte _padding_0x34[4];
-    undefined4 field_0x38; // accesses: 6
+    undefined4 * field_0x38; // accesses: 6
 
     // Member Functions
     void __thiscall SetMaterial(CMotionShader *this,CPlugMaterialCustom *param_1,CPlugMaterial *param_2);

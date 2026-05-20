@@ -11,8 +11,8 @@ struct CScene2d {
     undefined4 field_0x8; // accesses: 2
     undefined4 field_0xc; // accesses: 2
     byte _padding_0x10[144];
-    undefined4 field_0xa0; // accesses: 2
-    undefined4 field_0xa4; // accesses: 7
+    int field_0xa0; // accesses: 2
+    int field_0xa4; // accesses: 7
     undefined4 field_0xa8; // accesses: 2
     undefined4 field_0xac; // accesses: 2
     undefined4 field_0xb0; // accesses: 2

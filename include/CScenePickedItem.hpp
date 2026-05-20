@@ -14,7 +14,7 @@ struct CScenePickedItem {
     byte _padding_0xf4[48];
     undefined4 field_0x124; // accesses: 1
     byte _padding_0x128[48];
-    undefined4 field_0x158; // accesses: 2
+    CScenePickedItem * field_0x158; // accesses: 2
     undefined4 field_0x15c; // accesses: 2
 
     // Member Functions

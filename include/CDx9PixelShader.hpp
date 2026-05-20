@@ -5,7 +5,7 @@
 
 struct CDx9PixelShader {
     byte _padding_0x0[200];
-    undefined4 field_0xc8; // accesses: 2
+    int field_0xc8; // accesses: 2
 
     // Member Functions
     void __thiscall UndirtyAndSetPixelShader(void *this,CDx9PixelShader *param_1);

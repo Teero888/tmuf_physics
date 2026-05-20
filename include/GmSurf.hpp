@@ -7,14 +7,14 @@ struct GmSurf {
     byte _padding_0x0[4];
     undefined2 field_0x4; // accesses: 7
     byte _padding_0x6[2];
-    undefined4 field_0x8; // accesses: 9
+    float field_0x8; // accesses: 9
     undefined2 field_0x9; // accesses: 2
     byte _padding_0xb[1];
-    undefined4 field_0xc; // accesses: 4
-    undefined4 field_0x10; // accesses: 4
+    float field_0xc; // accesses: 4
+    float field_0x10; // accesses: 4
     undefined4 field_0x14; // accesses: 3
-    undefined4 field_0x18; // accesses: 3
-    undefined4 field_0x1c; // accesses: 3
+    float field_0x18; // accesses: 3
+    float field_0x1c; // accesses: 3
     byte _padding_0x20[4];
     float field_0x24; // accesses: 2
     float field_0x28; // accesses: 1

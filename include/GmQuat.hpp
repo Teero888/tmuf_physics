@@ -7,9 +7,9 @@ struct CClassicBuffer;
 
 struct GmQuat {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 15
-    int field_0x8; // accesses: 14
-    float field_0xc; // accesses: 13
+    CClassicBuffer * field_0x4; // accesses: 15
+    GmQuat * field_0x8; // accesses: 14
+    GmQuat * field_0xc; // accesses: 13
     float field_0x10; // accesses: 2
     float field_0x14; // accesses: 1
     float field_0x18; // accesses: 1

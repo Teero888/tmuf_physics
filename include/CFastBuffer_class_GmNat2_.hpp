@@ -5,7 +5,7 @@
 
 struct CFastBuffer<class_GmNat2> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 4
+    int field_0x4; // accesses: 4
 
     // Member Functions
     int __thiscall Find (void *this,CFastArray<class_GxTexCoordSet> *param_1,GxTexCoordSet *param_2);

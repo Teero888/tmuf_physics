@@ -12,28 +12,28 @@ struct SStringParam;
 
 struct CSystemEngine {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 10
-    uint field_0x8; // accesses: 5
+    LPCSTR field_0x4; // accesses: 10
+    CMwNod * field_0x8; // accesses: 5
     byte _padding_0xc[8];
-    undefined4 field_0x14; // accesses: 10
+    CSystemFids * field_0x14; // accesses: 10
     uint field_0x18; // accesses: 2
     CSystemEngine * field_0x1c; // accesses: 3
     undefined4 field_0x20; // accesses: 6
-    undefined4 field_0x24; // accesses: 6
-    undefined4 field_0x28; // accesses: 6
-    undefined4 field_0x2c; // accesses: 5
-    undefined4 field_0x30; // accesses: 5
+    CSystemFidsDrive * field_0x24; // accesses: 6
+    CSystemFidsDrive * field_0x28; // accesses: 6
+    CSystemFidsDrive * field_0x2c; // accesses: 5
+    CSystemFidsDrive * field_0x30; // accesses: 5
     undefined4 field_0x34; // accesses: 1
     byte _padding_0x38[20];
-    undefined4 field_0x4c; // accesses: 3
-    undefined4 field_0x50; // accesses: 5
+    CSystemFids * field_0x4c; // accesses: 3
+    CSystemFids * field_0x50; // accesses: 5
     CSystemEngine * field_0x54; // accesses: 1
     byte _padding_0x58[4];
     undefined4 field_0x5c; // accesses: 1
     undefined4 field_0x60; // accesses: 1
     undefined4 field_0x64; // accesses: 1
     undefined * field_0x68; // accesses: 1
-    undefined4 field_0x6c; // accesses: 3
+    undefined4 * field_0x6c; // accesses: 3
     byte _padding_0x70[4];
     CClassicBuffer * field_0x74; // accesses: 1
     byte _padding_0x78[280];

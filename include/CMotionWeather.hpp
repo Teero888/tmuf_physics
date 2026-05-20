@@ -9,12 +9,12 @@ struct CSceneToySea;
 
 struct CMotionWeather {
     byte _padding_0x0[24];
-    CSceneMobilClouds * field_0x18; // accesses: 2
+    CSceneToySea * field_0x18; // accesses: 2
     byte _padding_0x1c[20];
-    undefined4 field_0x30; // accesses: 3
-    undefined4 field_0x34; // accesses: 10
+    int field_0x30; // accesses: 3
+    int field_0x34; // accesses: 10
     byte _padding_0x38[28];
-    CSceneMobilClouds * field_0x54; // accesses: 4
+    CMwNod * field_0x54; // accesses: 4
     byte _padding_0x58[24];
     undefined4 field_0x70; // accesses: 1
     byte _padding_0x74[32];

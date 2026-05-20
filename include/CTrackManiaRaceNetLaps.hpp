@@ -15,7 +15,7 @@ struct CTrackManiaRaceNetLaps {
     int field_0x50; // accesses: 1
     byte _padding_0x54[28];
     int field_0x70; // accesses: 4
-    undefined4 field_0x74; // accesses: 5
+    int field_0x74; // accesses: 5
     undefined4 field_0x78; // accesses: 1
     byte _padding_0x7c[28];
     int field_0x98; // accesses: 3
@@ -24,7 +24,7 @@ struct CTrackManiaRaceNetLaps {
     byte _padding_0x318[684];
     int field_0x5c4; // accesses: 2
     byte _padding_0x5c8[184];
-    undefined4 field_0x680; // accesses: 2
+    int field_0x680; // accesses: 2
 
     // Member Functions
     void __thiscall UpdateAsync(CTrackManiaRaceNetLaps *this,CInputPortDx8 *param_1);

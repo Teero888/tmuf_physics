@@ -20,8 +20,8 @@ struct CHmsZone {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 77
-    int field_0x8; // accesses: 2
+    int field_0x4; // accesses: 77
+    ulong field_0x8; // accesses: 2
     byte _padding_0xc[4];
     int field_0x10; // accesses: 4
     undefined4 field_0x14; // accesses: 10
@@ -32,8 +32,8 @@ struct CHmsZone {
     int field_0x2c; // accesses: 2
     int field_0x30; // accesses: 2
     byte _padding_0x34[20];
-    CHmsItem * field_0x48; // accesses: 4
-    SGmSmoothReal2 * field_0x4c; // accesses: 5
+    int field_0x48; // accesses: 4
+    int field_0x4c; // accesses: 5
     int field_0x50; // accesses: 3
     ulong field_0x54; // accesses: 3
     byte _padding_0x58[20];
@@ -50,17 +50,17 @@ struct CHmsZone {
     undefined4 field_0xa4; // accesses: 2
     undefined4 field_0xa8; // accesses: 2
     undefined4 field_0xac; // accesses: 13
-    undefined4 field_0xb0; // accesses: 8
+    int field_0xb0; // accesses: 8
     undefined4 field_0xb4; // accesses: 2
-    undefined4 field_0xb8; // accesses: 3
-    undefined4 field_0xbc; // accesses: 2
+    int field_0xb8; // accesses: 3
+    int field_0xbc; // accesses: 2
     undefined4 field_0xc0; // accesses: 1
-    undefined4 field_0xc4; // accesses: 6
-    undefined4 field_0xc8; // accesses: 3
+    int field_0xc4; // accesses: 6
+    int field_0xc8; // accesses: 3
     undefined4 field_0xcc; // accesses: 1
     undefined4 field_0xd0; // accesses: 1
-    undefined4 field_0xd4; // accesses: 6
-    undefined4 field_0xd8; // accesses: 6
+    float field_0xd4; // accesses: 6
+    float field_0xd8; // accesses: 6
     byte _padding_0xdc[12];
     undefined4 field_0xe8; // accesses: 3
     ushort field_0xec; // accesses: 43
@@ -68,11 +68,11 @@ struct CHmsZone {
     ushort field_0xf0; // accesses: 43
     ushort field_0xf2; // accesses: 43
     byte _padding_0xf4[12];
-    undefined4 field_0x100; // accesses: 6
-    undefined4 field_0x104; // accesses: 42
-    undefined4 field_0x108; // accesses: 6
+    int field_0x100; // accesses: 6
+    undefined4 * field_0x104; // accesses: 42
+    float field_0x108; // accesses: 6
     byte _padding_0x10c[12];
-    undefined4 field_0x118; // accesses: 3
+    undefined4 * field_0x118; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Get (CHmsZone *this,CPlugBlendShapes *param_1,CMwStack *param_2,CMwValueStd *param_3);

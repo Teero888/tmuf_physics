@@ -5,7 +5,7 @@
 
 struct struct_SFastCat> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 12
+    ulong field_0x4; // accesses: 12
 
     // Member Functions
     /* WARNING: Control flow encountered bad instruction data */ ulong __thiscall ChangeCatAt (void *this, CFastBufferCat<struct_SHmsItem_CallbackSortCustom_Elem,struct_SFastCat> *param_1, ulong param_2,ulong param_3,ulong param_4);

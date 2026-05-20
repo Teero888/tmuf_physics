@@ -7,10 +7,10 @@ struct TiXmlAttributeSet;
 
 struct GmQuadTree<struct_SQuadTreeMeshUv> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 13
+    TiXmlAttributeSet * field_0x4; // accesses: 13
     undefined4 field_0x8; // accesses: 8
-    undefined4 field_0xc; // accesses: 8
-    undefined4 field_0x10; // accesses: 8
+    float field_0xc; // accesses: 8
+    TiXmlAttributeSet * field_0x10; // accesses: 8
     undefined4 field_0x14; // accesses: 10
 
     // Member Functions

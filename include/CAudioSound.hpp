@@ -8,7 +8,7 @@ struct CMwNod;
 
 struct CAudioSound {
     byte _padding_0x0[20];
-    undefined4 field_0x14; // accesses: 2
+    int field_0x14; // accesses: 2
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 1
@@ -20,11 +20,11 @@ struct CAudioSound {
     undefined4 field_0x38; // accesses: 1
     undefined4 field_0x3c; // accesses: 1
     undefined4 field_0x40; // accesses: 1
-    undefined4 field_0x44; // accesses: 4
+    CAudioPort * field_0x44; // accesses: 4
     uint field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
-    undefined4 field_0x50; // accesses: 6
-    undefined4 field_0x54; // accesses: 3
+    ulong field_0x50; // accesses: 6
+    EPlugVideoTimer field_0x54; // accesses: 3
     undefined4 field_0x58; // accesses: 1
     undefined4 field_0x5c; // accesses: 1
     undefined4 field_0x60; // accesses: 1
@@ -32,7 +32,7 @@ struct CAudioSound {
     undefined4 field_0x68; // accesses: 1
     undefined4 field_0x6c; // accesses: 1
     undefined4 field_0x70; // accesses: 1
-    undefined4 field_0x74; // accesses: 5
+    int * field_0x74; // accesses: 5
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CAudioSound (CAudioSound *this,CAudioSound *param_1,CPlugSound *param_2,CAudioPort *param_3);

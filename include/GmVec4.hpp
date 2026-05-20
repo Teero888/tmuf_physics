@@ -5,12 +5,12 @@
 
 struct GmVec4 {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 37
-    undefined4 field_0x8; // accesses: 41
-    undefined4 field_0xc; // accesses: 25
-    double field_0x10; // accesses: 11
+    float field_0x4; // accesses: 37
+    float field_0x8; // accesses: 41
+    float field_0xc; // accesses: 25
+    float field_0x10; // accesses: 11
     float field_0x14; // accesses: 5
-    double field_0x18; // accesses: 9
+    float field_0x18; // accesses: 9
     float field_0x1c; // accesses: 2
     float field_0x20; // accesses: 2
     float field_0x24; // accesses: 2

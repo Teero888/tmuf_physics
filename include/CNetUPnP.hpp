@@ -5,8 +5,8 @@
 
 struct CNetUPnP {
     byte _padding_0x0[20];
-    int field_0x14; // accesses: 3
-    int field_0x18; // accesses: 5
+    int * field_0x14; // accesses: 3
+    int * field_0x18; // accesses: 5
 
     // Member Functions
     int __thiscall ForceAdd(CNetUPnP *this,CNetUPnP *param_1,EProtocol param_2,ushort param_3, CNetIPAddress *param_4,ushort param_5,CFastStringInt *param_6);

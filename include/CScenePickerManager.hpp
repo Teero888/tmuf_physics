@@ -10,7 +10,7 @@ struct CMwNod;
 struct CScenePickerManager {
     byte _padding_0x0[16];
     undefined4 field_0x10; // accesses: 1
-    undefined4 field_0x14; // accesses: 3
+    int * field_0x14; // accesses: 3
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 1

@@ -10,15 +10,15 @@ struct CSystemFidsFolder;
 
 struct CSystemPackManager {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 9
-    undefined4 field_0x8; // accesses: 2
-    void * field_0xc; // accesses: 2
+    CSystemPackManager * field_0x4; // accesses: 9
+    int field_0x8; // accesses: 2
+    int field_0xc; // accesses: 2
     undefined4 field_0x10; // accesses: 1
     int field_0x14; // accesses: 2
     uint field_0x18; // accesses: 1
     int field_0x1c; // accesses: 2
     int field_0x20; // accesses: 2
-    void * field_0x24; // accesses: 4
+    int field_0x24; // accesses: 4
     undefined * field_0x28; // accesses: 2
     code * field_0x2c; // accesses: 1
     byte _padding_0x30[8];
@@ -26,8 +26,8 @@ struct CSystemPackManager {
     code * field_0x3c; // accesses: 4
     int field_0x40; // accesses: 3
     int field_0x44; // accesses: 1
-    int field_0x48; // accesses: 6
-    CSystemFidsFolder * field_0x4c; // accesses: 3
+    CSystemFidFile * field_0x48; // accesses: 6
+    SNat128 * field_0x4c; // accesses: 3
     CSystemFidsFolder * field_0x50; // accesses: 3
     byte _padding_0x54[4];
     int field_0x58; // accesses: 1

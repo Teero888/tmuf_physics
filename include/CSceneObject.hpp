@@ -13,10 +13,10 @@ struct CSceneObject {
     int field_0x8; // accesses: 2
     byte _padding_0xc[4];
     int field_0x10; // accesses: 4
-    undefined4 field_0x14; // accesses: 5
+    int * field_0x14; // accesses: 5
     int field_0x18; // accesses: 12
     undefined4 field_0x1c; // accesses: 1
-    undefined4 field_0x20; // accesses: 28
+    CMotions * field_0x20; // accesses: 28
     undefined4 field_0x24; // accesses: 5
 
     // Member Functions

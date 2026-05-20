@@ -22,7 +22,7 @@ struct CGameAdvertising {
     int field_0x18; // accesses: 3
     uint field_0x1c; // accesses: 6
     byte _padding_0x20[8];
-    int field_0x28; // accesses: 3
+    CFastString * field_0x28; // accesses: 3
     byte _padding_0x2c[4];
     ulong field_0x30; // accesses: 1
     CPlugVisualIndexedLines * field_0x34; // accesses: 1
@@ -46,7 +46,7 @@ struct CGameAdvertising {
     uint field_0x9c; // accesses: 6
     byte _padding_0xa0[40];
     int field_0xc8; // accesses: 3
-    undefined4 field_0xcc; // accesses: 17
+    CMwNod * field_0xcc; // accesses: 17
     GmIso3 * field_0xd0; // accesses: 6
 
     // Member Functions

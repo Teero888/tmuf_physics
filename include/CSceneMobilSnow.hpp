@@ -23,7 +23,7 @@ struct CSceneMobilSnow {
     undefined4 field_0x4c; // accesses: 1
     undefined4 field_0x50; // accesses: 1
     byte _padding_0x54[8];
-    undefined4 field_0x5c; // accesses: 2
+    CLoadGeomDynaSprite * field_0x5c; // accesses: 2
     undefined4 field_0x60; // accesses: 1
     undefined4 field_0x64; // accesses: 1
     undefined4 field_0x68; // accesses: 1

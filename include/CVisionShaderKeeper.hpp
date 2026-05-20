@@ -5,7 +5,7 @@
 
 struct CVisionShaderKeeper {
     byte _padding_0x0[8];
-    undefined4 field_0x8; // accesses: 4
+    undefined4 * field_0x8; // accesses: 4
     CVisionShaderKeeper * field_0xc; // accesses: 2
     uint field_0x10; // accesses: 16
     byte _padding_0x14[12];

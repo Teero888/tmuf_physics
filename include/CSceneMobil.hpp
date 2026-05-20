@@ -22,40 +22,40 @@ struct GmLocFreeVal;
 
 struct CSceneMobil {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 15
-    undefined4 field_0x8; // accesses: 13
+    int field_0x4; // accesses: 15
+    int field_0x8; // accesses: 13
     undefined4 field_0xc; // accesses: 1
-    undefined4 field_0x10; // accesses: 5
-    undefined4 field_0x14; // accesses: 27
-    int field_0x18; // accesses: 18
+    int field_0x10; // accesses: 5
+    CSceneToyBroomstick * field_0x14; // accesses: 27
+    CSceneObject * field_0x18; // accesses: 18
     CHmsLight * field_0x1c; // accesses: 1
-    uint field_0x20; // accesses: 18
-    undefined4 field_0x24; // accesses: 8
-    undefined4 field_0x28; // accesses: 63
+    int * field_0x20; // accesses: 18
+    CFuncPlug * field_0x24; // accesses: 8
+    CHmsItem * field_0x28; // accesses: 63
     undefined4 field_0x2c; // accesses: 9
-    undefined4 field_0x30; // accesses: 39
-    undefined4 field_0x34; // accesses: 15
-    undefined4 field_0x38; // accesses: 8
-    undefined4 field_0x3c; // accesses: 2
+    CMotions * field_0x30; // accesses: 39
+    int * field_0x34; // accesses: 15
+    GmIso4 * field_0x38; // accesses: 8
+    float field_0x3c; // accesses: 2
     undefined4 field_0x40; // accesses: 3
-    undefined4 field_0x44; // accesses: 15
-    undefined4 field_0x48; // accesses: 2
+    CMwNod * field_0x44; // accesses: 15
+    float field_0x48; // accesses: 2
     byte _padding_0x4c[28];
     undefined4 field_0x68; // accesses: 1
     byte _padding_0x6c[12];
     code * field_0x78; // accesses: 2
     byte _padding_0x7c[8];
-    undefined4 field_0x84; // accesses: 2
+    float field_0x84; // accesses: 2
     code * field_0x88; // accesses: 1
     byte _padding_0x8c[4];
-    undefined4 field_0x90; // accesses: 5
+    int field_0x90; // accesses: 5
     byte _padding_0x94[4];
     CPlugMaterial * field_0x98; // accesses: 1
     uint field_0x9c; // accesses: 7
     byte _padding_0xa0[8];
-    undefined4 field_0xa8; // accesses: 3
+    int field_0xa8; // accesses: 3
     int field_0xac; // accesses: 3
-    CMotionLight * field_0xb0; // accesses: 6
+    int * field_0xb0; // accesses: 6
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CSceneMobil *this,CSystemData *param_1,CMwStack *param_2,void *param_3);

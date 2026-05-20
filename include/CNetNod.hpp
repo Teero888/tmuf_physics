@@ -7,7 +7,7 @@ struct CNetNod {
     byte _padding_0x0[12];
     int field_0xc; // accesses: 3
     byte _padding_0x10[4];
-    undefined4 field_0x14; // accesses: 4
+    undefined4 * field_0x14; // accesses: 4
     undefined4 field_0x18; // accesses: 1
     byte _padding_0x1c[32];
     int field_0x3c; // accesses: 2

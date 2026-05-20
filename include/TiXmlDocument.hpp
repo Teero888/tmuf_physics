@@ -10,7 +10,7 @@ struct TiXmlDocument {
     byte _padding_0xc[12];
     int field_0x18; // accesses: 1
     byte _padding_0x1c[20];
-    undefined4 field_0x30; // accesses: 4
+    TiXmlDocument * field_0x30; // accesses: 4
     undefined4 * field_0x34; // accesses: 1
     undefined4 field_0x38; // accesses: 1
     undefined4 field_0x3c; // accesses: 5

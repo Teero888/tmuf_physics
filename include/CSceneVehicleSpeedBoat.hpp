@@ -11,21 +11,21 @@ struct GmVec3;
 
 struct CSceneVehicleSpeedBoat {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 12
-    undefined4 field_0x8; // accesses: 12
+    float field_0x4; // accesses: 12
+    float field_0x8; // accesses: 12
     float field_0xc; // accesses: 1
     float field_0x10; // accesses: 9
-    float field_0x14; // accesses: 11
+    CScene * field_0x14; // accesses: 11
     float field_0x18; // accesses: 1
     float field_0x1c; // accesses: 1
     float field_0x20; // accesses: 1
     GmVec3 * field_0x24; // accesses: 1
-    CHmsItem * field_0x28; // accesses: 32
+    int field_0x28; // accesses: 32
     float field_0x2c; // accesses: 3
     undefined4 field_0x30; // accesses: 1
     undefined4 field_0x34; // accesses: 1
-    undefined4 field_0x38; // accesses: 2
-    undefined4 field_0x3c; // accesses: 4
+    float field_0x38; // accesses: 2
+    float field_0x3c; // accesses: 4
     int field_0x40; // accesses: 1
     float field_0x44; // accesses: 2
     short field_0x48; // accesses: 1
@@ -51,7 +51,7 @@ struct CSceneVehicleSpeedBoat {
     float field_0xac; // accesses: 1
     byte _padding_0xb0[12];
     float field_0xbc; // accesses: 1
-    GmMat3 * field_0xc0; // accesses: 2
+    float field_0xc0; // accesses: 2
     float field_0xc4; // accesses: 1
     float field_0xc8; // accesses: 1
     undefined4 field_0xcc; // accesses: 1
@@ -89,9 +89,9 @@ struct CSceneVehicleSpeedBoat {
     byte _padding_0x158[32];
     GmMat3 * field_0x178; // accesses: 1
     byte _padding_0x17c[356];
-    undefined4 field_0x2e0; // accesses: 3
+    int field_0x2e0; // accesses: 3
     undefined4 field_0x2e4; // accesses: 2
-    undefined4 field_0x2e8; // accesses: 5
+    float field_0x2e8; // accesses: 5
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall LimitTo (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3);

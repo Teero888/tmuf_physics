@@ -37,9 +37,9 @@ struct CSceneVehicleStruct {
     };
 
     byte _padding_0x0[68];
-    undefined4 field_0x44; // accesses: 8
-    undefined4 field_0x48; // accesses: 8
-    undefined4 field_0x4c; // accesses: 8
+    CFuncKeysReal * field_0x44; // accesses: 8
+    CFuncKeysReal * field_0x48; // accesses: 8
+    CFuncKeysReal * field_0x4c; // accesses: 8
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleStruct(CSceneVehicleStruct *this,CSceneVehicleStruct *param_1);

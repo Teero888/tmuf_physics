@@ -11,11 +11,11 @@ struct GmIso4;
 
 struct CHmsCamera {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 4
-    undefined4 field_0x8; // accesses: 4
+    float field_0x4; // accesses: 4
+    float field_0x8; // accesses: 4
     undefined4 field_0xc; // accesses: 2
     float field_0x10; // accesses: 2
-    CSceneSector * field_0x14; // accesses: 2
+    float field_0x14; // accesses: 2
     byte _padding_0x18[8];
     int field_0x20; // accesses: 1
     int field_0x24; // accesses: 1
@@ -24,21 +24,21 @@ struct CHmsCamera {
     float field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 2
     undefined4 field_0x38; // accesses: 2
-    undefined4 field_0x3c; // accesses: 5
-    undefined4 field_0x40; // accesses: 4
+    GmFrustum * field_0x3c; // accesses: 5
+    CHmsCamera * field_0x40; // accesses: 4
     byte _padding_0x44[104];
     int field_0xac; // accesses: 1
     byte _padding_0xb0[16];
     int field_0xc0; // accesses: 2
     byte _padding_0xc4[84];
     int field_0x118; // accesses: 7
-    undefined4 field_0x11c; // accesses: 5
-    undefined4 field_0x120; // accesses: 5
-    undefined4 field_0x124; // accesses: 12
-    undefined4 field_0x128; // accesses: 4
-    undefined4 field_0x12c; // accesses: 5
-    undefined4 field_0x130; // accesses: 15
-    undefined4 field_0x134; // accesses: 3
+    CMwCmdScriptVarBool * field_0x11c; // accesses: 5
+    int field_0x120; // accesses: 5
+    GmIso3 * field_0x124; // accesses: 12
+    CMwCmdScriptVarBool * field_0x128; // accesses: 4
+    int field_0x12c; // accesses: 5
+    float field_0x130; // accesses: 15
+    int field_0x134; // accesses: 3
     undefined4 field_0x138; // accesses: 1
     undefined4 field_0x13c; // accesses: 1
     undefined4 field_0x140; // accesses: 1
@@ -51,47 +51,47 @@ struct CHmsCamera {
     undefined4 field_0x15c; // accesses: 1
     undefined4 field_0x160; // accesses: 1
     undefined4 field_0x164; // accesses: 3
-    undefined4 field_0x168; // accesses: 2
+    int field_0x168; // accesses: 2
     float field_0x16c; // accesses: 2
-    undefined4 field_0x170; // accesses: 5
-    undefined4 field_0x174; // accesses: 3
-    undefined4 field_0x178; // accesses: 8
+    float field_0x170; // accesses: 5
+    int field_0x174; // accesses: 3
+    CHmsCamera * field_0x178; // accesses: 8
     undefined4 field_0x17c; // accesses: 1
-    undefined4 field_0x180; // accesses: 2
-    undefined4 field_0x184; // accesses: 3
-    undefined4 field_0x188; // accesses: 3
-    undefined4 field_0x18c; // accesses: 2
-    undefined4 field_0x190; // accesses: 2
-    undefined4 field_0x194; // accesses: 2
-    undefined4 field_0x198; // accesses: 2
-    undefined4 field_0x19c; // accesses: 3
-    undefined4 field_0x1a0; // accesses: 3
+    int field_0x180; // accesses: 2
+    int field_0x184; // accesses: 3
+    int field_0x188; // accesses: 3
+    int field_0x18c; // accesses: 2
+    int field_0x190; // accesses: 2
+    int field_0x194; // accesses: 2
+    float field_0x198; // accesses: 2
+    float field_0x19c; // accesses: 3
+    int * field_0x1a0; // accesses: 3
     byte _padding_0x1a4[12];
     undefined4 field_0x1b0; // accesses: 1
     undefined4 field_0x1b4; // accesses: 1
     undefined4 field_0x1b8; // accesses: 1
     undefined4 field_0x1bc; // accesses: 1
     undefined4 field_0x1c0; // accesses: 1
-    undefined4 field_0x1c4; // accesses: 3
-    undefined4 field_0x1c8; // accesses: 3
-    undefined4 field_0x1cc; // accesses: 3
-    undefined4 field_0x1d0; // accesses: 3
+    float field_0x1c4; // accesses: 3
+    float field_0x1c8; // accesses: 3
+    float field_0x1cc; // accesses: 3
+    float field_0x1d0; // accesses: 3
     undefined4 field_0x1d4; // accesses: 1
-    undefined4 field_0x1d8; // accesses: 4
-    undefined4 field_0x1dc; // accesses: 4
-    undefined4 field_0x1e0; // accesses: 4
+    float field_0x1d8; // accesses: 4
+    float field_0x1dc; // accesses: 4
+    float field_0x1e0; // accesses: 4
     undefined4 field_0x1e4; // accesses: 1
     undefined4 field_0x1e8; // accesses: 1
     undefined4 field_0x1ec; // accesses: 1
     undefined4 field_0x1f0; // accesses: 1
-    undefined4 field_0x1f4; // accesses: 3
-    undefined4 field_0x1f8; // accesses: 4
-    undefined4 field_0x1fc; // accesses: 3
-    undefined4 field_0x200; // accesses: 2
+    int field_0x1f4; // accesses: 3
+    int field_0x1f8; // accesses: 4
+    int field_0x1fc; // accesses: 3
+    int field_0x200; // accesses: 2
     undefined4 field_0x204; // accesses: 2
     undefined4 field_0x208; // accesses: 1
-    undefined4 field_0x20c; // accesses: 8
-    undefined4 field_0x210; // accesses: 2
+    int * field_0x20c; // accesses: 8
+    int field_0x210; // accesses: 2
     byte _padding_0x214[144];
     int field_0x2a4; // accesses: 2
     int field_0x2a8; // accesses: 2

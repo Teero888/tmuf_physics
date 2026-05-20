@@ -12,15 +12,15 @@ struct CMotionPlayer {
     byte _padding_0x0[24];
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
-    undefined4 field_0x20; // accesses: 5
+    int * field_0x20; // accesses: 5
     undefined4 field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 6
+    ulong field_0x28; // accesses: 6
     undefined4 field_0x2c; // accesses: 1
-    undefined4 field_0x30; // accesses: 8
-    CMwNod * field_0x34; // accesses: 2
+    CMwNod * field_0x30; // accesses: 8
+    CMwCmd * field_0x34; // accesses: 2
     undefined4 field_0x38; // accesses: 1
     byte _padding_0x3c[12];
-    undefined4 field_0x48; // accesses: 2
+    int field_0x48; // accesses: 2
     undefined4 field_0x4c; // accesses: 1
 
     // Member Functions

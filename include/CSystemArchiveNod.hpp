@@ -26,41 +26,41 @@ struct CSystemArchiveNod {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 46
-    undefined4 field_0x8; // accesses: 21
-    undefined4 field_0xc; // accesses: 11
-    undefined4 field_0x10; // accesses: 9
-    undefined4 field_0x14; // accesses: 8
-    undefined4 field_0x18; // accesses: 17
-    undefined4 field_0x1c; // accesses: 48
+    CMwNod * field_0x4; // accesses: 46
+    CSystemEngine * field_0x8; // accesses: 21
+    ulong field_0xc; // accesses: 11
+    int field_0x10; // accesses: 9
+    CSystemFids * field_0x14; // accesses: 8
+    CSystemFids * field_0x18; // accesses: 17
+    int field_0x1c; // accesses: 48
     byte _padding_0x20[8];
     int field_0x28; // accesses: 2
     byte _padding_0x2c[4];
     int field_0x30; // accesses: 2
     byte _padding_0x34[24];
-    undefined4 field_0x4c; // accesses: 6
-    undefined4 field_0x50; // accesses: 90
+    ulong field_0x4c; // accesses: 6
+    CSystemEngine * field_0x50; // accesses: 90
     byte _padding_0x54[4];
-    undefined4 field_0x58; // accesses: 2
-    undefined4 field_0x5c; // accesses: 16
+    CSystemFids * field_0x58; // accesses: 2
+    ulong field_0x5c; // accesses: 16
     int field_0x60; // accesses: 1
-    undefined4 field_0x64; // accesses: 4
+    ulong field_0x64; // accesses: 4
     byte _padding_0x68[4];
     undefined4 * field_0x6c; // accesses: 10
     byte _padding_0x70[4];
-    undefined4 field_0x74; // accesses: 3
-    undefined4 field_0x78; // accesses: 12
-    undefined4 field_0x7c; // accesses: 5
+    CClassicBufferMemory * field_0x74; // accesses: 3
+    CClassicArchive field_0x78; // accesses: 12
+    int field_0x7c; // accesses: 5
     undefined4 field_0x80; // accesses: 2
-    undefined4 field_0x84; // accesses: 5
-    undefined4 field_0x88; // accesses: 5
-    undefined4 field_0x8c; // accesses: 9
-    undefined4 field_0x90; // accesses: 7
+    int field_0x84; // accesses: 5
+    ulong field_0x88; // accesses: 5
+    int field_0x8c; // accesses: 9
+    CMwNod * field_0x90; // accesses: 7
     undefined4 field_0x94; // accesses: 2
-    undefined4 field_0x98; // accesses: 5
-    undefined4 field_0x9c; // accesses: 6
-    undefined4 field_0xa0; // accesses: 2
-    undefined4 field_0xa4; // accesses: 12
+    undefined4 * field_0x98; // accesses: 5
+    int field_0x9c; // accesses: 6
+    int field_0xa0; // accesses: 2
+    undefined4 * field_0xa4; // accesses: 12
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall DoFidSaveFile(CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2);

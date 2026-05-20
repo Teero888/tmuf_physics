@@ -10,7 +10,7 @@ struct CPlugFilePHlsl {
     byte _padding_0x18[8];
     undefined4 field_0x20; // accesses: 1
     byte _padding_0x24[164];
-    undefined4 field_0xc8; // accesses: 2
+    int field_0xc8; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ApplyFidParameter_Crypted (CPlugFilePHlsl *this,CPlugFilePHlsl *param_1,SParam_Id *param_2);

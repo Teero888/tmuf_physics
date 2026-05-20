@@ -15,8 +15,8 @@ struct CGameCtnChallenge {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 5
-    undefined4 field_0x8; // accesses: 2
+    int field_0x4; // accesses: 5
+    float field_0x8; // accesses: 2
     byte _padding_0xc[12];
     CGameCtnBlockUnitInfo * field_0x18; // accesses: 1
     byte _padding_0x1c[8];
@@ -27,7 +27,7 @@ struct CGameCtnChallenge {
     float field_0x7c; // accesses: 1
     float field_0x80; // accesses: 1
     byte _padding_0x84[12];
-    CGameCtnChapter * field_0x90; // accesses: 4
+    int field_0x90; // accesses: 4
     byte _padding_0x94[8];
     uint field_0x9c; // accesses: 6
     byte _padding_0xa0[8];

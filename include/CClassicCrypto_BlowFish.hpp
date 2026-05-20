@@ -5,7 +5,7 @@
 
 struct CClassicCrypto_BlowFish {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 25
+    undefined1 * field_0x4; // accesses: 25
     byte _padding_0x8[4160];
     int field_0x1048; // accesses: 1
 

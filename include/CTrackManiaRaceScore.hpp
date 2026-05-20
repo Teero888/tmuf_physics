@@ -12,9 +12,9 @@ struct CTrackManiaRaceScore {
     int field_0x18; // accesses: 1
     int field_0x1c; // accesses: 1
     byte _padding_0x20[44];
-    undefined4 field_0x4c; // accesses: 3
+    int field_0x4c; // accesses: 3
     undefined4 field_0x50; // accesses: 2
-    undefined4 field_0x54; // accesses: 9
+    int field_0x54; // accesses: 9
     undefined4 field_0x58; // accesses: 1
     byte _padding_0x5c[384];
     int field_0x1dc; // accesses: 1

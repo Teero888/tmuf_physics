@@ -10,7 +10,7 @@ struct CSceneToySeaHouleTable;
 
 struct CSceneToyRock {
     byte _padding_0x0[20];
-    void * field_0x14; // accesses: 3
+    int * field_0x14; // accesses: 3
     byte _padding_0x18[12];
     CSceneToySeaHouleTable * field_0x24; // accesses: 2
     float field_0x28; // accesses: 3
@@ -26,10 +26,10 @@ struct CSceneToyRock {
     int field_0x6c; // accesses: 1
     int field_0x70; // accesses: 5
     byte _padding_0x74[4];
-    int field_0x78; // accesses: 4
-    undefined4 field_0x7c; // accesses: 2
-    undefined4 field_0x80; // accesses: 5
-    undefined4 field_0x84; // accesses: 2
+    CSceneToySea * field_0x78; // accesses: 4
+    float field_0x7c; // accesses: 2
+    float field_0x80; // accesses: 5
+    float field_0x84; // accesses: 2
     float field_0x88; // accesses: 3
     float field_0x8c; // accesses: 2
     float field_0x90; // accesses: 1

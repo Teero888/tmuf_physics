@@ -28,7 +28,7 @@ struct CHmsCollisionManager {
         int field_0x48; // accesses: 4
         int field_0x4c; // accesses: 1
         CHmsCorpus * field_0x50; // accesses: 1
-        undefined4 field_0x54; // accesses: 5
+        ulong field_0x54; // accesses: 5
         byte _padding_0x58[52];
         int field_0x8c; // accesses: 1
         byte _padding_0x90[12];
@@ -59,25 +59,25 @@ struct CHmsCollisionManager {
 
     struct SZone {
         byte _padding_0x0[4];
-        undefined4 field_0x4; // accesses: 28
+        undefined4 * field_0x4; // accesses: 28
         char field_0x6; // accesses: 4
         byte _padding_0x7[1];
-        undefined4 field_0x8; // accesses: 20
-        undefined4 field_0xc; // accesses: 12
-        undefined4 field_0x10; // accesses: 10
+        GmVec3 * field_0x8; // accesses: 20
+        GmIso3 * field_0xc; // accesses: 12
+        int field_0x10; // accesses: 10
         int field_0x14; // accesses: 4
         byte _padding_0x18[15];
         byte field_0x27; // accesses: 3
         byte _padding_0x28[12];
         int field_0x34; // accesses: 12
         byte _padding_0x38[16];
-        undefined4 field_0x48; // accesses: 14
+        int field_0x48; // accesses: 14
         byte _padding_0x4c[4];
-        undefined4 field_0x50; // accesses: 12
+        CHmsCollisionBuffer * field_0x50; // accesses: 12
         CSystemData * field_0x54; // accesses: 1
         int field_0x58; // accesses: 12
         byte _padding_0x5c[48];
-        undefined4 field_0x8c; // accesses: 14
+        int field_0x8c; // accesses: 14
         byte _padding_0x90[12];
         uint field_0x9c; // accesses: 5
         byte _padding_0xa0[240];

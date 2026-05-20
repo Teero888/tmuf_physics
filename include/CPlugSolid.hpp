@@ -10,12 +10,12 @@ struct GmVec3;
 
 struct CPlugSolid {
     byte _padding_0x0[4];
-    uint field_0x4; // accesses: 5
+    float field_0x4; // accesses: 5
     int field_0x8; // accesses: 15
     float field_0xc; // accesses: 3
     int field_0x10; // accesses: 2
-    undefined4 field_0x14; // accesses: 2
-    undefined4 field_0x18; // accesses: 11
+    code * field_0x14; // accesses: 2
+    GmVec3 * field_0x18; // accesses: 11
     byte _padding_0x1c[4];
     int field_0x20; // accesses: 1
     int field_0x24; // accesses: 1
@@ -24,18 +24,18 @@ struct CPlugSolid {
     float field_0x34; // accesses: 1
     float field_0x38; // accesses: 1
     float field_0x3c; // accesses: 1
-    undefined4 field_0x40; // accesses: 3
-    undefined4 field_0x44; // accesses: 2
-    undefined4 field_0x48; // accesses: 2
+    float field_0x40; // accesses: 3
+    float field_0x44; // accesses: 2
+    float field_0x48; // accesses: 2
     byte _padding_0x4c[8];
     CClassicArchive * field_0x54; // accesses: 1
     CClassicArchive * field_0x58; // accesses: 2
-    undefined4 field_0x5c; // accesses: 6
-    undefined4 field_0x60; // accesses: 5
-    undefined4 field_0x64; // accesses: 43
-    undefined4 field_0x68; // accesses: 27
-    undefined4 field_0x6c; // accesses: 6
-    undefined4 field_0x70; // accesses: 10
+    int field_0x5c; // accesses: 6
+    int field_0x60; // accesses: 5
+    CPlugSolid * field_0x64; // accesses: 43
+    CPlugSolid * field_0x68; // accesses: 27
+    float field_0x6c; // accesses: 6
+    ulong field_0x70; // accesses: 10
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateDefaultData(CPlugSolid *this,CCrystal *param_1);

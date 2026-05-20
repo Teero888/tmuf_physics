@@ -11,7 +11,7 @@ struct CGameCtnMediaBlockFxColors {
     byte _padding_0x38[48];
     float field_0x68; // accesses: 3
     float field_0x6c; // accesses: 3
-    float field_0x70; // accesses: 2
+    SParam * field_0x70; // accesses: 2
 
     // Member Functions
     GmVec3 __thiscall GetValue (CGameCtnMediaBlockFxColors *this,CFuncColorGradient *param_1,float param_2);

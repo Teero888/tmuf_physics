@@ -5,8 +5,8 @@
 
 struct CMwRefBuffer {
     byte _padding_0x0[32];
-    undefined4 field_0x20; // accesses: 2
-    undefined4 field_0x24; // accesses: 3
+    int field_0x20; // accesses: 2
+    int field_0x24; // accesses: 3
 
     // Member Functions
     CMwNod * __thiscall GetFromId(CMwRefBuffer *this,CMwRefBuffer *param_1,CMwId *param_2);

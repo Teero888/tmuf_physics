@@ -5,7 +5,7 @@
 
 struct CLoadGeomVertexGen<671098945> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 4
+    int field_0x4; // accesses: 4
     undefined4 field_0x8; // accesses: 2
 
     // Member Functions

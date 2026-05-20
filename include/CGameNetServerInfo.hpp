@@ -5,7 +5,7 @@
 
 struct CGameNetServerInfo {
     byte _padding_0x0[180];
-    int field_0xb4; // accesses: 2
+    CGameNetServerInfo * field_0xb4; // accesses: 2
 
     // Member Functions
     void __thiscall SetReloadNeeded (CGameNetServerInfo *this,CGameNetServerInfo *param_1,EReload param_2);

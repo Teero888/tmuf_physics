@@ -21,10 +21,10 @@ struct CControlBase {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 8
+    float field_0x4; // accesses: 8
     CMwParam * field_0x8; // accesses: 1
     float field_0xc; // accesses: 2
-    undefined4 field_0x10; // accesses: 4
+    undefined4 * field_0x10; // accesses: 4
     int * field_0x14; // accesses: 2
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
@@ -45,7 +45,7 @@ struct CControlBase {
     undefined4 field_0x94; // accesses: 2
     undefined4 field_0x98; // accesses: 2
     undefined4 field_0x9c; // accesses: 2
-    undefined4 field_0xa0; // accesses: 3
+    float field_0xa0; // accesses: 3
     undefined4 field_0xa4; // accesses: 2
     undefined4 field_0xa8; // accesses: 2
     undefined4 field_0xac; // accesses: 2
@@ -57,13 +57,13 @@ struct CControlBase {
     undefined4 field_0xc4; // accesses: 2
     undefined4 field_0xc8; // accesses: 2
     undefined4 field_0xcc; // accesses: 2
-    undefined4 field_0xd0; // accesses: 5
+    CControlBase * field_0xd0; // accesses: 5
     byte _padding_0xd4[8];
     int field_0xdc; // accesses: 1
     byte _padding_0xe0[4];
     int field_0xe4; // accesses: 1
     byte _padding_0xe8[8];
-    undefined4 field_0xf0; // accesses: 3
+    int field_0xf0; // accesses: 3
     undefined * field_0xf4; // accesses: 1
     CMwCmdFastCall * field_0xf8; // accesses: 1
     undefined4 field_0xfc; // accesses: 14
@@ -74,9 +74,9 @@ struct CControlBase {
     undefined4 field_0x110; // accesses: 1
     byte _padding_0x114[4];
     undefined4 field_0x118; // accesses: 1
-    undefined4 field_0x11c; // accesses: 9
+    int field_0x11c; // accesses: 9
     byte _padding_0x120[92];
-    int field_0x17c; // accesses: 3
+    CControlEffectMaster * field_0x17c; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ SMwParamInfo * __thiscall GetParamInfo(CControlBase *this,CControlBase *param_1,CMwStack *param_2);

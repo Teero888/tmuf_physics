@@ -5,9 +5,9 @@
 
 struct CPlugVisualQuads2D {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 12
-    undefined4 field_0x8; // accesses: 7
-    undefined4 field_0xc; // accesses: 7
+    int field_0x4; // accesses: 12
+    float field_0x8; // accesses: 7
+    float field_0xc; // accesses: 7
     undefined4 field_0x10; // accesses: 5
     undefined4 field_0x14; // accesses: 5
     undefined4 field_0x18; // accesses: 5

@@ -10,13 +10,13 @@ struct CSystemFile {
     byte _padding_0x0[4];
     undefined4 field_0x4; // accesses: 4
     byte _padding_0x8[4];
-    undefined4 field_0xc; // accesses: 14
-    undefined4 field_0x10; // accesses: 7
+    int field_0xc; // accesses: 14
+    undefined4 * field_0x10; // accesses: 7
     undefined4 field_0x14; // accesses: 2
-    SStringParamInt * field_0x18; // accesses: 4
-    undefined4 field_0x1c; // accesses: 6
-    undefined4 field_0x20; // accesses: 13
-    undefined4 field_0x24; // accesses: 13
+    undefined * field_0x18; // accesses: 4
+    DWORD field_0x1c; // accesses: 6
+    int field_0x20; // accesses: 13
+    int field_0x24; // accesses: 13
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ long __cdecl Open(_D3DXINCLUDE_TYPE param_1,char *param_2,void *param_3,void **param_4,uint *param_5 );

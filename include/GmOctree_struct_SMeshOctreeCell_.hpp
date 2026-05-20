@@ -5,7 +5,7 @@
 
 struct GmOctree<struct_SMeshOctreeCell> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 20
+    int field_0x4; // accesses: 20
     undefined4 field_0x8; // accesses: 10
     undefined4 field_0xc; // accesses: 11
     undefined4 field_0x10; // accesses: 10

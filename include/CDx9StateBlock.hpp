@@ -5,7 +5,7 @@
 
 struct CDx9StateBlock {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 71
+    int field_0x4; // accesses: 71
     undefined4 field_0x8; // accesses: 39
     byte _padding_0xc[20];
     int field_0x20; // accesses: 1

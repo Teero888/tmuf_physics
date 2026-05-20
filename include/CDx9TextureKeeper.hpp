@@ -10,12 +10,12 @@ struct CVisionViewportDx9;
 struct CDx9TextureKeeper {
     byte _padding_0x0[2];
     ushort field_0x2; // accesses: 18
-    undefined4 field_0x4; // accesses: 25
+    float field_0x4; // accesses: 25
     ushort field_0x6; // accesses: 1
     float field_0x8; // accesses: 8
-    undefined4 field_0xc; // accesses: 3
+    int field_0xc; // accesses: 3
     int field_0x10; // accesses: 1
-    undefined4 field_0x14; // accesses: 3
+    int field_0x14; // accesses: 3
     byte _padding_0x18[12];
     uint field_0x24; // accesses: 6
     byte _padding_0x28[32];

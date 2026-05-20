@@ -8,7 +8,7 @@ struct CSceneCamera;
 
 struct CGameSafeFrame {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
+    float field_0x4; // accesses: 2
     undefined4 field_0x8; // accesses: 1
     undefined4 field_0xc; // accesses: 1
     undefined4 field_0x10; // accesses: 1
@@ -24,7 +24,7 @@ struct CGameSafeFrame {
     float field_0x38; // accesses: 1
     int field_0x3c; // accesses: 1
     CScene2d * field_0x40; // accesses: 1
-    int field_0x44; // accesses: 2
+    CScene2d * field_0x44; // accesses: 2
     CScene2d * field_0x48; // accesses: 2
     byte _padding_0x4c[204];
     int field_0x118; // accesses: 1

@@ -7,7 +7,7 @@ struct CScenePoc {
     byte _padding_0x0[40];
     undefined4 field_0x28; // accesses: 1
     undefined4 field_0x2c; // accesses: 1
-    undefined4 field_0x30; // accesses: 2
+    int * field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 1
 
     // Member Functions

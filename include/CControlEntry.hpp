@@ -20,7 +20,7 @@ struct CControlEntry {
     byte _padding_0x150[4];
     undefined4 field_0x154; // accesses: 1
     byte _padding_0x158[4];
-    undefined4 field_0x15c; // accesses: 4
+    int field_0x15c; // accesses: 4
 
     // Member Functions
     void __thiscall CControlEntry(CControlEntry *this,CControlEntry *param_1);

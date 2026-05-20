@@ -33,7 +33,7 @@ struct CGameCtnApp {
     byte _padding_0x16c[8];
     int field_0x174; // accesses: 1
     byte _padding_0x178[28];
-    int field_0x194; // accesses: 5
+    int * field_0x194; // accesses: 5
     byte _padding_0x198[16];
     int field_0x1a8; // accesses: 3
     byte _padding_0x1ac[36];
@@ -44,11 +44,11 @@ struct CGameCtnApp {
     byte _padding_0x1e0[48];
     CGameAdvertising * field_0x210; // accesses: 4
     byte _padding_0x214[40];
-    int field_0x23c; // accesses: 3
+    int * field_0x23c; // accesses: 3
     byte _padding_0x240[52];
     int field_0x274; // accesses: 1
     byte _padding_0x278[16];
-    undefined1 * field_0x288; // accesses: 2
+    int field_0x288; // accesses: 2
     void * field_0x28c; // accesses: 1
     byte _padding_0x290[52];
     CInputBindingsConfig * field_0x2c4; // accesses: 1
@@ -56,8 +56,8 @@ struct CGameCtnApp {
     CInputBindingsConfig * field_0x2cc; // accesses: 1
     CInputBindingsConfig * field_0x2d0; // accesses: 1
     byte _padding_0x2d4[104];
-    undefined4 field_0x33c; // accesses: 2
-    undefined4 field_0x340; // accesses: 3
+    int field_0x33c; // accesses: 2
+    int field_0x340; // accesses: 3
     float field_0x344; // accesses: 2
     undefined4 field_0x348; // accesses: 3
 

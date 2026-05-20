@@ -9,7 +9,7 @@ struct GxTexCoordSet;
 
 struct CMotions {
     byte _padding_0x0[32];
-    undefined4 field_0x20; // accesses: 3
+    CMotionTrack * field_0x20; // accesses: 3
     byte _padding_0x24[12];
     CMotionCmdBase * field_0x30; // accesses: 1
 

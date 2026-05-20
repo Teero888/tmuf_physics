@@ -14,9 +14,9 @@ struct CGbxApp {
     byte _padding_0x18[4];
     int field_0x1c; // accesses: 1
     int field_0x20; // accesses: 1
-    CSystemEngine * field_0x24; // accesses: 2
+    int field_0x24; // accesses: 2
     int field_0x28; // accesses: 1
-    CSystemEngine * field_0x2c; // accesses: 2
+    CSystemFids * field_0x2c; // accesses: 2
     CSystemConfig * field_0x30; // accesses: 2
     byte _padding_0x34[68];
     int field_0x78; // accesses: 2

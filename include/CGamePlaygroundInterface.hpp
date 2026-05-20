@@ -13,17 +13,17 @@ struct CPlugAudio;
 
 struct CGamePlaygroundInterface {
     byte _padding_0x0[20];
-    CGameManialinkPage * field_0x14; // accesses: 8
+    CMwNod * field_0x14; // accesses: 8
     CGameApp * field_0x18; // accesses: 2
     byte _padding_0x1c[12];
-    undefined4 field_0x28; // accesses: 3
+    int field_0x28; // accesses: 3
     undefined4 field_0x2c; // accesses: 4
     byte _padding_0x30[16];
-    undefined4 field_0x40; // accesses: 3
+    int field_0x40; // accesses: 3
     CControlFrame * field_0x44; // accesses: 6
-    undefined4 field_0x48; // accesses: 2
+    int field_0x48; // accesses: 2
     byte _padding_0x4c[28];
-    CControlBase * field_0x68; // accesses: 5
+    int * field_0x68; // accesses: 5
     byte _padding_0x6c[20];
     byte field_0x80; // accesses: 1
     byte _padding_0x81[3];
@@ -31,7 +31,7 @@ struct CGamePlaygroundInterface {
     byte _padding_0x88[8];
     uint field_0x90; // accesses: 1
     uint field_0x94; // accesses: 1
-    undefined4 field_0x98; // accesses: 4
+    ulong field_0x98; // accesses: 4
 
     // Member Functions
     int __thiscall ChatIsAllowed (CGamePlaygroundInterface *this,CGamePlaygroundInterface *param_1);

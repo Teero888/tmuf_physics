@@ -16,9 +16,9 @@ struct CNetFileTransferDownload {
     undefined4 field_0xc; // accesses: 1
     int field_0x10; // accesses: 1
     byte _padding_0x14[12];
-    int field_0x20; // accesses: 2
+    int * field_0x20; // accesses: 2
     byte _padding_0x24[28];
-    undefined4 field_0x40; // accesses: 4
+    int field_0x40; // accesses: 4
     ulong field_0x44; // accesses: 1
     byte _padding_0x48[20];
     int field_0x5c; // accesses: 2

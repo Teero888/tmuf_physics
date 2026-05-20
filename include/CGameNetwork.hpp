@@ -18,12 +18,12 @@ struct CGameNetwork {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 12
+    int * field_0x4; // accesses: 12
     byte _padding_0x8[8];
-    undefined4 field_0x10; // accesses: 5
+    SStringParam * field_0x10; // accesses: 5
     undefined4 field_0x14; // accesses: 2
     int field_0x18; // accesses: 1
-    undefined4 field_0x1c; // accesses: 4
+    int field_0x1c; // accesses: 4
     undefined4 field_0x20; // accesses: 1
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1
@@ -62,14 +62,14 @@ struct CGameNetwork {
     byte _padding_0x188[32];
     CGameNetClient * field_0x1a8; // accesses: 8
     CGameNetServer * field_0x1ac; // accesses: 10
-    CGameMasterServer * field_0x1b0; // accesses: 3
+    int field_0x1b0; // accesses: 3
     byte _padding_0x1b4[4];
     int field_0x1b8; // accesses: 8
     byte _padding_0x1bc[20];
     int field_0x1d0; // accesses: 11
     int field_0x1d4; // accesses: 5
     byte _padding_0x1d8[100];
-    int field_0x23c; // accesses: 15
+    int * field_0x23c; // accesses: 15
     byte _padding_0x240[896];
     int field_0x5c0; // accesses: 2
 

@@ -7,7 +7,7 @@ struct SStringParam;
 
 struct CControlButton {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
+    SStringParam * field_0x4; // accesses: 2
     byte _padding_0x8[296];
     undefined4 field_0x130; // accesses: 1
     undefined4 field_0x134; // accesses: 1
@@ -21,7 +21,7 @@ struct CControlButton {
     undefined4 field_0x154; // accesses: 1
     undefined4 field_0x158; // accesses: 1
     byte _padding_0x15c[4];
-    undefined4 field_0x160; // accesses: 2
+    int field_0x160; // accesses: 2
     undefined * field_0x164; // accesses: 1
     undefined4 field_0x168; // accesses: 1
     undefined4 field_0x16c; // accesses: 1

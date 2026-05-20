@@ -21,17 +21,17 @@ struct CTrackManiaControlScores {
     CTrackManiaControlScores * field_0x16c; // accesses: 2
     void * field_0x170; // accesses: 1
     int field_0x174; // accesses: 3
-    undefined4 field_0x178; // accesses: 2
+    int field_0x178; // accesses: 2
     byte _padding_0x17c[16];
-    CGameCtnEditor * field_0x18c; // accesses: 5
-    int field_0x190; // accesses: 3
+    CTrackManiaControlScores * field_0x18c; // accesses: 5
+    int * field_0x190; // accesses: 3
     CTrackManiaRaceScore * field_0x194; // accesses: 1
-    undefined4 field_0x198; // accesses: 2
+    ulong field_0x198; // accesses: 2
     byte _padding_0x19c[24];
     CGameCtnEditor * field_0x1b4; // accesses: 1
     CGameCtnEditor * field_0x1b8; // accesses: 1
-    CGameCtnEditor * field_0x1bc; // accesses: 7
-    CGameCtnEditor * field_0x1c0; // accesses: 7
+    CTrackManiaControlScores * field_0x1bc; // accesses: 7
+    CTrackManiaControlScores * field_0x1c0; // accesses: 7
     byte _padding_0x1c4[12];
     CGameControlGridCard * field_0x1d0; // accesses: 1
     CGameControlGridCard * field_0x1d4; // accesses: 2

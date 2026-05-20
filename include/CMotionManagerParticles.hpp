@@ -22,30 +22,30 @@ struct CMotionManagerParticles {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 53
-    undefined4 field_0x8; // accesses: 42
-    undefined4 field_0xc; // accesses: 24
+    CMotionManagerParticles * field_0x4; // accesses: 53
+    SCasterCat * field_0x8; // accesses: 42
+    int field_0xc; // accesses: 24
     int field_0x10; // accesses: 2
-    CPlugVisualSprite * field_0x14; // accesses: 17
-    undefined4 field_0x18; // accesses: 16
-    undefined4 field_0x1c; // accesses: 15
-    undefined4 field_0x20; // accesses: 15
-    GmIso3 * field_0x24; // accesses: 18
+    ulong field_0x14; // accesses: 17
+    GmVec3 * field_0x18; // accesses: 16
+    ulong field_0x1c; // accesses: 15
+    ulong field_0x20; // accesses: 15
+    int field_0x24; // accesses: 18
     float field_0x28; // accesses: 6
-    SCasterCat * field_0x2c; // accesses: 7
+    float field_0x2c; // accesses: 7
     float field_0x30; // accesses: 5
     undefined4 field_0x34; // accesses: 10
-    undefined4 field_0x38; // accesses: 13
-    undefined4 field_0x3c; // accesses: 17
-    undefined4 field_0x40; // accesses: 10
+    float field_0x38; // accesses: 13
+    int field_0x3c; // accesses: 17
+    float field_0x40; // accesses: 10
     undefined4 field_0x44; // accesses: 2
     undefined4 field_0x48; // accesses: 2
     byte _padding_0x4c[4];
-    void * field_0x50; // accesses: 3
+    float field_0x50; // accesses: 3
     byte _padding_0x54[4];
     float field_0x58; // accesses: 2
-    undefined4 field_0x5c; // accesses: 3
-    undefined4 field_0x60; // accesses: 3
+    float field_0x5c; // accesses: 3
+    float field_0x60; // accesses: 3
     float field_0x64; // accesses: 1
     byte _padding_0x68[4];
     float field_0x6c; // accesses: 1
@@ -53,11 +53,11 @@ struct CMotionManagerParticles {
     float field_0x74; // accesses: 1
     byte _padding_0x78[4];
     SPartState * field_0x7c; // accesses: 5
-    undefined4 field_0x80; // accesses: 10
-    undefined4 field_0x84; // accesses: 5
-    undefined4 field_0x88; // accesses: 5
+    SPartGroup * field_0x80; // accesses: 10
+    float field_0x84; // accesses: 5
+    float field_0x88; // accesses: 5
     undefined4 field_0x8c; // accesses: 4
-    TiXmlAttribute * field_0x90; // accesses: 4
+    float field_0x90; // accesses: 4
     byte _padding_0x94[4];
     int field_0x98; // accesses: 5
     uint field_0x9c; // accesses: 7

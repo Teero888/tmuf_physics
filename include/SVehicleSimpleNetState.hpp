@@ -7,8 +7,8 @@ struct SVehicleSimpleNetState {
     byte _padding_0x0[12];
     undefined2 field_0xc; // accesses: 8
     byte _padding_0xe[2];
-    undefined4 field_0x10; // accesses: 12
-    undefined4 field_0x14; // accesses: 12
+    int field_0x10; // accesses: 12
+    int field_0x14; // accesses: 12
     byte _padding_0x18[4];
     int field_0x1c; // accesses: 4
     byte _padding_0x20[68];

@@ -6,7 +6,7 @@
 struct SVehicleSimpleState_ReplayAfter211003 {
     byte _padding_0x0[4];
     float field_0x4; // accesses: 5
-    undefined4 field_0x8; // accesses: 4
+    float field_0x8; // accesses: 4
     ushort field_0xc; // accesses: 4
     byte _padding_0xe[2];
     uint field_0x10; // accesses: 4

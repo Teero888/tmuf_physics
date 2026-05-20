@@ -7,7 +7,7 @@ struct SStringParam;
 
 struct CGameLeague {
     byte _padding_0x0[4];
-    int field_0x4; // accesses: 4
+    undefined * field_0x4; // accesses: 4
     byte _padding_0x8[16];
     SStringParam * field_0x18; // accesses: 1
     byte _padding_0x1c[4];

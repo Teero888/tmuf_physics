@@ -14,7 +14,7 @@ struct CVisionTexConverter {
     byte field_0x35; // accesses: 2
     byte _padding_0x36[4];
     uint field_0x3a; // accesses: 3
-    uint * field_0x3b; // accesses: 3
+    CVisionTexConverter * field_0x3b; // accesses: 3
     byte _padding_0x3f[859056627];
     uint field_0x33342a32; // accesses: 2
 

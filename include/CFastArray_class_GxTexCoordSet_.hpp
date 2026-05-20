@@ -5,7 +5,7 @@
 
 struct CFastArray<class_GxTexCoordSet> {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 6
+    uint field_0x4; // accesses: 6
 
     // Member Functions
     void __thiscall AddTail (void *this,CFastArray<struct_CDx9DeviceCaps::SFormat> *param_1,SFormat *param_2);

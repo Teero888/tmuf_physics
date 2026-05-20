@@ -35,13 +35,13 @@ struct CMotionManagerWeathers {
     float field_0x2c; // accesses: 7
     float field_0x30; // accesses: 2
     int field_0x34; // accesses: 3
-    undefined4 field_0x38; // accesses: 5
-    undefined4 field_0x3c; // accesses: 3
-    undefined4 field_0x40; // accesses: 3
-    undefined4 field_0x44; // accesses: 2
+    int field_0x38; // accesses: 5
+    float field_0x3c; // accesses: 3
+    float field_0x40; // accesses: 3
+    float field_0x44; // accesses: 2
     undefined4 field_0x48; // accesses: 4
-    undefined4 field_0x4c; // accesses: 2
-    undefined4 field_0x50; // accesses: 2
+    float field_0x4c; // accesses: 2
+    float field_0x50; // accesses: 2
     float field_0x54; // accesses: 1
     float field_0x58; // accesses: 1
     float field_0x5c; // accesses: 1
@@ -49,7 +49,7 @@ struct CMotionManagerWeathers {
     byte _padding_0x64[4];
     GxFogBlender * field_0x68; // accesses: 2
     byte _padding_0x6c[4];
-    undefined4 field_0x70; // accesses: 6
+    CMwCmdScriptVarBool * field_0x70; // accesses: 6
     byte _padding_0x74[12];
     float field_0x80; // accesses: 1
     float field_0x84; // accesses: 1
@@ -63,29 +63,29 @@ struct CMotionManagerWeathers {
     byte _padding_0xa4[4];
     int field_0xa8; // accesses: 2
     uint field_0xac; // accesses: 7
-    undefined4 field_0xb0; // accesses: 7
-    undefined4 field_0xb4; // accesses: 13
-    undefined4 field_0xb8; // accesses: 15
-    undefined4 field_0xbc; // accesses: 6
-    GxLight * field_0xc0; // accesses: 4
-    GxLight * field_0xc4; // accesses: 32
-    int field_0xc8; // accesses: 7
+    float field_0xb0; // accesses: 7
+    int field_0xb4; // accesses: 13
+    CPlugFileGen * field_0xb8; // accesses: 15
+    int field_0xbc; // accesses: 6
+    int field_0xc0; // accesses: 4
+    int field_0xc4; // accesses: 32
+    CSceneLight * field_0xc8; // accesses: 7
     byte _padding_0xcc[4];
     undefined4 field_0xd0; // accesses: 1
     float field_0xd4; // accesses: 1
     float field_0xd8; // accesses: 1
     float field_0xdc; // accesses: 1
     float field_0xe0; // accesses: 1
-    int field_0xe4; // accesses: 8
+    CLoadGeomDynaSprite * field_0xe4; // accesses: 8
     byte _padding_0xe8[4];
-    float * field_0xec; // accesses: 3
+    GmVec4 * field_0xec; // accesses: 3
     CPlugShader * field_0xf0; // accesses: 12
     int field_0xf4; // accesses: 2
     uint field_0xf8; // accesses: 3
-    CPlugShader * field_0xfc; // accesses: 14
-    undefined4 field_0x100; // accesses: 4
-    undefined4 field_0x104; // accesses: 6
-    undefined4 field_0x108; // accesses: 3
+    CPlugMaterial * field_0xfc; // accesses: 14
+    CPlugBitmapAddress * field_0x100; // accesses: 4
+    CHmsZoneVPacker * field_0x104; // accesses: 6
+    int field_0x108; // accesses: 3
     int field_0x10c; // accesses: 2
     int field_0x110; // accesses: 1
     int field_0x114; // accesses: 2

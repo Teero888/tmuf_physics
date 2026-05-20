@@ -7,7 +7,7 @@ struct CGameCtnChallenge;
 
 struct CTrackManiaEditorTerrain {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 8
+    int field_0x4; // accesses: 8
     int field_0x8; // accesses: 2
     byte _padding_0xc[20];
     int field_0x20; // accesses: 4

@@ -5,12 +5,12 @@
 
 struct CInputBindingsConfig {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 5
+    ulong field_0x4; // accesses: 5
     undefined4 field_0x8; // accesses: 2
     byte _padding_0xc[56];
     undefined4 field_0x44; // accesses: 1
     undefined * field_0x48; // accesses: 1
-    undefined4 field_0x4c; // accesses: 2
+    ulong field_0x4c; // accesses: 2
 
     // Member Functions
     int __thiscall IsDeviceConfigured (CInputBindingsConfig *this,CInputBindingsConfig *param_1,CMwId *param_2);

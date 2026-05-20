@@ -28,7 +28,7 @@ struct CTrackManiaPlayerInfo {
     undefined4 field_0x2a8; // accesses: 1
     undefined4 field_0x2ac; // accesses: 1
     byte _padding_0x2b0[4];
-    undefined4 field_0x2b4; // accesses: 2
+    int field_0x2b4; // accesses: 2
     undefined4 field_0x2b8; // accesses: 1
     byte _padding_0x2bc[4];
     undefined4 field_0x2c0; // accesses: 1
@@ -38,7 +38,7 @@ struct CTrackManiaPlayerInfo {
     undefined4 field_0x2d0; // accesses: 1
     undefined4 field_0x2d4; // accesses: 1
     byte _padding_0x2d8[8];
-    undefined4 field_0x2e0; // accesses: 2
+    int field_0x2e0; // accesses: 2
     undefined4 field_0x2e4; // accesses: 1
     undefined4 field_0x2e8; // accesses: 1
     undefined4 field_0x2ec; // accesses: 1
@@ -48,7 +48,7 @@ struct CTrackManiaPlayerInfo {
     undefined4 field_0x308; // accesses: 1
     undefined4 field_0x30c; // accesses: 1
     undefined * field_0x310; // accesses: 1
-    undefined4 field_0x314; // accesses: 2
+    ulong field_0x314; // accesses: 2
     undefined4 field_0x318; // accesses: 1
     undefined4 field_0x31c; // accesses: 1
     undefined4 field_0x320; // accesses: 1

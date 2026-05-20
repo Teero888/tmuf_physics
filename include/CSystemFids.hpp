@@ -8,9 +8,9 @@ struct SStringParam;
 
 struct CSystemFids {
     byte _padding_0x0[4];
-    SStringParam * field_0x4; // accesses: 8
+    undefined * field_0x4; // accesses: 8
     byte _padding_0x8[12];
-    undefined4 field_0x14; // accesses: 15
+    CSystemFids * field_0x14; // accesses: 15
     undefined4 field_0x18; // accesses: 3
     uint field_0x1c; // accesses: 2
     byte _padding_0x20[20];
@@ -20,7 +20,7 @@ struct CSystemFids {
     byte _padding_0x44[40];
     undefined ** field_0x6c; // accesses: 1
     byte _padding_0x70[4];
-    int field_0x74; // accesses: 2
+    undefined * field_0x74; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall DeleteDown(CSystemFids *this,CSystemFids *param_1);

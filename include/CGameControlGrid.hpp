@@ -12,7 +12,7 @@ struct CGameControlGrid {
     byte _padding_0x1d4[48];
     CGameRemoteBufferPool * field_0x204; // accesses: 3
     byte _padding_0x208[16];
-    undefined4 field_0x218; // accesses: 5
+    ulong field_0x218; // accesses: 5
     CGameRemoteBuffer * field_0x21c; // accesses: 1
 
     // Member Functions

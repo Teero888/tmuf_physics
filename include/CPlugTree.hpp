@@ -48,7 +48,7 @@ struct CPlugTree {
 
     struct CIteratorSurface {
         byte _padding_0x0[140];
-        int field_0x8c; // accesses: 3
+        CPlugSurface * field_0x8c; // accesses: 3
 
         // Member Functions
         CPlugSurface * __thiscall GetNextSurface (void *this,CIteratorSurface *param_1,CPlugTree **param_2);
@@ -69,7 +69,7 @@ struct CPlugTree {
 
     struct CIteratorVisual {
         byte _padding_0x0[144];
-        int field_0x90; // accesses: 3
+        CPlugVisual * field_0x90; // accesses: 3
 
         // Member Functions
         CPlugVisual * __thiscall GetNextVisual(void *this,CIteratorVisual *param_1,CPlugTree **param_2);
@@ -89,44 +89,44 @@ struct CPlugTree {
     };
 
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 45
+    float field_0x4; // accesses: 45
     char field_0x6; // accesses: 1
     byte _padding_0x7[1];
-    undefined4 field_0x8; // accesses: 30
-    undefined4 field_0xc; // accesses: 16
-    undefined4 field_0x10; // accesses: 21
-    undefined4 field_0x14; // accesses: 39
-    undefined4 field_0x18; // accesses: 26
-    undefined4 field_0x1c; // accesses: 42
-    undefined4 field_0x20; // accesses: 9
-    undefined4 field_0x24; // accesses: 17
+    CPlugMaterialCustom * field_0x8; // accesses: 30
+    float field_0xc; // accesses: 16
+    CPlugSurface * field_0x10; // accesses: 21
+    CPlugSolid * field_0x14; // accesses: 39
+    float field_0x18; // accesses: 26
+    CMwNod * field_0x1c; // accesses: 42
+    SPlugTreeOptimGroup * field_0x20; // accesses: 9
+    float field_0x24; // accesses: 17
     byte field_0x27; // accesses: 1
-    undefined4 field_0x28; // accesses: 5
-    undefined4 field_0x2c; // accesses: 3
-    undefined4 field_0x30; // accesses: 5
-    undefined4 field_0x34; // accesses: 11
-    undefined4 field_0x38; // accesses: 15
-    undefined4 field_0x3c; // accesses: 7
-    undefined4 field_0x40; // accesses: 7
-    undefined4 field_0x44; // accesses: 7
-    undefined4 field_0x48; // accesses: 7
+    float field_0x28; // accesses: 5
+    float field_0x2c; // accesses: 3
+    int field_0x30; // accesses: 5
+    int field_0x34; // accesses: 11
+    int field_0x38; // accesses: 15
+    int field_0x3c; // accesses: 7
+    int field_0x40; // accesses: 7
+    int field_0x44; // accesses: 7
+    int field_0x48; // accesses: 7
     undefined4 field_0x4c; // accesses: 1
-    undefined4 field_0x50; // accesses: 3
-    undefined4 field_0x54; // accesses: 17
-    ushort field_0x56; // accesses: 4
+    int field_0x50; // accesses: 3
+    ulong field_0x54; // accesses: 17
+    undefined2 field_0x56; // accesses: 4
     undefined4 field_0x58; // accesses: 3
     byte _padding_0x5c[36];
     undefined4 field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
-    undefined4 field_0x88; // accesses: 2
-    undefined4 field_0x8c; // accesses: 26
-    undefined4 field_0x90; // accesses: 64
-    undefined4 field_0x94; // accesses: 65
-    undefined4 field_0x98; // accesses: 35
-    undefined4 field_0x9c; // accesses: 184
-    undefined4 field_0xa0; // accesses: 27
-    undefined4 field_0xa4; // accesses: 8
-    undefined4 field_0xa8; // accesses: 10
+    code * field_0x88; // accesses: 2
+    CVisionVisualKeeper * field_0x8c; // accesses: 26
+    CVisionVisualKeeper * field_0x90; // accesses: 64
+    CVisionVisualKeeper * field_0x94; // accesses: 65
+    CVisionVisualKeeper * field_0x98; // accesses: 35
+    int field_0x9c; // accesses: 184
+    CVisionVisualKeeper * field_0xa0; // accesses: 27
+    CMwCmdAffectParamBool * field_0xa4; // accesses: 8
+    int field_0xa8; // accesses: 10
     byte _padding_0xac[4];
     code * field_0xb0; // accesses: 1
 

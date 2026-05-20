@@ -5,7 +5,7 @@
 
 struct CGameCtnMenuProfileScene {
     byte _padding_0x0[28];
-    int field_0x1c; // accesses: 2
+    int * field_0x1c; // accesses: 2
     int * field_0x20; // accesses: 2
     float field_0x24; // accesses: 1
     byte _padding_0x28[4];

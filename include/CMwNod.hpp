@@ -8,10 +8,10 @@ struct CMwParam;
 
 struct CMwNod {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 18
-    undefined4 field_0x8; // accesses: 12
-    undefined4 field_0xc; // accesses: 19
-    undefined4 field_0x10; // accesses: 18
+    CMwNod * field_0x4; // accesses: 18
+    CMwParam * field_0x8; // accesses: 12
+    int field_0xc; // accesses: 19
+    int field_0x10; // accesses: 18
     int field_0x14; // accesses: 5
     CMwEngineInfo * field_0x18; // accesses: 21
     code * field_0x1c; // accesses: 1

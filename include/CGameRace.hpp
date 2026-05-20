@@ -31,14 +31,14 @@ struct CGameRace {
     undefined4 field_0x8; // accesses: 1
     byte _padding_0xc[4];
     int field_0x10; // accesses: 2
-    undefined4 field_0x14; // accesses: 2
-    CGameCtnApp * field_0x18; // accesses: 17
+    int * field_0x14; // accesses: 2
+    int * field_0x18; // accesses: 17
     int field_0x1c; // accesses: 2
-    undefined4 field_0x20; // accesses: 13
-    CGamePlayer * field_0x24; // accesses: 3
-    CMwNod * field_0x28; // accesses: 11
+    CMwNod * field_0x20; // accesses: 13
+    int field_0x24; // accesses: 3
+    CGameRace * field_0x28; // accesses: 11
     CGameNetPlayerInfo * field_0x2c; // accesses: 1
-    CMwNod * field_0x30; // accesses: 5
+    CGameScene * field_0x30; // accesses: 5
     CMwNod * field_0x34; // accesses: 4
     undefined4 field_0x38; // accesses: 1
     undefined4 field_0x3c; // accesses: 1
@@ -48,28 +48,28 @@ struct CGameRace {
     byte _padding_0x4c[4];
     CGameRace * field_0x50; // accesses: 2
     undefined4 field_0x54; // accesses: 3
-    undefined4 field_0x58; // accesses: 8
+    CGameCtnMediaClipPlayer * field_0x58; // accesses: 8
     undefined4 field_0x5c; // accesses: 3
-    undefined4 field_0x60; // accesses: 15
+    CGameCtnMediaClipPlayer * field_0x60; // accesses: 15
     byte _padding_0x64[8];
-    undefined4 field_0x6c; // accesses: 6
-    undefined4 field_0x70; // accesses: 7
-    undefined4 field_0x74; // accesses: 7
+    int field_0x6c; // accesses: 6
+    CGameRace * field_0x70; // accesses: 7
+    int field_0x74; // accesses: 7
     undefined4 field_0x78; // accesses: 1
-    undefined4 field_0x7c; // accesses: 2
+    CGameRace * field_0x7c; // accesses: 2
     CGamePlayerCameraSet * field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
     undefined4 field_0x88; // accesses: 1
     byte _padding_0x8c[4];
     int field_0x90; // accesses: 1
     byte _padding_0x94[4];
-    undefined4 field_0x98; // accesses: 6
+    CGameRace * field_0x98; // accesses: 6
     undefined4 field_0x9c; // accesses: 2
-    undefined4 field_0xa0; // accesses: 25
-    undefined4 field_0xa4; // accesses: 26
-    undefined4 field_0xa8; // accesses: 4
+    CGameCtnMediaClipPlayer * field_0xa0; // accesses: 25
+    CGameCtnMediaClipPlayer * field_0xa4; // accesses: 26
+    int field_0xa8; // accesses: 4
     int field_0xac; // accesses: 2
-    undefined4 field_0xb0; // accesses: 10
+    CGameRace * field_0xb0; // accesses: 10
     undefined4 field_0xb4; // accesses: 6
     byte _padding_0xb8[184];
     CMwNod * field_0x170; // accesses: 1

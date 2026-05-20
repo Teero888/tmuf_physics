@@ -7,7 +7,7 @@ struct CNetConnectedClient {
     byte _padding_0x0[28];
     undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 2
-    uint field_0x24; // accesses: 2
+    ulong field_0x24; // accesses: 2
     float field_0x28; // accesses: 1
     byte _padding_0x2c[100];
     int field_0x90; // accesses: 1

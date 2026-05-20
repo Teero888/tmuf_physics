@@ -7,8 +7,8 @@ struct CGameCtnBench {
     byte _padding_0x0[36];
     int * field_0x24; // accesses: 1
     byte _padding_0x28[16];
-    undefined4 field_0x38; // accesses: 5
-    undefined4 field_0x3c; // accesses: 5
+    int field_0x38; // accesses: 5
+    int field_0x3c; // accesses: 5
     uint field_0x40; // accesses: 1
     int field_0x44; // accesses: 1
 

@@ -11,7 +11,7 @@ struct CTrackManiaEditorFree {
     undefined4 field_0x10; // accesses: 1
     undefined4 field_0x14; // accesses: 3
     undefined4 field_0x18; // accesses: 3
-    undefined4 field_0x1c; // accesses: 3
+    float field_0x1c; // accesses: 3
     int field_0x20; // accesses: 4
     float field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1
@@ -30,7 +30,7 @@ struct CTrackManiaEditorFree {
     byte _padding_0xc0[84];
     int field_0x114; // accesses: 1
     byte _padding_0x118[1020];
-    undefined4 field_0x514; // accesses: 2
+    int field_0x514; // accesses: 2
 
     // Member Functions
     /* WARNING: Removing unreachable block (ram,0x004a00d1) */ /* WARNING: Removing unreachable block (ram,0x004a0126) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CTrackManiaEditorFree::CreateDefaultParams (CTrackManiaEditorFree *this,CTrackManiaEditor *param_1,SStartParameters *param_2);
