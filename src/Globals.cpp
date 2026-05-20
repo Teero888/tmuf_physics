@@ -1,7 +1,6 @@
 // Global Functions and Headers
 
-// Extracted Physics Code
-// Starting from: CTrackManiaRace::Validate and core physics classes/keywords
+// Extracted Physics Code from CTrackManiaRace::Validate
 
 // =================================================
 // Function: ::s_CollisionGroupPairs__

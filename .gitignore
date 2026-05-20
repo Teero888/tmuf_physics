@@ -1,7 +1,21 @@
-steamdata
-GbxDump
-gbx-tools-3d
-dump.cpp
+# Project specific ignores
+steamdata/
+GbxDump/
+gbx-tools-3d/
+old/
+
+# Generated files
+scripts/physics_extracted_code.c
+scripts/reconstructed_structs.json
+scripts/reconstructed_structs.h
+scripts/unknown_types.txt
+scripts/potential_enums.txt
+
+# Executables and debug info
 exe/*
 !exe/TmForeverFixed.exe
 !exe/TmForeverFixed.pdb
+
+# OS files
+.DS_Store
+Thumbs.db

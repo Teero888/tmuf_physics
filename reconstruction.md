@@ -1,51 +1,56 @@
 # TrackMania Physics Reconstruction Guide
 
-This guide explains how to go from a raw Ghidra C dump to a modular, semi-compilable C++ physics library using the automated pipeline in the `new/` directory.
+This guide explains how to go from a raw Ghidra C dump to a modular, semi-compilable C++ physics library.
 
 ## Prerequisites
-- A full C dump from Ghidra named `dump.cpp` (or `dump.c`).
+- A full C dump from Ghidra named `dump.cpp` (or `dump.c`) placed in the `scripts/` directory.
 - Python 3.x
 
 ## Step-by-Step Pipeline
 
-Run all commands from within the `new/` directory.
+**All commands should be executed from within the `scripts/` directory.**
 
 ### 1. Extract the Physics Subset
-Extracts only the code reachable from `CTrackManiaRace::Validate` and core physics classes/keywords (whitelisted in the script).
+Extracts only the code reachable from `CTrackManiaRace::Validate` and core physics classes.
 ```bash
+cd scripts
 python3 recursive_extract.py dump.cpp CTrackManiaRace::Validate
 ```
-- **Output:** `physics_extracted_code.c`
+- **Output:** `scripts/physics_extracted_code.c`
 
 ### 2. Split into Modular Source Files
-Breaks the massive extracted file into individual `.cpp` files in the `src/` directory, organized by class name.
+Breaks the extracted file into individual `.cpp` files in the root `src/` directory.
 ```bash
 python3 split_classes.py
 ```
-- **Output:** `src/*.cpp`, `src/Globals.cpp`
+- **Output:** `src/*.cpp` (root directory)
 
 ### 3. Reconstruct Struct Layouts & Signatures
-Performs static analysis on the `src/` files to identify memory offsets (fields), data types, and member function signatures for every class.
+Performs static analysis on the `src/` files to identify memory offsets and function signatures.
 ```bash
-python3 reconstruct_structs.py src
+python3 reconstruct_structs.py
 ```
-- **Output:** `reconstructed_structs.json` (Database), `reconstructed_structs.h` (Flat view)
+- **Output:** `scripts/reconstructed_structs.json`, `scripts/reconstructed_structs.h`
 
 ### 4. Split into Modular Header Files
-Generates individual `.hpp` files in the `include/` directory. This script automatically handles **nested structs** (placing them inside their parent class) and adds member function declarations.
+Generates individual `.hpp` files in the root `include/` directory.
 ```bash
 python3 split_structs.py
 ```
-- **Output:** `include/*.hpp`
+- **Output:** `include/*.hpp` (root directory)
 
 ### 5. Finalize Dependencies (Typedefs)
-Analyzes the generated headers to find any types that were referenced but not defined (e.g., enums or external classes) and creates `typedefs.h`.
+Analyzes the generated headers to find unknown types and creates `typedefs.h`.
 ```bash
-# 1. Generate the list of unknown types
-python3 find_unknown_types.py include > unknown_types.txt
+# 1. Extract potential enums from the source code
+grep -ohP "\bE[A-Z]\w+\b" ../src/*.cpp | sort | uniq > potential_enums.txt
 
-# 2. Build the comprehensive typedefs header
+# 2. Generate the list of unknown types
+python3 find_unknown_types.py > unknown_types.txt
+
+# 3. Build the comprehensive typedefs header
 python3 make_typedefs.py
 ```
-- **Output:** `include/typedefs.h`
+
+- **Output:** `include/typedefs.h` (root directory)
 
