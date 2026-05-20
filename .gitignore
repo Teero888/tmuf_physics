@@ -2,4 +2,9 @@ steamdata
 GbxDump
 gbx-tools-3d
 new/src
-new/include
+new/include/*
+!new/include/typedefs.h
+new/*.cpp
+new/*.h
+new/*.txt
+new/*.json
