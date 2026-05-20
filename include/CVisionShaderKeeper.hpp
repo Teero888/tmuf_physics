@@ -3,13 +3,14 @@
 
 #include "typedefs.h"
 
+struct CDx9IndexBuffer;
+
 struct CVisionShaderKeeper {
-    byte _padding_0x0[8];
-    undefined4 * field_0x8; // accesses: 4
-    CVisionShaderKeeper * field_0xc; // accesses: 2
+    void** vftable; // accesses: 2
+    byte _padding_0x4[4];
+    CVisionShaderKeeper * field_0x8; // accesses: 4
+    CDx9IndexBuffer * field_0xc; // accesses: 2
     uint field_0x10; // accesses: 16
-    byte _padding_0x14[12];
-    uint field_0x20; // accesses: 1
 
     // Member Functions
     ulong __thiscall ShaderAddRef(CVisionShaderKeeper *this,CVisionShaderKeeper *param_1);

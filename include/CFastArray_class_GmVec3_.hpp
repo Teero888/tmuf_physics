@@ -3,12 +3,11 @@
 
 #include "typedefs.h"
 
-struct CControlBase;
+struct ulong;
 
 struct CFastArray<class_GmVec3> {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 2
+    void** vftable; // accesses: 2
+    ulong field_0x4; // accesses: 10
 
     // Member Functions
     void __thiscall AllocateMore (void *this,CFastArray<struct_CDx9DeviceCaps::SFormat> *param_1,ulong param_2);

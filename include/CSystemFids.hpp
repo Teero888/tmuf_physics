@@ -4,23 +4,19 @@
 #include "typedefs.h"
 
 struct CMwNod;
+struct CSystemFidFile;
 struct SStringParam;
+struct ulong;
 
 struct CSystemFids {
-    byte _padding_0x0[4];
-    undefined * field_0x4; // accesses: 8
-    byte _padding_0x8[12];
-    CSystemFids * field_0x14; // accesses: 15
-    undefined4 field_0x18; // accesses: 3
-    uint field_0x1c; // accesses: 2
-    byte _padding_0x20[20];
+    void** vftable; // accesses: 19
+    undefined * field_0x4; // accesses: 3
+    CSystemFidFile * field_0x8; // accesses: 1
+    byte _padding_0xc[8];
+    CMwNod * field_0x14; // accesses: 14
+    undefined4 field_0x18; // accesses: 5
+    byte _padding_0x1c[24];
     undefined4 field_0x34; // accesses: 3
-    byte _padding_0x38[8];
-    SStringParam * field_0x40; // accesses: 2
-    byte _padding_0x44[40];
-    undefined ** field_0x6c; // accesses: 1
-    byte _padding_0x70[4];
-    undefined * field_0x74; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall DeleteDown(CSystemFids *this,CSystemFids *param_1);

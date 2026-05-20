@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct SVisualId {
+    void** vftable; // accesses: 1
+    undefined4 field_0x4; // accesses: 1
 
     // Member Functions
     void __thiscall Reset(void *this,GmFrustumIso4 *param_1);

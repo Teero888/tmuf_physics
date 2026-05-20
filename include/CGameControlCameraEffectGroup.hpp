@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CGameControlCameraEffectGroup {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CGameControlCameraEffectGroup (CGameControlCameraEffectGroup *this,CGameControlCameraEffectGroup *param_1);

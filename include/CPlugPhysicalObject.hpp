@@ -3,20 +3,24 @@
 
 #include "typedefs.h"
 
+struct CPlugTree;
+
 struct CPlugPhysicalObject {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
+    void** vftable; // accesses: 6
+    float field_0x4; // accesses: 2
     undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[28];
-    undefined4 field_0x28; // accesses: 1
-    undefined4 field_0x2c; // accesses: 1
-    undefined4 field_0x30; // accesses: 1
+    byte _padding_0xc[8];
+    float field_0x14; // accesses: 1
+    byte _padding_0x18[12];
+    float field_0x24; // accesses: 1
+    undefined4 field_0x28; // accesses: 2
+    undefined4 field_0x2c; // accesses: 2
+    undefined4 field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 2
-    undefined4 field_0x38; // accesses: 2
-    undefined4 field_0x3c; // accesses: 2
-    undefined4 field_0x40; // accesses: 1
-    byte _padding_0x44[72];
-    int field_0x8c; // accesses: 4
+    float field_0x38; // accesses: 5
+    float field_0x3c; // accesses: 5
+    float field_0x40; // accesses: 5
+    CPlugTree * field_0x44; // accesses: 6
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugPhysicalObject(void *this,CPlugPhysicalObject *param_1);

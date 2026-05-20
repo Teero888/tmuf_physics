@@ -4,11 +4,11 @@
 #include "typedefs.h"
 
 struct CClassicBuffer {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 39
     undefined4 field_0x4; // accesses: 1
     undefined4 field_0x8; // accesses: 1
-    CClassicBuffer * field_0xc; // accesses: 1
-    SLadderResult * field_0x10; // accesses: 3
+    byte _padding_0xc[4];
+    uint field_0x10; // accesses: 1
 
     // Member Functions
     /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall IsEqualBuffer (CClassicBuffer *this,CClassicBufferMemory *param_1,CClassicBufferMemory *param_2);

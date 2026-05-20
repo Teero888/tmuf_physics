@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CSystemFidsDrive {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 4
     undefined4 field_0x4; // accesses: 1
     byte _padding_0x8[16];
     CSystemFidsDrive * field_0x18; // accesses: 1

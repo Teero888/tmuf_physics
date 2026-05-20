@@ -3,13 +3,11 @@
 
 #include "typedefs.h"
 
+struct SPlugFaceCull;
+
 struct CDx9VertexShader {
     byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[204];
-    code * field_0xdc; // accesses: 1
+    int field_0x4; // accesses: 2
 
     // Member Functions
     int __cdecl FilterSetVertexShader(CDx9VertexShader *param_1);

@@ -4,8 +4,7 @@
 #include "typedefs.h"
 
 struct CVisionEngine {
-    byte _padding_0x0[144];
-    int field_0x90; // accesses: 1
+    void** vftable; // accesses: 1
 
     // Member Functions
     CHmsViewport * __thiscall FindOrCreateViewport (CVisionEngine *this,CVisionEngine *param_1,CSystemWindow *param_2);

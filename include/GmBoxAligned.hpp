@@ -3,19 +3,16 @@
 
 #include "typedefs.h"
 
+struct GmIso4;
+
 struct GmBoxAligned {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 29
-    float field_0x8; // accesses: 31
-    float field_0xc; // accesses: 13
-    float field_0x10; // accesses: 10
-    float field_0x14; // accesses: 12
-    float field_0x18; // accesses: 3
-    float field_0x1c; // accesses: 2
-    float field_0x20; // accesses: 2
-    float field_0x24; // accesses: 1
-    float field_0x28; // accesses: 1
-    float field_0x2c; // accesses: 1
+    void** vftable; // accesses: 33
+    undefined1 * field_0x4; // accesses: 30
+    float field_0x8; // accesses: 32
+    float field_0xc; // accesses: 30
+    float field_0x10; // accesses: 25
+    float field_0x14; // accesses: 28
+    float field_0x18; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall TestInterSegment_MiddleVectAB (void *this,GmBoxAligned *param_1,GmVec3 *param_2,GmVec3 *param_3);

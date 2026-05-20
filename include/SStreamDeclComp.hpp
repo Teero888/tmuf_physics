@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct SStreamDeclComp {
+    void** vftable; // accesses: 1
 
     // Member Functions
     EPlugVDclType __thiscall GetPlugRegType(void *this,SStreamDeclComp *param_1,EPlugVDcl param_2);

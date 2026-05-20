@@ -3,14 +3,23 @@
 
 #include "typedefs.h"
 
+struct CClassicBufferMemory;
+struct CClassicI18n;
+struct CFastString;
+struct CMwNod;
+struct CMwStack;
+struct SStringParam;
+struct ulong;
+struct ushort;
+
 struct CFastStringInt {
-    byte _padding_0x0[4];
-    CFastStringInt * field_0x4; // accesses: 19
-    undefined2 * field_0x8; // accesses: 2
-    int field_0xc; // accesses: 3
-    int field_0x10; // accesses: 5
-    int field_0x14; // accesses: 5
-    byte _padding_0x18[4];
+    void** vftable; // accesses: 91
+    SStringParam * field_0x4; // accesses: 99
+    undefined2 * field_0x8; // accesses: 6
+    undefined1 * field_0xc; // accesses: 5
+    undefined4 field_0x10; // accesses: 10
+    undefined4 field_0x14; // accesses: 11
+    char * field_0x18; // accesses: 3
     undefined4 field_0x1c; // accesses: 3
 
     // Member Functions

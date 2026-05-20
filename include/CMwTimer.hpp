@@ -3,7 +3,22 @@
 
 #include "typedefs.h"
 
+struct int64;
+struct ulong;
+
 struct CMwTimer {
+    void** vftable; // accesses: 2
+    undefined4 field_0x4; // accesses: 2
+    ulong field_0x8; // accesses: 3
+    ulong field_0xc; // accesses: 7
+    float field_0x10; // accesses: 5
+    float field_0x14; // accesses: 1
+    int64 field_0x18; // accesses: 3
+    int field_0x1c; // accesses: 5
+    DWORD field_0x20; // accesses: 6
+    undefined4 field_0x24; // accesses: 6
+    float field_0x28; // accesses: 5
+    undefined4 field_0x2c; // accesses: 5
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __cdecl SecondsToMwTime(float param_1);

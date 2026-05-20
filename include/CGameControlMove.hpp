@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameControlMove {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1
     byte _padding_0x1c[36];
@@ -15,7 +16,7 @@ struct CGameControlMove {
     undefined4 field_0x70; // accesses: 1
     undefined4 field_0x74; // accesses: 1
     undefined4 field_0x78; // accesses: 1
-    int field_0x7c; // accesses: 3
+    undefined4 field_0x7c; // accesses: 3
     undefined4 field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
     undefined4 field_0x88; // accesses: 1

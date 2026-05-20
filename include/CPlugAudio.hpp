@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CPlugAudio {
+    void** vftable; // accesses: 1
 
     // Member Functions
     CMwId * __thiscall MwGetId(CPlugAudio *this,CPlugAudio *param_1);

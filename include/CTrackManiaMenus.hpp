@@ -9,18 +9,17 @@ struct CTrackMania;
 struct CTrackManiaNetwork;
 
 struct CTrackManiaMenus {
-    byte _padding_0x0[124];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[120];
     undefined4 field_0x7c; // accesses: 1
-    byte _padding_0x80[352];
-    int field_0x1e0; // accesses: 3
-    byte _padding_0x1e4[1308];
+    byte _padding_0x80[1664];
     undefined4 field_0x700; // accesses: 1
     undefined4 field_0x704; // accesses: 1
     byte _padding_0x708[124];
-    int field_0x784; // accesses: 10
+    CTrackMania * field_0x784; // accesses: 10
     int field_0x788; // accesses: 1
     byte _padding_0x78c[180];
-    void * field_0x840; // accesses: 3
+    CGameNetwork * field_0x840; // accesses: 3
 
     // Member Functions
     void __thiscall DialogInGameMenu_OnRetire(CTrackManiaMenus *this,CTrackManiaMenus *param_1);

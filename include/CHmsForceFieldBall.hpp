@@ -4,14 +4,8 @@
 #include "typedefs.h"
 
 struct CHmsForceFieldBall {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
-    float field_0x8; // accesses: 1
-    byte _padding_0xc[4];
-    int field_0x10; // accesses: 1
-    byte _padding_0x14[4];
-    int field_0x18; // accesses: 3
-    byte _padding_0x1c[32];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[56];
     float field_0x3c; // accesses: 1
     float field_0x40; // accesses: 1
     float field_0x44; // accesses: 1

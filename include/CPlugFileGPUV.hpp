@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugFileGPUV {
-    byte _padding_0x0[188];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[184];
     undefined4 field_0xbc; // accesses: 1
     undefined4 field_0xc0; // accesses: 1
     undefined4 field_0xc4; // accesses: 1

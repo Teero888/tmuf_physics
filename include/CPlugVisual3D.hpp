@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CPlugVisual3D {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CPlugVisual3D(CPlugVisual3D *this,CPlugVisual3D *param_1,CPlugVisual3D *param_2);

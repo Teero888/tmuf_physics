@@ -4,16 +4,12 @@
 #include "typedefs.h"
 
 struct SSceneToyBoat_ReplayState {
-    byte _padding_0x0[40];
-    int field_0x28; // accesses: 1
-    byte _padding_0x2c[92];
+    byte _padding_0x0[120];
+    undefined4 field_0x78; // accesses: 1
+    undefined4 field_0x7c; // accesses: 1
+    undefined4 field_0x80; // accesses: 1
+    undefined4 field_0x84; // accesses: 1
     undefined4 field_0x88; // accesses: 1
-    undefined4 field_0x8c; // accesses: 1
-    byte _padding_0x90[40];
-    undefined4 field_0xb8; // accesses: 1
-    undefined4 field_0xbc; // accesses: 1
-    byte _padding_0xc0[28];
-    undefined4 field_0xdc; // accesses: 1
 
     // Member Functions
     void __thiscall SetFromBoat (void *this,SSceneToyBoat_NetState *param_1,CSceneToyBoat *param_2);

@@ -3,8 +3,11 @@
 
 #include "typedefs.h"
 
+struct CSystemEngine;
+
 struct SNodFid {
-    byte _padding_0x0[8];
+    void** vftable; // accesses: 2
+    int field_0x4; // accesses: 1
     int field_0x8; // accesses: 1
 
     // Member Functions

@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameControlSelection {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     byte _padding_0x18[12];
     undefined4 field_0x24; // accesses: 1

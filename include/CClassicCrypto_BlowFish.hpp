@@ -4,10 +4,9 @@
 #include "typedefs.h"
 
 struct CClassicCrypto_BlowFish {
-    byte _padding_0x0[4];
-    undefined1 * field_0x4; // accesses: 25
-    byte _padding_0x8[4160];
-    int field_0x1048; // accesses: 1
+    void** vftable; // accesses: 3
+    byte _padding_0x4[64];
+    uint field_0x44; // accesses: 1
 
     // Member Functions
     void __thiscall DoBlock (void *this,CClassicCrypto_BlowFish *param_1,uint64 *param_2,uint64 *param_3);

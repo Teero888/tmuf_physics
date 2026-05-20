@@ -11,14 +11,14 @@ struct TiXmlAttributeSet;
 struct CNetHttpClient {
     byte _padding_0x0[24];
     int field_0x18; // accesses: 5
-    CClassicBufferMemory * field_0x1c; // accesses: 3
+    uint field_0x1c; // accesses: 3
     byte _padding_0x20[48];
     CNetTransferInfoQueue * field_0x50; // accesses: 4
     undefined4 field_0x54; // accesses: 1
     CPlugFileGpuBuilder * field_0x58; // accesses: 4
     byte _padding_0x5c[12];
     DWORD field_0x68; // accesses: 1
-    TiXmlAttributeSet * field_0x6c; // accesses: 3
+    int field_0x6c; // accesses: 3
     byte _padding_0x70[24];
     code * field_0x88; // accesses: 1
     int field_0x8c; // accesses: 1

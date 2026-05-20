@@ -4,6 +4,9 @@
 #include "typedefs.h"
 
 struct CSceneToyTrain {
+    void** vftable; // accesses: 1
+    byte _padding_0x4[4];
+    int field_0x8; // accesses: 2
 
     // Member Functions
     void __thiscall CheckContacts(CSceneToyTrain *this,CSceneToyTrain *param_1);

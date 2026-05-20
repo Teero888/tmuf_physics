@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct SPlugVisibleFilter {
+    void** vftable; // accesses: 1
+    undefined2 field_0x2; // accesses: 1
 
     // Member Functions
     void __thiscall SetDefaultValues(void *this,SPlugVisibleFilter *param_1);

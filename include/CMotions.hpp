@@ -3,15 +3,15 @@
 
 #include "typedefs.h"
 
-struct CMotionCmdBase;
 struct CMotionTrack;
 struct GxTexCoordSet;
 
 struct CMotions {
-    byte _padding_0x0[32];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[4];
+    short field_0x8; // accesses: 1
+    byte _padding_0xa[22];
     CMotionTrack * field_0x20; // accesses: 3
-    byte _padding_0x24[12];
-    CMotionCmdBase * field_0x30; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CMotion * __thiscall AddMotion(CMotions *this,CSceneObject *param_1,CMwNod *param_2,CMwId *param_3,int param_4);

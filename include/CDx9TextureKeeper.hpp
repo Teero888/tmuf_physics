@@ -3,40 +3,39 @@
 
 #include "typedefs.h"
 
+struct CPlugBitmap;
 struct CPlugFileImg;
 struct CSystemFidFile;
 struct CVisionViewportDx9;
+struct ulong;
 
 struct CDx9TextureKeeper {
-    byte _padding_0x0[2];
-    ushort field_0x2; // accesses: 18
-    float field_0x4; // accesses: 25
-    ushort field_0x6; // accesses: 1
-    float field_0x8; // accesses: 8
-    int field_0xc; // accesses: 3
-    int field_0x10; // accesses: 1
-    int field_0x14; // accesses: 3
-    byte _padding_0x18[12];
-    uint field_0x24; // accesses: 6
-    byte _padding_0x28[32];
-    int field_0x48; // accesses: 5
-    uint field_0x4c; // accesses: 9
+    void** vftable; // accesses: 11
+    undefined4 field_0x4; // accesses: 3
+    CPlugFileImg * field_0x8; // accesses: 7
+    CPlugBitmap * field_0xc; // accesses: 11
+    int field_0x10; // accesses: 5
+    undefined4 field_0x14; // accesses: 4
+    char field_0x18; // accesses: 2
+    byte _padding_0x19[3];
+    uint field_0x1c; // accesses: 2
+    byte field_0x20; // accesses: 18
+    byte _padding_0x21[3];
+    CDx9TextureKeeper * field_0x24; // accesses: 7
+    CDx9TextureKeeper * field_0x28; // accesses: 8
+    uint field_0x2c; // accesses: 1
+    int field_0x30; // accesses: 4
+    byte _padding_0x34[20];
+    CPlugFileImg * field_0x48; // accesses: 5
+    uint field_0x4c; // accesses: 8
     CVisionViewportDx9 field_0x4d; // accesses: 1
     uint field_0x50; // accesses: 2
     byte _padding_0x54[32];
-    int field_0x74; // accesses: 1
-    byte _padding_0x78[388];
-    int field_0x1fc; // accesses: 4
-    undefined4 field_0x200; // accesses: 1
-    undefined4 field_0x204; // accesses: 1
-    byte _padding_0x208[8];
-    int field_0x210; // accesses: 4
-    byte _padding_0x214[44];
-    int field_0x240; // accesses: 1
-    byte _padding_0x244[788];
-    uint field_0x558; // accesses: 1
-    byte _padding_0x55c[372];
-    int field_0x6d0; // accesses: 2
+    ulong field_0x74; // accesses: 7
+    ulong field_0x78; // accesses: 6
+    ulong field_0x7c; // accesses: 2
+    undefined4 field_0x80; // accesses: 3
+    undefined4 field_0x84; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ResetCache(void);

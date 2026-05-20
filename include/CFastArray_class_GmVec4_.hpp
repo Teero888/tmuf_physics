@@ -5,9 +5,7 @@
 
 struct CFastArray<class_GmVec4> {
     byte _padding_0x0[4];
-    int field_0x4; // accesses: 3
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
+    int field_0x4; // accesses: 6
 
     // Member Functions
     void __thiscall CopyFromFastArray (void *this,CFastArray<class_GmVec4> *param_1,CFastArray<class_GmVec4> *param_2);

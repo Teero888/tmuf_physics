@@ -4,12 +4,16 @@
 #include "typedefs.h"
 
 struct CPlugShaderApply {
-    byte _padding_0x0[32];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
+    int field_0x14; // accesses: 1
+    byte _padding_0x18[4];
+    uint field_0x1c; // accesses: 4
     EGxTexOp field_0x20; // accesses: 2
     byte _padding_0x24[108];
     undefined4 field_0x90; // accesses: 1
     byte _padding_0x94[8];
-    undefined4 field_0x9c; // accesses: 10
+    EGxAlphaCmp field_0x9c; // accesses: 10
     undefined4 field_0xa0; // accesses: 3
 
     // Member Functions

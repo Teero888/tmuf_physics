@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct struct_SFastCatSmall> {
+    byte _padding_0x0[12];
+    int field_0xc; // accesses: 2
 
     // Member Functions
     ulong __thiscall GetCatIndexFromIndexInAll (void *this,CFastBufferCat<struct_CInputPort::SMappedAction,struct_SFastCat> *param_1, ulong param_2);

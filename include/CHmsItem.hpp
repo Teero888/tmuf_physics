@@ -4,12 +4,12 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct CHmsZone;
-struct CMwCmdBufferCore;
+struct CHmsPortal;
 struct CMwNod;
 struct CPlugSolid;
 struct CSceneToyMotorbike;
-struct GmMat3;
+struct ulong;
+struct ushort;
 
 struct CHmsItem {
     struct CCallback {
@@ -25,38 +25,41 @@ struct CHmsItem {
     };
 
     struct SCallbackList {
+        void** vftable; // accesses: 1
+        undefined4 field_0x4; // accesses: 1
+        undefined4 field_0x8; // accesses: 1
+        undefined4 field_0xc; // accesses: 1
+        undefined4 field_0x10; // accesses: 1
+        undefined4 field_0x14; // accesses: 1
 
         // Member Functions
         void __thiscall SCallbackList(void *this,SCallbackList *param_1);
         void __thiscall ~SCallbackList(void *this,SCallbackList *param_1);
     };
 
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 56
-    GmMat3 * field_0x8; // accesses: 11
-    undefined4 field_0xc; // accesses: 6
-    int * field_0x10; // accesses: 7
-    CPlugSolid * field_0x14; // accesses: 21
-    ulong field_0x18; // accesses: 116
-    ushort field_0x1c; // accesses: 69
-    byte _padding_0x1e[2];
-    undefined2 field_0x20; // accesses: 28
+    void** vftable; // accesses: 21
+    float field_0x4; // accesses: 11
+    float field_0x8; // accesses: 11
+    float field_0xc; // accesses: 2
+    float field_0x10; // accesses: 2
+    CClassicArchive * field_0x14; // accesses: 16
+    ulong field_0x18; // accesses: 110
+    EDynamicType field_0x1c; // accesses: 73
+    ushort field_0x20; // accesses: 32
     byte _padding_0x22[2];
-    int * field_0x24; // accesses: 10
-    byte _padding_0x28[4];
-    int field_0x2c; // accesses: 1
+    void * field_0x24; // accesses: 9
+    float field_0x28; // accesses: 1
+    float field_0x2c; // accesses: 1
     undefined4 field_0x30; // accesses: 1
-    undefined4 field_0x34; // accesses: 2
-    byte _padding_0x38[8];
-    undefined4 field_0x40; // accesses: 2
-    undefined4 field_0x44; // accesses: 3
-    int field_0x48; // accesses: 4
-    int field_0x4c; // accesses: 4
+    byte _padding_0x34[8];
+    undefined4 field_0x3c; // accesses: 1
+    int * field_0x40; // accesses: 3
+    CMwNod * field_0x44; // accesses: 3
+    short field_0x48; // accesses: 5
+    byte _padding_0x4a[2];
+    undefined4 field_0x4c; // accesses: 4
     undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 3
-    int field_0x58; // accesses: 4
-    byte _padding_0x5c[64];
-    uint field_0x9c; // accesses: 12
+    void * field_0x54; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetAsyncBlendBetweenPreviousAndNextStates(CHmsItem *this,CHmsItem *param_1);

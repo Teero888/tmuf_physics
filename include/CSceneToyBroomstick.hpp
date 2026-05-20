@@ -5,18 +5,13 @@
 
 struct CHmsItem;
 struct CMwCmdBlockMain;
-struct CPlugAudio;
+struct ulong;
 
 struct CSceneToyBroomstick {
-    byte _padding_0x0[12];
-    float field_0xc; // accesses: 1
-    float field_0x10; // accesses: 1
-    float field_0x14; // accesses: 3
-    byte _padding_0x18[12];
-    undefined4 field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 5
-    undefined4 field_0x2c; // accesses: 1
-    byte _padding_0x30[164];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[36];
+    CHmsItem * field_0x28; // accesses: 4
+    byte _padding_0x2c[168];
     CMwCmdBlockMain * field_0xd4; // accesses: 2
     byte _padding_0xd8[68];
     undefined4 field_0x11c; // accesses: 1

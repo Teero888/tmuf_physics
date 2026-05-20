@@ -4,8 +4,6 @@
 #include "typedefs.h"
 
 struct GmFunc {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __cdecl AsinSafe(float param_1);

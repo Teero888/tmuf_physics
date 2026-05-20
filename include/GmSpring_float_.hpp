@@ -4,6 +4,11 @@
 #include "typedefs.h"
 
 struct GmSpring<float> {
+    void** vftable; // accesses: 2
+    float field_0x4; // accesses: 2
+    float field_0x8; // accesses: 4
+    float field_0xc; // accesses: 2
+    float field_0x10; // accesses: 4
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GmSpring<float>(void *this,GmSpring<float> *param_1);

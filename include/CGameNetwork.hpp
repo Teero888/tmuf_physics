@@ -6,65 +6,42 @@
 struct CGameMasterServer;
 struct CGameNetClient;
 struct CGameNetServer;
-struct CNetMasterServerRequest;
 struct CNetServer;
-struct SStringParam;
+struct ushort;
 
 struct CGameNetwork {
     struct SBill {
+        void** vftable; // accesses: 1
+        undefined4 field_0x4; // accesses: 1
+        undefined4 field_0x8; // accesses: 1
+        undefined * field_0xc; // accesses: 1
+        undefined4 field_0x10; // accesses: 1
+        undefined4 field_0x14; // accesses: 1
+        byte _padding_0x18[24];
+        undefined4 field_0x30; // accesses: 1
 
         // Member Functions
         void __thiscall SBill (void *this,SBill *param_1,CFastString *param_2,CFastString *param_3, CFastStringInt *param_4,int param_5);
     };
 
-    byte _padding_0x0[4];
-    int * field_0x4; // accesses: 12
-    byte _padding_0x8[8];
-    SStringParam * field_0x10; // accesses: 5
-    undefined4 field_0x14; // accesses: 2
-    int field_0x18; // accesses: 1
-    int field_0x1c; // accesses: 4
-    undefined4 field_0x20; // accesses: 1
-    undefined4 field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 1
-    undefined4 field_0x2c; // accesses: 1
-    byte _padding_0x30[24];
-    undefined4 field_0x48; // accesses: 1
-    undefined4 field_0x4c; // accesses: 1
-    undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 1
-    byte _padding_0x58[4];
-    undefined4 field_0x5c; // accesses: 1
-    byte _padding_0x60[48];
-    ulong field_0x90; // accesses: 1
-    byte _padding_0x94[24];
+    void** vftable; // accesses: 16
+    short * field_0x4; // accesses: 9
+    byte _padding_0x8[12];
+    undefined4 field_0x14; // accesses: 1
+    byte _padding_0x18[148];
     undefined4 field_0xac; // accesses: 1
     ushort field_0xb0; // accesses: 1
     byte _padding_0xb2[2];
     int field_0xb4; // accesses: 3
-    byte _padding_0xb8[4];
-    CGameNetwork * field_0xbc; // accesses: 1
-    undefined1 * field_0xc0; // accesses: 1
-    undefined4 field_0xc4; // accesses: 1
-    byte _padding_0xc8[92];
+    byte _padding_0xb8[108];
     int field_0x124; // accesses: 1
     undefined4 field_0x128; // accesses: 1
-    byte _padding_0x12c[28];
-    EPlayerType field_0x148; // accesses: 1
-    byte _padding_0x14c[24];
-    ulong field_0x164; // accesses: 1
-    byte _padding_0x168[12];
-    int field_0x174; // accesses: 1
-    byte _padding_0x178[4];
-    int field_0x17c; // accesses: 1
-    byte _padding_0x180[4];
-    int field_0x184; // accesses: 1
-    byte _padding_0x188[32];
+    byte _padding_0x12c[124];
     CGameNetClient * field_0x1a8; // accesses: 8
     CGameNetServer * field_0x1ac; // accesses: 10
-    int field_0x1b0; // accesses: 3
+    CGameMasterServer * field_0x1b0; // accesses: 2
     byte _padding_0x1b4[4];
-    int field_0x1b8; // accesses: 8
+    int field_0x1b8; // accesses: 6
     byte _padding_0x1bc[20];
     int field_0x1d0; // accesses: 11
     int field_0x1d4; // accesses: 5

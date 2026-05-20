@@ -4,9 +4,8 @@
 #include "typedefs.h"
 
 struct CHmsConfig {
-    byte _padding_0x0[8];
-    int field_0x8; // accesses: 2
-    byte _padding_0xc[8];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 3
     undefined4 field_0x18; // accesses: 3
     undefined4 field_0x1c; // accesses: 1

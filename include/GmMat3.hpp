@@ -4,15 +4,15 @@
 #include "typedefs.h"
 
 struct GmMat3 {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 34
-    float field_0x8; // accesses: 35
-    float field_0xc; // accesses: 9
-    float field_0x10; // accesses: 9
-    float field_0x14; // accesses: 9
-    float field_0x18; // accesses: 9
-    float field_0x1c; // accesses: 9
-    float field_0x20; // accesses: 9
+    void** vftable; // accesses: 54
+    float field_0x4; // accesses: 60
+    float field_0x8; // accesses: 58
+    float field_0xc; // accesses: 37
+    float field_0x10; // accesses: 35
+    float field_0x14; // accesses: 37
+    float field_0x18; // accesses: 47
+    float field_0x1c; // accesses: 47
+    float field_0x20; // accesses: 45
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall SetDOVInverse(void *this,GmMat3 *param_1,GmVec3 *param_2);

@@ -3,26 +3,35 @@
 
 #include "typedefs.h"
 
-struct CHmsZoneVPacker;
-struct CPlugTree;
-struct CPlugTreeVisualMip;
 struct GmBoxAligned;
+struct ulong;
 
 struct CHmsVPackerCell {
-    byte _padding_0x0[4];
-    CPlugTreeVisualMip * field_0x4; // accesses: 4
-    int field_0x8; // accesses: 4
-    byte _padding_0xc[8];
-    int field_0x14; // accesses: 2
-    byte _padding_0x18[52];
-    undefined4 field_0x4c; // accesses: 1
-    byte _padding_0x50[8];
-    CHmsZoneVPacker * field_0x58; // accesses: 6
+    void** vftable; // accesses: 2
+    undefined4 field_0x4; // accesses: 1
+    undefined4 field_0x8; // accesses: 1
+    float field_0xc; // accesses: 3
+    float field_0x10; // accesses: 3
+    float field_0x14; // accesses: 2
+    byte _padding_0x18[12];
+    undefined2 field_0x24; // accesses: 1
+    byte _padding_0x26[2];
+    float field_0x28; // accesses: 1
+    float field_0x2c; // accesses: 2
+    byte _padding_0x30[24];
+    undefined4 field_0x48; // accesses: 1
+    byte _padding_0x4c[12];
+    undefined4 field_0x58; // accesses: 3
     GmBoxAligned * field_0x5c; // accesses: 1
     CHmsVPackerCell * field_0x60; // accesses: 1
     ulong * field_0x64; // accesses: 1
-    byte _padding_0x68[44];
-    int field_0x94; // accesses: 1
+    byte _padding_0x68[12];
+    undefined4 field_0x74; // accesses: 1
+    undefined4 field_0x78; // accesses: 1
+    undefined4 field_0x7c; // accesses: 1
+    undefined4 field_0x80; // accesses: 1
+    undefined4 field_0x84; // accesses: 1
+    undefined4 field_0x88; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsVPackerCell(void *this,CHmsVPackerCell *param_1);

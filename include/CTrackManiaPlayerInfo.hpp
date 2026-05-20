@@ -3,23 +3,32 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CTrackManiaPlayerInfo {
     struct SRpcPlayerQuickInfo {
+        void** vftable; // accesses: 1
+        undefined1 field_0x1; // accesses: 1
+        undefined2 field_0x2; // accesses: 1
+        byte _padding_0x4[16];
+        undefined4 field_0x14; // accesses: 1
+        undefined4 field_0x18; // accesses: 1
 
         // Member Functions
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     };
 
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
-    byte _padding_0x8[100];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[104];
     int field_0x6c; // accesses: 1
     int field_0x70; // accesses: 1
     byte _padding_0x74[20];
     int field_0x88; // accesses: 1
     byte _padding_0x8c[4];
     int field_0x90; // accesses: 1
-    byte _padding_0x94[420];
+    byte _padding_0x94[328];
+    int field_0x1dc; // accesses: 1
+    byte _padding_0x1e0[88];
     undefined4 field_0x238; // accesses: 1
     byte _padding_0x23c[4];
     undefined4 field_0x240; // accesses: 1
@@ -28,7 +37,7 @@ struct CTrackManiaPlayerInfo {
     undefined4 field_0x2a8; // accesses: 1
     undefined4 field_0x2ac; // accesses: 1
     byte _padding_0x2b0[4];
-    int field_0x2b4; // accesses: 2
+    undefined4 field_0x2b4; // accesses: 2
     undefined4 field_0x2b8; // accesses: 1
     byte _padding_0x2bc[4];
     undefined4 field_0x2c0; // accesses: 1
@@ -38,7 +47,7 @@ struct CTrackManiaPlayerInfo {
     undefined4 field_0x2d0; // accesses: 1
     undefined4 field_0x2d4; // accesses: 1
     byte _padding_0x2d8[8];
-    int field_0x2e0; // accesses: 2
+    undefined4 field_0x2e0; // accesses: 2
     undefined4 field_0x2e4; // accesses: 1
     undefined4 field_0x2e8; // accesses: 1
     undefined4 field_0x2ec; // accesses: 1

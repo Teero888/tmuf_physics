@@ -3,27 +3,18 @@
 
 #include "typedefs.h"
 
-struct CMwNod;
 struct CSceneMobilClouds;
 struct CSceneToySea;
 
 struct CMotionWeather {
-    byte _padding_0x0[24];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[20];
     CSceneToySea * field_0x18; // accesses: 2
     byte _padding_0x1c[20];
-    int field_0x30; // accesses: 3
-    int field_0x34; // accesses: 10
-    byte _padding_0x38[28];
-    CMwNod * field_0x54; // accesses: 4
-    byte _padding_0x58[24];
-    undefined4 field_0x70; // accesses: 1
-    byte _padding_0x74[32];
-    CSceneToySea * field_0x94; // accesses: 1
-    byte _padding_0x98[4];
-    int field_0x9c; // accesses: 1
-    int field_0xa0; // accesses: 1
-    byte _padding_0xa4[64];
-    int field_0xe4; // accesses: 2
+    undefined4 field_0x30; // accesses: 3
+    undefined4 field_0x34; // accesses: 10
+    byte _padding_0x38[172];
+    int field_0xe4; // accesses: 1
 
     // Member Functions
     int __thiscall GetSkyGradVBitmapAdr (CMotionWeather *this,CMotionWeather *param_1,CPlugBitmapAddress **param_2);

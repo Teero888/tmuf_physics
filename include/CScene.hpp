@@ -6,9 +6,8 @@
 struct CSceneToySea;
 
 struct CScene {
-    byte _padding_0x0[24];
-    int field_0x18; // accesses: 5
-    byte _padding_0x1c[52];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[76];
     undefined4 field_0x50; // accesses: 1
     CSceneToySea * field_0x54; // accesses: 2
     byte _padding_0x58[68];

@@ -3,14 +3,18 @@
 
 #include "typedefs.h"
 
+struct CPlugShader;
+struct CVisionViewportDx9;
+struct GmIso4;
+
 struct GmVec4 {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 37
-    float field_0x8; // accesses: 41
-    float field_0xc; // accesses: 25
-    float field_0x10; // accesses: 11
+    void** vftable; // accesses: 53
+    float field_0x4; // accesses: 52
+    float field_0x8; // accesses: 51
+    CVisionViewportDx9 * field_0xc; // accesses: 44
+    float field_0x10; // accesses: 7
     float field_0x14; // accesses: 5
-    float field_0x18; // accesses: 9
+    float field_0x18; // accesses: 2
     float field_0x1c; // accesses: 2
     float field_0x20; // accesses: 2
     float field_0x24; // accesses: 2

@@ -14,7 +14,7 @@ struct CControlTimeLine2 {
     float field_0x154; // accesses: 1
     float field_0x158; // accesses: 1
     byte _padding_0x15c[292];
-    int * field_0x280; // accesses: 4
+    CPlugTree * field_0x280; // accesses: 4
 
     // Member Functions
     void __thiscall GetTreeXFromTime (CControlTimeLine2 *this,CControlTimeLine2 *param_1,float param_2,float *param_3, int *param_4);

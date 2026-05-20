@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CMwEngineInfo {
-    byte _padding_0x0[4];
-    uint field_0x4; // accesses: 1
+    void** vftable; // accesses: 1
+    uint field_0x4; // accesses: 3
 
     // Member Functions
     void __thiscall AddClass(CMwEngineInfo *this,CMwEngineInfo *param_1,CMwClassInfo *param_2);

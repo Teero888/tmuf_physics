@@ -6,7 +6,8 @@
 struct CMwNod;
 
 struct CGameCtnEditorScenePocLink {
-    byte _padding_0x0[100];
+    void** vftable; // accesses: 12
+    byte _padding_0x4[96];
     undefined4 field_0x64; // accesses: 1
     undefined4 field_0x68; // accesses: 1
     byte _padding_0x6c[4];
@@ -17,7 +18,7 @@ struct CGameCtnEditorScenePocLink {
     float field_0x80; // accesses: 2
     float field_0x84; // accesses: 1
     byte _padding_0x88[48];
-    undefined4 field_0xb8; // accesses: 5
+    CGameCtnEditorScenePocLink * field_0xb8; // accesses: 5
     undefined4 field_0xbc; // accesses: 1
 
     // Member Functions

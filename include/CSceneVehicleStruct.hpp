@@ -8,9 +8,6 @@ struct CMwNod;
 
 struct CSceneVehicleStruct {
     struct SSimulationWheel {
-        byte _padding_0x0[4];
-        undefined4 field_0x4; // accesses: 1
-        undefined4 field_0x8; // accesses: 1
 
         // Member Functions
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
@@ -18,17 +15,14 @@ struct CSceneVehicleStruct {
     };
 
     struct SVisualArm {
-        byte _padding_0x0[8];
-        undefined4 field_0x8; // accesses: 1
+        void** vftable; // accesses: 1
+        undefined4 field_0x4; // accesses: 1
 
         // Member Functions
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     };
 
     struct SVisualWheel {
-        byte _padding_0x0[32];
-        undefined4 field_0x20; // accesses: 1
-        undefined4 field_0x24; // accesses: 1
 
         // Member Functions
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
@@ -36,10 +30,11 @@ struct CSceneVehicleStruct {
         void __thiscall ~SVisualWheel(void *this,SVisualWheel *param_1);
     };
 
-    byte _padding_0x0[68];
-    CFuncKeysReal * field_0x44; // accesses: 8
-    CFuncKeysReal * field_0x48; // accesses: 8
-    CFuncKeysReal * field_0x4c; // accesses: 8
+    void** vftable; // accesses: 1
+    byte _padding_0x4[64];
+    CMwNod * field_0x44; // accesses: 8
+    CMwNod * field_0x48; // accesses: 8
+    CMwNod * field_0x4c; // accesses: 8
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleStruct(CSceneVehicleStruct *this,CSceneVehicleStruct *param_1);

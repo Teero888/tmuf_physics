@@ -3,18 +3,20 @@
 
 #include "typedefs.h"
 
-struct CMwEngineInfo;
-struct CMwParam;
+struct CFastString;
+struct CSystemFid;
+struct CSystemFids;
+struct ulong;
 
 struct CMwNod {
-    byte _padding_0x0[4];
-    CMwNod * field_0x4; // accesses: 18
-    CMwParam * field_0x8; // accesses: 12
-    int field_0xc; // accesses: 19
-    int field_0x10; // accesses: 18
-    int field_0x14; // accesses: 5
-    CMwEngineInfo * field_0x18; // accesses: 21
-    code * field_0x1c; // accesses: 1
+    void** vftable; // accesses: 27
+    ulong field_0x4; // accesses: 9
+    undefined4 field_0x8; // accesses: 3
+    void * field_0xc; // accesses: 16
+    CMwNod * field_0x10; // accesses: 15
+    CSystemFids * field_0x14; // accesses: 1
+    int field_0x18; // accesses: 11
+    undefined4 field_0x1c; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall Param_Check(CMwNod *this,CMwNod *param_1,CMwStack *param_2);

@@ -3,9 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastArray<struct_SPlugGpuLoadFx> {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
+    void** vftable; // accesses: 2
+    void * field_0x4; // accesses: 9
 
     // Member Functions
     int __thiscall AreEqual (void *this,CDx9StateBlock *param_1,CDx9StateBlock *param_2);

@@ -3,49 +3,40 @@
 
 #include "typedefs.h"
 
-struct CClassicBuffer;
-struct CFastStringInt;
-struct CSystemFid;
-struct TiXmlElement;
-struct TiXmlNode;
-struct TiXmlText;
+struct CNetConnection;
+struct ulong;
 
 struct CGameMasterServer {
     struct SCriteria {
+        byte _padding_0x0[8];
+        undefined4 field_0x8; // accesses: 1
+        undefined * field_0xc; // accesses: 2
 
         // Member Functions
         void __thiscall ~SCriteria(void *this,SCriteria *param_1);
     };
 
     struct SLadderResult {
+        void** vftable; // accesses: 1
+        undefined * field_0x4; // accesses: 1
 
         // Member Functions
         void __thiscall SLadderResult(void *this,SLadderResult *param_1);
     };
 
     struct SLadderStats {
+        byte _padding_0x0[28];
+        undefined4 field_0x1c; // accesses: 1
+        undefined * field_0x20; // accesses: 1
 
         // Member Functions
         void __thiscall SLadderStats(void *this,SLadderStats *param_1);
     };
 
-    byte _padding_0x0[4];
-    TiXmlText * field_0x4; // accesses: 3
-    byte _padding_0x8[4];
-    int field_0xc; // accesses: 1
-    byte _padding_0x10[4];
-    int field_0x14; // accesses: 1
-    byte _padding_0x18[8];
-    CFastStringInt * field_0x20; // accesses: 1
-    TiXmlText * field_0x24; // accesses: 2
-    char * field_0x28; // accesses: 1
-    byte _padding_0x2c[8];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[48];
     undefined4 field_0x34; // accesses: 3
-    TiXmlNode * field_0x38; // accesses: 2
-    TiXmlElement * field_0x3c; // accesses: 2
-    byte _padding_0x40[8];
-    int field_0x48; // accesses: 3
-    byte _padding_0x4c[300];
+    byte _padding_0x38[320];
     undefined4 field_0x178; // accesses: 2
     byte _padding_0x17c[8];
     int field_0x184; // accesses: 3

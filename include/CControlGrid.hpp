@@ -4,9 +4,8 @@
 #include "typedefs.h"
 
 struct CControlGrid {
-    byte _padding_0x0[4];
-    ulong field_0x4; // accesses: 1
-    byte _padding_0x8[376];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[380];
     undefined4 field_0x180; // accesses: 1
     undefined4 field_0x184; // accesses: 1
     undefined4 field_0x188; // accesses: 1

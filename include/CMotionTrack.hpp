@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CMotionTrack {
-    byte _padding_0x0[36];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[32];
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1
 

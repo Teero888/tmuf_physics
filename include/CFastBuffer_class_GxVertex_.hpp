@@ -3,7 +3,12 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastBuffer<class_GxVertex> {
+    void** vftable; // accesses: 10
+    ulong field_0x4; // accesses: 8
+    uint field_0x8; // accesses: 1
 
     // Member Functions
     void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);

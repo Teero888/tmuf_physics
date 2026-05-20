@@ -4,6 +4,9 @@
 #include "typedefs.h"
 
 struct SStateSplit {
+    byte _padding_0x0[168];
+    undefined4 field_0xa8; // accesses: 2
+    undefined4 field_0xac; // accesses: 2
 
     // Member Functions
     void __thiscall Allocate(void *this,SStateSplit *param_1,ulong param_2);

@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GxLight {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 2
     float field_0x4; // accesses: 2
     float field_0x8; // accesses: 2
     byte _padding_0xc[12];

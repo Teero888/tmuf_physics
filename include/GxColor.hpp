@@ -6,10 +6,10 @@
 struct GmVec3;
 
 struct GxColor {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 16
-    GxColor * field_0x8; // accesses: 19
-    GmVec3 * field_0xc; // accesses: 1
+    void** vftable; // accesses: 37
+    float field_0x4; // accesses: 35
+    float field_0x8; // accesses: 32
+    float field_0xc; // accesses: 12
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetHLS(void *this,GxColor *param_1,GmVec3 *param_2);

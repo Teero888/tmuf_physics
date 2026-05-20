@@ -5,16 +5,9 @@
 
 struct CDx9StateBlock {
     byte _padding_0x0[4];
-    int field_0x4; // accesses: 71
-    undefined4 field_0x8; // accesses: 39
-    byte _padding_0xc[20];
-    int field_0x20; // accesses: 1
-    byte _padding_0x24[88];
-    short field_0x7c; // accesses: 1
-    byte _padding_0x7e[70];
-    code * field_0xc4; // accesses: 1
-    byte _padding_0xc8[920];
-    int field_0x460; // accesses: 2
+    int * field_0x4; // accesses: 1
+    byte _padding_0x8[4];
+    int field_0xc; // accesses: 2
 
     // Member Functions
     float __cdecl LockRenderStateReal(_D3DRENDERSTATETYPE param_1,float param_2);

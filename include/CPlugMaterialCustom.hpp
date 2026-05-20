@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CPlugMaterialCustom {
+    void** vftable; // accesses: 1
 
     // Member Functions
     CPlugShader * __cdecl ShaderLoadFromFidParam(CSystemFid *param_1,CPlugMaterialCustom *param_2);

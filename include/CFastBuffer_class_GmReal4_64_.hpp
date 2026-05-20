@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CFastBuffer<class_GmReal4_64> {
+    void** vftable; // accesses: 2
+    int field_0x4; // accesses: 1
 
     // Member Functions
     void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);

@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CFastBuffer<class_CMwNodRef<class_CGameCtnGhostInfo>_> {
+    byte _padding_0x0[4];
+    int field_0x4; // accesses: 3
 
     // Member Functions
     void __thiscall SwapElemsAt (void *this,CFastBuffer<struct_CVisionViewport::SDelayedToSort64b> *param_1,ulong param_2, ulong param_3);

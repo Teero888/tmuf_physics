@@ -4,9 +4,7 @@
 #include "typedefs.h"
 
 struct CControlKeyboardInterface {
-    byte _padding_0x0[4];
-    undefined2 * field_0x4; // accesses: 1
-    byte _padding_0x8[8];
+    byte _padding_0x0[16];
     undefined4 field_0x10; // accesses: 1
 
     // Member Functions

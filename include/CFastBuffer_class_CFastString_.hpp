@@ -3,7 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastBuffer<class_CFastString> {
+    void** vftable; // accesses: 10
+    void * field_0x4; // accesses: 5
 
     // Member Functions
     SLoadedLight * __thiscall AddNewElem (void *this,CFastBuffer<struct_CVisionViewportDx9::SLoadedLight> *param_1);

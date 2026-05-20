@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugSound {
-    byte _padding_0x0[24];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[20];
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 1

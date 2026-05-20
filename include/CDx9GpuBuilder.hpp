@@ -4,8 +4,7 @@
 #include "typedefs.h"
 
 struct CDx9GpuBuilder {
-    byte _padding_0x0[51];
-    undefined4 field_0x33; // accesses: 1
+    void** vftable; // accesses: 1
 
     // Member Functions
     /* WARNING: Control flow encountered bad instruction data */ /* WARNING: Instruction at (ram,0x009a545d) overlaps instruction at (ram,0x009a545c) */ /* WARNING: Unable to track spacebase fully for stack */ void __thiscall CDx9GpuBuilder::CDx9GpuBuilder(CDx9GpuBuilder *this,CDx9GpuBuilder *param_1);

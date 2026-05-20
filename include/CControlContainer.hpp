@@ -5,12 +5,14 @@
 
 struct CControlBase;
 struct CMwCmd;
+struct ulong;
 
 struct CControlContainer {
-    byte _padding_0x0[24];
+    void** vftable; // accesses: 4
+    byte _padding_0x4[20];
     int field_0x18; // accesses: 1
     byte _padding_0x1c[80];
-    int field_0x6c; // accesses: 3
+    CControlContainer * field_0x6c; // accesses: 1
     CMwCmd * field_0x70; // accesses: 1
     byte _padding_0x74[28];
     undefined4 field_0x90; // accesses: 1
@@ -28,11 +30,9 @@ struct CControlContainer {
     undefined * field_0x13c; // accesses: 1
     undefined4 field_0x140; // accesses: 1
     byte _padding_0x144[8];
-    int field_0x14c; // accesses: 3
+    undefined4 field_0x14c; // accesses: 3
     undefined4 field_0x150; // accesses: 1
     undefined4 field_0x154; // accesses: 1
-    byte _padding_0x158[164];
-    code * field_0x1fc; // accesses: 1
 
     // Member Functions
     CControlBase * __thiscall CreateControl (CControlContainer *this,CControlContainer *param_1,char *param_2,char *param_3, char *param_4,CMwNod *param_5,char *param_6,CControlStyle *param_7);

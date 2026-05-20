@@ -8,11 +8,9 @@ struct CGameControlCameraMaster;
 
 struct CGamePlayerCameraSet {
     byte _padding_0x0[20];
-    CGameControlCamera * field_0x14; // accesses: 4
-    int field_0x18; // accesses: 10
+    undefined4 field_0x14; // accesses: 4
+    CGameControlCameraMaster * field_0x18; // accesses: 8
     int * field_0x1c; // accesses: 7
-    byte _padding_0x20[96];
-    undefined4 field_0x80; // accesses: 1
 
     // Member Functions
     CGameControlCamera * __thiscall CamPtrGet (CGamePlayerCameraSet *this,CGamePlayerCameraSet *param_1,ulong param_2);

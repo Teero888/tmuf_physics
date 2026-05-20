@@ -8,12 +8,10 @@ struct CFuncCurvesReal;
 struct CFuncKeysReal;
 
 struct CBoatSail {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 2
-    byte _padding_0x8[12];
+    byte _padding_0x0[20];
     int field_0x14; // accesses: 5
     int field_0x18; // accesses: 1
-    int field_0x1c; // accesses: 3
+    CFuncCurvesReal * field_0x1c; // accesses: 3
     byte _padding_0x20[24];
     CFuncCurvesReal * field_0x38; // accesses: 1
     CFuncCurvesReal * field_0x3c; // accesses: 1
@@ -26,14 +24,10 @@ struct CBoatSail {
     CFuncKeysReal * field_0x58; // accesses: 2
     float field_0x5c; // accesses: 1
     float field_0x60; // accesses: 2
-    byte _padding_0x64[32];
-    float field_0x84; // accesses: 2
-    byte _padding_0x88[28];
+    byte _padding_0x64[64];
     float field_0xa4; // accesses: 1
     byte _padding_0xa8[4];
     float field_0xac; // accesses: 2
-    byte _padding_0xb0[12];
-    int field_0xbc; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall AccelerationGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);

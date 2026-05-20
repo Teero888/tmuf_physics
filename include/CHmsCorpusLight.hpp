@@ -6,17 +6,17 @@
 struct CMotionLight;
 
 struct CHmsCorpusLight {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 2
+    void** vftable; // accesses: 3
+    undefined4 field_0x4; // accesses: 1
+    undefined4 field_0x8; // accesses: 1
     float field_0xc; // accesses: 1
     float field_0x10; // accesses: 1
-    float field_0x14; // accesses: 3
+    float field_0x14; // accesses: 2
     byte _padding_0x18[36];
     undefined4 field_0x3c; // accesses: 3
     undefined4 field_0x40; // accesses: 3
     undefined4 field_0x44; // accesses: 3
-    int field_0x48; // accesses: 6
+    undefined4 field_0x48; // accesses: 6
     int * field_0x4c; // accesses: 8
     undefined4 field_0x50; // accesses: 1
     undefined4 field_0x54; // accesses: 1

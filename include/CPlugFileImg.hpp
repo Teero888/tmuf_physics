@@ -3,14 +3,12 @@
 
 #include "typedefs.h"
 
+struct uchar;
+struct ulong;
+
 struct CPlugFileImg {
-    byte _padding_0x0[2];
-    undefined2 field_0x2; // accesses: 2
-    undefined2 field_0x4; // accesses: 6
-    byte _padding_0x6[2];
-    ulong field_0x8; // accesses: 2
-    undefined4 field_0xc; // accesses: 8
-    byte _padding_0x10[4];
+    void** vftable; // accesses: 3
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     ulong field_0x18; // accesses: 9
     ulong field_0x1c; // accesses: 11

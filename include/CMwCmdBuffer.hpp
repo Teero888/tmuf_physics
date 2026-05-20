@@ -6,15 +6,13 @@
 struct CMwCmd;
 
 struct CMwCmdBuffer {
-    byte _padding_0x0[4];
-    ulong field_0x4; // accesses: 6
-    byte _padding_0x8[8];
-    int field_0x10; // accesses: 1
-    int field_0x14; // accesses: 7
-    int field_0x18; // accesses: 12
-    int field_0x1c; // accesses: 9
+    void** vftable; // accesses: 3
+    byte _padding_0x4[16];
+    uint field_0x14; // accesses: 7
+    undefined4 field_0x18; // accesses: 2
+    uint field_0x1c; // accesses: 9
     byte _padding_0x20[36];
-    int field_0x44; // accesses: 4
+    undefined4 field_0x44; // accesses: 4
 
     // Member Functions
     CMwClassInfo * __thiscall MwGetClassInfo(CMwCmdBuffer *this,CFuncSegment *param_1);

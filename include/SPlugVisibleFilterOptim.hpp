@@ -3,7 +3,11 @@
 
 #include "typedefs.h"
 
+struct ushort;
+
 struct SPlugVisibleFilterOptim {
+    void** vftable; // accesses: 3
+    ushort field_0x2; // accesses: 1
 
     // Member Functions
     int __thiscall IsIdRejected (void *this,SPlugVisibleFilterOptim *param_1,SPlugVisibleId *param_2);

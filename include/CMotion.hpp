@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMotion {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CMotion(CMotion *this,CMotion *param_1);

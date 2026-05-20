@@ -8,16 +8,13 @@ struct CMwNod;
 
 struct CSceneFxNod {
     byte _padding_0x0[20];
-    int field_0x14; // accesses: 5
-    int field_0x18; // accesses: 3
-    int field_0x1c; // accesses: 8
+    CSceneFxNod * field_0x14; // accesses: 4
+    CHmsViewport * field_0x18; // accesses: 3
+    CSceneFxNod * field_0x1c; // accesses: 8
     byte _padding_0x20[16];
-    int * field_0x30; // accesses: 13
+    CMwNod * field_0x30; // accesses: 13
     byte _padding_0x34[16];
-    CSceneFxNod * field_0x44; // accesses: 4
-    byte _padding_0x48[364];
-    undefined4 field_0x1b4; // accesses: 3
-    code * field_0x1b8; // accesses: 2
+    CSceneFxNod * field_0x44; // accesses: 2
 
     // Member Functions
     CSceneFxNod * __thiscall NodFindFromFx(CSceneFxNod *this,CSceneFxNod *param_1,CSceneFx *param_2);

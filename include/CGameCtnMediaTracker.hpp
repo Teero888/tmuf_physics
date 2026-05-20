@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct CControlContainer;
-struct CControlEffectSimi;
 struct CControlSimi2;
 struct CControlTimeLine2;
 struct CGameControlCamera;
@@ -15,65 +13,38 @@ struct CGameCtnMediaClipPlayer;
 struct CGameSafeFrame;
 
 struct CGameCtnMediaTracker {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 15
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 2
-    byte _padding_0x10[4];
-    int * field_0x14; // accesses: 8
-    int field_0x18; // accesses: 5
-    STransformDesc * field_0x1c; // accesses: 4
+    byte _padding_0x0[32];
     CGameCtnChallenge * field_0x20; // accesses: 2
-    byte _padding_0x24[4];
-    CControlEffectSimi * field_0x28; // accesses: 2
-    int field_0x2c; // accesses: 2
-    undefined4 field_0x30; // accesses: 1
-    undefined4 field_0x34; // accesses: 1
-    CControlEffectSimi * field_0x38; // accesses: 4
-    byte _padding_0x3c[8];
-    CGameCtnChallenge * field_0x44; // accesses: 1
-    STransformDesc * field_0x48; // accesses: 1
-    float field_0x4c; // accesses: 1
-    float field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 1
-    int field_0x58; // accesses: 1
-    byte _padding_0x5c[36];
-    CGameCtnChallenge * field_0x80; // accesses: 1
-    byte _padding_0x84[28];
-    int field_0xa0; // accesses: 4
-    byte _padding_0xa4[4];
-    int field_0xa8; // accesses: 1
-    CGameCtnMediaClip * field_0xac; // accesses: 2
-    int field_0xb0; // accesses: 1
+    byte _padding_0x24[8];
+    int field_0x2c; // accesses: 1
+    byte _padding_0x30[112];
+    CGameSafeFrame * field_0xa0; // accesses: 4
+    byte _padding_0xa4[8];
+    CGameCtnMediaClip * field_0xac; // accesses: 1
+    byte _padding_0xb0[4];
     CGameCtnMediaClipPlayer * field_0xb4; // accesses: 16
-    byte _padding_0xb8[4];
-    int field_0xbc; // accesses: 1
-    byte _padding_0xc0[12];
+    byte _padding_0xb8[20];
     CControlTimeLine2 * field_0xcc; // accesses: 9
     byte _padding_0xd0[12];
     int field_0xdc; // accesses: 1
     byte _padding_0xe0[28];
-    int field_0xfc; // accesses: 2
+    undefined4 field_0xfc; // accesses: 2
     byte _padding_0x100[24];
-    int field_0x118; // accesses: 2
+    undefined4 field_0x118; // accesses: 2
     int field_0x11c; // accesses: 7
     int * field_0x120; // accesses: 2
     byte _padding_0x124[108];
-    int field_0x190; // accesses: 10
+    undefined4 field_0x190; // accesses: 10
     int field_0x194; // accesses: 1
     int field_0x198; // accesses: 5
     byte _padding_0x19c[116];
-    int field_0x210; // accesses: 2
+    undefined4 field_0x210; // accesses: 2
     byte _padding_0x214[20];
-    int field_0x228; // accesses: 3
+    CControlSimi2 * field_0x228; // accesses: 3
     byte _padding_0x22c[92];
     int * field_0x288; // accesses: 7
     int * field_0x28c; // accesses: 3
-    byte _padding_0x290[52];
-    int field_0x2c4; // accesses: 1
-    byte _padding_0x2c8[4];
-    int field_0x2cc; // accesses: 2
-    byte _padding_0x2d0[32];
+    byte _padding_0x290[96];
     int * field_0x2f0; // accesses: 3
     byte _padding_0x2f4[212];
     int field_0x3c8; // accesses: 1

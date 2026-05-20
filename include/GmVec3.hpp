@@ -3,19 +3,27 @@
 
 #include "typedefs.h"
 
+struct CHmsItem;
+struct CSceneVehicleCarTuning;
+struct SPredictionTypeVector;
+
 struct GmVec3 {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 31
-    float field_0x8; // accesses: 31
+    void** vftable; // accesses: 169
+    void * field_0x4; // accesses: 159
+    void * field_0x8; // accesses: 168
     float field_0xc; // accesses: 3
-    float field_0x10; // accesses: 3
-    float field_0x14; // accesses: 3
-    float field_0x18; // accesses: 3
-    float field_0x1c; // accesses: 3
-    float field_0x20; // accesses: 3
+    float field_0x10; // accesses: 2
+    float field_0x14; // accesses: 2
+    float field_0x18; // accesses: 2
+    float field_0x1c; // accesses: 2
+    float field_0x20; // accesses: 2
     float field_0x24; // accesses: 4
-    float field_0x28; // accesses: 4
+    float field_0x28; // accesses: 3
     float field_0x2c; // accesses: 4
+    byte _padding_0x30[8];
+    CHmsItem * field_0x38; // accesses: 1
+    byte _padding_0x3c[80];
+    int field_0x8c; // accesses: 5
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __cdecl GetAngle(GmVec3 *param_1,GmVec3 *param_2);

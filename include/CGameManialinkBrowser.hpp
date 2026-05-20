@@ -6,24 +6,23 @@
 struct CAudioPort;
 struct CAudioSound;
 struct CGameApp;
+struct CGameApp_MenuContext;
 struct CMwNod;
 
 struct CGameManialinkBrowser {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 1
-    byte _padding_0x8[12];
+    byte _padding_0x0[20];
     CGameApp_MenuContext * field_0x14; // accesses: 4
     int field_0x18; // accesses: 3
     int field_0x1c; // accesses: 1
     byte _padding_0x20[4];
     int * field_0x24; // accesses: 4
     byte _padding_0x28[4];
-    undefined4 field_0x2c; // accesses: 3
-    int field_0x30; // accesses: 4
-    int field_0x34; // accesses: 2
+    CMwNod * field_0x2c; // accesses: 3
+    CMwNod * field_0x30; // accesses: 4
+    undefined4 field_0x34; // accesses: 2
     undefined1 * field_0x38; // accesses: 1
-    undefined4 field_0x3c; // accesses: 3
-    undefined4 field_0x40; // accesses: 3
+    CMwNod * field_0x3c; // accesses: 3
+    CMwNod * field_0x40; // accesses: 3
     CAudioPort * field_0x44; // accesses: 4
     byte _padding_0x48[52];
     undefined4 field_0x7c; // accesses: 1

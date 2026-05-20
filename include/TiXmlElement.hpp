@@ -4,10 +4,12 @@
 #include "typedefs.h"
 
 struct TiXmlElement {
-    byte _padding_0x0[24];
-    undefined4 field_0x18; // accesses: 1
+    void** vftable; // accesses: 2
+    byte _padding_0x4[20];
+    int * field_0x18; // accesses: 10
     undefined4 field_0x1c; // accesses: 1
-    byte _padding_0x20[44];
+    int field_0x20; // accesses: 4
+    byte _padding_0x24[40];
     TiXmlElement * field_0x4c; // accesses: 1
 
     // Member Functions

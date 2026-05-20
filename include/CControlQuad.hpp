@@ -3,14 +3,9 @@
 
 #include "typedefs.h"
 
-struct CMwRefBuffer;
-
 struct CControlQuad {
-    byte _padding_0x0[60];
-    float field_0x3c; // accesses: 1
-    byte _padding_0x40[12];
-    CMwRefBuffer * field_0x4c; // accesses: 2
-    byte _padding_0x50[172];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[248];
     uint field_0xfc; // accesses: 2
     byte _padding_0x100[32];
     undefined4 field_0x120; // accesses: 1

@@ -4,74 +4,29 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct CFastString;
-struct CFastStringInt;
 struct CGameCtnApp;
 struct CGameCtnGhost;
 struct CGameDialogs;
 struct CGameMasterServer;
-struct CMwNod;
-struct CPlugAudio;
 struct CTrackMania;
-struct CTrackManiaNetForm;
-struct STmValidateParam;
 
 struct CTrackManiaNetwork {
-    byte _padding_0x0[4];
-    CFastStringInt * field_0x4; // accesses: 13
-    byte _padding_0x8[4];
-    int field_0xc; // accesses: 3
-    CFastString * field_0x10; // accesses: 6
-    CGameCtnGhost * field_0x14; // accesses: 8
-    undefined4 field_0x18; // accesses: 1
-    byte _padding_0x1c[4];
-    undefined4 field_0x20; // accesses: 4
-    undefined4 field_0x24; // accesses: 8
-    undefined4 field_0x28; // accesses: 4
-    undefined4 field_0x2c; // accesses: 4
-    ulong field_0x30; // accesses: 4
-    byte _padding_0x34[4];
-    CFastStringInt * field_0x38; // accesses: 1
-    int field_0x3c; // accesses: 2
-    byte _padding_0x40[4];
-    int field_0x44; // accesses: 2
-    byte _padding_0x48[8];
-    undefined4 field_0x50; // accesses: 1
-    undefined * field_0x54; // accesses: 1
-    byte _padding_0x58[24];
-    int field_0x70; // accesses: 1
-    int field_0x74; // accesses: 1
-    byte _padding_0x78[100];
-    int field_0xdc; // accesses: 2
-    byte _padding_0xe0[48];
-    code * field_0x110; // accesses: 1
-    byte _padding_0x114[4];
-    int field_0x118; // accesses: 4
+    void** vftable; // accesses: 67
+    byte _padding_0x4[276];
+    CGameDialogs * field_0x118; // accesses: 4
     byte _padding_0x11c[148];
-    int field_0x1b0; // accesses: 8
+    CGameMasterServer * field_0x1b0; // accesses: 8
     byte _padding_0x1b4[28];
     int field_0x1d0; // accesses: 3
-    byte _padding_0x1d4[44];
-    int field_0x200; // accesses: 3
-    byte _padding_0x204[4];
-    ulong field_0x208; // accesses: 1
-    byte _padding_0x20c[48];
+    byte _padding_0x1d4[104];
     CTrackManiaNetworkServerInfo * field_0x23c; // accesses: 1
-    byte _padding_0x240[20];
-    int field_0x254; // accesses: 1
-    byte _padding_0x258[8];
-    ulong field_0x260; // accesses: 3
-    byte _padding_0x264[72];
-    int field_0x2ac; // accesses: 3
-    byte _padding_0x2b0[840];
-    CGameCtnApp * field_0x5f8; // accesses: 16
+    byte _padding_0x240[952];
+    CTrackMania * field_0x5f8; // accesses: 16
     byte _padding_0x5fc[96];
-    int field_0x65c; // accesses: 2
+    undefined4 field_0x65c; // accesses: 2
     int field_0x660; // accesses: 8
-    byte _padding_0x664[156];
-    int field_0x700; // accesses: 1
-    byte _padding_0x704[212];
-    int field_0x7d8; // accesses: 4
+    byte _padding_0x664[372];
+    undefined4 field_0x7d8; // accesses: 4
     byte _padding_0x7dc[68];
     undefined4 field_0x820; // accesses: 4
     byte _padding_0x824[8];

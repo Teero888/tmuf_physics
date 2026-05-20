@@ -8,11 +8,10 @@ struct CMwNod;
 struct CSystemConfig;
 
 struct CGbxGame {
-    byte _padding_0x0[20];
-    undefined4 field_0x14; // accesses: 1
-    byte _padding_0x18[20];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[40];
     HINSTANCE field_0x2c; // accesses: 1
-    int field_0x30; // accesses: 8
+    LPVOID field_0x30; // accesses: 8
     byte _padding_0x34[8];
     int field_0x3c; // accesses: 1
     byte _padding_0x40[16];

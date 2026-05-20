@@ -3,13 +3,15 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CSystemFileMemMapped {
     byte _padding_0x0[20];
     undefined4 field_0x14; // accesses: 1
     ulong field_0x18; // accesses: 2
     undefined4 field_0x1c; // accesses: 3
     undefined4 field_0x20; // accesses: 3
-    undefined4 field_0x24; // accesses: 3
+    LPCVOID field_0x24; // accesses: 3
 
     // Member Functions
     ulong __thiscall GetActualSize(CSystemFileMemMapped *this,CClassicBufferMemory *param_1);

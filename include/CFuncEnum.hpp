@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CFuncEnum {
-    byte _padding_0x0[32];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[28];
     CFuncEnum * field_0x20; // accesses: 3
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1

@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CTrackManiaNetForm {
-    byte _padding_0x0[140];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[136];
     undefined4 field_0x8c; // accesses: 2
     undefined * field_0x90; // accesses: 3
     byte _padding_0x94[4];

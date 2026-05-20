@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct SSysGraphicPerformance {
+    void** vftable; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateCpuDependant(void *this,SSysGraphicPerformance *param_1);

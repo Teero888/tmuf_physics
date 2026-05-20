@@ -4,10 +4,14 @@
 #include "typedefs.h"
 
 struct CHmsSoundSource;
+struct CMwRefBuffer;
 
 struct CSceneSoundSource {
-    byte _padding_0x0[48];
+    void** vftable; // accesses: 4
+    byte _padding_0x4[44];
     int field_0x30; // accesses: 9
+    byte _padding_0x34[64];
+    CMwRefBuffer * field_0x74; // accesses: 1
 
     // Member Functions
     CPlugSound * __thiscall GetPlugSound(CSceneSoundSource *this,CSceneSoundSource *param_1);

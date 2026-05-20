@@ -3,11 +3,10 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CMotionParticleType {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 4
-    float field_0x8; // accesses: 4
-    byte _padding_0xc[24];
+    byte _padding_0x0[36];
     int field_0x24; // accesses: 1
     byte _padding_0x28[288];
     ulong field_0x148; // accesses: 1

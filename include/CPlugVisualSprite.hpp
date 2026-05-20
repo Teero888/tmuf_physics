@@ -3,14 +3,15 @@
 
 #include "typedefs.h"
 
+struct CControlEffectMaster;
+struct TiXmlAttribute;
+struct ulong;
+struct ushort;
+
 struct CPlugVisualSprite {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 8
-    float field_0x8; // accesses: 8
-    float field_0xc; // accesses: 4
-    byte _padding_0x10[4];
-    float field_0x14; // accesses: 1
-    byte _padding_0x18[4];
+    void** vftable; // accesses: 5
+    ulong field_0x4; // accesses: 3
+    byte _padding_0x8[20];
     uint field_0x1c; // accesses: 8
     byte _padding_0x20[20];
     float field_0x34; // accesses: 1
@@ -27,8 +28,10 @@ struct CPlugVisualSprite {
     undefined4 field_0xa8; // accesses: 1
     undefined4 field_0xac; // accesses: 1
     undefined4 field_0xb0; // accesses: 9
-    undefined2 field_0xb4; // accesses: 5
-    undefined2 field_0xb6; // accesses: 4
+    ushort field_0xb4; // accesses: 5
+    ushort field_0xb6; // accesses: 4
+    byte _padding_0xb8[100];
+    CControlEffectMaster * field_0x11c; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeBoundingBox (CPlugVisualSprite *this,CPlugVisualStrip *param_1,ulong param_2,ulong param_3);

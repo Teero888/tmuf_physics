@@ -3,11 +3,7 @@
 
 #include "typedefs.h"
 
-struct SStringParam;
-
 struct CGameMasterServerRequestParams {
-    byte _padding_0x0[12];
-    SStringParam * field_0xc; // accesses: 1
 
     // Member Functions
     SParam * __thiscall InternalGetParam (CGameMasterServerRequestParams *this,CGameMasterServerRequestParams *param_1, CFastString *param_2);

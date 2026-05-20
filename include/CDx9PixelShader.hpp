@@ -4,8 +4,9 @@
 #include "typedefs.h"
 
 struct CDx9PixelShader {
-    byte _padding_0x0[200];
-    int field_0xc8; // accesses: 2
+    void** vftable; // accesses: 2
+    int * field_0x4; // accesses: 2
+    int field_0x8; // accesses: 1
 
     // Member Functions
     void __thiscall UndirtyAndSetPixelShader(void *this,CDx9PixelShader *param_1);

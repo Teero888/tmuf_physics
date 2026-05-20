@@ -3,18 +3,31 @@
 
 #include "typedefs.h"
 
+struct uchar;
+
 struct SVehicleSimpleNetState {
-    byte _padding_0x0[12];
-    undefined2 field_0xc; // accesses: 8
-    byte _padding_0xe[2];
-    int field_0x10; // accesses: 12
-    int field_0x14; // accesses: 12
-    byte _padding_0x18[4];
+    void** vftable; // accesses: 17
+    uchar field_0x1; // accesses: 1
+    byte _padding_0x2[2];
+    float field_0x4; // accesses: 1
+    float field_0x8; // accesses: 1
+    float field_0xc; // accesses: 1
+    float field_0x10; // accesses: 1
+    int field_0x14; // accesses: 1
+    float field_0x18; // accesses: 1
     int field_0x1c; // accesses: 4
-    byte _padding_0x20[68];
-    uint field_0x64; // accesses: 1
-    byte _padding_0x68[24];
+    byte _padding_0x20[4];
+    float field_0x24; // accesses: 1
+    float field_0x28; // accesses: 1
+    float field_0x2c; // accesses: 1
+    byte _padding_0x30[52];
+    int field_0x64; // accesses: 1
+    int field_0x68; // accesses: 1
+    byte _padding_0x6c[20];
     float field_0x80; // accesses: 1
+    byte _padding_0x84[4];
+    int field_0x88; // accesses: 1
+    int field_0x8c; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RestoreFromStruct (void *this,SVehicleSimpleState_ReplayAfter040104 *param_1,SVehicleCarState *param_2, SState *param_3,SState *param_4,SState *param_5,SState *param_6);

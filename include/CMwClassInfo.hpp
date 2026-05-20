@@ -4,14 +4,11 @@
 #include "typedefs.h"
 
 struct CMwClassInfo {
-    byte _padding_0x0[1];
-    byte field_0x1; // accesses: 1
-    byte _padding_0x2[2];
+    byte _padding_0x0[4];
     int field_0x4; // accesses: 2
     CMwClassInfo * field_0x8; // accesses: 3
-    byte _padding_0xc[8];
-    char * field_0x14; // accesses: 1
-    CMwClassInfo * field_0x18; // accesses: 2
+    byte _padding_0xc[12];
+    CMwClassInfo * field_0x18; // accesses: 1
     byte _padding_0x1c[4];
     int field_0x20; // accesses: 1
     uint field_0x24; // accesses: 1

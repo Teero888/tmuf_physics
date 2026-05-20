@@ -4,9 +4,12 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
+struct CFastString;
 struct CMwNod;
-struct CPlugMaterial;
 struct CSystemFids;
+struct CSystemPackDesc;
+struct CSystemPackManager;
+struct ulong;
 
 struct CSystemFid {
     struct LoadHeaderUserDataFromChunkId<struct_CSystemArchiveNod {
@@ -15,7 +18,11 @@ struct CSystemFid {
         SHeaderFolderDep> (CSystemFid *this,CSystemFid *param_1,SHeaderFolderDep *param_2,ulong param_3,int param_4);
     };
 
+    struct ulong;
+
     struct SCallStackFidContext {
+        void** vftable; // accesses: 3
+        SCallStackFidContext * field_0x4; // accesses: 3
 
         // Member Functions
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ~SCallStackFidContext(void *this,SCallStackFidContext *param_1);
@@ -23,27 +30,26 @@ struct CSystemFid {
     };
 
     struct SHeaderUserData {
+        void** vftable; // accesses: 2
 
         // Member Functions
         ulong __thiscall ComputeByteSizeTotalInFile(void *this,SHeaderUserData *param_1);
     };
 
-    byte _padding_0x0[4];
-    undefined * field_0x4; // accesses: 13
-    int field_0x8; // accesses: 5
-    undefined4 field_0xc; // accesses: 2
-    int field_0x10; // accesses: 1
-    int * field_0x14; // accesses: 10
-    int field_0x18; // accesses: 3
+    void** vftable; // accesses: 13
+    CSystemPackManager * field_0x4; // accesses: 1
+    undefined4 field_0x8; // accesses: 2
+    byte _padding_0xc[8];
+    CSystemFids * field_0x14; // accesses: 11
+    byte _padding_0x18[4];
     undefined4 field_0x1c; // accesses: 3
-    CPlugMaterial * field_0x20; // accesses: 14
-    byte _padding_0x24[8];
-    int field_0x2c; // accesses: 2
-    int field_0x30; // accesses: 8
+    CMwNod * field_0x20; // accesses: 11
+    byte _padding_0x24[12];
+    undefined4 field_0x30; // accesses: 7
     byte _padding_0x34[48];
     ulong field_0x64; // accesses: 6
-    uint * field_0x68; // accesses: 44
-    undefined4 * field_0x6c; // accesses: 9
+    CClassicArchive * field_0x68; // accesses: 44
+    undefined ** field_0x6c; // accesses: 15
     CLoader * field_0x70; // accesses: 2
     byte _padding_0x74[12];
     uint field_0x80; // accesses: 3

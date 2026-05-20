@@ -3,27 +3,38 @@
 
 #include "typedefs.h"
 
+struct SVehicleCarState;
+struct uchar;
+struct ushort;
+
 struct SVehicleSimpleState_ReplayAfter081205 {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 9
-    float field_0x8; // accesses: 7
-    ushort field_0xc; // accesses: 8
-    byte _padding_0xe[2];
-    int field_0x10; // accesses: 9
-    int field_0x14; // accesses: 9
-    float field_0x18; // accesses: 2
-    uint field_0x1c; // accesses: 1
-    byte _padding_0x20[4];
-    float field_0x24; // accesses: 2
-    float field_0x28; // accesses: 2
-    byte _padding_0x2c[56];
-    int field_0x64; // accesses: 2
-    int field_0x68; // accesses: 2
-    byte _padding_0x6c[20];
-    float field_0x80; // accesses: 2
-    byte _padding_0x84[4];
-    int field_0x88; // accesses: 2
-    int field_0x8c; // accesses: 2
+    void** vftable; // accesses: 2
+    ushort field_0x2; // accesses: 2
+    ushort field_0x4; // accesses: 2
+    ushort field_0x6; // accesses: 2
+    ushort field_0x8; // accesses: 2
+    ushort field_0xa; // accesses: 2
+    ushort field_0xc; // accesses: 2
+    byte field_0xe; // accesses: 2
+    byte field_0xf; // accesses: 2
+    byte field_0x10; // accesses: 2
+    undefined1 field_0x11; // accesses: 1
+    undefined1 field_0x12; // accesses: 1
+    byte field_0x13; // accesses: 2
+    byte field_0x14; // accesses: 2
+    byte field_0x15; // accesses: 2
+    byte field_0x16; // accesses: 2
+    byte field_0x17; // accesses: 2
+    byte field_0x18; // accesses: 2
+    byte field_0x19; // accesses: 2
+    byte field_0x1a; // accesses: 2
+    byte field_0x1b; // accesses: 2
+    byte field_0x1c; // accesses: 16
+    byte field_0x1d; // accesses: 2
+    byte field_0x1e; // accesses: 2
+    byte field_0x1f; // accesses: 1
+    byte field_0x20; // accesses: 9
+    byte field_0x21; // accesses: 23
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RestoreFromStruct (void *this,SVehicleSimpleState_ReplayAfter040104 *param_1,SVehicleCarState *param_2, SState *param_3,SState *param_4,SState *param_5,SState *param_6);

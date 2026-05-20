@@ -4,9 +4,11 @@
 #include "typedefs.h"
 
 struct CMwNod;
+struct ulong;
 
 struct CMwCmdFastCallUser {
-    byte _padding_0x0[28];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[24];
     _func___cdecl_void_ulong * field_0x1c; // accesses: 1
     CMwNod * field_0x20; // accesses: 1
     ulong field_0x24; // accesses: 1

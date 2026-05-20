@@ -10,45 +10,32 @@ struct CMwNod;
 
 struct CGameCtnApp {
     struct SNationConfig {
+        void** vftable; // accesses: 1
+        undefined * field_0x4; // accesses: 2
 
         // Member Functions
         void __thiscall ~SNationConfig(void *this,SNationConfig *param_1);
     };
 
-    byte _padding_0x0[36];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[32];
     int field_0x24; // accesses: 1
     byte _padding_0x28[68];
     CInputPort * field_0x6c; // accesses: 6
-    byte _padding_0x70[4];
-    int field_0x74; // accesses: 2
-    byte _padding_0x78[56];
-    int field_0xb0; // accesses: 2
-    byte _padding_0xb4[120];
+    byte _padding_0x70[188];
     int field_0x12c; // accesses: 2
-    byte _padding_0x130[20];
-    CInputBindingsConfig * field_0x144; // accesses: 1
-    CInputBindingsConfig * field_0x148; // accesses: 1
-    byte _padding_0x14c[28];
-    int field_0x168; // accesses: 3
+    byte _padding_0x130[56];
+    CMwNod * field_0x168; // accesses: 3
     byte _padding_0x16c[8];
     int field_0x174; // accesses: 1
     byte _padding_0x178[28];
     int * field_0x194; // accesses: 5
-    byte _padding_0x198[16];
-    int field_0x1a8; // accesses: 3
-    byte _padding_0x1ac[36];
-    int field_0x1d0; // accesses: 1
-    undefined4 field_0x1d4; // accesses: 1
-    byte _padding_0x1d8[4];
-    undefined4 field_0x1dc; // accesses: 1
-    byte _padding_0x1e0[48];
-    CGameAdvertising * field_0x210; // accesses: 4
-    byte _padding_0x214[40];
-    int * field_0x23c; // accesses: 3
-    byte _padding_0x240[52];
+    byte _padding_0x198[120];
+    int field_0x210; // accesses: 4
+    byte _padding_0x214[96];
     int field_0x274; // accesses: 1
     byte _padding_0x278[16];
-    int field_0x288; // accesses: 2
+    undefined1 * field_0x288; // accesses: 2
     void * field_0x28c; // accesses: 1
     byte _padding_0x290[52];
     CInputBindingsConfig * field_0x2c4; // accesses: 1
@@ -56,8 +43,8 @@ struct CGameCtnApp {
     CInputBindingsConfig * field_0x2cc; // accesses: 1
     CInputBindingsConfig * field_0x2d0; // accesses: 1
     byte _padding_0x2d4[104];
-    int field_0x33c; // accesses: 2
-    int field_0x340; // accesses: 3
+    undefined4 field_0x33c; // accesses: 2
+    undefined4 field_0x340; // accesses: 3
     float field_0x344; // accesses: 2
     undefined4 field_0x348; // accesses: 3
 

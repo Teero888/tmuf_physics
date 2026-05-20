@@ -3,22 +3,13 @@
 
 #include "typedefs.h"
 
-struct CSystemConfig;
 struct CSystemEngine;
-struct CSystemFids;
-struct CVisionViewportDx9;
 
 struct CGbxApp {
-    byte _padding_0x0[20];
-    undefined4 field_0x14; // accesses: 13
-    byte _padding_0x18[4];
-    int field_0x1c; // accesses: 1
-    int field_0x20; // accesses: 1
-    int field_0x24; // accesses: 2
-    int field_0x28; // accesses: 1
-    CSystemFids * field_0x2c; // accesses: 2
-    CSystemConfig * field_0x30; // accesses: 2
-    byte _padding_0x34[68];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[40];
+    CSystemEngine * field_0x2c; // accesses: 1
+    byte _padding_0x30[72];
     int field_0x78; // accesses: 2
     byte _padding_0x7c[56];
     int field_0xb4; // accesses: 1

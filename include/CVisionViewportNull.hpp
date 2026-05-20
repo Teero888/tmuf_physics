@@ -4,8 +4,7 @@
 #include "typedefs.h"
 
 struct CVisionViewportNull {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CVisionViewportNull(CVisionViewportNull *this,CVisionViewportNull *param_1);

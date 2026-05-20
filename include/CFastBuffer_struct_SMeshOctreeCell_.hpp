@@ -4,8 +4,9 @@
 #include "typedefs.h"
 
 struct CFastBuffer<struct_SMeshOctreeCell> {
-    byte _padding_0x0[8];
-    int field_0x8; // accesses: 2
+    void** vftable; // accesses: 6
+    void * field_0x4; // accesses: 4
+    undefined4 field_0x8; // accesses: 2
 
     // Member Functions
     void __thiscall ArchiveCount (void *this,CFastArray<class_CPlugFileSnd*> *param_1,CClassicArchive *param_2);

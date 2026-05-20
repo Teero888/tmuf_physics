@@ -3,23 +3,13 @@
 
 #include "typedefs.h"
 
-struct CPlugAudio;
 struct CSceneToySeaHouleTable;
 struct CSystemFileMemMapped;
 struct GmVec4;
+struct ulong;
 
 struct CSceneToySea {
-    byte _padding_0x0[4];
-    ulong field_0x4; // accesses: 1
-    byte _padding_0x8[12];
-    CPlugAudio * field_0x14; // accesses: 1
-    byte _padding_0x18[4];
-    int field_0x1c; // accesses: 2
-    SPlugGpuLoadFx * field_0x20; // accesses: 1
-    byte _padding_0x24[28];
-    CPlugVolumeProjector * field_0x40; // accesses: 1
-    CPlugVolumeProjector * field_0x44; // accesses: 1
-    byte _padding_0x48[120];
+    byte _padding_0x0[192];
     CSceneToySeaHouleTable * field_0xc0; // accesses: 7
     byte _padding_0xc4[16];
     GmVec4 * field_0xd4; // accesses: 1

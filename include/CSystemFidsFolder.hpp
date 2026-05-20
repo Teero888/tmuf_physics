@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CSystemFidsFolder {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 4
     undefined4 field_0x4; // accesses: 1
     byte _padding_0x8[12];
     int * field_0x14; // accesses: 1

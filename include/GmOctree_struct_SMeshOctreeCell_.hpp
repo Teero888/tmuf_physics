@@ -5,13 +5,7 @@
 
 struct GmOctree<struct_SMeshOctreeCell> {
     byte _padding_0x0[4];
-    int field_0x4; // accesses: 20
-    undefined4 field_0x8; // accesses: 10
-    undefined4 field_0xc; // accesses: 11
-    undefined4 field_0x10; // accesses: 10
-    undefined4 field_0x14; // accesses: 11
-    undefined4 field_0x18; // accesses: 11
-    undefined4 field_0x1c; // accesses: 9
+    CNetNod_CheckedArchive * field_0x4; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall BuildOctreeRecurse (void *this,GmOctree<struct_SMeshOctreeCell> *param_1,ulong param_2, SMeshOctreeCell *param_3);

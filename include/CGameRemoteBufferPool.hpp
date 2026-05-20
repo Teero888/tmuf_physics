@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameRemoteBufferPool {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
     int * field_0x14; // accesses: 4
 
     // Member Functions

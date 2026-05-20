@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CFuncKeys {
+    void** vftable; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall ComputeBlendCoef (CFuncKeys *this,CFastBufferKey<struct_CGameCtnMediaBlockTime::SKeyVal> *param_1, float param_2,ulong *param_3,ulong *param_4,float *param_5,int param_6);

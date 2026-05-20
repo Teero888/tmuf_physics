@@ -3,9 +3,13 @@
 
 #include "typedefs.h"
 
+struct CClassicArchive;
+struct ulong;
+
 struct CFastBuffer<float> {
-    byte _padding_0x0[8];
-    int field_0x8; // accesses: 1
+    void** vftable; // accesses: 12
+    CClassicArchive * field_0x4; // accesses: 16
+    uint field_0x8; // accesses: 1
 
     // Member Functions
     void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);

@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMwProfiler {
+    void** vftable; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __cdecl GetDurationFromDeltaTimeStamp(int64 param_1);

@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct ~CFastBuffer<struct_CGameCtnMenus {
+    byte _padding_0x0[4];
+    void * field_0x4; // accesses: 2
 
     // Member Functions
     SFrameLadderRankingsStepOld> (void *this,CFastBuffer<struct_CGameCtnMenus::SFrameLadderRankingsStepOld> *param_1);

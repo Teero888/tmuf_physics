@@ -6,8 +6,9 @@
 struct CMwNod;
 
 struct CPlugVisualIndexed {
-    byte _padding_0x0[152];
-    int field_0x98; // accesses: 8
+    void** vftable; // accesses: 1
+    byte _padding_0x4[148];
+    CMwNod * field_0x98; // accesses: 7
 
     // Member Functions
     void __thiscall CPlugVisualIndexed (CPlugVisualIndexed *this,CPlugVisualIndexed *param_1,CPlugVisualIndexed *param_2);

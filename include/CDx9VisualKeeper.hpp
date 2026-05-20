@@ -4,26 +4,10 @@
 #include "typedefs.h"
 
 struct CDx9VisualKeeper {
-    byte _padding_0x0[1];
-    undefined2 field_0x1; // accesses: 5
-    undefined2 field_0x2; // accesses: 2
-    undefined2 field_0x4; // accesses: 48
-    undefined2 field_0x6; // accesses: 2
-    int field_0x8; // accesses: 19
-    undefined4 field_0xc; // accesses: 4
-    float field_0x10; // accesses: 1
-    int * field_0x14; // accesses: 3
-    float field_0x18; // accesses: 1
-    byte _padding_0x1c[52];
-    int field_0x50; // accesses: 4
-    byte _padding_0x54[40];
-    uchar ** field_0x7c; // accesses: 1
-    byte _padding_0x80[24];
-    int field_0x98; // accesses: 4
-    int field_0x9c; // accesses: 1
-    int field_0xa0; // accesses: 1
-    byte _padding_0xa4[644];
-    int field_0x328; // accesses: 1
+    void** vftable; // accesses: 15
+    uint field_0x4; // accesses: 20
+    byte _padding_0x8[144];
+    int field_0x98; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall LoadStaticGeometry(CDx9VisualKeeper *this,CDx9VisualKeeper *param_1,ulong param_2);

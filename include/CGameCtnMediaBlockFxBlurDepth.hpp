@@ -4,11 +4,7 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaBlockFxBlurDepth {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 2
-    int field_0x8; // accesses: 2
-    float field_0xc; // accesses: 2
-    byte _padding_0x10[36];
+    byte _padding_0x0[52];
     int field_0x34; // accesses: 1
 
     // Member Functions

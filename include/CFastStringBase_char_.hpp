@@ -3,9 +3,11 @@
 
 #include "typedefs.h"
 
+struct CClassicBufferMemory;
+
 struct CFastStringBase<char> {
-    byte _padding_0x0[4];
-    wchar_t * field_0x4; // accesses: 10
+    void** vftable; // accesses: 6
+    void * field_0x4; // accesses: 9
 
     // Member Functions
     void __thiscall AllocAtLeast (CFastStringBase<char> *this,CFastStringBase<wchar_t> *param_1,ulong param_2,int param_3, SOldChars *param_4);

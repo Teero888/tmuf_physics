@@ -3,9 +3,11 @@
 
 #include "typedefs.h"
 
+struct uchar;
+
 struct SVehicleSimpleState_ReplayAfter170806 {
-    byte _padding_0x0[44];
-    float field_0x2c; // accesses: 2
+    byte _padding_0x0[34];
+    byte field_0x22; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RestoreFromStruct (void *this,SVehicleSimpleState_ReplayAfter040104 *param_1,SVehicleCarState *param_2, SState *param_3,SState *param_4,SState *param_5,SState *param_6);

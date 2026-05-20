@@ -3,34 +3,23 @@
 
 #include "typedefs.h"
 
-struct CHmsCorpus;
 struct CMwNod;
 
 struct CHmsPackLightMap {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
-    ulong field_0x8; // accesses: 2
-    CHmsPackLightMap * field_0xc; // accesses: 2
-    undefined4 field_0x10; // accesses: 1
+    byte _padding_0x0[20];
     undefined4 field_0x14; // accesses: 2
     undefined4 field_0x18; // accesses: 2
     byte _padding_0x1c[4];
-    int field_0x20; // accesses: 7
-    int field_0x24; // accesses: 1
-    ushort field_0x28; // accesses: 2
-    byte _padding_0x2a[2];
-    undefined4 field_0x2c; // accesses: 4
+    CMwNod * field_0x20; // accesses: 6
+    byte _padding_0x24[8];
+    undefined4 field_0x2c; // accesses: 2
     int field_0x30; // accesses: 1
     byte _padding_0x34[20];
-    int field_0x48; // accesses: 7
-    byte _padding_0x4c[12];
-    int field_0x58; // accesses: 1
-    byte _padding_0x5c[20];
-    uint field_0x70; // accesses: 2
-    byte _padding_0x74[328];
-    int field_0x1bc; // accesses: 3
+    int field_0x48; // accesses: 6
+    byte _padding_0x4c[368];
+    CHmsPackLightMap * field_0x1bc; // accesses: 3
     byte _padding_0x1c0[4];
-    int field_0x1c4; // accesses: 6
+    undefined4 field_0x1c4; // accesses: 6
 
     // Member Functions
     EDbgLight __thiscall DynaDbgLightGet(CHmsPackLightMap *this,CHmsPackLightMap *param_1);

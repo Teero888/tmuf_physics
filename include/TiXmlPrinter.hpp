@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct TiXmlPrinter {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 2
     undefined4 field_0x4; // accesses: 1
     byte _padding_0x8[4];
     undefined4 * field_0xc; // accesses: 3

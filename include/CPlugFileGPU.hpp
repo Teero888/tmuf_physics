@@ -3,21 +3,19 @@
 
 #include "typedefs.h"
 
-struct CPlugFileGpuBuilder;
+struct ulong;
 
 struct CPlugFileGPU {
     struct SLoadDesc {
-        byte _padding_0x0[4];
-        uint field_0x4; // accesses: 2
+        void** vftable; // accesses: 1
+        int field_0x4; // accesses: 2
 
         // Member Functions
         ulong __thiscall GetNextRegisterIndex (void *this,SLoadDesc *param_1,CFastArray<struct_SPlugGpuLoadFx> *param_2);
     };
 
-    byte _padding_0x0[4];
-    CPlugFileGpuBuilder * field_0x4; // accesses: 5
-    undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[12];
+    void** vftable; // accesses: 6
+    byte _padding_0x4[20];
     int field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     uint field_0x20; // accesses: 1
@@ -34,7 +32,7 @@ struct CPlugFileGPU {
     ID3DXConstantTable * field_0xb4; // accesses: 1
     ID3DXConstantTable * field_0xb8; // accesses: 3
     undefined4 field_0xbc; // accesses: 5
-    int field_0xc0; // accesses: 4
+    uint field_0xc0; // accesses: 4
 
     // Member Functions
     CFastString * __thiscall DefineGetValue(CPlugFileGPU *this,CPlugFileGPU *param_1,CMwId *param_2);

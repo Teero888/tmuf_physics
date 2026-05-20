@@ -4,10 +4,8 @@
 #include "typedefs.h"
 
 struct CSystemFileName {
-    byte _padding_0x0[2];
-    short field_0x2; // accesses: 2
-    wchar_t * field_0x4; // accesses: 22
-    short field_0x6; // accesses: 2
+    void** vftable; // accesses: 5
+    undefined2 * field_0x4; // accesses: 5
 
     // Member Functions
     /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ void __cdecl ConvertToSystemName (CFastStringInt *param_1,CFastString *param_2,int param_3,EMode param_4);

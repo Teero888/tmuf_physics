@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CPlug {
+    void** vftable; // accesses: 2
 
     // Member Functions
     void __thiscall CPlug(CPlug *this,CPlug *param_1);

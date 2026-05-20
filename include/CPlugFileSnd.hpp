@@ -3,6 +3,8 @@
 
 #include "typedefs.h"
 
+struct ushort;
+
 struct CPlugFileSnd {
     byte _padding_0x0[20];
     short field_0x14; // accesses: 1

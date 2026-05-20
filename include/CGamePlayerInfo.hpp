@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGamePlayerInfo {
-    byte _padding_0x0[388];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[384];
     undefined4 field_0x184; // accesses: 1
     undefined * field_0x188; // accesses: 1
     byte _padding_0x18c[20];

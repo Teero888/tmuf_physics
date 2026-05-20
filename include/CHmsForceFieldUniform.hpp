@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CHmsForceFieldUniform {
-    byte _padding_0x0[84];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[80];
     int field_0x54; // accesses: 1
     byte _padding_0x58[4];
     undefined4 field_0x5c; // accesses: 2

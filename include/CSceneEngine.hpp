@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CSceneEngine {
-    byte _padding_0x0[32];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[28];
     undefined4 field_0x20; // accesses: 1
     undefined4 field_0x24; // accesses: 1
 

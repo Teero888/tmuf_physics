@@ -7,8 +7,9 @@ struct CMwCmd;
 struct CMwNod;
 
 struct CMotionSkelBlender {
-    byte _padding_0x0[20];
-    CMwCmd * field_0x14; // accesses: 2
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
+    CMwNod * field_0x14; // accesses: 2
 
     // Member Functions
     void __cdecl StaticAddRef(void);

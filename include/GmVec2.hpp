@@ -4,10 +4,10 @@
 #include "typedefs.h"
 
 struct GmVec2 {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 16
-    float field_0x8; // accesses: 2
-    float field_0xc; // accesses: 2
+    void** vftable; // accesses: 56
+    int field_0x4; // accesses: 53
+    float field_0x8; // accesses: 8
+    float field_0xc; // accesses: 1
     float field_0x10; // accesses: 1
     float field_0x14; // accesses: 1
 

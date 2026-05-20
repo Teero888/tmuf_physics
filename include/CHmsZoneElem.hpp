@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CHmsZoneElem {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
 
     // Member Functions

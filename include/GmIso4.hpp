@@ -3,19 +3,27 @@
 
 #include "typedefs.h"
 
+struct CControlContainer;
+
 struct GmIso4 {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 33
-    float field_0x8; // accesses: 32
-    float field_0xc; // accesses: 17
-    float field_0x10; // accesses: 15
-    float field_0x14; // accesses: 15
-    float field_0x18; // accesses: 14
-    float field_0x1c; // accesses: 13
-    float field_0x20; // accesses: 13
-    float field_0x24; // accesses: 11
-    float field_0x28; // accesses: 11
-    float field_0x2c; // accesses: 11
+    void** vftable; // accesses: 35
+    float field_0x4; // accesses: 30
+    float field_0x8; // accesses: 30
+    float field_0xc; // accesses: 18
+    GmIso4 * field_0x10; // accesses: 16
+    float field_0x14; // accesses: 16
+    float field_0x18; // accesses: 15
+    float field_0x1c; // accesses: 15
+    GmIso4 * field_0x20; // accesses: 15
+    float field_0x24; // accesses: 24
+    float field_0x28; // accesses: 27
+    float field_0x2c; // accesses: 24
+    byte _padding_0x30[8];
+    GmIso4 * field_0x38; // accesses: 1
+    byte _padding_0x3c[48];
+    int field_0x6c; // accesses: 2
+    byte _padding_0x70[44];
+    uint field_0x9c; // accesses: 2
 
     // Member Functions
     CSystemFidsFolder * __thiscall GetDir(void *this,CSystemDataFolders *param_1,ulong param_2,ulong param_3);

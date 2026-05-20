@@ -6,16 +6,13 @@
 struct GmIso4;
 
 struct CPlugViewDepLocator {
-    byte _padding_0x0[8];
-    float field_0x8; // accesses: 4
-    float field_0xc; // accesses: 2
-    float field_0x10; // accesses: 1
-    int field_0x14; // accesses: 7
-    float field_0x18; // accesses: 2
+    byte _padding_0x0[20];
+    int field_0x14; // accesses: 1
+    float field_0x18; // accesses: 1
     GmIso4 * field_0x1c; // accesses: 1
     byte _padding_0x20[4];
     float field_0x24; // accesses: 2
-    float field_0x28; // accesses: 4
+    float field_0x28; // accesses: 2
     float field_0x2c; // accesses: 2
     float field_0x30; // accesses: 2
     float field_0x34; // accesses: 2

@@ -4,10 +4,21 @@
 #include "typedefs.h"
 
 struct SHmsRenderRect {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 1
     undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
+    byte _padding_0x8[28];
+    undefined4 field_0x24; // accesses: 2
+    undefined4 field_0x28; // accesses: 2
+    undefined4 field_0x2c; // accesses: 2
+    undefined4 field_0x30; // accesses: 2
+    undefined4 field_0x34; // accesses: 1
+    undefined4 field_0x38; // accesses: 1
+    undefined4 field_0x3c; // accesses: 1
+    undefined4 field_0x40; // accesses: 1
+    undefined4 field_0x44; // accesses: 1
+    undefined4 field_0x48; // accesses: 1
+    undefined4 field_0x4c; // accesses: 1
+    undefined4 field_0x50; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Reset(void *this,GmFrustumIso4 *param_1);

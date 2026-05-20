@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CFastArray<float> {
+    void** vftable; // accesses: 3
+    void * field_0x4; // accesses: 6
 
     // Member Functions
     void __thiscall AddTail (void *this,CFastArray<struct_CDx9DeviceCaps::SFormat> *param_1,SFormat *param_2);

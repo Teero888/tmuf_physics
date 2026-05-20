@@ -4,9 +4,10 @@
 #include "typedefs.h"
 
 struct CMwRefBuffer {
-    byte _padding_0x0[32];
-    int field_0x20; // accesses: 2
-    int field_0x24; // accesses: 3
+    void** vftable; // accesses: 1
+    byte _padding_0x4[28];
+    undefined4 field_0x20; // accesses: 2
+    undefined4 field_0x24; // accesses: 3
 
     // Member Functions
     CMwNod * __thiscall GetFromId(CMwRefBuffer *this,CMwRefBuffer *param_1,CMwId *param_2);

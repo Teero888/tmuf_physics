@@ -4,10 +4,7 @@
 #include "typedefs.h"
 
 struct CSystemManagerFile {
-    byte _padding_0x0[4];
-    LPCWSTR field_0x4; // accesses: 14
-    byte _padding_0x8[16];
-    undefined4 field_0x18; // accesses: 4
+    void** vftable; // accesses: 5
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __cdecl GiveDirAllRights(CFastStringInt *param_1);

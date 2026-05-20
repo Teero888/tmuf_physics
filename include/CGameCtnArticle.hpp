@@ -5,19 +5,15 @@
 
 struct CGameSkin;
 struct CMwNod;
+struct CPlugBitmap;
 struct CPlugShaderApply;
 
 struct CGameCtnArticle {
     byte _padding_0x0[36];
-    CPlugBitmap * field_0x24; // accesses: 2
-    byte _padding_0x28[16];
-    undefined4 field_0x38; // accesses: 1
-    undefined4 field_0x3c; // accesses: 1
-    undefined4 field_0x40; // accesses: 1
-    undefined4 field_0x44; // accesses: 1
-    byte _padding_0x48[16];
+    CPlugShaderApply * field_0x24; // accesses: 2
+    byte _padding_0x28[48];
     CGameSkin * field_0x58; // accesses: 4
-    undefined4 field_0x5c; // accesses: 3
+    CMwNod * field_0x5c; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CFuncEnum * __thiscall CreateIcon (CGameCtnArticle *this,CGameCtnArticle *param_1,ulong param_2,int param_3);

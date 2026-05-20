@@ -3,7 +3,10 @@
 
 #include "typedefs.h"
 
+struct ushort;
+
 struct GxBGRColor565 {
+    void** vftable; // accesses: 2
 
     // Member Functions
     GxBGRColor565 * __thiscall Get32b(void *this,GxBGRColor565 *param_1);

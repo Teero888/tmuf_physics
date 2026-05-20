@@ -3,8 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CGameNetPlayerInfo {
-    byte _padding_0x0[36];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[32];
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1
     undefined * field_0x2c; // accesses: 1
@@ -24,8 +27,8 @@ struct CGameNetPlayerInfo {
     undefined4 field_0x64; // accesses: 2
     undefined4 field_0x68; // accesses: 1
     undefined4 field_0x6c; // accesses: 1
-    int field_0x70; // accesses: 2
-    int field_0x74; // accesses: 2
+    undefined4 field_0x70; // accesses: 3
+    undefined4 field_0x74; // accesses: 3
     byte _padding_0x78[4];
     undefined4 field_0x7c; // accesses: 1
     undefined4 field_0x80; // accesses: 1
@@ -62,7 +65,7 @@ struct CGameNetPlayerInfo {
     undefined2 field_0x140; // accesses: 1
     byte _padding_0x142[2];
     undefined4 field_0x144; // accesses: 1
-    undefined4 field_0x148; // accesses: 1
+    EPlayerType field_0x148; // accesses: 2
     undefined4 field_0x14c; // accesses: 1
     undefined4 field_0x150; // accesses: 2
     undefined4 field_0x154; // accesses: 1

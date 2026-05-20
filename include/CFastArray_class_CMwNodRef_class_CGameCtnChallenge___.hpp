@@ -3,7 +3,11 @@
 
 #include "typedefs.h"
 
+struct CMwNod;
+
 struct CFastArray<class_CMwNodRef<class_CGameCtnChallenge>_> {
+    void** vftable; // accesses: 4
+    CMwNod * field_0x4; // accesses: 9
 
     // Member Functions
     void __thiscall AllocateLess (void *this,CFastArray<struct_CHmsWaterRegion::SCell> *param_1,ulong param_2);

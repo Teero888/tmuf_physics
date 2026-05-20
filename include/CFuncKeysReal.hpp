@@ -4,8 +4,9 @@
 #include "typedefs.h"
 
 struct CFuncKeysReal {
-    byte _padding_0x0[40];
-    undefined4 field_0x28; // accesses: 2
+    void** vftable; // accesses: 1
+    byte _padding_0x4[36];
+    float * field_0x28; // accesses: 2
 
     // Member Functions
     GmVec3 __thiscall GetValue(CFuncKeysReal *this,CFuncColorGradient *param_1,float param_2);

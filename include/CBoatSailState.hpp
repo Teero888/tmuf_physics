@@ -3,51 +3,40 @@
 
 #include "typedefs.h"
 
-struct CBoatParam;
 struct CBoatSail;
 struct CMwId;
 struct CPlugTree;
 struct CPlugVisual;
 
 struct CBoatSailState {
-    byte _padding_0x0[8];
-    float field_0x8; // accesses: 1
-    float field_0xc; // accesses: 2
-    float field_0x10; // accesses: 2
-    int field_0x14; // accesses: 48
-    int * field_0x18; // accesses: 13
-    int * field_0x1c; // accesses: 4
-    int * field_0x20; // accesses: 4
+    byte _padding_0x0[20];
+    int field_0x14; // accesses: 43
+    CPlugTree * field_0x18; // accesses: 11
+    CPlugTree * field_0x1c; // accesses: 4
+    CPlugTree * field_0x20; // accesses: 4
     CBoatSailState * field_0x24; // accesses: 22
     int * field_0x28; // accesses: 13
     int * field_0x2c; // accesses: 2
     int field_0x30; // accesses: 1
     int field_0x34; // accesses: 1
-    float field_0x38; // accesses: 1
-    byte _padding_0x3c[4];
-    float field_0x40; // accesses: 1
-    float field_0x44; // accesses: 4
-    float field_0x48; // accesses: 1
-    byte _padding_0x4c[24];
-    float field_0x64; // accesses: 1
-    float field_0x68; // accesses: 1
-    float field_0x6c; // accesses: 3
-    int field_0x70; // accesses: 3
-    float field_0x74; // accesses: 2
+    byte _padding_0x38[52];
+    float field_0x6c; // accesses: 1
+    int field_0x70; // accesses: 1
+    float field_0x74; // accesses: 1
     int field_0x78; // accesses: 1
     int field_0x7c; // accesses: 2
     float field_0x80; // accesses: 8
-    CMwId * field_0x84; // accesses: 10
+    float field_0x84; // accesses: 10
     float field_0x88; // accesses: 3
-    int field_0x8c; // accesses: 3
+    undefined4 field_0x8c; // accesses: 3
     float field_0x90; // accesses: 4
     byte _padding_0x94[4];
-    float field_0x98; // accesses: 5
-    CBoatSailState * field_0x9c; // accesses: 10
-    int field_0xa0; // accesses: 2
+    undefined4 field_0x98; // accesses: 4
+    CBoatSailState * field_0x9c; // accesses: 2
+    float field_0xa0; // accesses: 1
     float field_0xa4; // accesses: 8
-    CPlugVisual * field_0xa8; // accesses: 8
-    float field_0xac; // accesses: 11
+    float field_0xa8; // accesses: 8
+    float field_0xac; // accesses: 10
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BSCoefSailTuningGet (CBoatSailState *this,CBoatSailState *param_1,float param_2,float param_3,float param_4);

@@ -4,9 +4,10 @@
 #include "typedefs.h"
 
 struct GxBGRAColor {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 1
-    float field_0x8; // accesses: 1
+    void** vftable; // accesses: 2
+    undefined1 field_0x1; // accesses: 2
+    undefined1 field_0x2; // accesses: 2
+    undefined1 field_0x3; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Set(void *this,CMwCmdScriptVarBool *param_1,int param_2);

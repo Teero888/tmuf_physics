@@ -6,7 +6,8 @@
 struct CControlKeyboardInterface;
 
 struct CControlEntry {
-    byte _padding_0x0[252];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[248];
     uint field_0xfc; // accesses: 2
     byte _padding_0x100[48];
     undefined4 field_0x130; // accesses: 1
@@ -20,7 +21,7 @@ struct CControlEntry {
     byte _padding_0x150[4];
     undefined4 field_0x154; // accesses: 1
     byte _padding_0x158[4];
-    int field_0x15c; // accesses: 4
+    CControlKeyboardInterface * field_0x15c; // accesses: 4
 
     // Member Functions
     void __thiscall CControlEntry(CControlEntry *this,CControlEntry *param_1);

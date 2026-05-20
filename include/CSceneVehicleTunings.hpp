@@ -4,13 +4,8 @@
 #include "typedefs.h"
 
 struct CSceneVehicleTunings {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 4
-    byte _padding_0x8[8];
-    int field_0x10; // accesses: 4
-    byte _padding_0x14[4];
-    int field_0x18; // accesses: 13
-    byte _padding_0x1c[4];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[28];
     undefined4 field_0x20; // accesses: 1
     undefined4 field_0x24; // accesses: 3
 

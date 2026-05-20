@@ -3,18 +3,11 @@
 
 #include "typedefs.h"
 
-struct CClassicBuffer;
-
 struct GmQuat {
-    byte _padding_0x0[4];
-    CClassicBuffer * field_0x4; // accesses: 15
-    GmQuat * field_0x8; // accesses: 14
-    GmQuat * field_0xc; // accesses: 13
-    float field_0x10; // accesses: 2
-    float field_0x14; // accesses: 1
-    float field_0x18; // accesses: 1
-    float field_0x1c; // accesses: 1
-    float field_0x20; // accesses: 2
+    void** vftable; // accesses: 20
+    float field_0x4; // accesses: 16
+    GmQuat * field_0x8; // accesses: 18
+    float field_0xc; // accesses: 17
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ArchiveGmQuatCompact(void *this,GmQuat *param_1,CClassicArchive *param_2);

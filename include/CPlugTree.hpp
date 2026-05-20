@@ -4,8 +4,9 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
+struct CMwCmdAffectParamBool;
 struct CMwNod;
-struct CMwParamClass;
+struct CPlugBitmapShader;
 struct CPlugMaterial;
 struct CPlugMaterialCustom;
 struct CPlugShader;
@@ -14,16 +15,16 @@ struct CPlugShaderGeneric;
 struct CPlugSolid;
 struct CPlugSurface;
 struct CPlugVisual;
-struct CSystemArchiveNod;
 struct CVisionVisualKeeper;
-struct GxTexCoordSet;
+struct ulong;
+struct ushort;
 
 struct CPlugTree {
-    struct CPlugMaterial;
-
     struct CIteratorMaterial {
-        byte _padding_0x0[152];
-        int field_0x98; // accesses: 3
+        byte _padding_0x0[4];
+        void * field_0x4; // accesses: 1
+        byte _padding_0x8[4];
+        undefined4 field_0xc; // accesses: 5
 
         // Member Functions
         CPlugMaterial * __thiscall GetNextMaterial (void *this,CIteratorMaterial *param_1,CPlugTree **param_2);
@@ -32,11 +33,9 @@ struct CPlugTree {
         void __thiscall ~CIteratorMaterial(void *this,CIteratorMaterial *param_1);
     };
 
-    struct CPlugShader;
-
     struct CIteratorShader {
-        byte _padding_0x0[148];
-        CPlugShader * field_0x94; // accesses: 3
+        byte _padding_0x0[12];
+        undefined4 field_0xc; // accesses: 5
 
         // Member Functions
         CPlugShader * __thiscall GetNextShader(void *this,CIteratorShader *param_1,CPlugTree **param_2);
@@ -44,20 +43,22 @@ struct CPlugTree {
         void __thiscall ResetItShader (void *this,CIteratorShader *param_1,CPlugTree *param_2,EMode param_3);
     };
 
-    struct CPlugSurface;
-
     struct CIteratorSurface {
-        byte _padding_0x0[140];
-        CPlugSurface * field_0x8c; // accesses: 3
+        byte _padding_0x0[12];
+        int field_0xc; // accesses: 4
 
         // Member Functions
         CPlugSurface * __thiscall GetNextSurface (void *this,CIteratorSurface *param_1,CPlugTree **param_2);
         void __thiscall ResetItSurface (void *this,CIteratorSurface *param_1,CPlugTree *param_2,EMode param_3);
     };
 
+    struct CPlugModelTree;
+
     struct CIteratorTree {
-        byte _padding_0x0[36];
-        int * field_0x24; // accesses: 1
+        void** vftable; // accesses: 2
+        byte _padding_0x4[8];
+        CPlugTree * field_0xc; // accesses: 7
+        CPlugTree * field_0x10; // accesses: 3
 
         // Member Functions
         CPlugModelTree * __thiscall GetNextTree(void *this,CPlugModelTree_ItTree *param_1);
@@ -65,11 +66,9 @@ struct CPlugTree {
         void __thiscall ResetItTree (void *this,CIteratorTree *param_1,CPlugTree *param_2,EMode param_3);
     };
 
-    struct CPlugVisual;
-
     struct CIteratorVisual {
-        byte _padding_0x0[144];
-        CPlugVisual * field_0x90; // accesses: 3
+        byte _padding_0x0[12];
+        undefined4 field_0xc; // accesses: 5
 
         // Member Functions
         CPlugVisual * __thiscall GetNextVisual(void *this,CIteratorVisual *param_1,CPlugTree **param_2);
@@ -77,9 +76,10 @@ struct CPlugTree {
         void __thiscall ResetItVisual (void *this,CIteratorVisual *param_1,CPlugTree *param_2,EMode param_3);
     };
 
+    struct CPlugSolid;
+
     struct SVolatileTreePointer {
-        byte _padding_0x0[8];
-        int field_0x8; // accesses: 1
+        void** vftable; // accesses: 3
 
         // Member Functions
         CPlugTree * __thiscall GetTree(void *this,SVolatileTreePointer *param_1);
@@ -88,47 +88,40 @@ struct CPlugTree {
         void __thiscall ~SVolatileTreePointer(void *this,SVolatileTreePointer *param_1);
     };
 
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 45
-    char field_0x6; // accesses: 1
-    byte _padding_0x7[1];
-    CPlugMaterialCustom * field_0x8; // accesses: 30
-    float field_0xc; // accesses: 16
-    CPlugSurface * field_0x10; // accesses: 21
-    CPlugSolid * field_0x14; // accesses: 39
-    float field_0x18; // accesses: 26
-    CMwNod * field_0x1c; // accesses: 42
-    SPlugTreeOptimGroup * field_0x20; // accesses: 9
-    float field_0x24; // accesses: 17
-    byte field_0x27; // accesses: 1
-    float field_0x28; // accesses: 5
-    float field_0x2c; // accesses: 3
-    int field_0x30; // accesses: 5
-    int field_0x34; // accesses: 11
-    int field_0x38; // accesses: 15
-    int field_0x3c; // accesses: 7
-    int field_0x40; // accesses: 7
-    int field_0x44; // accesses: 7
-    int field_0x48; // accesses: 7
+    void** vftable; // accesses: 84
+    undefined4 field_0x4; // accesses: 2
+    CPlugMaterialCustom * field_0x8; // accesses: 5
+    undefined4 field_0xc; // accesses: 5
+    CPlugSurface * field_0x10; // accesses: 2
+    CMwNod * field_0x14; // accesses: 21
+    int field_0x18; // accesses: 9
+    CClassicArchive * field_0x1c; // accesses: 20
+    int field_0x20; // accesses: 1
+    CPlugTree * field_0x24; // accesses: 9
+    byte _padding_0x28[12];
+    undefined4 field_0x34; // accesses: 7
+    CPlugTree * field_0x38; // accesses: 9
+    undefined4 field_0x3c; // accesses: 6
+    undefined4 field_0x40; // accesses: 6
+    undefined4 field_0x44; // accesses: 6
+    undefined4 field_0x48; // accesses: 6
     undefined4 field_0x4c; // accesses: 1
-    int field_0x50; // accesses: 3
-    ulong field_0x54; // accesses: 17
-    undefined2 field_0x56; // accesses: 4
-    undefined4 field_0x58; // accesses: 3
+    undefined4 field_0x50; // accesses: 1
+    short field_0x54; // accesses: 14
+    short field_0x56; // accesses: 4
+    void * field_0x58; // accesses: 3
     byte _padding_0x5c[36];
     undefined4 field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
-    code * field_0x88; // accesses: 2
-    CVisionVisualKeeper * field_0x8c; // accesses: 26
-    CVisionVisualKeeper * field_0x90; // accesses: 64
-    CVisionVisualKeeper * field_0x94; // accesses: 65
-    CVisionVisualKeeper * field_0x98; // accesses: 35
-    int field_0x9c; // accesses: 184
-    CVisionVisualKeeper * field_0xa0; // accesses: 27
-    CMwCmdAffectParamBool * field_0xa4; // accesses: 8
-    int field_0xa8; // accesses: 10
-    byte _padding_0xac[4];
-    code * field_0xb0; // accesses: 1
+    undefined4 field_0x88; // accesses: 1
+    CClassicArchive * field_0x8c; // accesses: 23
+    CClassicArchive * field_0x90; // accesses: 54
+    CClassicArchive * field_0x94; // accesses: 61
+    CClassicArchive * field_0x98; // accesses: 32
+    undefined4 field_0x9c; // accesses: 122
+    CClassicArchive * field_0xa0; // accesses: 27
+    CMwCmdAffectParamBool * field_0xa4; // accesses: 7
+    CPlugTree * field_0xa8; // accesses: 10
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CPlugTree * __cdecl MakeQuad2D (CPlug *param_1,float param_2,float param_3,CPlugVisual *param_4,float param_5, ulong param_6,ulong param_7,ulong param_8,GmVec2 *param_9,GmVec2 *param_10, GmVec2 *param_11);

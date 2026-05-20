@@ -4,11 +4,6 @@
 #include "typedefs.h"
 
 struct CHmsCollisionManager {
-    struct CHmsCorpus;
-    struct CPlugTree;
-    struct CSystemFid;
-    struct CSystemFidFile;
-
     struct SGroup {
         struct SAgainstGroup {
 
@@ -17,22 +12,8 @@ struct CHmsCollisionManager {
             void __thiscall ~SAgainstGroup(void *this,SAgainstGroup *param_1);
         };
 
-        byte _padding_0x0[8];
-        CSystemFidFile * field_0x8; // accesses: 2
-        SCasterCat * field_0xc; // accesses: 1
-        SCasterCat * field_0x10; // accesses: 2
-        int field_0x14; // accesses: 2
-        byte _padding_0x18[36];
-        uint field_0x3c; // accesses: 3
-        byte _padding_0x40[8];
-        int field_0x48; // accesses: 4
-        int field_0x4c; // accesses: 1
-        CHmsCorpus * field_0x50; // accesses: 1
-        ulong field_0x54; // accesses: 5
-        byte _padding_0x58[52];
-        int field_0x8c; // accesses: 1
-        byte _padding_0x90[12];
-        uint field_0x9c; // accesses: 2
+        byte _padding_0x0[64];
+        int field_0x40; // accesses: 2
 
         // Member Functions
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeIsToPerformCollisions(void *this,SGroup *param_1);
@@ -51,40 +32,41 @@ struct CHmsCollisionManager {
     struct CHmsCollisionBuffer;
     struct CHmsCorpus;
     struct CMwNod;
-    struct CSystemData;
-    struct GmIso3;
-    struct GmIso4;
-    struct GmVec3;
-    struct SPlugFaceCull;
+    struct LocatedGmSurf;
+    struct SZone;
 
     struct SZone {
-        byte _padding_0x0[4];
-        undefined4 * field_0x4; // accesses: 28
-        char field_0x6; // accesses: 4
-        byte _padding_0x7[1];
-        GmVec3 * field_0x8; // accesses: 20
-        GmIso3 * field_0xc; // accesses: 12
-        int field_0x10; // accesses: 10
-        int field_0x14; // accesses: 4
-        byte _padding_0x18[15];
-        byte field_0x27; // accesses: 3
-        byte _padding_0x28[12];
-        int field_0x34; // accesses: 12
-        byte _padding_0x38[16];
-        int field_0x48; // accesses: 14
-        byte _padding_0x4c[4];
-        CHmsCollisionBuffer * field_0x50; // accesses: 12
-        CSystemData * field_0x54; // accesses: 1
-        int field_0x58; // accesses: 12
-        byte _padding_0x5c[48];
-        int field_0x8c; // accesses: 14
-        byte _padding_0x90[12];
-        uint field_0x9c; // accesses: 5
-        byte _padding_0xa0[240];
-        LocatedGmSurf * field_0x190; // accesses: 1
+        void** vftable; // accesses: 3
+        byte _padding_0x4[56];
+        undefined4 field_0x3c; // accesses: 1
+        undefined4 field_0x40; // accesses: 1
+        byte _padding_0x44[12];
+        LocatedGmSurf * field_0x50; // accesses: 3
+        byte _padding_0x54[44];
+        undefined4 field_0x80; // accesses: 1
+        undefined4 field_0x84; // accesses: 1
+        byte _padding_0x88[4];
+        CMwNod * field_0x8c; // accesses: 1
+        byte _padding_0x90[52];
+        undefined4 field_0xc4; // accesses: 1
+        undefined4 field_0xc8; // accesses: 1
+        byte _padding_0xcc[60];
+        undefined4 field_0x108; // accesses: 1
+        undefined4 field_0x10c; // accesses: 1
+        byte _padding_0x110[60];
+        undefined4 field_0x14c; // accesses: 1
+        undefined4 field_0x150; // accesses: 1
+        byte _padding_0x154[36];
+        undefined4 field_0x178; // accesses: 1
+        undefined4 field_0x17c; // accesses: 1
+        undefined4 field_0x180; // accesses: 1
+        undefined4 field_0x184; // accesses: 4
+        SZone * field_0x188; // accesses: 5
+        undefined4 field_0x18c; // accesses: 3
+        SZone * field_0x190; // accesses: 3
         int field_0x194; // accesses: 1
-        byte _padding_0x198[52];
-        CMwNod * field_0x1cc; // accesses: 1
+        undefined1 * field_0x198; // accesses: 1
+        CMwNod * field_0x19c; // accesses: 3
 
         // Member Functions
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IntersectSegment (void *this,SZone *param_1,ECollisionGroup param_2,GmVec3 *param_3,GmVec3 *param_4, float *param_5,CPlugTree **param_6);
@@ -106,14 +88,9 @@ struct CHmsCollisionManager {
         void __thiscall UpdateStaticCollisionTrees(void *this,CHmsCollisionManager *param_1);
     };
 
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
-    byte _padding_0x8[8];
-    int field_0x10; // accesses: 2
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
-    int field_0x18; // accesses: 6
-    byte _padding_0x1c[52];
-    undefined4 field_0x50; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CHmsCollisionManager *this,CSystemData *param_1,CMwStack *param_2,void *param_3);

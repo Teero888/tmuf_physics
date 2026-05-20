@@ -6,24 +6,24 @@
 struct CGameCtnBench;
 struct CGameCtnMediaClipGroup;
 struct CGameCtnMediaClipPlayer;
-struct CGamePlayerCameraSet;
 struct CMwNod;
 
 struct CGameCtnMediaClipViewer {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
-    undefined4 field_0x18; // accesses: 6
+    undefined4 field_0x18; // accesses: 1
     CGameCtnBench * field_0x1c; // accesses: 3
     undefined4 field_0x20; // accesses: 1
-    int field_0x24; // accesses: 2
+    undefined4 field_0x24; // accesses: 2
     CGameCtnMediaClipViewer * field_0x28; // accesses: 1
     CGameCtnMediaClipPlayer * field_0x2c; // accesses: 13
     CGameCtnMediaClipPlayer * field_0x30; // accesses: 23
-    int * field_0x34; // accesses: 6
-    int * field_0x38; // accesses: 7
+    CMwNod * field_0x34; // accesses: 6
+    CMwNod * field_0x38; // accesses: 7
     undefined4 field_0x3c; // accesses: 2
     byte _padding_0x40[4];
-    int field_0x44; // accesses: 11
+    CGameCtnMediaClipGroup * field_0x44; // accesses: 11
     undefined4 field_0x48; // accesses: 1
     CGameCtnMediaClipPlayer * field_0x4c; // accesses: 12
     undefined4 field_0x50; // accesses: 1
@@ -35,7 +35,7 @@ struct CGameCtnMediaClipViewer {
     undefined4 field_0x68; // accesses: 2
     undefined4 field_0x6c; // accesses: 2
     undefined4 field_0x70; // accesses: 2
-    int * field_0x74; // accesses: 6
+    CMwNod * field_0x74; // accesses: 6
     CGameCtnMediaClipViewer * field_0x78; // accesses: 3
 
     // Member Functions

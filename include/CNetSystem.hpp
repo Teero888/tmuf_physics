@@ -5,8 +5,6 @@
 
 struct CNetSystem {
     struct CNetSystemError {
-        byte _padding_0x0[12];
-        undefined4 field_0xc; // accesses: 1
 
         // Member Functions
         void __thiscall CNetSystemError (CNetSystemError *this,CNetSystemError *param_1,CNetSystemError *param_2);

@@ -3,11 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CInputBindingsConfig {
-    byte _padding_0x0[4];
-    ulong field_0x4; // accesses: 5
-    undefined4 field_0x8; // accesses: 2
-    byte _padding_0xc[56];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[64];
     undefined4 field_0x44; // accesses: 1
     undefined * field_0x48; // accesses: 1
     ulong field_0x4c; // accesses: 2

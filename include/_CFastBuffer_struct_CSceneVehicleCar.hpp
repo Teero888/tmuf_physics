@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct ~CFastBuffer<struct_CSceneVehicleCar {
+    byte _padding_0x0[4];
+    void * field_0x4; // accesses: 1
 
     // Member Functions
     SSimulationWheel> (void *this,CFastBuffer<struct_CSceneVehicleCar::SSimulationWheel> *param_1);

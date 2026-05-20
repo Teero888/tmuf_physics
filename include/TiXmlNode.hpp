@@ -4,17 +4,17 @@
 #include "typedefs.h"
 
 struct TiXmlNode {
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 7
     undefined4 field_0x4; // accesses: 1
     undefined4 field_0x8; // accesses: 1
     undefined4 field_0xc; // accesses: 1
-    undefined4 field_0x10; // accesses: 4
-    int field_0x14; // accesses: 3
-    undefined4 * field_0x18; // accesses: 6
-    int field_0x1c; // accesses: 7
-    undefined4 * field_0x20; // accesses: 5
+    TiXmlNode * field_0x10; // accesses: 3
+    TiXmlNode * field_0x14; // accesses: 3
+    TiXmlNode * field_0x18; // accesses: 6
+    TiXmlNode * field_0x1c; // accesses: 7
+    undefined4 * field_0x20; // accesses: 3
     undefined4 field_0x24; // accesses: 2
-    undefined4 field_0x28; // accesses: 5
+    TiXmlNode * field_0x28; // accesses: 3
 
     // Member Functions
     TiXmlDocument * __thiscall GetDocument(TiXmlNode *this,TiXmlNode *param_1);

@@ -3,10 +3,15 @@
 
 #include "typedefs.h"
 
+struct CHmsItem;
+
 struct CHmsZoneOverlay {
-    byte _padding_0x0[24];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[20];
     undefined4 field_0x18; // accesses: 1
-    byte _padding_0x1c[284];
+    byte _padding_0x1c[44];
+    CHmsItem * field_0x48; // accesses: 2
+    byte _padding_0x4c[236];
     undefined4 field_0x138; // accesses: 1
     undefined4 field_0x13c; // accesses: 1
     undefined4 field_0x140; // accesses: 1

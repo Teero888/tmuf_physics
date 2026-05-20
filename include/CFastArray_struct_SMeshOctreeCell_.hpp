@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CFastArray<struct_SMeshOctreeCell> {
+    void** vftable; // accesses: 1
+    void * field_0x4; // accesses: 4
 
     // Member Functions
     void __thiscall SetCount (void *this,CFastBuffer<class_CSystemFidsFolder*> *param_1,ulong param_2);

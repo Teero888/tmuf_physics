@@ -4,16 +4,14 @@
 #include "typedefs.h"
 
 struct CMwNod;
-struct SStringParam;
 
 struct CGamePlayer {
-    byte _padding_0x0[4];
-    SStringParam * field_0x4; // accesses: 1
-    byte _padding_0x8[20];
-    int field_0x1c; // accesses: 4
-    undefined4 field_0x20; // accesses: 3
-    int * field_0x24; // accesses: 11
-    undefined4 field_0x28; // accesses: 4
+    void** vftable; // accesses: 2
+    byte _padding_0x4[24];
+    undefined4 field_0x1c; // accesses: 4
+    CMwNod * field_0x20; // accesses: 3
+    CMwNod * field_0x24; // accesses: 11
+    CMwNod * field_0x28; // accesses: 4
     byte _padding_0x2c[4];
     undefined4 field_0x30; // accesses: 2
     undefined * field_0x34; // accesses: 3
@@ -21,7 +19,7 @@ struct CGamePlayer {
     undefined4 field_0x44; // accesses: 1
     undefined4 field_0x48; // accesses: 1
     byte _padding_0x4c[492];
-    int field_0x238; // accesses: 3
+    CGamePlayer * field_0x238; // accesses: 1
 
     // Member Functions
     CMwClassInfo * __thiscall MwGetClassInfo(CGamePlayer *this,CFuncSegment *param_1);

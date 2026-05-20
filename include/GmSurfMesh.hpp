@@ -4,15 +4,10 @@
 #include "typedefs.h"
 
 struct GmSurfMesh {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 38
-    int field_0x8; // accesses: 40
-    float field_0xc; // accesses: 7
-    float field_0x10; // accesses: 5
-    float field_0x14; // accesses: 6
-    float field_0x18; // accesses: 5
-    undefined2 field_0x1c; // accesses: 1
-    byte _padding_0x1e[6];
+    void** vftable; // accesses: 3
+    float field_0x4; // accesses: 3
+    float field_0x8; // accesses: 4
+    byte _padding_0xc[24];
     int field_0x24; // accesses: 3
 
     // Member Functions

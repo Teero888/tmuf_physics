@@ -3,9 +3,11 @@
 
 #include "typedefs.h"
 
+struct CPlugBitmap;
+
 struct CGamePlayerTagData {
     byte _padding_0x0[20];
-    int field_0x14; // accesses: 2
+    CPlugBitmap * field_0x14; // accesses: 2
 
     // Member Functions
     CPlugBitmap * __thiscall GetBitmap(CGamePlayerTagData *this,CGamePlayerTagData *param_1);

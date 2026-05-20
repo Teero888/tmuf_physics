@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct GmSurfBox {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall GmSurfBox(GmSurfBox *this,GmSurfBox *param_1);

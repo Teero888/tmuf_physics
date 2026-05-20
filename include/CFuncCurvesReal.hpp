@@ -3,12 +3,8 @@
 
 #include "typedefs.h"
 
-struct CFuncKeysReal;
-
 struct CFuncCurvesReal {
-    byte _padding_0x0[4];
-    CFuncKeysReal * field_0x4; // accesses: 2
-    byte _padding_0x8[16];
+    byte _padding_0x0[24];
     int field_0x18; // accesses: 1
 
     // Member Functions

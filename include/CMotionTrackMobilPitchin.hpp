@@ -3,20 +3,10 @@
 
 #include "typedefs.h"
 
-struct CPlugAudio;
 struct GmMat2;
 
 struct CMotionTrackMobilPitchin {
-    byte _padding_0x0[8];
-    float field_0x8; // accesses: 1
-    float field_0xc; // accesses: 1
-    byte _padding_0x10[4];
-    CPlugAudio * field_0x14; // accesses: 1
-    byte _padding_0x18[12];
-    undefined4 field_0x24; // accesses: 1
-    float field_0x28; // accesses: 2
-    undefined4 field_0x2c; // accesses: 1
-    byte _padding_0x30[36];
+    byte _padding_0x0[84];
     float field_0x54; // accesses: 2
     byte _padding_0x58[12];
     float field_0x64; // accesses: 4

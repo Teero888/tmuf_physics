@@ -4,14 +4,17 @@
 #include "typedefs.h"
 
 struct CPlugTreeVisualMip {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 6
+    byte _padding_0x4[16];
     int field_0x14; // accesses: 1
-    byte _padding_0x18[120];
+    byte _padding_0x18[52];
+    undefined4 field_0x4c; // accesses: 1
+    byte _padding_0x50[64];
     int field_0x90; // accesses: 1
     byte _padding_0x94[8];
     uint field_0x9c; // accesses: 2
     byte _padding_0xa0[28];
-    int field_0xbc; // accesses: 3
+    undefined4 field_0xbc; // accesses: 3
     byte _padding_0xc0[12];
     float field_0xcc; // accesses: 4
     float field_0xd0; // accesses: 4

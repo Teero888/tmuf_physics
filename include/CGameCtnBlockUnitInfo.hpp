@@ -6,7 +6,8 @@
 struct CGameCtnBlockInfo;
 
 struct CGameCtnBlockUnitInfo {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1

@@ -4,18 +4,13 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
+struct CFuncSegment;
 struct CMwNod;
 
 struct CPlugSurface {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
-    int field_0x8; // accesses: 5
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[4];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
     CClassicArchive * field_0x14; // accesses: 8
-    byte _padding_0x18[12];
-    ushort field_0x24; // accesses: 2
-    ushort field_0x26; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl StaticInit(void);

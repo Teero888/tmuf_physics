@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameControlCard {
-    byte _padding_0x0[252];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[248];
     uint field_0xfc; // accesses: 3
     byte _padding_0x100[124];
     undefined4 field_0x17c; // accesses: 1

@@ -3,10 +3,12 @@
 
 #include "typedefs.h"
 
+struct CControlBase;
 struct CGameAvatar;
 
 struct CGameControlPlayerAvatar {
-    byte _padding_0x0[48];
+    void** vftable; // accesses: 5
+    byte _padding_0x4[44];
     CGameAvatar * field_0x30; // accesses: 2
 
     // Member Functions

@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct TiXmlString {
+    void** vftable; // accesses: 27
 
     // Member Functions
     TiXmlString * __thiscall append(void *this,TiXmlString *param_1,char *param_2,uint param_3);

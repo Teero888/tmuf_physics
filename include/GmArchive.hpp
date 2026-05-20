@@ -4,10 +4,6 @@
 #include "typedefs.h"
 
 struct GmArchive {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 9
-    float field_0x8; // accesses: 7
-    float field_0xc; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ReadQuat_6(CClassicBuffer *param_1,GmQuat *param_2);

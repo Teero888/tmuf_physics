@@ -3,35 +3,32 @@
 
 #include "typedefs.h"
 
-struct CGameCtnBlockInfo;
 struct CGameOutlineBox;
 struct CMwNod;
 struct CPlugTree;
 struct CSceneMobil;
+struct SVolatileTreePointer;
 
 struct CGameCtnCursor {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 3
-    undefined4 field_0x8; // accesses: 3
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[4];
-    int field_0x14; // accesses: 3
-    int field_0x18; // accesses: 3
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
+    undefined4 field_0x14; // accesses: 1
+    undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 4
     undefined4 field_0x24; // accesses: 4
-    int field_0x28; // accesses: 10
-    float field_0x2c; // accesses: 10
-    CGameCtnCursor * field_0x30; // accesses: 12
-    float field_0x34; // accesses: 6
-    float field_0x38; // accesses: 5
-    undefined4 field_0x3c; // accesses: 2
+    undefined4 field_0x28; // accesses: 4
+    float field_0x2c; // accesses: 4
+    float field_0x30; // accesses: 4
+    float field_0x34; // accesses: 4
+    float field_0x38; // accesses: 3
+    undefined4 field_0x3c; // accesses: 1
     CMwNod * field_0x40; // accesses: 12
-    CMwNod * field_0x44; // accesses: 18
+    CMwNod * field_0x44; // accesses: 17
     CMwNod * field_0x48; // accesses: 11
-    int * field_0x4c; // accesses: 16
-    int field_0x50; // accesses: 22
-    int field_0x54; // accesses: 3
+    CPlugTree * field_0x4c; // accesses: 16
+    CGameOutlineBox * field_0x50; // accesses: 20
+    undefined4 field_0x54; // accesses: 3
     undefined4 field_0x58; // accesses: 1
     undefined4 field_0x5c; // accesses: 1
     undefined4 field_0x60; // accesses: 1
@@ -43,13 +40,13 @@ struct CGameCtnCursor {
     float field_0x78; // accesses: 2
     float field_0x7c; // accesses: 2
     float field_0x80; // accesses: 2
-    undefined4 field_0x84; // accesses: 2
+    ESpriteColor0 * field_0x84; // accesses: 2
     undefined4 field_0x88; // accesses: 1
     undefined4 field_0x8c; // accesses: 1
     undefined4 field_0x90; // accesses: 1
     undefined4 field_0x94; // accesses: 1
     undefined4 field_0x98; // accesses: 1
-    undefined4 field_0x9c; // accesses: 3
+    undefined4 field_0x9c; // accesses: 1
     undefined4 field_0xa0; // accesses: 1
     undefined4 field_0xa4; // accesses: 1
     undefined4 field_0xa8; // accesses: 1
@@ -72,8 +69,6 @@ struct CGameCtnCursor {
     undefined4 field_0xec; // accesses: 1
     undefined4 field_0xf0; // accesses: 1
     SVolatileTreePointer * field_0xf4; // accesses: 2
-    byte _padding_0xf8[20];
-    CGameCtnBlockInfo * field_0x10c; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall Update(CGameCtnCursor *this,SGmSmoothReal2 *param_1,int param_2,ulong param_3);

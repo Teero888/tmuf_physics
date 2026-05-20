@@ -5,21 +5,19 @@
 
 struct CClassicBufferMemory;
 struct CNetNod;
+struct ulong;
 
 struct CNetConnection {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 5
-    EProtocol field_0x8; // accesses: 1
-    int * field_0xc; // accesses: 1
-    byte _padding_0x10[12];
-    int field_0x1c; // accesses: 5
+    void** vftable; // accesses: 1
+    byte _padding_0x4[24];
+    undefined4 field_0x1c; // accesses: 5
     undefined4 field_0x20; // accesses: 2
     undefined4 field_0x24; // accesses: 2
     ulong field_0x28; // accesses: 1
     byte _padding_0x2c[4];
     ulong field_0x30; // accesses: 2
     byte _padding_0x34[60];
-    CNetNod * field_0x70; // accesses: 3
+    CNetConnection * field_0x70; // accesses: 3
     byte _padding_0x74[20];
     int field_0x88; // accesses: 1
     byte _padding_0x8c[4];

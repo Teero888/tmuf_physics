@@ -3,19 +3,40 @@
 
 #include "typedefs.h"
 
-struct CPlugAudio;
-struct GmIso4;
+struct CHmsItem;
+struct CHmsStateDyna;
+struct CMwCmdScriptVarBool;
 struct GmMat3;
-struct GmVec3;
+struct GmQuat;
+struct SHistoryPoint;
 
 struct CHmsDyna {
+    struct CMwCmdScriptVarBool;
+
     struct CHmsStateDyna {
-        byte _padding_0x0[1];
-        ushort field_0x1; // accesses: 1
-        byte _padding_0x3[9];
-        int field_0xc; // accesses: 1
-        byte _padding_0x10[4];
-        int field_0x14; // accesses: 1
+        void** vftable; // accesses: 2
+        int field_0x4; // accesses: 2
+        byte _padding_0x8[56];
+        undefined4 field_0x40; // accesses: 1
+        undefined4 field_0x44; // accesses: 1
+        undefined4 field_0x48; // accesses: 1
+        undefined4 field_0x4c; // accesses: 1
+        undefined4 field_0x50; // accesses: 1
+        undefined4 field_0x54; // accesses: 1
+        undefined4 field_0x58; // accesses: 1
+        undefined4 field_0x5c; // accesses: 1
+        undefined4 field_0x60; // accesses: 1
+        undefined4 field_0x64; // accesses: 1
+        undefined4 field_0x68; // accesses: 1
+        undefined4 field_0x6c; // accesses: 1
+        undefined4 field_0x70; // accesses: 1
+        undefined4 field_0x74; // accesses: 1
+        undefined4 field_0x78; // accesses: 1
+        byte _padding_0x7c[36];
+        undefined4 field_0xa0; // accesses: 1
+        undefined4 field_0xa4; // accesses: 1
+        undefined4 field_0xa8; // accesses: 1
+        undefined4 field_0xac; // accesses: 1
 
         // Member Functions
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall OldRestoreState (void *this,CHmsStateDyna *param_1,CClassicBufferMemory *param_2,uchar param_3);
@@ -23,57 +44,132 @@ struct CHmsDyna {
         void __thiscall RestoreState (void *this,CHmsStateDyna *param_1,CClassicBufferMemory *param_2,uchar param_3);
     };
 
-    byte _padding_0x0[4];
-    SPredictionTypeVector * field_0x4; // accesses: 78
-    SPredictionTypeVector * field_0x8; // accesses: 79
-    float field_0xc; // accesses: 10
-    float field_0x10; // accesses: 12
-    float field_0x14; // accesses: 13
-    float field_0x18; // accesses: 11
-    float field_0x1c; // accesses: 7
-    float field_0x20; // accesses: 7
-    float field_0x24; // accesses: 6
-    float field_0x28; // accesses: 5
-    float field_0x2c; // accesses: 5
-    float field_0x30; // accesses: 3
-    float field_0x34; // accesses: 11
-    float field_0x38; // accesses: 11
-    float field_0x3c; // accesses: 11
-    float field_0x40; // accesses: 8
-    float field_0x44; // accesses: 8
-    float field_0x48; // accesses: 10
-    float field_0x4c; // accesses: 4
-    float field_0x50; // accesses: 4
-    float field_0x54; // accesses: 3
-    float field_0x58; // accesses: 19
-    float field_0x5c; // accesses: 19
-    float field_0x60; // accesses: 20
-    float field_0x64; // accesses: 8
-    float field_0x68; // accesses: 8
-    float field_0x6c; // accesses: 8
-    float field_0x70; // accesses: 8
-    float field_0x74; // accesses: 8
-    float field_0x78; // accesses: 6
-    byte _padding_0x7c[4];
-    float field_0x80; // accesses: 1
-    undefined4 field_0x84; // accesses: 2
-    undefined4 field_0x88; // accesses: 2
-    undefined4 field_0x8c; // accesses: 2
-    byte _padding_0x90[16];
-    int field_0xa0; // accesses: 1
-    byte _padding_0xa4[4];
-    GmVec3 * field_0xa8; // accesses: 34
-    int field_0xac; // accesses: 3
-    SHistoryPoint * field_0xb0; // accesses: 4
+    void** vftable; // accesses: 25
+    float field_0x4; // accesses: 23
+    float field_0x8; // accesses: 22
+    float field_0xc; // accesses: 3
+    byte _padding_0x10[20];
+    float field_0x24; // accesses: 1
+    float field_0x28; // accesses: 1
+    float field_0x2c; // accesses: 1
+    byte _padding_0x30[4];
+    float field_0x34; // accesses: 1
+    float field_0x38; // accesses: 1
+    float field_0x3c; // accesses: 1
+    float field_0x40; // accesses: 2
+    float field_0x44; // accesses: 2
+    float field_0x48; // accesses: 2
+    float field_0x4c; // accesses: 1
+    float field_0x50; // accesses: 1
+    float field_0x54; // accesses: 1
+    float field_0x58; // accesses: 7
+    float field_0x5c; // accesses: 7
+    float field_0x60; // accesses: 7
+    float field_0x64; // accesses: 1
+    float field_0x68; // accesses: 1
+    float field_0x6c; // accesses: 1
+    byte _padding_0x70[64];
+    SHistoryPoint * field_0xb0; // accesses: 1
     SHistoryPoint * field_0xb4; // accesses: 1
     SHistoryPoint * field_0xb8; // accesses: 1
     SHistoryPoint * field_0xbc; // accesses: 1
-    SHistoryPoint * field_0xc0; // accesses: 1
-    SHistoryPoint * field_0xc4; // accesses: 1
+    SHistoryPoint * field_0xc0; // accesses: 3
+    SHistoryPoint * field_0xc4; // accesses: 3
     byte _padding_0xc8[12];
     SHistoryPoint * field_0xd4; // accesses: 1
     SHistoryPoint * field_0xd8; // accesses: 1
     SHistoryPoint * field_0xdc; // accesses: 1
+    byte _padding_0xe0[24];
+    float field_0xf8; // accesses: 1
+    float field_0xfc; // accesses: 1
+    float field_0x100; // accesses: 1
+    undefined4 field_0x104; // accesses: 1
+    float * field_0x108; // accesses: 7
+    byte _padding_0x10c[176];
+    void * field_0x1bc; // accesses: 1
+    byte _padding_0x1c0[176];
+    void * field_0x270; // accesses: 1
+    byte _padding_0x274[180];
+    void * field_0x328; // accesses: 18
+    void * field_0x32c; // accesses: 33
+    byte _padding_0x330[12];
+    undefined4 field_0x33c; // accesses: 5
+    CHmsItem * field_0x340; // accesses: 7
+    byte _padding_0x344[4];
+    int field_0x348; // accesses: 31
+    uint field_0x34c; // accesses: 49
+    int field_0x350; // accesses: 30
+    byte _padding_0x354[4];
+    undefined4 field_0x358; // accesses: 2
+    undefined4 field_0x35c; // accesses: 2
+    undefined4 field_0x360; // accesses: 2
+    undefined4 field_0x364; // accesses: 2
+    undefined4 field_0x368; // accesses: 2
+    undefined4 field_0x36c; // accesses: 2
+    byte _padding_0x370[12];
+    undefined4 field_0x37c; // accesses: 1
+    undefined4 field_0x380; // accesses: 1
+    undefined4 field_0x384; // accesses: 1
+    undefined4 field_0x388; // accesses: 1
+    undefined4 field_0x38c; // accesses: 1
+    undefined4 field_0x390; // accesses: 1
+    undefined4 field_0x394; // accesses: 1
+    undefined4 field_0x398; // accesses: 1
+    undefined4 field_0x39c; // accesses: 1
+    undefined4 field_0x3a0; // accesses: 1
+    undefined4 field_0x3a4; // accesses: 1
+    undefined4 field_0x3a8; // accesses: 1
+    undefined4 field_0x3ac; // accesses: 1
+    undefined4 field_0x3b0; // accesses: 1
+    undefined4 field_0x3b4; // accesses: 1
+    undefined4 field_0x3b8; // accesses: 1
+    undefined4 field_0x3bc; // accesses: 1
+    undefined4 field_0x3c0; // accesses: 1
+    byte _padding_0x3c4[60];
+    undefined4 field_0x400; // accesses: 2
+    byte _padding_0x404[52];
+    undefined4 field_0x438; // accesses: 2
+    undefined4 field_0x43c; // accesses: 2
+    undefined4 field_0x440; // accesses: 2
+    undefined4 field_0x444; // accesses: 2
+    undefined4 field_0x448; // accesses: 2
+    undefined4 field_0x44c; // accesses: 2
+    byte _padding_0x450[12];
+    undefined4 field_0x45c; // accesses: 1
+    undefined4 field_0x460; // accesses: 1
+    undefined4 field_0x464; // accesses: 1
+    undefined4 field_0x468; // accesses: 1
+    undefined4 field_0x46c; // accesses: 1
+    undefined4 field_0x470; // accesses: 1
+    undefined4 field_0x474; // accesses: 1
+    undefined4 field_0x478; // accesses: 1
+    undefined4 field_0x47c; // accesses: 1
+    undefined4 field_0x480; // accesses: 1
+    undefined4 field_0x484; // accesses: 1
+    undefined4 field_0x488; // accesses: 1
+    undefined4 field_0x48c; // accesses: 1
+    undefined4 field_0x490; // accesses: 1
+    undefined4 field_0x494; // accesses: 1
+    undefined4 field_0x498; // accesses: 1
+    undefined4 field_0x49c; // accesses: 1
+    undefined4 field_0x4a0; // accesses: 1
+    byte _padding_0x4a4[60];
+    undefined4 field_0x4e0; // accesses: 4
+    byte _padding_0x4e4[52];
+    uint field_0x518; // accesses: 13
+    undefined4 field_0x51c; // accesses: 8
+    undefined4 field_0x520; // accesses: 7
+    undefined4 field_0x524; // accesses: 6
+    undefined4 field_0x528; // accesses: 8
+    undefined4 field_0x52c; // accesses: 2
+    undefined4 field_0x530; // accesses: 2
+    undefined4 field_0x534; // accesses: 2
+    byte _padding_0x538[36];
+    undefined4 field_0x55c; // accesses: 2
+    undefined4 field_0x560; // accesses: 2
+    undefined4 field_0x564; // accesses: 2
+    byte _padding_0x568[36];
+    GmMat3 * field_0x58c; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsStateDifferentFrom(void *this,CHmsItem *param_1,GmIso4 *param_2);

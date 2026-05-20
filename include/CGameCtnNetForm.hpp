@@ -4,11 +4,8 @@
 #include "typedefs.h"
 
 struct CGameCtnNetForm {
-    byte _padding_0x0[1];
-    uint field_0x1; // accesses: 1
-    uint field_0x4; // accesses: 1
-    uint field_0x5; // accesses: 1
-    byte _padding_0x9[23];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[28];
     undefined4 field_0x20; // accesses: 1
 
     // Member Functions

@@ -4,6 +4,9 @@
 #include "typedefs.h"
 
 struct CFastBuffer<int> {
+    void** vftable; // accesses: 6
+    void * field_0x4; // accesses: 5
+    uint field_0x8; // accesses: 1
 
     // Member Functions
     ulong __thiscall FindAfter(void *this,CFastBuffer<int> *param_1,int *param_2,ulong param_3);

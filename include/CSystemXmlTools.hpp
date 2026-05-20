@@ -3,25 +3,10 @@
 
 #include "typedefs.h"
 
-struct CMwNod;
-struct CMwParam;
-struct CSystemFidFile;
-struct SStringParam;
-struct TiXmlElement;
-
 struct CSystemXmlTools {
-    byte _padding_0x0[4];
-    CMwNod * field_0x4; // accesses: 9
-    CSystemFidFile * field_0x8; // accesses: 6
-    byte _padding_0xc[4];
-    SStringParam * field_0x10; // accesses: 4
-    TiXmlElement * field_0x14; // accesses: 3
-    int * field_0x18; // accesses: 13
-    code * field_0x1c; // accesses: 1
-    int field_0x20; // accesses: 15
-    int field_0x24; // accesses: 3
-    byte _padding_0x28[68];
-    undefined4 * field_0x6c; // accesses: 6
+    void** vftable; // accesses: 1
+    byte _padding_0x4[20];
+    int * field_0x18; // accesses: 3
 
     // Member Functions
     CMwNod * __cdecl XmlToNod(CSystemFid *param_1);

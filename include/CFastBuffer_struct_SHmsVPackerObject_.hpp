@@ -3,7 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastBuffer<struct_SHmsVPackerObject> {
+    void** vftable; // accesses: 8
+    int field_0x4; // accesses: 3
 
     // Member Functions
     void __thiscall Add (void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);

@@ -4,27 +4,15 @@
 #include "typedefs.h"
 
 struct CMotionEmitterParticles;
-struct CPlugAudio;
 struct CSceneToySea;
-struct CSceneToySeaHouleTable;
 
 struct CSceneToyRock {
-    byte _padding_0x0[20];
-    int * field_0x14; // accesses: 3
-    byte _padding_0x18[12];
-    CSceneToySeaHouleTable * field_0x24; // accesses: 2
-    float field_0x28; // accesses: 3
-    float field_0x2c; // accesses: 2
-    byte _padding_0x30[8];
-    float field_0x38; // accesses: 2
-    byte _padding_0x3c[8];
-    float field_0x44; // accesses: 2
-    byte _padding_0x48[24];
-    undefined4 field_0x60; // accesses: 1
-    undefined4 field_0x64; // accesses: 1
-    undefined4 field_0x68; // accesses: 1
+    void** vftable; // accesses: 3
+    byte _padding_0x4[16];
+    int * field_0x14; // accesses: 1
+    byte _padding_0x18[84];
     int field_0x6c; // accesses: 1
-    int field_0x70; // accesses: 5
+    CMotionEmitterParticles * field_0x70; // accesses: 5
     byte _padding_0x74[4];
     CSceneToySea * field_0x78; // accesses: 4
     float field_0x7c; // accesses: 2

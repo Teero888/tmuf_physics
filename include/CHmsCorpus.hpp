@@ -4,30 +4,30 @@
 #include "typedefs.h"
 
 struct CHmsZoneElem;
+struct CMwCmdScriptVarBool;
+struct GmMat3;
+struct ulong;
 
 struct CHmsCorpus {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[8];
-    code * field_0x14; // accesses: 1
-    code * field_0x18; // accesses: 3
-    code * field_0x1c; // accesses: 1
-    uint field_0x20; // accesses: 1
-    undefined4 field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 1
-    byte _padding_0x2c[16];
+    void** vftable; // accesses: 8
+    int field_0x4; // accesses: 1
+    GmMat3 * field_0x8; // accesses: 1
+    undefined4 field_0xc; // accesses: 1
+    byte _padding_0x10[8];
+    uint field_0x18; // accesses: 2
+    byte _padding_0x1c[32];
     undefined4 field_0x3c; // accesses: 1
     undefined4 field_0x40; // accesses: 1
     undefined4 field_0x44; // accesses: 1
-    int field_0x48; // accesses: 6
-    undefined4 field_0x4c; // accesses: 2
+    int field_0x48; // accesses: 8
+    void * field_0x4c; // accesses: 2
     undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 1
-    int field_0x58; // accesses: 20
-    byte _padding_0x5c[716];
-    int field_0x328; // accesses: 1
-    int field_0x32c; // accesses: 1
+    undefined4 field_0x54; // accesses: 2
+    CHmsZoneElem * field_0x58; // accesses: 22
+    byte _padding_0x5c[48];
+    int field_0x8c; // accesses: 1
+    byte _padding_0x90[12];
+    uint field_0x9c; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall WaterGetPlaneEqInZone(CHmsCorpus *this,CHmsCorpus *param_1,GmVec4 *param_2);

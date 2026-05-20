@@ -3,12 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CNetMasterServerDownload {
-    byte _padding_0x0[20];
-    int field_0x14; // accesses: 1
-    byte _padding_0x18[4];
-    int field_0x1c; // accesses: 1
-    byte _padding_0x20[24];
+    void** vftable; // accesses: 3
+    byte _padding_0x4[52];
     undefined4 field_0x38; // accesses: 1
     byte _padding_0x3c[4];
     ulong field_0x40; // accesses: 1

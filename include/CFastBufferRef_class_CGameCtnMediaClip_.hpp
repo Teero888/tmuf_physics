@@ -3,7 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastBufferRef<class_CGameCtnMediaClip> {
+    void** vftable; // accesses: 5
+    int * field_0x4; // accesses: 4
 
     // Member Functions
     ulong __thiscall FindPtr (void *this,CFastBufferRef<class_CGameCtnMediaClip> *param_1,CGameCtnMediaClip *param_2);

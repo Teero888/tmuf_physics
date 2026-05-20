@@ -4,10 +4,9 @@
 #include "typedefs.h"
 
 struct CFastBuffer<class_GmInt4> {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
+    void** vftable; // accesses: 4
+    void * field_0x4; // accesses: 4
+    uint field_0x8; // accesses: 1
 
     // Member Functions
     /* WARNING: Control flow encountered bad instruction data */ SLoadedLight * __thiscall AddNewElem (void *this,CFastBuffer<struct_CVisionViewportDx9::SLoadedLight> *param_1);

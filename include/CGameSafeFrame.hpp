@@ -7,34 +7,22 @@ struct CScene2d;
 struct CSceneCamera;
 
 struct CGameSafeFrame {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
-    undefined4 field_0x10; // accesses: 1
-    byte _padding_0x14[4];
+    void** vftable; // accesses: 1
+    float field_0x4; // accesses: 1
+    byte _padding_0x8[16];
     int field_0x18; // accesses: 2
     float field_0x1c; // accesses: 4
     float field_0x20; // accesses: 2
     float field_0x24; // accesses: 2
-    int field_0x28; // accesses: 2
+    CSceneCamera * field_0x28; // accesses: 2
     float field_0x2c; // accesses: 1
     float field_0x30; // accesses: 1
     float field_0x34; // accesses: 1
     float field_0x38; // accesses: 1
     int field_0x3c; // accesses: 1
     CScene2d * field_0x40; // accesses: 1
-    CScene2d * field_0x44; // accesses: 2
+    int field_0x44; // accesses: 2
     CScene2d * field_0x48; // accesses: 2
-    byte _padding_0x4c[204];
-    int field_0x118; // accesses: 1
-    byte _padding_0x11c[8];
-    float field_0x124; // accesses: 2
-    byte _padding_0x128[8];
-    float field_0x130; // accesses: 1
-    byte _padding_0x134[368];
-    int field_0x2a4; // accesses: 2
-    int field_0x2a8; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ GmVec2 __thiscall GetWindowSize(CGameSafeFrame *this,CGameSafeFrame *param_1);

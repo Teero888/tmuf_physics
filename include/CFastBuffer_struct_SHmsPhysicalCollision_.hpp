@@ -4,6 +4,9 @@
 #include "typedefs.h"
 
 struct CFastBuffer<struct_SHmsPhysicalCollision> {
+    void** vftable; // accesses: 6
+    void * field_0x4; // accesses: 5
+    uint field_0x8; // accesses: 1
 
     // Member Functions
     SLoadedLight * __thiscall AddNewElem (void *this,CFastBuffer<struct_CVisionViewportDx9::SLoadedLight> *param_1);

@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CAudioSoundSurface {
-    byte _padding_0x0[120];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[116];
     undefined4 field_0x78; // accesses: 1
     undefined4 field_0x7c; // accesses: 1
     undefined4 field_0x80; // accesses: 1

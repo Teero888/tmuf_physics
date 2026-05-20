@@ -3,9 +3,13 @@
 
 #include "typedefs.h"
 
+struct ushort;
+
 struct SSystemTime {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 7
+    void** vftable; // accesses: 9
+    byte field_0x2; // accesses: 1
+    byte _padding_0x3[1];
+    uint field_0x4; // accesses: 11
 
     // Member Functions
     int __thiscall IsInvalid(void *this,SSystemTime *param_1);

@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct GxTexCoordSet {
+    void** vftable; // accesses: 1
+    void * field_0x4; // accesses: 1
 
     // Member Functions
     void __thiscall Alloc(void *this,GxTexCoordSet *param_1,ulong param_2);

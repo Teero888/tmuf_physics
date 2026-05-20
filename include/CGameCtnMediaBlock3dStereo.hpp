@@ -4,10 +4,7 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaBlock3dStereo {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 2
-    float field_0x8; // accesses: 2
-    byte _padding_0xc[24];
+    byte _padding_0x0[36];
     int field_0x24; // accesses: 1
     byte _padding_0x28[12];
     float * field_0x34; // accesses: 1

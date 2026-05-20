@@ -4,9 +4,11 @@
 #include "typedefs.h"
 
 struct > {
-    byte _padding_0x0[4];
-    code * field_0x4; // accesses: 3
-    int field_0x8; // accesses: 1
+    void** vftable; // accesses: 35
+    void * field_0x4; // accesses: 40
+    uint field_0x8; // accesses: 19
+    int field_0xc; // accesses: 17
+    int field_0x10; // accesses: 2
 
     // Member Functions
     CMotionPlayer * __thiscall GetNodFromId (void *this,CFastBuffer<class_CMotionPlayer*> *param_1,CMwId *param_2);

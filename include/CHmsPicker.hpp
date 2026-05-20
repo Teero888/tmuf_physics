@@ -4,13 +4,14 @@
 #include "typedefs.h"
 
 struct CHmsPicker {
-    byte _padding_0x0[20];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 3
     undefined4 field_0x18; // accesses: 3
-    undefined4 field_0x1c; // accesses: 3
-    undefined4 field_0x20; // accesses: 3
-    undefined4 field_0x24; // accesses: 3
-    undefined4 field_0x28; // accesses: 3
+    void * field_0x1c; // accesses: 3
+    void * field_0x20; // accesses: 3
+    void * field_0x24; // accesses: 3
+    void * field_0x28; // accesses: 3
     undefined4 field_0x2c; // accesses: 3
     undefined4 field_0x30; // accesses: 3
     undefined4 field_0x34; // accesses: 3
@@ -41,7 +42,7 @@ struct CHmsPicker {
     byte _padding_0x98[48];
     undefined4 field_0xc8; // accesses: 3
     undefined4 field_0xcc; // accesses: 3
-    undefined4 field_0xd0; // accesses: 3
+    void * field_0xd0; // accesses: 3
     undefined4 field_0xd4; // accesses: 3
     undefined4 field_0xd8; // accesses: 3
     undefined4 field_0xdc; // accesses: 3

@@ -3,8 +3,16 @@
 
 #include "typedefs.h"
 
+struct CMwNod;
+
 struct STmValidateParam {
-    byte _padding_0x0[232];
+    void** vftable; // accesses: 8
+    STmValidateParam * field_0x4; // accesses: 2
+    undefined4 field_0x8; // accesses: 2
+    undefined4 field_0xc; // accesses: 2
+    undefined4 field_0x10; // accesses: 2
+    undefined4 field_0x14; // accesses: 2
+    byte _padding_0x18[208];
     uint field_0xe8; // accesses: 2
     byte _padding_0xec[4];
     uint field_0xf0; // accesses: 2

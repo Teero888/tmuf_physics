@@ -4,6 +4,11 @@
 #include "typedefs.h"
 
 struct GmField2Compressed {
+    byte _padding_0x0[36];
+    float field_0x24; // accesses: 2
+    float field_0x28; // accesses: 1
+    float field_0x2c; // accesses: 2
+    float field_0x30; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetAxeXAt(void *this,GmField2Compressed *param_1,GmNat2 *param_2,float *param_3);

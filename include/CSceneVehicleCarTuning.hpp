@@ -7,18 +7,12 @@ struct CFuncKeysReal;
 struct CMwNod;
 
 struct CSceneVehicleCarTuning {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 18
-    int field_0x8; // accesses: 3
-    byte _padding_0xc[4];
-    int field_0x10; // accesses: 2
-    byte _padding_0x14[4];
-    int field_0x18; // accesses: 6
-    byte _padding_0x1c[12];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[36];
     CFuncKeysReal * field_0x28; // accesses: 1
     float field_0x2c; // accesses: 3
     float field_0x30; // accesses: 3
-    CFuncKeysReal * field_0x34; // accesses: 16
+    CMwNod * field_0x34; // accesses: 16
     undefined4 field_0x38; // accesses: 1
     CFuncKeysReal * field_0x3c; // accesses: 1
     CFuncKeysReal * field_0x40; // accesses: 1
@@ -31,11 +25,11 @@ struct CSceneVehicleCarTuning {
     undefined4 field_0x5c; // accesses: 1
     CFuncKeysReal * field_0x60; // accesses: 1
     undefined4 field_0x64; // accesses: 1
-    CFuncKeysReal * field_0x68; // accesses: 11
+    CMwNod * field_0x68; // accesses: 11
     undefined4 field_0x6c; // accesses: 1
     CFuncKeysReal * field_0x70; // accesses: 1
-    CFuncKeysReal * field_0x74; // accesses: 3
-    CFuncKeysReal * field_0x78; // accesses: 12
+    float field_0x74; // accesses: 3
+    CMwNod * field_0x78; // accesses: 12
     undefined4 field_0x7c; // accesses: 1
     undefined4 field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
@@ -45,14 +39,14 @@ struct CSceneVehicleCarTuning {
     CFuncKeysReal * field_0x94; // accesses: 1
     undefined4 field_0x98; // accesses: 1
     undefined4 field_0x9c; // accesses: 1
-    CFuncKeysReal * field_0xa0; // accesses: 10
+    CMwNod * field_0xa0; // accesses: 10
     undefined4 field_0xa4; // accesses: 1
     undefined4 field_0xa8; // accesses: 1
-    CFuncKeysReal * field_0xac; // accesses: 10
+    CMwNod * field_0xac; // accesses: 10
     undefined4 field_0xb0; // accesses: 1
     undefined4 field_0xb4; // accesses: 1
-    CFuncKeysReal * field_0xb8; // accesses: 10
-    CFuncKeysReal * field_0xbc; // accesses: 9
+    CMwNod * field_0xb8; // accesses: 10
+    CMwNod * field_0xbc; // accesses: 9
     undefined4 field_0xc0; // accesses: 1
     float field_0xc4; // accesses: 3
     float field_0xc8; // accesses: 3
@@ -114,38 +108,38 @@ struct CSceneVehicleCarTuning {
     undefined4 field_0x1a8; // accesses: 1
     undefined4 field_0x1ac; // accesses: 1
     undefined4 field_0x1b0; // accesses: 1
-    CFuncKeysReal * field_0x1b4; // accesses: 10
+    CMwNod * field_0x1b4; // accesses: 10
     undefined4 field_0x1b8; // accesses: 1
-    CFuncKeysReal * field_0x1bc; // accesses: 9
+    CMwNod * field_0x1bc; // accesses: 9
     undefined4 field_0x1c0; // accesses: 1
-    CFuncKeysReal * field_0x1c4; // accesses: 8
+    CMwNod * field_0x1c4; // accesses: 8
     undefined4 field_0x1c8; // accesses: 1
     undefined4 field_0x1cc; // accesses: 1
     undefined4 field_0x1d0; // accesses: 1
     undefined4 field_0x1d4; // accesses: 1
     undefined4 field_0x1d8; // accesses: 1
     undefined4 field_0x1dc; // accesses: 1
-    CFuncKeysReal * field_0x1e0; // accesses: 11
+    CMwNod * field_0x1e0; // accesses: 11
     float field_0x1e4; // accesses: 2
     undefined4 field_0x1e8; // accesses: 1
-    CFuncKeysReal * field_0x1ec; // accesses: 8
-    CFuncKeysReal * field_0x1f0; // accesses: 8
+    CMwNod * field_0x1ec; // accesses: 8
+    CMwNod * field_0x1f0; // accesses: 8
     CFuncKeysReal * field_0x1f4; // accesses: 1
     undefined4 field_0x1f8; // accesses: 1
     undefined4 field_0x1fc; // accesses: 1
     undefined4 field_0x200; // accesses: 1
     undefined4 field_0x204; // accesses: 1
     float field_0x208; // accesses: 3
-    CFuncKeysReal * field_0x20c; // accesses: 3
-    CFuncKeysReal * field_0x210; // accesses: 8
-    CFuncKeysReal * field_0x214; // accesses: 8
-    CFuncKeysReal * field_0x218; // accesses: 10
+    float field_0x20c; // accesses: 3
+    CMwNod * field_0x210; // accesses: 8
+    CMwNod * field_0x214; // accesses: 8
+    CMwNod * field_0x218; // accesses: 10
     undefined4 field_0x21c; // accesses: 1
     float field_0x220; // accesses: 1
-    CFuncKeysReal * field_0x224; // accesses: 11
+    CMwNod * field_0x224; // accesses: 11
     CFuncKeysReal * field_0x228; // accesses: 1
     CFuncKeysReal * field_0x22c; // accesses: 1
-    CFuncKeysReal * field_0x230; // accesses: 11
+    CMwNod * field_0x230; // accesses: 11
     undefined4 field_0x234; // accesses: 1
     undefined4 field_0x238; // accesses: 1
     undefined4 field_0x23c; // accesses: 1
@@ -153,11 +147,11 @@ struct CSceneVehicleCarTuning {
     float field_0x244; // accesses: 1
     CFuncKeysReal * field_0x248; // accesses: 1
     CFuncKeysReal * field_0x24c; // accesses: 1
-    CFuncKeysReal * field_0x250; // accesses: 13
-    CFuncKeysReal * field_0x254; // accesses: 3
+    CMwNod * field_0x250; // accesses: 13
+    float field_0x254; // accesses: 3
     float field_0x258; // accesses: 3
-    CFuncKeysReal * field_0x25c; // accesses: 11
-    CFuncKeysReal * field_0x260; // accesses: 11
+    CMwNod * field_0x25c; // accesses: 11
+    CMwNod * field_0x260; // accesses: 11
     undefined4 field_0x264; // accesses: 1
     float field_0x268; // accesses: 1
     float field_0x26c; // accesses: 1
@@ -166,15 +160,15 @@ struct CSceneVehicleCarTuning {
     undefined4 field_0x278; // accesses: 1
     float field_0x27c; // accesses: 1
     CFuncKeysReal * field_0x280; // accesses: 1
-    CFuncKeysReal * field_0x284; // accesses: 3
-    CFuncKeysReal * field_0x288; // accesses: 11
+    float field_0x284; // accesses: 3
+    CMwNod * field_0x288; // accesses: 11
     undefined4 field_0x28c; // accesses: 1
     float field_0x290; // accesses: 3
     float field_0x294; // accesses: 3
     undefined4 field_0x298; // accesses: 1
     CFuncKeysReal * field_0x29c; // accesses: 1
     undefined4 field_0x2a0; // accesses: 1
-    CFuncKeysReal * field_0x2a4; // accesses: 11
+    CMwNod * field_0x2a4; // accesses: 11
     undefined4 field_0x2a8; // accesses: 1
     undefined4 field_0x2ac; // accesses: 1
     CFuncKeysReal * field_0x2b0; // accesses: 1
@@ -209,19 +203,19 @@ struct CSceneVehicleCarTuning {
     undefined4 field_0x360; // accesses: 1
     undefined4 field_0x364; // accesses: 1
     undefined4 field_0x368; // accesses: 1
-    CFuncKeysReal * field_0x36c; // accesses: 8
+    CMwNod * field_0x36c; // accesses: 8
     byte _padding_0x370[8];
-    undefined4 field_0x378; // accesses: 3
+    CMwNod * field_0x378; // accesses: 3
     undefined4 field_0x37c; // accesses: 1
-    CFuncKeysReal * field_0x380; // accesses: 9
+    CMwNod * field_0x380; // accesses: 9
     undefined4 field_0x384; // accesses: 1
     undefined4 field_0x388; // accesses: 1
     undefined4 field_0x38c; // accesses: 1
     undefined4 field_0x390; // accesses: 1
     undefined4 field_0x394; // accesses: 1
-    CFuncKeysReal * field_0x398; // accesses: 2
-    CFuncKeysReal * field_0x39c; // accesses: 2
-    CFuncKeysReal * field_0x3a0; // accesses: 2
+    undefined4 field_0x398; // accesses: 2
+    float field_0x39c; // accesses: 2
+    float field_0x3a0; // accesses: 2
     undefined4 field_0x3a4; // accesses: 1
     float field_0x3a8; // accesses: 1
 

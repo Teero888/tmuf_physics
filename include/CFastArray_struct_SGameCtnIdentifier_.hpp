@@ -4,9 +4,8 @@
 #include "typedefs.h"
 
 struct CFastArray<struct_SGameCtnIdentifier> {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 2
+    void** vftable; // accesses: 2
+    undefined4 * field_0x4; // accesses: 3
 
     // Member Functions
     int __thiscall IsEmpty(void *this,SShaderCustom *param_1);

@@ -5,48 +5,43 @@
 
 struct CDx9DynamicVB;
 struct CMwCmdBuffer;
-struct CMwNod;
 struct CMwTimer;
 struct CMwTimerAdapter;
 struct CPlugAudio;
+struct ulong;
 
 struct CMwCmdBufferCore {
-    byte _padding_0x0[4];
-    ulong field_0x4; // accesses: 5
-    byte field_0x6; // accesses: 1
-    byte _padding_0x7[9];
-    int field_0x10; // accesses: 1
-    undefined4 field_0x14; // accesses: 2
-    CMwTimer * field_0x18; // accesses: 7
-    _func___cdecl_void * field_0x1c; // accesses: 2
-    _func___cdecl_void * field_0x20; // accesses: 2
-    byte _padding_0x24[8];
-    int * field_0x2c; // accesses: 10
-    int field_0x30; // accesses: 7
-    int field_0x34; // accesses: 5
-    int field_0x38; // accesses: 5
+    void** vftable; // accesses: 3
+    byte _padding_0x4[16];
+    CPlugAudio * field_0x14; // accesses: 2
+    undefined4 field_0x18; // accesses: 4
+    byte _padding_0x1c[16];
+    CMwCmdBuffer * field_0x2c; // accesses: 10
+    undefined4 field_0x30; // accesses: 7
+    undefined4 field_0x34; // accesses: 5
+    undefined4 field_0x38; // accesses: 5
     ulong field_0x3c; // accesses: 6
-    int field_0x40; // accesses: 6
+    uint field_0x40; // accesses: 6
     undefined4 field_0x44; // accesses: 1
     undefined4 field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
     undefined4 field_0x50; // accesses: 1
     byte _padding_0x54[4];
     undefined4 field_0x58; // accesses: 5
-    int field_0x5c; // accesses: 4
-    int field_0x60; // accesses: 6
-    int field_0x64; // accesses: 5
-    int field_0x68; // accesses: 4
+    undefined4 field_0x5c; // accesses: 4
+    undefined4 field_0x60; // accesses: 6
+    undefined4 field_0x64; // accesses: 5
+    undefined4 field_0x68; // accesses: 4
     byte _padding_0x6c[8];
     undefined4 field_0x74; // accesses: 1
     byte _padding_0x78[60];
     undefined4 field_0xb4; // accesses: 1
     undefined4 field_0xb8; // accesses: 1
     CMwTimerAdapter * field_0xbc; // accesses: 5
-    int field_0xc0; // accesses: 5
-    int field_0xc4; // accesses: 3
+    undefined4 field_0xc0; // accesses: 5
+    undefined4 field_0xc4; // accesses: 3
     byte _padding_0xc8[56];
-    int * field_0x100; // accesses: 19
+    CMwCmdBuffer * field_0x100; // accesses: 19
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ForceFpuCwForSimulationX86(char *param_1);

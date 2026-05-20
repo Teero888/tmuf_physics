@@ -3,18 +3,12 @@
 
 #include "typedefs.h"
 
-struct CPlugMaterial;
-
 struct CMotionDayTime {
-    byte _padding_0x0[20];
-    uint field_0x14; // accesses: 2
-    byte _padding_0x18[12];
-    CMotionDayTime * field_0x24; // accesses: 3
+    void** vftable; // accesses: 1
+    byte _padding_0x4[32];
+    undefined4 field_0x24; // accesses: 3
     undefined4 field_0x28; // accesses: 1
     undefined4 field_0x2c; // accesses: 1
-    byte _padding_0x30[104];
-    CPlugMaterial * field_0x98; // accesses: 1
-    uint field_0x9c; // accesses: 4
 
     // Member Functions
     void __thiscall CMotionDayTime(CMotionDayTime *this,CMotionDayTime *param_1);

@@ -4,8 +4,9 @@
 #include "typedefs.h"
 
 struct CFastBuffer<class_CMwNodRef<class_CPlugMaterial>_> {
-    byte _padding_0x0[8];
-    int field_0x8; // accesses: 1
+    void** vftable; // accesses: 7
+    void * field_0x4; // accesses: 5
+    undefined4 field_0x8; // accesses: 2
 
     // Member Functions
     SLoadedLight * __thiscall AddNewElem (void *this,CFastBuffer<struct_CVisionViewportDx9::SLoadedLight> *param_1);

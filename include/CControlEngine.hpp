@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CControlEngine {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CControlEngine(CControlEngine *this,CControlEngine *param_1);

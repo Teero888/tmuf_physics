@@ -6,48 +6,42 @@
 struct CControlContainer;
 struct CGameApp;
 struct CGameCtnApp;
-struct CHmsZone;
 struct CMwNod;
 struct CSceneObject;
 
 struct CGameCtnMenus {
     struct SFrameLadderRankingsStepOld {
+        byte _padding_0x0[8];
+        undefined4 field_0x8; // accesses: 1
+        undefined * field_0xc; // accesses: 2
 
         // Member Functions
         void __thiscall ~SFrameLadderRankingsStepOld (void *this,SFrameLadderRankingsStepOld *param_1);
     };
 
-    byte _padding_0x0[4];
+    void** vftable; // accesses: 3
     undefined4 field_0x4; // accesses: 1
     undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[148];
-    CHmsZone * field_0xa0; // accesses: 1
-    byte _padding_0xa4[152];
+    byte _padding_0xc[304];
     undefined4 field_0x13c; // accesses: 1
-    byte _padding_0x140[36];
-    undefined4 * field_0x164; // accesses: 2
-    byte _padding_0x168[140];
+    byte _padding_0x140[180];
     int field_0x1f4; // accesses: 1
     int field_0x1f8; // accesses: 1
     byte _padding_0x1fc[32];
-    undefined4 field_0x21c; // accesses: 3
+    CMwNod * field_0x21c; // accesses: 3
     undefined4 field_0x220; // accesses: 1
-    byte _padding_0x224[24];
-    undefined4 field_0x23c; // accesses: 1
-    undefined4 field_0x240; // accesses: 1
-    undefined4 field_0x244; // accesses: 1
-    byte _padding_0x248[860];
-    int field_0x5a4; // accesses: 6
-    CSceneObject * field_0x5a8; // accesses: 3
+    byte _padding_0x224[896];
+    CMwNod * field_0x5a4; // accesses: 6
+    undefined4 field_0x5a8; // accesses: 3
     byte _padding_0x5ac[112];
-    undefined4 field_0x61c; // accesses: 3
-    int field_0x620; // accesses: 2
+    CMwNod * field_0x61c; // accesses: 3
+    undefined4 field_0x620; // accesses: 2
     byte _padding_0x624[128];
     CControlContainer * field_0x6a4; // accesses: 1
     byte _padding_0x6a8[88];
     undefined4 field_0x700; // accesses: 1
     byte _padding_0x704[128];
-    int * field_0x784; // accesses: 9
+    void * field_0x784; // accesses: 9
     int field_0x788; // accesses: 3
     int field_0x78c; // accesses: 4
 

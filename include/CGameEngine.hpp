@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CGameEngine {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CGameEngine(CGameEngine *this,CGameEngine *param_1);

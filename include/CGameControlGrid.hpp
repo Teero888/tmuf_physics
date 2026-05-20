@@ -5,9 +5,11 @@
 
 struct CGameRemoteBuffer;
 struct CGameRemoteBufferPool;
+struct ulong;
 
 struct CGameControlGrid {
-    byte _padding_0x0[464];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[460];
     undefined4 field_0x1d0; // accesses: 3
     byte _padding_0x1d4[48];
     CGameRemoteBufferPool * field_0x204; // accesses: 3

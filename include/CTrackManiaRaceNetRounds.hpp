@@ -3,12 +3,8 @@
 
 #include "typedefs.h"
 
-struct CPlugAudio;
-
 struct CTrackManiaRaceNetRounds {
-    byte _padding_0x0[20];
-    CPlugAudio * field_0x14; // accesses: 1
-    byte _padding_0x18[1648];
+    byte _padding_0x0[1672];
     undefined4 field_0x688; // accesses: 1
 
     // Member Functions

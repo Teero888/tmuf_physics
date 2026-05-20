@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CNetEngine {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CNetEngine(CNetEngine *this,CNetEngine *param_1);

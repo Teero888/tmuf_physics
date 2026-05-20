@@ -3,11 +3,7 @@
 
 #include "typedefs.h"
 
-struct CSceneVehicleSpeedBoat;
-
 struct CCallbackComputeForcesSpeedBoat {
-    byte _padding_0x0[64];
-    CSceneVehicleSpeedBoat * field_0x40; // accesses: 1
 
     // Member Functions
     void * __thiscall _vector_deleting_destructor_ (CCallbackComputeForcesSpeedBoat *this,CRpcCallInternal *param_1,uint param_2);

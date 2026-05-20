@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CScenePoc {
-    byte _padding_0x0[40];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[36];
     undefined4 field_0x28; // accesses: 1
     undefined4 field_0x2c; // accesses: 1
     int * field_0x30; // accesses: 2

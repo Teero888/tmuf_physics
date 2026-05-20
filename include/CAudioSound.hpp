@@ -5,10 +5,12 @@
 
 struct CAudioPort;
 struct CMwNod;
+struct ulong;
 
 struct CAudioSound {
-    byte _padding_0x0[20];
-    int field_0x14; // accesses: 2
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
+    undefined4 field_0x14; // accesses: 2
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 1
@@ -24,7 +26,7 @@ struct CAudioSound {
     uint field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
     ulong field_0x50; // accesses: 6
-    EPlugVideoTimer field_0x54; // accesses: 3
+    undefined4 field_0x54; // accesses: 3
     undefined4 field_0x58; // accesses: 1
     undefined4 field_0x5c; // accesses: 1
     undefined4 field_0x60; // accesses: 1

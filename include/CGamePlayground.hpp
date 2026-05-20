@@ -7,19 +7,17 @@ struct CMwNod;
 struct TiXmlDeclaration;
 
 struct CGamePlayground {
-    byte _padding_0x0[4];
-    TiXmlDeclaration * field_0x4; // accesses: 3
-    byte _padding_0x8[8];
-    int field_0x10; // accesses: 2
-    byte _padding_0x14[4];
-    int field_0x18; // accesses: 9
+    void** vftable; // accesses: 7
+    TiXmlDeclaration * field_0x4; // accesses: 1
+    byte _padding_0x8[16];
+    undefined4 field_0x18; // accesses: 1
     byte _padding_0x1c[4];
-    int field_0x20; // accesses: 3
+    undefined4 field_0x20; // accesses: 1
     byte _padding_0x24[12];
-    undefined4 field_0x30; // accesses: 6
-    undefined4 field_0x34; // accesses: 6
+    CMwNod * field_0x30; // accesses: 6
+    CMwNod * field_0x34; // accesses: 6
     byte _padding_0x38[12];
-    int * field_0x44; // accesses: 8
+    CMwNod * field_0x44; // accesses: 8
     undefined4 field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
 

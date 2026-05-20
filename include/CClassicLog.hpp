@@ -3,20 +3,13 @@
 
 #include "typedefs.h"
 
-struct CSystemFile;
-struct SSystemTime;
-
 struct CClassicLog {
     byte _padding_0x0[4];
-    int * field_0x4; // accesses: 6
+    int * field_0x4; // accesses: 2
     int field_0x8; // accesses: 1
     code * field_0xc; // accesses: 1
     code * field_0x10; // accesses: 1
     int * field_0x14; // accesses: 2
-    byte _padding_0x18[148];
-    int field_0xac; // accesses: 1
-    byte _padding_0xb0[60];
-    int * field_0xec; // accesses: 4
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall FlushWhenTimeOut(CClassicLog *this,CClassicLog *param_1,int param_2);

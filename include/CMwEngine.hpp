@@ -4,8 +4,9 @@
 #include "typedefs.h"
 
 struct CMwEngine {
-    byte _padding_0x0[24];
-    undefined4 field_0x18; // accesses: 2
+    void** vftable; // accesses: 2
+    byte _padding_0x4[20];
+    uint * field_0x18; // accesses: 2
     undefined4 field_0x1c; // accesses: 2
 
     // Member Functions

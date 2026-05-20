@@ -5,57 +5,41 @@
 
 struct CHmsCorpus;
 struct CHmsItem;
-struct CHmsLight;
 struct CHmsZone;
-struct CMotionCmdBase;
 struct CMotionLight;
 struct CMotions;
 struct CMwNod;
-struct CPlugMaterial;
 struct CPlugSolid;
-struct CPlugTree;
 struct CSceneMessageHandler;
 struct CSceneObject;
 struct CSceneToyBroomstick;
-struct GmIso4;
-struct GmLocFreeVal;
 
 struct CSceneMobil {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 15
-    int field_0x8; // accesses: 13
-    undefined4 field_0xc; // accesses: 1
-    int field_0x10; // accesses: 5
-    CSceneToyBroomstick * field_0x14; // accesses: 27
-    CSceneObject * field_0x18; // accesses: 18
-    CHmsLight * field_0x1c; // accesses: 1
-    int * field_0x20; // accesses: 18
-    CFuncPlug * field_0x24; // accesses: 8
-    CHmsItem * field_0x28; // accesses: 63
-    undefined4 field_0x2c; // accesses: 9
-    CMotions * field_0x30; // accesses: 39
-    int * field_0x34; // accesses: 15
-    GmIso4 * field_0x38; // accesses: 8
-    float field_0x3c; // accesses: 2
-    undefined4 field_0x40; // accesses: 3
-    CMwNod * field_0x44; // accesses: 15
-    float field_0x48; // accesses: 2
-    byte _padding_0x4c[28];
-    undefined4 field_0x68; // accesses: 1
-    byte _padding_0x6c[12];
-    code * field_0x78; // accesses: 2
-    byte _padding_0x7c[8];
-    float field_0x84; // accesses: 2
-    code * field_0x88; // accesses: 1
-    byte _padding_0x8c[4];
-    int field_0x90; // accesses: 5
-    byte _padding_0x94[4];
-    CPlugMaterial * field_0x98; // accesses: 1
-    uint field_0x9c; // accesses: 7
-    byte _padding_0xa0[8];
-    int field_0xa8; // accesses: 3
-    int field_0xac; // accesses: 3
-    int * field_0xb0; // accesses: 6
+    void** vftable; // accesses: 29
+    byte _padding_0x4[4];
+    CSceneMobil * field_0x8; // accesses: 2
+    byte _padding_0xc[8];
+    int field_0x14; // accesses: 12
+    int field_0x18; // accesses: 1
+    byte _padding_0x1c[4];
+    int * field_0x20; // accesses: 13
+    uint field_0x24; // accesses: 2
+    int field_0x28; // accesses: 58
+    CMwNod * field_0x2c; // accesses: 8
+    CMwNod * field_0x30; // accesses: 26
+    CMwNod * field_0x34; // accesses: 14
+    float field_0x38; // accesses: 1
+    float field_0x3c; // accesses: 1
+    CHmsCorpus * field_0x40; // accesses: 1
+    CMwNod * field_0x44; // accesses: 14
+    float field_0x48; // accesses: 1
+    byte _padding_0x4c[12];
+    int field_0x58; // accesses: 1
+    byte _padding_0x5c[40];
+    float field_0x84; // accesses: 1
+    byte _padding_0x88[36];
+    int field_0xac; // accesses: 2
+    int * field_0xb0; // accesses: 4
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CSceneMobil *this,CSystemData *param_1,CMwStack *param_2,void *param_3);

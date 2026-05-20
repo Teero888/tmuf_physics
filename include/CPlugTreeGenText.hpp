@@ -6,10 +6,11 @@
 struct CPlugFont;
 
 struct CPlugTreeGenText {
-    byte _padding_0x0[60];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[56];
     int field_0x3c; // accesses: 1
     float field_0x40; // accesses: 2
-    int field_0x44; // accesses: 3
+    float field_0x44; // accesses: 3
     int field_0x48; // accesses: 1
     uint field_0x4c; // accesses: 2
     uint field_0x50; // accesses: 1

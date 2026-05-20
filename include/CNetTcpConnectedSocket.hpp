@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CNetTcpConnectedSocket {
+    void** vftable; // accesses: 5
 
     // Member Functions
     int __thiscall Shutdown(void *this,CNetTcpConnectedSocket *param_1);

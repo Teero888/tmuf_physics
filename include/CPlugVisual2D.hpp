@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugVisual2D {
-    byte _padding_0x0[28];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[24];
     uint field_0x1c; // accesses: 2
 
     // Member Functions

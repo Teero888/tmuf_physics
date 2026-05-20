@@ -3,26 +3,46 @@
 
 #include "typedefs.h"
 
-struct CClassicBufferMemory;
-struct CHmsViewport;
-struct CVisionShaderKeeper;
-
 struct CVisionViewport {
     struct SOccWheel {
+        void** vftable; // accesses: 1
+        undefined4 field_0x4; // accesses: 1
+        undefined4 field_0x8; // accesses: 1
+        undefined4 field_0xc; // accesses: 1
+        undefined4 field_0x10; // accesses: 1
+        byte _padding_0x14[4];
+        undefined4 field_0x18; // accesses: 1
+        undefined4 field_0x1c; // accesses: 1
+        undefined4 field_0x20; // accesses: 1
+        byte _padding_0x24[4];
+        undefined4 field_0x28; // accesses: 1
+        byte _padding_0x2c[4];
+        undefined4 field_0x30; // accesses: 1
+        undefined4 field_0x34; // accesses: 1
+        undefined4 field_0x38; // accesses: 1
+        byte _padding_0x3c[4];
+        undefined4 field_0x40; // accesses: 1
+        byte _padding_0x44[4];
+        undefined4 field_0x48; // accesses: 1
+        undefined4 field_0x4c; // accesses: 1
+        undefined4 field_0x50; // accesses: 1
+        byte _padding_0x54[4];
+        undefined4 field_0x58; // accesses: 1
+        byte _padding_0x5c[4];
+        undefined4 field_0x60; // accesses: 1
+        undefined4 field_0x64; // accesses: 1
+        undefined4 field_0x68; // accesses: 1
+        byte _padding_0x6c[4];
+        undefined4 field_0x70; // accesses: 1
+        undefined4 field_0x74; // accesses: 1
+        undefined4 field_0x78; // accesses: 1
 
         // Member Functions
         void __thiscall SOccWheel(void *this,SOccWheel *param_1);
     };
 
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 1
-    int field_0x8; // accesses: 3
-    byte _padding_0xc[4];
-    uint field_0x10; // accesses: 3
-    undefined4 field_0x14; // accesses: 7
-    byte _padding_0x18[4];
-    uint field_0x1c; // accesses: 1
-    byte _padding_0x20[20];
+    void** vftable; // accesses: 5
+    byte _padding_0x4[48];
     int field_0x34; // accesses: 1
     byte _padding_0x38[424];
     undefined4 field_0x1e0; // accesses: 1

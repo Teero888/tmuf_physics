@@ -6,78 +6,65 @@
 struct CGameApp;
 struct CGameCtnApp;
 struct CGameCtnMediaClipPlayer;
-struct CGameNetPlayerInfo;
-struct CGamePlayer;
 struct CGamePlayerCameraSet;
 struct CGameScene;
+struct CLoadGeomDynaSprite;
 struct CMwNod;
 
 struct CGameRace {
     struct SCameraPreset {
+        void** vftable; // accesses: 1
 
         // Member Functions
         void __thiscall SCameraPreset(void *this,SCameraPreset *param_1);
     };
 
+    struct CMwNod;
+
     struct SPlayerInfosForTargetting {
+        void** vftable; // accesses: 3
 
         // Member Functions
         void __thiscall SPlayerInfosForTargetting (void *this,SPlayerInfosForTargetting *param_1);
         void __thiscall ~SPlayerInfosForTargetting (void *this,SPlayerInfosForTargetting *param_1);
     };
 
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[4];
-    int field_0x10; // accesses: 2
-    int * field_0x14; // accesses: 2
-    int * field_0x18; // accesses: 17
-    int field_0x1c; // accesses: 2
-    CMwNod * field_0x20; // accesses: 13
-    int field_0x24; // accesses: 3
-    CGameRace * field_0x28; // accesses: 11
-    CGameNetPlayerInfo * field_0x2c; // accesses: 1
-    CGameScene * field_0x30; // accesses: 5
+    void** vftable; // accesses: 21
+    byte _padding_0x4[20];
+    CLoadGeomDynaSprite * field_0x18; // accesses: 10
+    byte _padding_0x1c[4];
+    int * field_0x20; // accesses: 5
+    byte _padding_0x24[4];
+    int field_0x28; // accesses: 1
+    byte _padding_0x2c[4];
+    CMwNod * field_0x30; // accesses: 5
     CMwNod * field_0x34; // accesses: 4
-    undefined4 field_0x38; // accesses: 1
-    undefined4 field_0x3c; // accesses: 1
-    byte _padding_0x40[4];
-    undefined4 field_0x44; // accesses: 3
-    undefined4 field_0x48; // accesses: 1
-    byte _padding_0x4c[4];
+    byte _padding_0x38[12];
+    CMwNod * field_0x44; // accesses: 3
+    byte _padding_0x48[8];
     CGameRace * field_0x50; // accesses: 2
     undefined4 field_0x54; // accesses: 3
     CGameCtnMediaClipPlayer * field_0x58; // accesses: 8
-    undefined4 field_0x5c; // accesses: 3
+    CMwNod * field_0x5c; // accesses: 3
     CGameCtnMediaClipPlayer * field_0x60; // accesses: 15
     byte _padding_0x64[8];
-    int field_0x6c; // accesses: 6
-    CGameRace * field_0x70; // accesses: 7
-    int field_0x74; // accesses: 7
+    ESpectatorCameraType field_0x6c; // accesses: 5
+    undefined4 field_0x70; // accesses: 3
+    undefined4 field_0x74; // accesses: 3
     undefined4 field_0x78; // accesses: 1
-    CGameRace * field_0x7c; // accesses: 2
+    undefined4 field_0x7c; // accesses: 2
     CGamePlayerCameraSet * field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
     undefined4 field_0x88; // accesses: 1
-    byte _padding_0x8c[4];
-    int field_0x90; // accesses: 1
-    byte _padding_0x94[4];
-    CGameRace * field_0x98; // accesses: 6
+    byte _padding_0x8c[12];
+    undefined4 field_0x98; // accesses: 6
     undefined4 field_0x9c; // accesses: 2
     CGameCtnMediaClipPlayer * field_0xa0; // accesses: 25
     CGameCtnMediaClipPlayer * field_0xa4; // accesses: 26
-    int field_0xa8; // accesses: 4
+    undefined4 field_0xa8; // accesses: 4
     int field_0xac; // accesses: 2
-    CGameRace * field_0xb0; // accesses: 10
-    undefined4 field_0xb4; // accesses: 6
-    byte _padding_0xb8[184];
-    CMwNod * field_0x170; // accesses: 1
-    CMwNod * field_0x174; // accesses: 1
-    byte _padding_0x178[8];
-    CGameCtnMediaClipPlayer * field_0x180; // accesses: 5
-    byte _padding_0x184[180];
-    CGamePlayer * field_0x238; // accesses: 1
+    CMwNod * field_0xb0; // accesses: 10
+    CMwNod * field_0xb4; // accesses: 6
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall MediaClipStart(CGameRace *this,CGameRace *param_1,CGameCtnMediaClip *param_2,int param_3);

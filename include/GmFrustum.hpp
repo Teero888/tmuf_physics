@@ -3,16 +3,18 @@
 
 #include "typedefs.h"
 
+struct CHmsCamera;
+struct GmIso4;
 struct GmVec3;
 
 struct GmFrustum {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 9
-    float field_0x8; // accesses: 10
-    float field_0xc; // accesses: 9
-    float field_0x10; // accesses: 8
-    float field_0x14; // accesses: 9
-    float field_0x18; // accesses: 3
+    void** vftable; // accesses: 19
+    float field_0x4; // accesses: 29
+    int field_0x8; // accesses: 31
+    GmIso4 * field_0xc; // accesses: 26
+    float field_0x10; // accesses: 29
+    uint field_0x14; // accesses: 30
+    float field_0x18; // accesses: 22
     float field_0x1c; // accesses: 3
     float field_0x20; // accesses: 3
     float field_0x24; // accesses: 3

@@ -4,10 +4,10 @@
 #include "typedefs.h"
 
 struct CPlugShaderGeneric {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 6
-    float field_0x8; // accesses: 6
-    float field_0xc; // accesses: 4
+    void** vftable; // accesses: 4
+    undefined4 field_0x4; // accesses: 3
+    undefined4 field_0x8; // accesses: 3
+    undefined4 field_0xc; // accesses: 1
     byte _padding_0x10[40];
     undefined4 field_0x38; // accesses: 2
     undefined4 field_0x3c; // accesses: 2

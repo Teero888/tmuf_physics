@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CNetArchive {
-    byte _padding_0x0[8];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[4];
     undefined4 field_0x8; // accesses: 2
     undefined4 field_0xc; // accesses: 1
 

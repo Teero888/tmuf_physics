@@ -4,6 +4,17 @@
 #include "typedefs.h"
 
 struct GmSpring<class_GmVec3> {
+    void** vftable; // accesses: 1
+    float field_0x4; // accesses: 1
+    float field_0x8; // accesses: 4
+    float field_0xc; // accesses: 4
+    float field_0x10; // accesses: 4
+    float field_0x14; // accesses: 2
+    float field_0x18; // accesses: 2
+    float field_0x1c; // accesses: 2
+    float field_0x20; // accesses: 5
+    float field_0x24; // accesses: 5
+    float field_0x28; // accesses: 5
 
     // Member Functions
     float __thiscall GetCriticalKa(void *this,GmSpring<class_GmVec3> *param_1);

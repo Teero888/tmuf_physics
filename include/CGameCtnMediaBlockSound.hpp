@@ -4,13 +4,7 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaBlockSound {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 3
-    float field_0x8; // accesses: 3
-    float field_0xc; // accesses: 3
-    float field_0x10; // accesses: 3
-    float field_0x14; // accesses: 3
-    byte _padding_0x18[12];
+    byte _padding_0x0[36];
     int field_0x24; // accesses: 1
 
     // Member Functions

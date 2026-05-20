@@ -3,17 +3,30 @@
 
 #include "typedefs.h"
 
+struct CFuncColorGradient;
+struct CGamePlayerInfo;
+struct CHmsCollisionManager;
+struct CHmsItem;
+struct CHmsZone;
+struct CMwNod;
 struct CMwStatsValue;
+struct CPlugBlendShapes;
+struct CPlugSolid;
+struct CPlugTree;
+struct CSceneMobil;
+struct CSceneVehicle;
+struct CSceneVehicleCar;
+struct SParam;
+struct ulong;
 
 struct CMwStack {
-    byte _padding_0x0[4];
-    undefined * field_0x4; // accesses: 21
-    int field_0x8; // accesses: 11
-    int field_0xc; // accesses: 6
-    undefined4 * field_0x10; // accesses: 26
-    undefined4 * field_0x14; // accesses: 23
-    int field_0x18; // accesses: 12
-    undefined4 field_0x1c; // accesses: 1
+    void** vftable; // accesses: 371
+    CPlugBlendShapes * field_0x4; // accesses: 181
+    int field_0x8; // accesses: 7
+    undefined4 field_0xc; // accesses: 2
+    void * field_0x10; // accesses: 23
+    void * field_0x14; // accesses: 20
+    undefined4 field_0x18; // accesses: 13
 
     // Member Functions
     ulong __thiscall ChangeBaseVal(CMwStack *this,CMwStack *param_1,ulong param_2);

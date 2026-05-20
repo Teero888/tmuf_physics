@@ -3,21 +3,12 @@
 
 #include "typedefs.h"
 
-struct CPlugAudio;
-struct CPlugVisualSprite;
-struct GmVec3;
+struct CLoadGeomDynaSprite;
 
 struct CSceneMobilSnow {
-    byte _padding_0x0[4];
-    CPlugVisualSprite * field_0x4; // accesses: 1
-    GmVec3 * field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[4];
-    CPlugAudio * field_0x14; // accesses: 1
-    byte _padding_0x18[4];
-    uint field_0x1c; // accesses: 6
-    byte _padding_0x20[8];
-    int field_0x28; // accesses: 2
+    void** vftable; // accesses: 1
+    byte _padding_0x4[36];
+    int field_0x28; // accesses: 1
     byte _padding_0x2c[28];
     undefined4 field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1

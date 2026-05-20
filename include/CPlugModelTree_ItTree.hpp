@@ -3,9 +3,12 @@
 
 #include "typedefs.h"
 
+struct CPlugModelTree;
+
 struct CPlugModelTree_ItTree {
-    byte _padding_0x0[44];
-    int field_0x2c; // accesses: 2
+    void** vftable; // accesses: 2
+    byte _padding_0x4[8];
+    CPlugModelTree * field_0xc; // accesses: 4
 
     // Member Functions
     CPlugModelTree * __thiscall GetNextTree(void *this,CPlugModelTree_ItTree *param_1);

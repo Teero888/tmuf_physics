@@ -3,57 +3,33 @@
 
 #include "typedefs.h"
 
-struct CHmsItem;
 struct CTrackManiaEditor;
+struct ulong;
 
 struct CTrackMania {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 1
-    float field_0x8; // accesses: 1
-    float field_0xc; // accesses: 1
-    byte _padding_0x10[28];
-    int field_0x2c; // accesses: 1
-    int * field_0x30; // accesses: 1
-    byte _padding_0x34[4];
-    CHmsItem * field_0x38; // accesses: 1
-    byte _padding_0x3c[28];
-    int field_0x58; // accesses: 1
-    byte _padding_0x5c[36];
-    float field_0x80; // accesses: 1
-    byte _padding_0x84[16];
-    float field_0x94; // accesses: 1
-    float field_0x98; // accesses: 1
-    int field_0x9c; // accesses: 1
-    float field_0xa0; // accesses: 1
-    undefined4 field_0xa4; // accesses: 1
-    byte _padding_0xa8[132];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[296];
     int field_0x12c; // accesses: 2
     byte _padding_0x130[56];
     CTrackManiaPlayerProfile * field_0x168; // accesses: 1
     byte _padding_0x16c[4];
     int field_0x170; // accesses: 1
-    byte _padding_0x174[4];
-    float field_0x178; // accesses: 1
-    float field_0x17c; // accesses: 1
-    undefined4 field_0x180; // accesses: 1
-    byte _padding_0x184[20];
+    byte _padding_0x174[36];
     int field_0x198; // accesses: 2
-    byte _padding_0x19c[68];
-    code * field_0x1e0; // accesses: 1
-    byte _padding_0x1e4[132];
+    byte _padding_0x19c[204];
     undefined4 field_0x268; // accesses: 1
     byte _padding_0x26c[4];
     int field_0x270; // accesses: 1
     byte _padding_0x274[416];
     int * field_0x414; // accesses: 3
-    int field_0x418; // accesses: 5
+    CTrackMania * field_0x418; // accesses: 4
     byte _padding_0x41c[232];
     ulong field_0x504; // accesses: 1
     CTrackMania * field_0x508; // accesses: 1
     byte _padding_0x50c[52];
-    int field_0x540; // accesses: 2
+    undefined4 field_0x540; // accesses: 2
     undefined2 * field_0x544; // accesses: 1
-    int field_0x548; // accesses: 2
+    undefined4 field_0x548; // accesses: 2
     undefined2 * field_0x54c; // accesses: 1
 
     // Member Functions

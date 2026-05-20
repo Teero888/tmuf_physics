@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CTrackManiaEngine {
+    void** vftable; // accesses: 1
 
     // Member Functions
     void __thiscall CTrackManiaEngine(CTrackManiaEngine *this,CTrackManiaEngine *param_1);

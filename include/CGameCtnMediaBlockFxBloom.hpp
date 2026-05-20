@@ -4,10 +4,7 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaBlockFxBloom {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 3
-    float field_0x8; // accesses: 3
-    byte _padding_0xc[40];
+    byte _padding_0x0[52];
     int field_0x34; // accesses: 1
 
     // Member Functions

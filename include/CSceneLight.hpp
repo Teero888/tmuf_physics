@@ -6,10 +6,9 @@
 struct CHmsLight;
 
 struct CSceneLight {
-    byte _padding_0x0[48];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[44];
     int field_0x30; // accesses: 4
-    byte _padding_0x34[48];
-    CSceneLight * field_0x64; // accesses: 1
 
     // Member Functions
     ESceneLight __thiscall GetKindLight(CSceneLight *this,CSceneLight *param_1);

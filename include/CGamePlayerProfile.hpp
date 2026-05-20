@@ -6,12 +6,8 @@
 struct CGameLeague;
 
 struct CGamePlayerProfile {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 3
-    undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[28];
-    float field_0x28; // accesses: 2
-    float field_0x2c; // accesses: 1
+    byte _padding_0x0[40];
+    CGameLeague * field_0x28; // accesses: 1
 
     // Member Functions
     ulong __thiscall FindVehicleProfileFromVehicleIdent (CGamePlayerProfile *this,CGamePlayerProfile *param_1,SGameCtnIdentifier *param_2);

@@ -7,12 +7,13 @@ struct CMwNod;
 struct CSceneObjectLink;
 
 struct CMotionEmitterParticles {
-    byte _padding_0x0[124];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[120];
     undefined4 field_0x7c; // accesses: 1
     CMotionEmitterParticles * field_0x80; // accesses: 2
     undefined4 field_0x84; // accesses: 1
-    undefined4 field_0x88; // accesses: 5
-    CSceneObjectLink * field_0x8c; // accesses: 2
+    CMwNod * field_0x88; // accesses: 5
+    undefined4 field_0x8c; // accesses: 2
 
     // Member Functions
     void __thiscall CMotionEmitterParticles (CMotionEmitterParticles *this,CMotionEmitterParticles *param_1);

@@ -9,8 +9,8 @@ struct CVisionVisualKeeper;
 
 struct CFuncPathMesh {
     byte _padding_0x0[40];
-    int * field_0x28; // accesses: 7
-    CPfmMeshInterface * field_0x2c; // accesses: 3
+    CMwNod * field_0x28; // accesses: 7
+    CPfmMeshInterface * field_0x2c; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall BuildMesh(CFuncPathMesh *this,CFuncPathMesh *param_1);

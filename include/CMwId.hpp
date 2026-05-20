@@ -3,7 +3,10 @@
 
 #include "typedefs.h"
 
+struct CSystemFidParameters;
+
 struct CMwId {
+    void** vftable; // accesses: 22
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetLocalName(void *this,CMwId *param_1,CFastStringInt *param_2);

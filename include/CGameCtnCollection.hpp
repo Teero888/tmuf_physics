@@ -4,11 +4,7 @@
 #include "typedefs.h"
 
 struct CGameCtnCollection {
-    byte _padding_0x0[28];
-    int field_0x1c; // accesses: 4
-    byte _padding_0x20[16];
-    int field_0x30; // accesses: 4
-    byte _padding_0x34[8];
+    byte _padding_0x0[60];
     CGameCtnZone * field_0x3c; // accesses: 1
 
     // Member Functions

@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct SStringParam;
+struct ulong;
 
 struct CGameCtnGhost {
     byte _padding_0x0[4];

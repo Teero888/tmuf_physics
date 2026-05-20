@@ -3,7 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastBufferRef<class_CGameMobil> {
+    void** vftable; // accesses: 6
+    int field_0x4; // accesses: 3
 
     // Member Functions
     void __thiscall ReplaceByLastAt (void *this,CFastBufferRef<class_CGameMobil> *param_1,ulong param_2,ulong param_3);

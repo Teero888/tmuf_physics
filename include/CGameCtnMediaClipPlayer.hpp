@@ -3,7 +3,6 @@
 
 #include "typedefs.h"
 
-struct CAudioPort;
 struct CGameControlCameraMaster;
 struct CGameCtnMediaClip;
 struct CGameCtnMediaClipViewer;
@@ -11,36 +10,32 @@ struct CGameScene;
 struct CMwCmd;
 struct CMwNod;
 struct CScene2d;
+struct ulong;
 
 struct CGameCtnMediaClipPlayer {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[4];
-    CMwNod * field_0x14; // accesses: 18
-    CGameCtnMediaClipViewer * field_0x18; // accesses: 20
+    void** vftable; // accesses: 4
+    byte _padding_0x4[16];
+    CGameCtnMediaClipPlayer * field_0x14; // accesses: 17
+    CGameCtnMediaClipViewer * field_0x18; // accesses: 19
     CGameControlCameraMaster * field_0x1c; // accesses: 12
     CGameCtnMediaClipPlayer * field_0x20; // accesses: 5
     undefined4 field_0x24; // accesses: 4
     undefined4 field_0x28; // accesses: 4
     undefined4 field_0x2c; // accesses: 4
-    CMwCmd * field_0x30; // accesses: 11
-    int field_0x34; // accesses: 4
+    CMwNod * field_0x30; // accesses: 11
+    undefined4 field_0x34; // accesses: 4
     CGameCtnMediaClipPlayer * field_0x38; // accesses: 2
-    undefined4 field_0x3c; // accesses: 2
+    CMwNod * field_0x3c; // accesses: 2
     CGameCtnMediaClipPlayer * field_0x40; // accesses: 4
-    float field_0x44; // accesses: 3
-    int field_0x48; // accesses: 10
+    undefined4 field_0x44; // accesses: 2
+    CMwNod * field_0x48; // accesses: 10
     CGameCtnMediaClipPlayer * field_0x4c; // accesses: 3
-    int field_0x50; // accesses: 2
-    CScene2d * field_0x54; // accesses: 19
+    undefined4 field_0x50; // accesses: 2
+    CMwNod * field_0x54; // accesses: 19
     undefined4 field_0x58; // accesses: 1
-    CGameScene * field_0x5c; // accesses: 8
-    CGameCtnMediaClipPlayer * field_0x60; // accesses: 12
-    byte _padding_0x64[4];
-    CAudioPort * field_0x68; // accesses: 2
-    byte _padding_0x6c[4];
+    ulong field_0x5c; // accesses: 8
+    CMwNod * field_0x60; // accesses: 12
+    byte _padding_0x64[12];
     undefined4 field_0x70; // accesses: 2
     CGameCtnMediaClipViewer * field_0x74; // accesses: 2
     undefined4 field_0x78; // accesses: 1
@@ -48,17 +43,10 @@ struct CGameCtnMediaClipPlayer {
     byte _padding_0x80[60];
     undefined4 field_0xbc; // accesses: 2
     byte _padding_0xc0[96];
-    int field_0x120; // accesses: 2
+    undefined4 field_0x120; // accesses: 2
     float field_0x124; // accesses: 1
     float field_0x128; // accesses: 1
     undefined4 field_0x12c; // accesses: 3
-    byte _padding_0x130[12];
-    undefined4 field_0x13c; // accesses: 2
-    undefined4 field_0x140; // accesses: 2
-    undefined4 field_0x144; // accesses: 2
-    undefined4 field_0x148; // accesses: 2
-    byte _padding_0x14c[48];
-    CAudioPort * field_0x17c; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnMediaClipPlayer (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);

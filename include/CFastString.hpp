@@ -3,16 +3,19 @@
 
 #include "typedefs.h"
 
+struct CFastStringInt;
+struct CNetFileTransferDownload;
+struct SParam;
 struct SStringParam;
+struct TiXmlText;
 
 struct CFastString {
-    byte _padding_0x0[4];
-    CFastString * field_0x4; // accesses: 59
-    int field_0x8; // accesses: 4
-    undefined1 * field_0xc; // accesses: 2
-    int field_0x10; // accesses: 5
-    int field_0x14; // accesses: 6
-    char * field_0x18; // accesses: 3
+    void** vftable; // accesses: 48
+    SStringParam * field_0x4; // accesses: 64
+    CFastString * field_0x8; // accesses: 3
+    undefined4 field_0xc; // accesses: 2
+    int field_0x10; // accesses: 1
+    int field_0x14; // accesses: 1
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall RemoveAllWhiteSpaces(CFastString *this,CFastString *param_1,char *param_2);

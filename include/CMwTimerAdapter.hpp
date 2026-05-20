@@ -3,12 +3,18 @@
 
 #include "typedefs.h"
 
+struct CMwTimer;
+struct ulong;
+
 struct CMwTimerAdapter {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
-    float field_0x8; // accesses: 1
-    ulong field_0xc; // accesses: 1
-    undefined4 field_0x10; // accesses: 1
+    void** vftable; // accesses: 8
+    DWORD field_0x4; // accesses: 6
+    float field_0x8; // accesses: 5
+    ulong field_0xc; // accesses: 4
+    ulong field_0x10; // accesses: 5
+    ulong field_0x14; // accesses: 2
+    undefined4 field_0x18; // accesses: 1
+    undefined4 field_0x1c; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall GetAsyncPeriodMwTime(void *this,CMwTimerAdapter *param_1);

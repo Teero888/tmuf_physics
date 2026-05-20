@@ -4,12 +4,7 @@
 #include "typedefs.h"
 
 struct CInputPortDx8 {
-    byte _padding_0x0[12];
-    uint field_0xc; // accesses: 1
-    byte _padding_0x10[4];
-    int field_0x14; // accesses: 2
-    int field_0x18; // accesses: 1
-    int field_0x1c; // accesses: 1
+    byte _padding_0x0[32];
     int field_0x20; // accesses: 3
     byte _padding_0x24[16];
     int field_0x34; // accesses: 2

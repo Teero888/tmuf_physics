@@ -4,10 +4,7 @@
 #include "typedefs.h"
 
 struct CTrackManiaEditorIconPage {
-    byte _padding_0x0[24];
-    EMwIconList field_0x18; // accesses: 1
-    EMwIconList field_0x1c; // accesses: 1
-    byte _padding_0x20[8];
+    byte _padding_0x0[40];
     int field_0x28; // accesses: 1
 
     // Member Functions

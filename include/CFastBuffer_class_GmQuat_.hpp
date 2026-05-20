@@ -3,11 +3,11 @@
 
 #include "typedefs.h"
 
+struct ulong;
+
 struct CFastBuffer<class_GmQuat> {
-    byte _padding_0x0[4];
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 2
-    undefined4 field_0xc; // accesses: 2
+    void** vftable; // accesses: 7
+    int field_0x4; // accesses: 2
 
     // Member Functions
     void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);

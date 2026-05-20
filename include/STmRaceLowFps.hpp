@@ -3,11 +3,14 @@
 
 #include "typedefs.h"
 
-struct CPlugAudio;
-
 struct STmRaceLowFps {
-    byte _padding_0x0[20];
-    CPlugAudio * field_0x14; // accesses: 2
+    void** vftable; // accesses: 3
+    undefined4 field_0x4; // accesses: 4
+    undefined4 field_0x8; // accesses: 3
+    byte _padding_0xc[20];
+    undefined4 field_0x20; // accesses: 2
+    uint field_0x24; // accesses: 6
+    uint field_0x28; // accesses: 6
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(void *this,CInputPortDx8 *param_1);

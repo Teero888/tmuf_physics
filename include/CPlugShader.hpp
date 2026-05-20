@@ -4,21 +4,23 @@
 #include "typedefs.h"
 
 struct CPlugShader {
-    byte _padding_0x0[4];
-    SCasterCat * field_0x4; // accesses: 4
+    void** vftable; // accesses: 17
+    undefined * field_0x4; // accesses: 1
     byte _padding_0x8[12];
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1
-    int field_0x1c; // accesses: 19
-    undefined4 field_0x20; // accesses: 6
+    undefined4 field_0x1c; // accesses: 19
+    undefined4 field_0x20; // accesses: 7
     undefined4 field_0x24; // accesses: 2
     undefined2 field_0x28; // accesses: 2
     byte _padding_0x2a[10];
     undefined4 field_0x34; // accesses: 1
-    byte _padding_0x38[21];
-    char field_0x4d; // accesses: 1
-    byte _padding_0x4e[38];
-    CPlugBitmapRender * field_0x74; // accesses: 1
+    byte _padding_0x38[12];
+    float field_0x44; // accesses: 2
+    float field_0x48; // accesses: 2
+    float field_0x4c; // accesses: 2
+    byte _padding_0x50[60];
+    uint field_0x8c; // accesses: 8
 
     // Member Functions
     CPlugBitmapAddress * __thiscall FindLayerByName(CPlugShader *this,CPlugShader *param_1,CFastString *param_2);

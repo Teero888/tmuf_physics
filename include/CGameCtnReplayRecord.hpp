@@ -4,12 +4,11 @@
 #include "typedefs.h"
 
 struct CFastString;
-struct CFastStringInt;
+struct ulong;
 
 struct CGameCtnReplayRecord {
-    byte _padding_0x0[4];
-    CGameCtnReplayRecord * field_0x4; // accesses: 1
-    byte _padding_0x8[12];
+    void** vftable; // accesses: 6
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     byte _padding_0x18[12];
     CFastString * field_0x24; // accesses: 3
@@ -20,17 +19,6 @@ struct CGameCtnReplayRecord {
     undefined4 field_0x40; // accesses: 1
     undefined4 field_0x44; // accesses: 1
     undefined4 field_0x48; // accesses: 1
-    byte _padding_0x4c[132];
-    CFastStringInt * field_0xd0; // accesses: 1
-    CGameCtnReplayRecord * field_0xd4; // accesses: 1
-    byte _padding_0xd8[16];
-    undefined4 field_0xe8; // accesses: 1
-    ulong field_0xec; // accesses: 1
-    ulong field_0xf0; // accesses: 1
-    byte _padding_0xf4[4];
-    int field_0xf8; // accesses: 1
-    byte _padding_0xfc[16];
-    ulong field_0x10c; // accesses: 2
 
     // Member Functions
     CGameCtnGhost * __thiscall GetBestGhostStunts(CGameCtnReplayRecord *this,CGameCtnReplayRecord *param_1);

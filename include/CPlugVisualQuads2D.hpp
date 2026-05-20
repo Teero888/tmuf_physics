@@ -4,14 +4,7 @@
 #include "typedefs.h"
 
 struct CPlugVisualQuads2D {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 12
-    float field_0x8; // accesses: 7
-    float field_0xc; // accesses: 7
-    undefined4 field_0x10; // accesses: 5
-    undefined4 field_0x14; // accesses: 5
-    undefined4 field_0x18; // accesses: 5
-    undefined4 field_0x1c; // accesses: 5
+    void** vftable; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateQuad (CPlugVisualQuads2D *this,CPlugVisualQuads2D *param_1,GmVec2 param_2,float param_3, float param_4,GxColor *param_5,ulong param_6,float param_7);
