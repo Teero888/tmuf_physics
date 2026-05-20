@@ -1,4 +1,3 @@
-
 import re
 import os
 import sys
@@ -12,6 +11,9 @@ def analyze_files(root_dir):
     # MyClass::`vector deleting destructor`, MyClass::operator[]
     func_pattern = re.compile(r'([a-zA-Z_][\w<>]*::(?:~?\w+|`[^`]+`|operator\s*\[\]))')
 
+    # Regex for our specific dump headers: // Function: ClassName::MethodName
+    header_pattern = re.compile(r'^// Function: (.*)$')
+
     cpp_files = []
     for dp, dn, fn in os.walk(root_dir):
         for f in fn:
@@ -20,34 +22,36 @@ def analyze_files(root_dir):
 
     for file_path in cpp_files:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
-            for i, line in enumerate(lines):
-                # Heuristic for a definition line:
-                # - Contains __thiscall or __cdecl
-                # - Is followed by an opening brace on the next line
-                is_definition = False
-                if '::' in line and '(' in line:
-                    if '__thiscall' in line or '__cdecl' in line:
-                        is_definition = True
-                    elif i + 1 < len(lines) and lines[i+1].strip() == '{':
-                        is_definition = True
-
-                for match in func_pattern.finditer(line):
-                    func_name = match.group(1)
+            content = f.read()
+            lines = content.splitlines()
+            
+            # Step 1: Find definitions using headers
+            for line in lines:
+                header_match = header_pattern.match(line.strip())
+                if header_match:
+                    func_name = header_match.group(1).strip()
                     # Normalize by removing template arguments for consistent matching
                     normalized_name = re.sub(r'<.*?>', '', func_name)
-                    
-                    if is_definition:
-                        defined_functions.add(normalized_name)
-                    else:
-                        # Basic check to avoid commented out code
-                        if not line.strip().startswith('//') and not line.strip().startswith('/*'):
-                            called_functions.add(normalized_name)
+                    defined_functions.add(normalized_name)
 
+            # Step 2: Find calls (any qualified name that isn't part of a definition header)
+            # We skip the headers to avoid double counting definitions as calls
+            for line in lines:
+                if line.strip().startswith('//'):
+                    continue
+                
+                for match in func_pattern.finditer(line):
+                    func_name = match.group(1)
+                    normalized_name = re.sub(r'<.*?>', '', func_name)
+                    called_functions.add(normalized_name)
+
+    # Functions that are called but not in our defined set
     undefined_functions = called_functions - defined_functions
 
     if undefined_functions:
-        print("Called but not defined functions:")
+        print(f"Total defined: {len(defined_functions)}")
+        print(f"Total called: {len(called_functions)}")
+        print(f"\nCalled but not defined functions ({len(undefined_functions)}):")
         for func in sorted(list(undefined_functions)):
             print(func)
     else:
@@ -55,7 +59,7 @@ def analyze_files(root_dir):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python script.py <path_to_src_directory>")
+        print("Usage: python find_undefined_functions.py <path_to_src_directory>")
         sys.exit(1)
     
     src_directory = sys.argv[1]
