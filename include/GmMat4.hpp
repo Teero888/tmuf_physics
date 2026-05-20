@@ -24,10 +24,10 @@ struct GmMat4 {
     float field_0x3c; // accesses: 13
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetFrustumProjection(void *this,GmMat4 *param_1,GmFrustum *param_2,ulong param_3);
     void __thiscall ArchiveGmMat4(void *this,GmMat4 *param_1,CClassicArchive *param_2);
     void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
     void __thiscall Set(void *this,CMwCmdScriptVarBool *param_1,int param_2);
+    void __thiscall SetFrustumProjection(void *this,GmMat4 *param_1,GmFrustum *param_2,ulong param_3);
     void __thiscall SetIdentity(void *this,GmMat43 *param_1);
     void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
     void __thiscall SetShadowPlaneProjection(void *this,GmMat4 *param_1,GmVec4 *param_2,GmVec4 *param_3);

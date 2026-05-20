@@ -31,7 +31,7 @@ struct CTrackManiaControlScores2 {
     undefined4 field_0x224; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall Update (CTrackManiaControlScores2 *this,SGmSmoothReal2 *param_1,int param_2,ulong param_3);
+    float __thiscall Update (CTrackManiaControlScores2 *this,SGmSmoothReal2 *param_1,int param_2,ulong param_3);
     int __thiscall FinishShouldBeVisible (CTrackManiaControlScores2 *this,CTrackManiaControlScores2 *param_1, CFastBuffer<class_CTrackManiaRaceScore*> *param_2);
     int __thiscall IsDirty (CTrackManiaControlScores2 *this,CTrackManiaControlScores2 *param_1);
     void __thiscall Clean(CTrackManiaControlScores2 *this,CHmsOcclusion *param_1);

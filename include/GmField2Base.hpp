@@ -14,7 +14,7 @@ struct GmField2Base {
     float field_0x20; // accesses: 6
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall GetBoundingCoords (GmField2Base *this,GmField2Base *param_1,GmVec2 *param_2,GmNat2 *param_3,GmNat2 *param_4, GmVec2 *param_5);
+    int __thiscall GetBoundingCoords (GmField2Base *this,GmField2Base *param_1,GmVec2 *param_2,GmNat2 *param_3,GmNat2 *param_4, GmVec2 *param_5);
 };
 
 #endif // GMFIELD2BASE_HPP

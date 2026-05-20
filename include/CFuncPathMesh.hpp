@@ -14,7 +14,7 @@ struct CFuncPathMesh {
     CPfmMeshInterface * field_0x2c; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall BuildMesh(CFuncPathMesh *this,CFuncPathMesh *param_1);
+    void __thiscall BuildMesh(CFuncPathMesh *this,CFuncPathMesh *param_1);
     void __thiscall SetVisual(CFuncPathMesh *this,CVisionVisualKeeper *param_1,CPlugVisual *param_2);
 };
 

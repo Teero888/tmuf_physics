@@ -7,7 +7,7 @@ struct CMotionEngine {
     void** vftable; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CMotion * __cdecl CreateMotionFromNod(CMwNod *param_1,CMwNod *param_2);
+    CMotion * __cdecl CreateMotionFromNod(CMwNod *param_1,CMwNod *param_2);
     void __thiscall CMotionEngine(CMotionEngine *this,CMotionEngine *param_1);
 };
 

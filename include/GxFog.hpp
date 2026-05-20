@@ -19,7 +19,7 @@ struct GxFog {
     undefined4 field_0x3c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GxFog(GxFog *this,GxFog *param_1);
+    void __thiscall GxFog(GxFog *this,GxFog *param_1);
 };
 
 #endif // GXFOG_HPP

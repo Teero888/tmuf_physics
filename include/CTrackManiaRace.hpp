@@ -125,11 +125,6 @@ struct CTrackManiaRace {
     int field_0x544; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Ghosts_UpdateAsync(CTrackManiaRace *this,CTrackManiaRace *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SwitchToRace (CTrackManiaRace *this,CGameRace *param_1,GmNat3 param_2,ECardinalDir param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CTrackManiaRace *this,CInputPortDx8 *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateCountDownIndex(CTrackManiaRace *this,CTrackManiaRace *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Validate (CTrackManiaRace *this,CTrackManiaRace *param_1,SMwFiberContext **param_2, STmValidateParam *param_3,ETmValidateResult *param_4,CFastStringInt *param_5,int param_6, int param_7,int param_8);
     CGameCtnBlock * __thiscall GetBlockFromCheckpointMobil (CTrackManiaRace *this,CTrackManiaRace *param_1,CSceneMobil *param_2);
     CTrackManiaPlayer * __thiscall GetPlayerFromMobil (CTrackManiaRace *this,CTrackManiaRace *param_1,CSceneMobil *param_2);
     CTrackManiaPlayer * __thiscall GetPlayingPlayer(CTrackManiaRace *this,CTrackManiaRace *param_1);
@@ -139,12 +134,17 @@ struct CTrackManiaRace {
     ulong __thiscall GetTimePenalty(CTrackManiaRace *this,CTrackManiaRace *param_1,ulong param_2);
     void __thiscall GetPlayerOrGhosts (CTrackManiaRace *this,CTrackManiaRace *param_1, CFastBuffer<struct_CTrackManiaRace::SPlayerOrGhost> *param_2);
     void __thiscall Ghosts_PreviousRaceGhostsClear(CTrackManiaRace *this,CTrackManiaRace *param_1);
+    void __thiscall Ghosts_UpdateAsync(CTrackManiaRace *this,CTrackManiaRace *param_1);
     void __thiscall InitNbLapsAndCheckpoints (CTrackManiaRace *this,CTrackManiaRace *param_1,ulong param_2);
     void __thiscall InternalPrepareEvent (CTrackManiaRace *this,CTrackManiaRace *param_1,CTrackManiaPlayer *param_2);
     void __thiscall PrepareCheckpoints(CTrackManiaRace *this,CTrackManiaRace *param_1);
     void __thiscall StopReplayRecordAndKeepCopy (CTrackManiaRace *this,CTrackManiaRace *param_1,int param_2);
+    void __thiscall SwitchToRace (CTrackManiaRace *this,CGameRace *param_1,GmNat3 param_2,ECardinalDir param_3);
     void __thiscall UnassignCamFreePrimaryActionKeys (CTrackManiaRace *this,CTrackManiaRace *param_1,CTrackManiaPlayer *param_2);
+    void __thiscall UpdateAsync(CTrackManiaRace *this,CInputPortDx8 *param_1);
     void __thiscall UpdateCams(CTrackManiaRace *this,CGameCtnMediaClipViewer *param_1);
+    void __thiscall UpdateCountDownIndex(CTrackManiaRace *this,CTrackManiaRace *param_1);
+    void __thiscall Validate (CTrackManiaRace *this,CTrackManiaRace *param_1,SMwFiberContext **param_2, STmValidateParam *param_3,ETmValidateResult *param_4,CFastStringInt *param_5,int param_6, int param_7,int param_8);
     void __thiscall ValidateCleanup(CTrackManiaRace *this,CTrackManiaRace *param_1);
 };
 

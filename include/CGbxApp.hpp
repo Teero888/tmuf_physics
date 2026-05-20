@@ -17,7 +17,7 @@ struct CGbxApp {
     undefined4 field_0xec; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Init(CGbxApp *this,CLoadGeomDynaSprite *param_1,CPlugVisualSprite *param_2, CVisionViewportDx9 *param_3,ESpriteColor0 *param_4);
+    void __thiscall Init(CGbxApp *this,CLoadGeomDynaSprite *param_1,CPlugVisualSprite *param_2, CVisionViewportDx9 *param_3,ESpriteColor0 *param_4);
 };
 
 #endif // CGBXAPP_HPP

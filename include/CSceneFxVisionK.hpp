@@ -22,7 +22,7 @@ struct CSceneFxVisionK {
     byte _final_padding[0xc]; // Total size: 0x140
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall BranchingArc_Step(CSceneFxVisionK *this,CSceneFxVisionK *param_1);
+    void __thiscall BranchingArc_Step(CSceneFxVisionK *this,CSceneFxVisionK *param_1);
 };
 
 #endif // CSCENEFXVISIONK_HPP

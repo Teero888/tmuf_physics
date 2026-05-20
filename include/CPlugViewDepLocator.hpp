@@ -26,7 +26,7 @@ struct CPlugViewDepLocator {
     float field_0x5c; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AdaptFrustum (CPlugViewDepLocator *this,CPlugViewDepLocator *param_1,GmIso4 *param_2,GmIso4 *param_3, GmFrustum *param_4,GmMat4 *param_5);
+    void __thiscall AdaptFrustum (CPlugViewDepLocator *this,CPlugViewDepLocator *param_1,GmIso4 *param_2,GmIso4 *param_3, GmFrustum *param_4,GmMat4 *param_5);
 };
 
 #endif // CPLUGVIEWDEPLOCATOR_HPP

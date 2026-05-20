@@ -44,8 +44,6 @@ struct CMwCmdBufferCore {
     byte _final_padding[0x4]; // Total size: 0x108
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ForceFpuCwForSimulationX86(char *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CMwCmdBufferCore(CMwCmdBufferCore *this,CMwCmdBufferCore *param_1);
     CMwClassInfo * __thiscall MwGetClassInfo(CMwCmdBufferCore *this,CFuncSegment *param_1);
     CMwCmdFastCall * __thiscall AddNotifySetTime (CMwCmdBufferCore *this,CMwCmdBufferCore *param_1,CMwNod *param_2, _func___cdecl_void *param_3);
     CMwNod * __cdecl MwNewCMwCmdBufferCore(void);
@@ -59,6 +57,8 @@ struct CMwCmdBufferCore {
     void * __thiscall _scalar_deleting_destructor_ (CMwCmdBufferCore *this,CPfmHeap *param_1,uint param_2);
     void __cdecl CreateCoreCmdBuffer(void);
     void __cdecl DestroyCoreCmdBuffer(void);
+    void __cdecl ForceFpuCwForSimulationX86(char *param_1);
+    void __thiscall CMwCmdBufferCore(CMwCmdBufferCore *this,CMwCmdBufferCore *param_1);
     void __thiscall Disable(CMwCmdBufferCore *this,CCrystalLink *param_1);
     void __thiscall Enable(CMwCmdBufferCore *this,CMwCmdBufferCore *param_1);
     void __thiscall EnableFixedTickFrequency (CMwCmdBufferCore *this,CMwCmdBufferCore *param_1,int param_2,ulong param_3);

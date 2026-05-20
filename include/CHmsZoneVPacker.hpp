@@ -60,10 +60,7 @@ struct CHmsZoneVPacker {
     SFlags * field_0x1a4; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall AddNewLight (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpusLight *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Construct (CHmsZoneVPacker *this,CSceneToySeaHoule *param_1,CPlugBitmap *param_2,float param_3, float param_4,float param_5,float param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RemoveSolid(CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpus *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetCreateParams (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,SHmsVPackerCreate *param_2);
+    int __thiscall AddNewLight (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpusLight *param_2);
     int __thiscall CheckDirty (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsViewport *param_2,CHmsCamera *param_3);
     void __cdecl ShadowCasterStateAdd(EShadowCaster *param_1,CHmsItem *param_2);
     void __thiscall AddInteractLights (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1, CFastBuffer<struct_CHmsVPackerCell::SLightBallLoc> *param_2, CFastBuffer<struct_CHmsVPackerCell::SLightSpotLoc> *param_3,CHmsVPackerCell *param_4, SFlags *param_5,ERadius param_6);
@@ -73,10 +70,13 @@ struct CHmsZoneVPacker {
     void __thiscall AddNewSolid(CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpus *param_2);
     void __thiscall CHmsZoneVPacker(CHmsZoneVPacker *this,CHmsZoneVPacker *param_1);
     void __thiscall CellAndChildSetDirtyCV (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsVPackerCell *param_2, SUserData *param_3);
+    void __thiscall Construct (CHmsZoneVPacker *this,CSceneToySeaHoule *param_1,CPlugBitmap *param_2,float param_3, float param_4,float param_5,float param_6);
     void __thiscall LightBBoxSetDirtyCV (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,GmBoxAligned *param_2);
     void __thiscall LightBBoxSetDirtyCV_Recur (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,ulong param_2,ulong param_3,ulong param_4, ulong param_5,GmBoxAligned *param_6);
     void __thiscall PrecalcLighting(CHmsZoneVPacker *this,CHmsZoneVPacker *param_1);
     void __thiscall RemoveLight (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpusLight *param_2);
+    void __thiscall RemoveSolid(CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpus *param_2);
+    void __thiscall SetCreateParams (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,SHmsVPackerCreate *param_2);
     void __thiscall SetDayTimeFactor (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,float param_2,int param_3);
     void __thiscall SetPackLightMap (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsPackLightMap *param_2);
     void __thiscall SetZone(CHmsZoneVPacker *this,CSceneSector *param_1,CHmsZone *param_2);

@@ -16,7 +16,7 @@ struct CGameCtnMenuProfileScene {
     float field_0x38; // accesses: 3
 
     // Member Functions
-    /* WARNING: Removing unreachable block (ram,0x0072d097) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnMenuProfileScene::UpdateAsync(CGameCtnMenuProfileScene *this,CInputPortDx8 *param_1);
+    void __thiscall UpdateAsync(CGameCtnMenuProfileScene *this,CInputPortDx8 *param_1);
 };
 
 #endif // CGAMECTNMENUPROFILESCENE_HPP

@@ -39,8 +39,8 @@ struct CSceneVehicleStruct {
     CMwNod * field_0x4c; // accesses: 8
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleStruct(CSceneVehicleStruct *this,CSceneVehicleStruct *param_1);
     ulong __thiscall GetVisualIndexFromMobilQuality (CSceneVehicleStruct *this,CSceneVehicleStruct *param_1,ESceneMobilQuality param_2);
+    void __thiscall CSceneVehicleStruct(CSceneVehicleStruct *this,CSceneVehicleStruct *param_1);
 };
 
 #endif // CSCENEVEHICLESTRUCT_HPP

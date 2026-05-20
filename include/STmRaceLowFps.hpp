@@ -13,11 +13,11 @@ struct STmRaceLowFps {
     int field_0x28; // accesses: 6
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(void *this,CInputPortDx8 *param_1);
     void __thiscall ResetFrames(void *this,STmRaceLowFps *param_1);
     void __thiscall Start(void *this,CGameCtnBench *param_1);
     void __thiscall Stop(void *this,STmRaceLowFps *param_1);
     void __thiscall StopAndReset(void *this,STmRaceLowFps *param_1);
+    void __thiscall UpdateAsync(void *this,CInputPortDx8 *param_1);
 };
 
 #endif // STMRACELOWFPS_HPP

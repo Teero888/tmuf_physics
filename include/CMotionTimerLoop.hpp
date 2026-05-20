@@ -12,7 +12,7 @@ struct CMotionTimerLoop {
     byte _final_padding[0x10]; // Total size: 0x34
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetNormedTime(CMotionTimerLoop *this,CMotionTimerLoop *param_1);
+    float __thiscall GetNormedTime(CMotionTimerLoop *this,CMotionTimerLoop *param_1);
 };
 
 #endif // CMOTIONTIMERLOOP_HPP

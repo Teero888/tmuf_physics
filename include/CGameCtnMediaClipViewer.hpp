@@ -39,7 +39,7 @@ struct CGameCtnMediaClipViewer {
     CGameCtnMediaClipViewer * field_0x78; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnMediaClipViewer (CGameCtnMediaClipViewer *this,CGameCtnMediaClipViewer *param_1);
+    void __thiscall CGameCtnMediaClipViewer (CGameCtnMediaClipViewer *this,CGameCtnMediaClipViewer *param_1);
     void __thiscall ClipGroupSet (CGameCtnMediaClipViewer *this,CGameCtnMediaClipViewer *param_1, CGameCtnMediaClipGroup *param_2);
     void __thiscall ClipSet (CGameCtnMediaClipViewer *this,CGameCtnMediaClipPlayer *param_1,CGameCtnMediaClip *param_2 );
     void __thiscall Start(CGameCtnMediaClipViewer *this,CGameCtnBench *param_1);

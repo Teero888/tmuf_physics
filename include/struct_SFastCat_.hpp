@@ -14,10 +14,10 @@ struct struct_SFastCat> {
     undefined4 field_0x20; // accesses: 2
 
     // Member Functions
-    /* WARNING: Control flow encountered bad instruction data */ ulong __thiscall ChangeCatAt (void *this, CFastBufferCat<struct_SHmsItem_CallbackSortCustom_Elem,struct_SFastCat> *param_1, ulong param_2,ulong param_3,ulong param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ SSamplerState * __thiscall GetElemInCat (void *this, CFastBufferCat<struct_CDx9StateBlock::SSamplerState,struct_CDx9StateBlock::SSamplerCat> *param_1,ulong param_2,ulong param_3);
     GmQuat * __thiscall GetElemInAll (void *this,CFastBufferCat<class_GmQuat,struct_SFastCat> *param_1,ulong param_2);
+    SSamplerState * __thiscall GetElemInCat (void *this, CFastBufferCat<struct_CDx9StateBlock::SSamplerState,struct_CDx9StateBlock::SSamplerCat> *param_1,ulong param_2,ulong param_3);
     int __thiscall FindIndexInAll (void *this,CFastBufferCat<class_CMwCmd*,struct_SFastCat> *param_1,CMwCmd **param_2, ulong *param_3,ulong *param_4);
+    ulong __thiscall ChangeCatAt (void *this, CFastBufferCat<struct_SHmsItem_CallbackSortCustom_Elem,struct_SFastCat> *param_1, ulong param_2,ulong param_3,ulong param_4);
     ulong __thiscall FindIndexInCat (void *this,CFastBufferCat<class_CNetHttpResult*,struct_SFastCat> *param_1, CNetHttpResult **param_2,ulong param_3);
     ulong __thiscall GetCountInCats (void *this,CFastBufferCat<class_CHmsCorpus*,struct_SFastCat> *param_1,ulong param_2, ulong param_3);
     ulong __thiscall SetParsingAll (void *this,CFastBufferCat<class_CDx9VisualKeeper*,struct_SFastCat> *param_1);

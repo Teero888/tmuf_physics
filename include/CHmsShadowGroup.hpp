@@ -37,7 +37,7 @@ struct CHmsShadowGroup {
     byte _final_padding[0x18]; // Total size: 0x9c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsShadowGroup(CHmsShadowGroup *this,CHmsShadowGroup *param_1);
+    void __thiscall CHmsShadowGroup(CHmsShadowGroup *this,CHmsShadowGroup *param_1);
 };
 
 #endif // CHMSSHADOWGROUP_HPP

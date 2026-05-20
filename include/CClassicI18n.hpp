@@ -17,9 +17,9 @@ struct CClassicI18n {
     ushort * field_0x24; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsLatinCharsInCurCatalog(CClassicI18n *this,CClassicI18n *param_1,ulong param_2);
     char * __cdecl StripContext(char *param_1);
     int __cdecl GetPrimaryLanguage(char *param_1,char *param_2);
+    int __thiscall IsLatinCharsInCurCatalog(CClassicI18n *this,CClassicI18n *param_1,ulong param_2);
     int __thiscall LoadMessageCatalog (CClassicI18n *this,CClassicI18n *param_1,char *param_2,CClassicBuffer *param_3, CFastString *param_4);
     ulong __cdecl IsLanguageKindOf(char *param_1,char *param_2);
     ulong __thiscall FindMsg(CClassicI18n *this,CClassicI18n *param_1,wchar_t *param_2);

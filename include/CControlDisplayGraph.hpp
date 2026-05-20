@@ -18,7 +18,7 @@ struct CControlDisplayGraph {
     byte _final_padding[0x24]; // Total size: 0x17c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AdvanceOneStep (CControlDisplayGraph *this,CControlDisplayGraph *param_1,int param_2);
+    void __thiscall AdvanceOneStep (CControlDisplayGraph *this,CControlDisplayGraph *param_1,int param_2);
 };
 
 #endif // CCONTROLDISPLAYGRAPH_HPP

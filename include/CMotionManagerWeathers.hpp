@@ -59,8 +59,8 @@ struct CMotionManagerWeathers {
     byte _final_padding[0x8]; // Total size: 0x130
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall ChangeWeatherAt (CMotionManagerWeathers *this,CMotionManagerWeathers *param_1,ulong param_2);
-    /* WARNING: Removing unreachable block (ram,0x0057400b) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CMotionManagerWeathers::UpdateAsync(CMotionManagerWeathers *this,CInputPortDx8 *param_1);
+    int __thiscall ChangeWeatherAt (CMotionManagerWeathers *this,CMotionManagerWeathers *param_1,ulong param_2);
+    void __thiscall UpdateAsync(CMotionManagerWeathers *this,CInputPortDx8 *param_1);
 };
 
 #endif // CMOTIONMANAGERWEATHERS_HPP

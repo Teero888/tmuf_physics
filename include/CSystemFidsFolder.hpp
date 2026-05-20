@@ -15,7 +15,7 @@ struct CSystemFidsFolder {
     undefined * field_0x44; // accesses: 3
 
     // Member Functions
-    /* WARNING: Removing unreachable block (ram,0x0042a80f) */ EMakeDir __cdecl CSystemFidsFolder::MakeDir(CFastStringInt *param_1);
+    EMakeDir __cdecl MakeDir(CFastStringInt *param_1);
     void __thiscall CSystemFidsFolder(CSystemFidsFolder *this,CSystemFidsFolder *param_1);
     void __thiscall GetFullName(CSystemFidsFolder *this,CPlugFile *param_1,CFastStringInt *param_2);
     void __thiscall SetDirName (CSystemFidsFolder *this,CSystemFidsFolder *param_1,CFastStringInt *param_2);

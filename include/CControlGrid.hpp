@@ -17,9 +17,9 @@ struct CControlGrid {
     byte _final_padding[0x20]; // Total size: 0x1c0
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CControlGrid(CControlGrid *this,CControlGrid *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetChildSquare (CControlGrid *this,CControlGrid *param_1,ulong param_2,ulong param_3,ulong param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateForceColumnsWidths(CControlGrid *this,CControlGrid *param_1);
+    void __thiscall CControlGrid(CControlGrid *this,CControlGrid *param_1);
+    void __thiscall SetChildSquare (CControlGrid *this,CControlGrid *param_1,ulong param_2,ulong param_3,ulong param_4);
+    void __thiscall UpdateForceColumnsWidths(CControlGrid *this,CControlGrid *param_1);
 };
 
 #endif // CCONTROLGRID_HPP

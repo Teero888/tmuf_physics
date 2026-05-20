@@ -14,7 +14,7 @@ struct CTrackManiaEditorFree {
     byte _final_padding[0x4]; // Total size: 0x51c
 
     // Member Functions
-    /* WARNING: Removing unreachable block (ram,0x004a00d1) */ /* WARNING: Removing unreachable block (ram,0x004a0126) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CTrackManiaEditorFree::CreateDefaultParams (CTrackManiaEditorFree *this,CTrackManiaEditor *param_1,SStartParameters *param_2);
+    void __thiscall CreateDefaultParams (CTrackManiaEditorFree *this,CTrackManiaEditor *param_1,SStartParameters *param_2);
     void __thiscall Start(CTrackManiaEditorFree *this,CGameCtnBench *param_1);
 };
 

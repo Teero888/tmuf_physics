@@ -31,7 +31,7 @@ struct CGameCtnMediaBlockCameraCustom {
         undefined4 field_0x5c; // accesses: 1
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
+        void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     };
 
     void** vftable;

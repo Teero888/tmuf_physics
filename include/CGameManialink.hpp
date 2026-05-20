@@ -23,7 +23,7 @@ struct CGameManialink {
         undefined4 field_0x3c; // accesses: 1
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SBuildPageParams(void *this,SBuildPageParams *param_1);
+        void __thiscall SBuildPageParams(void *this,SBuildPageParams *param_1);
         void __thiscall ~SBuildPageParams(void *this,SBuildPageParams *param_1);
     };
 
@@ -35,7 +35,7 @@ struct CGameManialink {
     undefined * field_0x40; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CGameManialinkPage * __cdecl BuildPage(SBuildPageParams *param_1,EErrorCode *param_2);
+    CGameManialinkPage * __cdecl BuildPage(SBuildPageParams *param_1,EErrorCode *param_2);
     void __cdecl AddPageToContainer(CGameManialinkPage *param_1,CControlFrame *param_2,float param_3);
 };
 

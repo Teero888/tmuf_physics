@@ -64,10 +64,10 @@ struct CPfmCell {
     float field_0x12c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeCellData(void *this,CPfmCell *param_1);
     int __thiscall ForcePointToCellCollumn(void *this,CPfmCell *param_1,GmVec3 *param_2);
     int __thiscall RequestLink (void *this,CPfmCell *param_1,GmVec3 *param_2,GmVec3 *param_3,CPfmCell *param_4);
     void __thiscall CPfmCell(void *this,CPfmCell *param_1);
+    void __thiscall ComputeCellData(void *this,CPfmCell *param_1);
     void __thiscall Initialize(void *this,CPfmCell *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4);
     void __thiscall ~CPfmCell(void *this,CPfmCell *param_1);
 };

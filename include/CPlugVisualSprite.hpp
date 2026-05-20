@@ -27,13 +27,13 @@ struct CPlugVisualSprite {
     byte _final_padding[0x8]; // Total size: 0xc0
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeBoundingBox (CPlugVisualSprite *this,CPlugVisualStrip *param_1,ulong param_2,ulong param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAtlasTexCoords(CPlugVisualSprite *this,CPlugVisualSprite *param_1);
     ulong __thiscall AddTexCoordSet (CPlugVisualSprite *this,CPlugVisualSprite *param_1,float param_2,float param_3, ulong param_4,float param_5,float param_6);
     void __thiscall AddSprite (CPlugVisualSprite *this,CPlugVisualSprite *param_1,GmVec3 *param_2,float param_3, GxColor *param_4,float param_5,float param_6,ulong param_7);
     void __thiscall CPlugVisualSprite(CPlugVisualSprite *this,CPlugVisualSprite *param_1);
+    void __thiscall ComputeBoundingBox (CPlugVisualSprite *this,CPlugVisualStrip *param_1,ulong param_2,ulong param_3);
     void __thiscall SetRenderMode (CPlugVisualSprite *this,CPlugVisualIndexedLines *param_1,ERenderMode param_2);
     void __thiscall SetSpriteFlags (CPlugVisualSprite *this,CPlugVisualSprite *param_1,SSpriteF *param_2);
+    void __thiscall UpdateAtlasTexCoords(CPlugVisualSprite *this,CPlugVisualSprite *param_1);
 };
 
 #endif // CPLUGVISUALSPRITE_HPP

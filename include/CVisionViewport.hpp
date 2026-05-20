@@ -83,9 +83,9 @@ struct CVisionViewport {
     undefined4 field_0x7f4; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CVisionViewport(CVisionViewport *this,CVisionViewport *param_1);
     CVisionShaderKeeper * __thiscall ShaderGetKeeper (CVisionViewport *this,CVisionViewport *param_1,CPlugShader *param_2);
     int __thiscall ForceDeviceSynchro(CVisionViewport *this,CVisionViewportDx9 *param_1);
+    void __thiscall CVisionViewport(CVisionViewport *this,CVisionViewport *param_1);
     void __thiscall ShaderUndirtyAll(CVisionViewport *this,CVisionViewport *param_1,int param_2);
     void __thiscall ShaderUpdateSortIndexs(CVisionViewport *this,CVisionViewport *param_1);
 };

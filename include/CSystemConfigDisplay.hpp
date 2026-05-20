@@ -57,16 +57,16 @@ struct CSystemConfigDisplay {
     undefined4 field_0xd4; // accesses: 21
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall MultiThreadGetScale(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall Tweak_NVidia_C51(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeAutoQuality(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeHighestResolutionFS (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall InternalApplyPreset (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1,EPreset param_2);
+    float __thiscall MultiThreadGetScale(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     int __thiscall IsGraphicAdpaterMain_NVidia_C51 (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
+    int __thiscall Tweak_NVidia_C51(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     int __thiscall WaterGeom(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     ulong __thiscall MultiThreadGetThreadCount (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     void __thiscall ApplyDynamicPresets(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     void __thiscall CSystemConfigDisplay(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
+    void __thiscall ComputeAutoQuality(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
+    void __thiscall ComputeHighestResolutionFS (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
+    void __thiscall InternalApplyPreset (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1,EPreset param_2);
     void __thiscall LowFpsReset(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     void __thiscall SetDefaultsDisplay(CSystemConfigDisplay *this,CSystemConfigDisplay *param_1);
     void __thiscall SetPreset (CSystemConfigDisplay *this,CSystemConfigDisplay *param_1,EPreset param_2);

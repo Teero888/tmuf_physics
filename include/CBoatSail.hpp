@@ -32,16 +32,16 @@ struct CBoatSail {
     byte _final_padding[0x24]; // Total size: 0xd4
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall AccelerationGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BSGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BestVmgAngleGet(CBoatSail *this,CBoatSail *param_1,float param_2,int param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BoomAngleGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall HeelGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3,float param_4, CMwId *param_5,float param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall LuffAngleSpeedGet (CBoatSail *this,CBoatSail *param_1,float param_2,float param_3,float param_4, CMwId *param_5,float param_6,float param_7);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall OptimalSailAngleGet (CBoatSail *this,CBoatSail *param_1,float param_2,float param_3,CMwId *param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall RevolveAngleSpeedGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall ShiverAngleGet(CBoatSail *this,CBoatSail *param_1,float param_2);
+    float __thiscall AccelerationGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
+    float __thiscall BSGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
+    float __thiscall BestVmgAngleGet(CBoatSail *this,CBoatSail *param_1,float param_2,int param_3);
+    float __thiscall BoomAngleGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
+    float __thiscall HeelGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3,float param_4, CMwId *param_5,float param_6);
+    float __thiscall LuffAngleSpeedGet (CBoatSail *this,CBoatSail *param_1,float param_2,float param_3,float param_4, CMwId *param_5,float param_6,float param_7);
+    float __thiscall OptimalSailAngleGet (CBoatSail *this,CBoatSail *param_1,float param_2,float param_3,CMwId *param_4);
+    float __thiscall RevolveAngleSpeedGet(CBoatSail *this,CBoatSail *param_1,float param_2,float param_3);
     float __thiscall SheetAngleMaxGet(CBoatSail *this,CBoatSail *param_1,float param_2);
+    float __thiscall ShiverAngleGet(CBoatSail *this,CBoatSail *param_1,float param_2);
 };
 
 #endif // CBOATSAIL_HPP

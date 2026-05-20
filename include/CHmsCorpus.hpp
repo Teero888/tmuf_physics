@@ -18,11 +18,11 @@ struct CHmsCorpus {
     CHmsZoneElem * field_0x58; // accesses: 20
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall WaterGetPlaneEqInZone(CHmsCorpus *this,CHmsCorpus *param_1,GmVec4 *param_2);
     CMwClassInfo * __thiscall MwGetClassInfo(CHmsCorpus *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCHmsCorpus(void);
     int __thiscall MwIsKindOf(CHmsCorpus *this,CMwCmdAffectParam *param_1,ulong param_2);
     int __thiscall OnCrashDump(CHmsCorpus *this,CMwNod *param_1,CFastString *param_2);
+    int __thiscall WaterGetPlaneEqInZone(CHmsCorpus *this,CHmsCorpus *param_1,GmVec4 *param_2);
     ulong __thiscall GetMwClassId(CHmsCorpus *this,CControlStyle *param_1);
     void * __thiscall _vector_deleting_destructor_(CHmsCorpus *this,CRpcCallInternal *param_1,uint param_2);
     void __thiscall CHmsCorpus(CHmsCorpus *this,CHmsCorpus *param_1);

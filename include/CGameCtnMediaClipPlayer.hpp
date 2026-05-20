@@ -48,8 +48,6 @@ struct CGameCtnMediaClipPlayer {
     undefined4 field_0x12c; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnMediaClipPlayer (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall EndClipTimeSetFromClip (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
     CGameMobil * __thiscall LocalPlayerGameMobilGet (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
     SGameCamVal * __thiscall GetCamValDefined (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
     float __thiscall ClipTimeGet(CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
@@ -57,6 +55,7 @@ struct CGameCtnMediaClipPlayer {
     ulong __thiscall GhostIdToGameMobilId (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1,ulong param_2);
     void __cdecl InternalUpdateBlocks (float param_1,float param_2,CFastBuffer<class_CGameCtnMediaBlock*> *param_3);
     void __cdecl InternalUpdateBlocksGhosts (float param_1,float param_2,float param_3,CFastBuffer<class_CGameCtnMediaBlock*> *param_4 );
+    void __thiscall CGameCtnMediaClipPlayer (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
     void __thiscall CacheUpdate(CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
     void __thiscall ClipPreClean (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1,CGameCtnMediaClip *param_2 );
     void __thiscall ClipPreload (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1,CGameCtnMediaClip *param_2 );
@@ -68,6 +67,7 @@ struct CGameCtnMediaClipPlayer {
     void __thiscall Destroy(CGameCtnMediaClipPlayer *this,CGameAdvertisingNadeo *param_1);
     void __thiscall DrawRectSet (CGameCtnMediaClipPlayer *this,CControlField2 *param_1,GmRectAligned *param_2);
     void __thiscall EndClipCallBackSet (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1,CMwNod *param_2, _func___cdecl_void *param_3);
+    void __thiscall EndClipTimeSetFromClip (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1);
     void __thiscall InternalBlockInstall (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1, CGameCtnMediaBlock *param_2);
     void __thiscall InternalBlockUninstall (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1, CGameCtnMediaBlock *param_2);
     void __thiscall LocalPlayerGameMobilIdSet (CGameCtnMediaClipPlayer *this,CGameCtnMediaClipPlayer *param_1,ulong param_2);

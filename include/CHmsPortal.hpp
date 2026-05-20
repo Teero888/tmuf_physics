@@ -63,23 +63,23 @@ struct CHmsPortal {
     float field_0x104; // accesses: 7
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsVisible(CHmsPortal *this,CPlugVisual *param_1,GmFrustum *param_2,GmIso4 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall TransformView(CHmsPortal *this,CHmsPortal *param_1,GmIso4 *param_2,GmFrustum *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsPortal(CHmsPortal *this,CHmsPortal *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeVisualLocationFromVertices(CHmsPortal *this,CHmsPortal *param_1);
-    /* WARNING: Removing unreachable block (ram,0x0054b25e) */ /* WARNING: Removing unreachable block (ram,0x0054b2a9) */ void __cdecl CHmsPortal::UpdateZoneTransfoOneWay(CHmsPortal *param_1,CHmsPortal *param_2);
     CMwClassInfo * __thiscall MwGetClassInfo(CHmsPortal *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCHmsPortal(void);
+    int __thiscall IsVisible(CHmsPortal *this,CPlugVisual *param_1,GmFrustum *param_2,GmIso4 *param_3);
     int __thiscall MwIsKindOf(CHmsPortal *this,CMwCmdAffectParam *param_1,ulong param_2);
+    int __thiscall TransformView(CHmsPortal *this,CHmsPortal *param_1,GmIso4 *param_2,GmFrustum *param_3);
     ulong __thiscall GetChunkInfo(CHmsPortal *this,CFuncSegment *param_1,ulong param_2);
     ulong __thiscall GetMwClassId(CHmsPortal *this,CControlStyle *param_1);
     ulong __thiscall GetUidChunkFromIndex(CHmsPortal *this,CMwCmdExpIso4Ident *param_1,ulong param_2);
     void * __thiscall _scalar_deleting_destructor_(CHmsPortal *this,CPfmHeap *param_1,uint param_2);
     void __cdecl LinkOneWay(CHmsPortal *param_1,CHmsPortal *param_2);
     void __cdecl LinkTwoWays(CHmsPortal *param_1,CHmsPortal *param_2);
+    void __cdecl UpdateZoneTransfoOneWay(CHmsPortal *param_1,CHmsPortal *param_2);
     void __cdecl UpdateZoneTransfoTwoWays(CHmsPortal *param_1,CHmsPortal *param_2);
     void __thiscall BindToBuild(CHmsPortal *this,CHmsPortal *param_1,CHmsItem *param_2,CPlugTree *param_3);
+    void __thiscall CHmsPortal(CHmsPortal *this,CHmsPortal *param_1);
     void __thiscall Chunk(CHmsPortal *this,CFuncSegment *param_1,CClassicArchive *param_2,ulong param_3);
+    void __thiscall ComputeVisualLocationFromVertices(CHmsPortal *this,CHmsPortal *param_1);
     void __thiscall GetPlaneEqInWorld(CHmsPortal *this,CHmsPortal *param_1,GmVec4 *param_2);
     void __thiscall MwIsKilled(CHmsPortal *this,CVisionViewportDx9 *param_1,CMwNod *param_2);
     void __thiscall MwIsUnreferenced(CHmsPortal *this,CVisionViewportDx9 *param_1,CMwNod *param_2);

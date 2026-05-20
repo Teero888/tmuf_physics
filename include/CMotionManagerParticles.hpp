@@ -32,18 +32,18 @@ struct CMotionManagerParticles {
     byte _final_padding[0x1c]; // Total size: 0x44
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall GroupUpdateParticles (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupEmitParticles (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateMultiState (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateMultistateLightTrail (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateMultistateWaterSplash (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateStandardLinesSpeedCamera (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateStandardQuadCamera (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateStandardQuadSpeed (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GroupUpdateStandardWaterSplash (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall PartInit (CMotionManagerParticles *this,CMotionManagerParticles *param_1,SPart *param_2, CMotionParticleType *param_3,ulong param_4,SEmitParams *param_5);
+    int __thiscall GroupUpdateParticles (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3);
     void __thiscall EmitterGetEmitParamsAsync (CMotionManagerParticles *this,CMotionManagerParticles *param_1, CMotionEmitterParticles *param_2,SEmitParams *param_3);
+    void __thiscall GroupEmitParticles (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3);
     void __thiscall GroupKillParticle (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3);
+    void __thiscall GroupUpdateMultiState (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall GroupUpdateMultistateLightTrail (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall GroupUpdateMultistateWaterSplash (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall GroupUpdateStandardLinesSpeedCamera (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall GroupUpdateStandardQuadCamera (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall GroupUpdateStandardQuadSpeed (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall GroupUpdateStandardWaterSplash (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3,GmVec3 *param_4,GmVec3 *param_5,ulong *param_6);
+    void __thiscall PartInit (CMotionManagerParticles *this,CMotionManagerParticles *param_1,SPart *param_2, CMotionParticleType *param_3,ulong param_4,SEmitParams *param_5);
     void __thiscall UpdateAsync(CMotionManagerParticles *this,CInputPortDx8 *param_1);
 };
 

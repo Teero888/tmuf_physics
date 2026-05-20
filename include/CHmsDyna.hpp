@@ -34,7 +34,7 @@ struct CHmsDyna {
         undefined4 field_0xac; // accesses: 1
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall OldRestoreState (void *this,CHmsStateDyna *param_1,CClassicBufferMemory *param_2,uchar param_3);
+        void __thiscall OldRestoreState (void *this,CHmsStateDyna *param_1,CClassicBufferMemory *param_2,uchar param_3);
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
         void __thiscall RestoreState (void *this,CHmsStateDyna *param_1,CClassicBufferMemory *param_2,uchar param_3);
     };
@@ -138,24 +138,13 @@ struct CHmsDyna {
     GmMat3 * field_0x58c; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsStateDifferentFrom(void *this,CHmsItem *param_1,GmIso4 *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsTwoLastHistoryPointsDifferent(void *this,CHmsDyna *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall TestIfRespawn(void *this,CHmsDyna *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsDyna(void *this,CHmsDyna *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeInterpolationConvergencePoint(void *this,CHmsDyna *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeInterpolationMethods(void *this,CHmsDyna *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeNextPosition (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4, ulong param_5,GmVec3 *param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeNextSpeed (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3,ulong param_4, GmVec3 *param_5);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeSpeedAndAccelerationAtTime2 (void *this,CHmsDyna *param_1,float *param_2,float *param_3,float param_4,float param_5, float param_6,ulong param_7,ulong param_8,ulong param_9);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeSynthetizedReplacement(void *this,CHmsDyna *param_1,GmVec3 *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall IntegrateStep (void *this,CHmsDyna *param_1,CHmsStateDyna *param_2,CHmsStateDyna *param_3,float param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Interpolate (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmMat3 *param_3,GmVec3 *param_4, GmMat3 *param_5,ulong param_6,SHistoryPoint *param_7,SHistoryPoint *param_8);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall PredictPointForInterpolation (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmMat3 *param_3,ulong param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetAsyncPrevDeltaT_End(void *this,CHmsDyna *param_1,GmIso4 *param_2);
     SHistoryPoint * __thiscall AddHistoryPoint (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmMat3 *param_3,ulong param_4);
     SHistoryPoint * __thiscall GetLastHistoryPointMinusOne(void *this,CHmsDyna *param_1);
     SHistoryPoint * __thiscall GetLastHistoryPointMinusTwo(void *this,CHmsDyna *param_1);
     float __thiscall ComputeEmbraceAngleForValue (void *this,CHmsDyna *param_1,float param_2,float param_3,float param_4,float param_5);
+    int __thiscall IsStateDifferentFrom(void *this,CHmsItem *param_1,GmIso4 *param_2);
+    int __thiscall IsTwoLastHistoryPointsDifferent(void *this,CHmsDyna *param_1);
+    int __thiscall TestIfRespawn(void *this,CHmsDyna *param_1);
     ulong __thiscall GetTimeLastHistoryPointMinusOne(void *this,CHmsDyna *param_1);
     void __thiscall AddForce(void *this,CHmsItem *param_1,GmVec3 *param_2,GmVec3 *param_3);
     void __thiscall AddImpulse(void *this,CHmsItem *param_1,GmVec3 *param_2);
@@ -166,10 +155,17 @@ struct CHmsDyna {
     void __thiscall AddStateForPrediction (void *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,ulong param_3, ulong param_4);
     void __thiscall AddTorque(void *this,CHmsItem *param_1,GmVec3 *param_2);
     void __thiscall ApplyReplacement(void *this,CHmsDyna *param_1,GmVec3 *param_2);
+    void __thiscall CHmsDyna(void *this,CHmsDyna *param_1);
     void __thiscall ChooseInterpolationMethods (void *this,CHmsDyna *param_1,GmVec3 *param_2,SPredictionTypeVector *param_3, SPredictionTypeVector *param_4);
     void __thiscall ComputeEmbraceAngle (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4, float param_5,float param_6,float param_7,GmVec3 *param_8);
+    void __thiscall ComputeInterpolationConvergencePoint(void *this,CHmsDyna *param_1);
+    void __thiscall ComputeInterpolationMethods(void *this,CHmsDyna *param_1);
     void __thiscall ComputeInterpolationParameters (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3, SPredictionTypeVector *param_4,GmVec3 *param_5,GmVec3 *param_6,GmVec3 *param_7, ulong param_8,ulong param_9,ulong param_10);
+    void __thiscall ComputeNextPosition (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4, ulong param_5,GmVec3 *param_6);
+    void __thiscall ComputeNextSpeed (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3,ulong param_4, GmVec3 *param_5);
     void __thiscall ComputeSpeed (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4, ulong param_5,ulong param_6);
+    void __thiscall ComputeSpeedAndAccelerationAtTime2 (void *this,CHmsDyna *param_1,float *param_2,float *param_3,float param_4,float param_5, float param_6,ulong param_7,ulong param_8,ulong param_9);
+    void __thiscall ComputeSynthetizedReplacement(void *this,CHmsDyna *param_1,GmVec3 *param_2);
     void __thiscall CopyStateToTemp(void *this,CHmsDyna *param_1);
     void __thiscall CopyTempToState(void *this,CHmsDyna *param_1);
     void __thiscall DoPHBInterpolation(void *this,CHmsDyna *param_1,ulong param_2,CHmsStateDyna *param_3);
@@ -182,7 +178,10 @@ struct CHmsDyna {
     void __thiscall GetLocalForce(void *this,CHmsDyna *param_1,GmVec3 *param_2);
     void __thiscall GetLocalLinearSpeed(void *this,CHmsDyna *param_1,GmVec3 *param_2);
     void __thiscall GetSpeed(void *this,CScenePoc *param_1,GmVec3 *param_2);
+    void __thiscall IntegrateStep (void *this,CHmsDyna *param_1,CHmsStateDyna *param_2,CHmsStateDyna *param_3,float param_4);
+    void __thiscall Interpolate (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmMat3 *param_3,GmVec3 *param_4, GmMat3 *param_5,ulong param_6,SHistoryPoint *param_7,SHistoryPoint *param_8);
     void __thiscall OldRestoreStaticState (void *this,CHmsCorpus *param_1,CClassicBufferMemory *param_2,int param_3,uchar param_4, int param_5);
+    void __thiscall PredictPointForInterpolation (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmMat3 *param_3,ulong param_4);
     void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     void __thiscall RestoreStaticState (void *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,int param_3,ulong param_4 ,ulong param_5,int param_6);
     void __thiscall RotateOf(void *this,CHmsCorpus *param_1,GmMat3 *param_2);
@@ -191,6 +190,7 @@ struct CHmsDyna {
     void __thiscall SetAllInterpolationLinear(void *this,CHmsDyna *param_1);
     void __thiscall SetAllInterpolationMethods (void *this,CHmsDyna *param_1,SHistoryPoint *param_2,EPredictionType param_3);
     void __thiscall SetAngularSpeed(void *this,CHmsItem *param_1,GmVec3 *param_2);
+    void __thiscall SetAsyncPrevDeltaT_End(void *this,CHmsDyna *param_1,GmIso4 *param_2);
     void __thiscall SetDynamicType(void *this,CHmsItem *param_1,EDynamicType param_2);
     void __thiscall SetForce(void *this,CHmsItem *param_1,GmVec3 *param_2);
     void __thiscall SetLastPrediction (void *this,CHmsDyna *param_1,GmVec3 *param_2,GmMat3 *param_3,GmVec3 *param_4, GmMat3 *param_5,ulong param_6);

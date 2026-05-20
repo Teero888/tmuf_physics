@@ -9,7 +9,7 @@ struct CFastBuffer<class_GmInt4> {
     uint field_0x8; // accesses: 1
 
     // Member Functions
-    /* WARNING: Control flow encountered bad instruction data */ SLoadedLight * __thiscall AddNewElem (void *this,CFastBuffer<struct_CVisionViewportDx9::SLoadedLight> *param_1);
+    SLoadedLight * __thiscall AddNewElem (void *this,CFastBuffer<struct_CVisionViewportDx9::SLoadedLight> *param_1);
     void __thiscall SetSizeAtLeast (void *this,CFastBuffer<struct_CCrystal::SSmoothingGroup> *param_1,ulong param_2);
 };
 

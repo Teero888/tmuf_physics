@@ -18,7 +18,7 @@ struct CSceneSector {
     undefined4 field_0x38; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneSector(CSceneSector *this,CSceneSector *param_1);
+    void __thiscall CSceneSector(CSceneSector *this,CSceneSector *param_1);
 };
 
 #endif // CSCENESECTOR_HPP

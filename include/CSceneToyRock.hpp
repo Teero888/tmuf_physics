@@ -24,7 +24,7 @@ struct CSceneToyRock {
     float field_0x94; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CSceneToyRock *this,CInputPortDx8 *param_1);
+    void __thiscall UpdateAsync(CSceneToyRock *this,CInputPortDx8 *param_1);
 };
 
 #endif // CSCENETOYROCK_HPP

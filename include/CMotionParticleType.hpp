@@ -18,8 +18,8 @@ struct CMotionParticleType {
     byte _final_padding[0x8]; // Total size: 0x178
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GenerateSplashPart (CMotionParticleType *this,CMotionParticleType *param_1,ulong param_2,GmVec3 *param_3, GmVec3 *param_4);
     ulong __thiscall GetVertPerPartCount(CMotionParticleType *this,CMotionParticleType *param_1);
+    void __thiscall GenerateSplashPart (CMotionParticleType *this,CMotionParticleType *param_1,ulong param_2,GmVec3 *param_3, GmVec3 *param_4);
 };
 
 #endif // CMOTIONPARTICLETYPE_HPP

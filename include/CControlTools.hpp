@@ -7,7 +7,6 @@ struct CControlTools {
     void** vftable; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl CreateRankText(ulong param_1,CFastStringInt *param_2,int param_3);
     void __cdecl ControlBind(CControlBase *param_1,CMwNod *param_2,char *param_3);
     void __cdecl ControlBindEvent (CControlBase *param_1,EEvent param_2,CMwNod *param_3,_func___cdecl_void_ulong *param_4, ulong param_5);
     void __cdecl ControlDraw(CControlBase *param_1);
@@ -21,6 +20,7 @@ struct CControlTools {
     void __cdecl ControlSetLabel(CControlBase *param_1,CFastStringInt *param_2);
     void __cdecl ControlSetReadOnlyAndDraw(CControlBase *param_1,int param_2,int param_3);
     void __cdecl ControlSetVisible(CControlBase *param_1,int param_2);
+    void __cdecl CreateRankText(ulong param_1,CFastStringInt *param_2,int param_3);
     void __cdecl FixLocalUrl(CFastString *param_1,CFastStringInt *param_2);
     void __thiscall Connect(void *this,CCrystalEdge *param_1);
 };

@@ -8,9 +8,6 @@ struct CPlugFileImg {
     byte _final_padding[0x5]; // Total size: 0x9
 
     // Member Functions
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall Force1stPixelAlpha0(CPlugFileImg *this,CPlugFileImg *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall FilterWrappedPixel (CPlugFileImg *this,CPlugFileImg *param_1,GxBGRAColor_conflict *param_2, GxTexCoord *param_3,EGxTexFilter param_4,ulong param_5,ulong param_6,ECubeFace param_7, EGxTexAddress param_8);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetPixelFromNormal (CPlugFileImg *this,CPlugFileImg *param_1,ushort *param_2,GmVec3 *param_3);
     int __thiscall IsInSystemMemory(CPlugFileImg *this,CPlugFileImg *param_1);
     int __thiscall ReGenerateForceTexelLoading(CPlugFileImg *this,CPlugFileImg *param_1);
     uchar * __thiscall GetFaceLevel (CPlugFileImg *this,CPlugFileImg *param_1,ulong param_2,ulong param_3,ulong *param_4, GmNat3 *param_5);
@@ -24,8 +21,11 @@ struct CPlugFileImg {
     void __thiscall AddAlpha_BGRA(CPlugFileImg *this,CPlugFileImg *param_1,uchar param_2);
     void __thiscall CPlugFileImg(CPlugFileImg *this,CPlugFileImg *param_1);
     void __thiscall DeletePixels(CPlugFileImg *this,CPlugFileImg *param_1);
+    void __thiscall FilterWrappedPixel (CPlugFileImg *this,CPlugFileImg *param_1,GxBGRAColor_conflict *param_2, GxTexCoord *param_3,EGxTexFilter param_4,ulong param_5,ulong param_6,ECubeFace param_7, EGxTexAddress param_8);
+    void __thiscall Force1stPixelAlpha0(CPlugFileImg *this,CPlugFileImg *param_1);
     void __thiscall ForceBorders_BGRA (CPlugFileImg *this,CPlugFileImg *param_1,GxBGRAColor_conflict *param_2,int param_3, int param_4,ulong param_5);
     void __thiscall GetPixelMip (CPlugFileImg *this,CPlugFileImg *param_1,GxBGRAColor_conflict *param_2,ulong param_3, ulong param_4,ulong param_5,ECubeFace param_6);
+    void __thiscall SetPixelFromNormal (CPlugFileImg *this,CPlugFileImg *param_1,ushort *param_2,GmVec3 *param_3);
     void __thiscall SetPixels (CPlugFileImg *this,CPlugFileImg *param_1,SDesc *param_2,uchar *param_3,ulong param_4);
 };
 

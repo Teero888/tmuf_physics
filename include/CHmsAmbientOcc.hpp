@@ -14,7 +14,7 @@ struct CHmsAmbientOcc {
     undefined4 field_0x28; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsAmbientOcc(CHmsAmbientOcc *this,CHmsAmbientOcc *param_1);
+    void __thiscall CHmsAmbientOcc(CHmsAmbientOcc *this,CHmsAmbientOcc *param_1);
 };
 
 #endif // CHMSAMBIENTOCC_HPP

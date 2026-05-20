@@ -25,8 +25,8 @@ struct CGameSafeFrame {
     byte _final_padding[0x14]; // Total size: 0x60
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ GmVec2 __thiscall GetWindowSize(CGameSafeFrame *this,CGameSafeFrame *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetAspectViewport (CGameSafeFrame *this,CGameSafeFrame *param_1,GmRectAligned *param_2);
+    GmVec2 __thiscall GetWindowSize(CGameSafeFrame *this,CGameSafeFrame *param_1);
+    void __thiscall GetAspectViewport (CGameSafeFrame *this,CGameSafeFrame *param_1,GmRectAligned *param_2);
     void __thiscall GetLensVal(CGameSafeFrame *this,CGameSafeFrame *param_1,GmLensVal *param_2);
     void __thiscall SetVisible(CGameSafeFrame *this,CScene2d *param_1,int param_2);
     void __thiscall UpdateCameraFrustum(CGameSafeFrame *this,CGameSafeFrame *param_1);

@@ -27,8 +27,6 @@ struct CDx9TextureKeeper {
     undefined4 field_0x84; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ResetCache(void);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpLoadTextureLevel (void *this,CDx9TextureKeeper *param_1,ulong param_2,ulong param_3, CVisionTexConverter *param_4,IDirect3DBaseTexture9 *param_5);
     IDirect3DSurface9 * __thiscall AutoGenMipMapGetSurface0(void *this,CDx9TextureKeeper *param_1);
     IDirect3DSurface9 * __thiscall RtWheelToCpuGetToRead(void *this,CDx9TextureKeeper *param_1);
     IDirect3DSurface9 * __thiscall RtWheelToCpuGetToWrite(void *this,CDx9TextureKeeper *param_1);
@@ -38,11 +36,13 @@ struct CDx9TextureKeeper {
     ulong __thiscall BiggerMipGetSizeToWin (void *this,CDx9TextureKeeper *param_1,CPlugBitmap *param_2,ulong *param_3);
     ulong __thiscall GetLevelByteSize (void *this,CDx9TextureKeeper *param_1,ulong param_2,ulong param_3);
     ulong __thiscall GetMipLevelSkipCountMax (void *this,CDx9TextureKeeper *param_1,CPlugBitmap *param_2);
+    void __cdecl ResetCache(void);
     void __thiscall AddSkipLevelExtDelta (void *this,CDx9TextureKeeper *param_1,CPlugBitmap *param_2,int param_3,char *param_4);
     void __thiscall AutoGenMipMapSetDirty(void *this,CDx9TextureKeeper *param_1);
     void __thiscall BiggerMipLevelFree (void *this,CDx9TextureKeeper *param_1,CPlugBitmap *param_2,ulong param_3);
     void __thiscall RtWheelToCpuReleaseAll(void *this,CDx9TextureKeeper *param_1);
     void __thiscall RtWheelToCpusIssueQuery(void *this,CDx9TextureKeeper *param_1);
+    void __thiscall UpLoadTextureLevel (void *this,CDx9TextureKeeper *param_1,ulong param_2,ulong param_3, CVisionTexConverter *param_4,IDirect3DBaseTexture9 *param_5);
 };
 
 #endif // CDX9TEXTUREKEEPER_HPP

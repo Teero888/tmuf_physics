@@ -36,9 +36,9 @@ struct CSceneToyCharacter {
     byte _final_padding[0x4]; // Total size: 0xd4
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForces (CSceneToyCharacter *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
     void __thiscall AbsorbContact (CSceneToyCharacter *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
     void __thiscall AfterContacts (CSceneToyCharacter *this,CCallbackSceneVehicleBallAfterContacts *param_1, CHmsItem *param_2);
+    void __thiscall ComputeForces (CSceneToyCharacter *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
     void __thiscall SetIsOnGround(CSceneToyCharacter *this,CSceneToyCharacter *param_1,int param_2);
     void __thiscall TuningsSet (CSceneToyCharacter *this,CSceneToyCharacter *param_1,CSceneToyCharacterTunings *param_2);
 };

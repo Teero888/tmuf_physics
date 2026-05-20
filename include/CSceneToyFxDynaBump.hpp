@@ -34,11 +34,11 @@ struct CSceneToyFxDynaBump {
     float * field_0xbc; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CSceneToyFxDynaBump *this,CInputPortDx8 *param_1);
     int __thiscall UpdateShaderLoadFxPtrs(CSceneToyFxDynaBump *this,CSceneToyFxDynaBump *param_1);
     void __thiscall AbsorbContact (CSceneToyFxDynaBump *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
     void __thiscall CSceneToyFxDynaBump(CSceneToyFxDynaBump *this,CSceneToyFxDynaBump *param_1);
     void __thiscall InitFromMaterialFx (CSceneToyFxDynaBump *this,CSceneToyFxDynaBump *param_1,CPlugTree *param_2);
+    void __thiscall UpdateAsync(CSceneToyFxDynaBump *this,CInputPortDx8 *param_1);
 };
 
 #endif // CSCENETOYFXDYNABUMP_HPP

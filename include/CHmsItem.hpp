@@ -55,15 +55,13 @@ struct CHmsItem {
     undefined4 field_0x54; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetAsyncBlendBetweenPreviousAndNextStates(CHmsItem *this,CHmsItem *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsItem(CHmsItem *this,CHmsItem *param_1);
-    /* WARNING: Type propagation algorithm not settling */ void __thiscall TransformOf(CHmsItem *this,CHmsItem *param_1,GmIso4 *param_2);
     CGameCtnZone * __thiscall GetZone(CHmsItem *this,CGameCtnCollection *param_1,CMwId *param_2);
     CHmsCorpus * __thiscall GetCorpus(CHmsItem *this,CHmsItem *param_1,CHmsZone *param_2);
     CHmsCorpus * __thiscall GetCurrentCorpus(CHmsItem *this,CHmsItem *param_1);
     CMwClassInfo * __thiscall MwGetClassInfo(CHmsItem *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCHmsItem(void);
     EHmsCorpusCat __thiscall GetCorpusCat(CHmsItem *this,CHmsItem *param_1);
+    float __thiscall GetAsyncBlendBetweenPreviousAndNextStates(CHmsItem *this,CHmsItem *param_1);
     int __thiscall IsStateDifferentFrom(CHmsItem *this,CHmsItem *param_1,GmIso4 *param_2);
     int __thiscall MwIsKindOf(CHmsItem *this,CMwCmdAffectParam *param_1,ulong param_2);
     int __thiscall OnCrashDump(CHmsItem *this,CMwNod *param_1,CFastString *param_2);
@@ -82,6 +80,7 @@ struct CHmsItem {
     void __thiscall AddImpulse(CHmsItem *this,CHmsItem *param_1,GmVec3 *param_2);
     void __thiscall AddStateForPrediction (CHmsItem *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,ulong param_3, ulong param_4);
     void __thiscall AddTorque(CHmsItem *this,CHmsItem *param_1,GmVec3 *param_2);
+    void __thiscall CHmsItem(CHmsItem *this,CHmsItem *param_1);
     void __thiscall CallbackSet(CHmsItem *this,CHmsItem *param_1,ECallback param_2,CCallback *param_3);
     void __thiscall Chunk(CHmsItem *this,CFuncSegment *param_1,CClassicArchive *param_2,ulong param_3);
     void __thiscall CreateDefaultData(CHmsItem *this,CCrystal *param_1);
@@ -124,6 +123,7 @@ struct CHmsItem {
     void __thiscall SetShadowReceiverGroupMask(CHmsItem *this,CHmsItem *param_1,ulong param_2);
     void __thiscall SetSolid(CHmsItem *this,CSceneToyMotorbike *param_1,CPlugSolid *param_2);
     void __thiscall SetTorque(CHmsItem *this,CHmsItem *param_1,GmVec3 *param_2);
+    void __thiscall TransformOf(CHmsItem *this,CHmsItem *param_1,GmIso4 *param_2);
     void __thiscall UpdateCorpusCat(CHmsItem *this,CHmsItem *param_1);
     void __thiscall UpdateIsBuild(CHmsItem *this,CHmsItem *param_1);
     void __thiscall VisibleIdSet(CHmsItem *this,CHmsItem *param_1,SPlugVisibleId *param_2);

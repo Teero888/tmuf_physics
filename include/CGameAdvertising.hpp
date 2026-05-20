@@ -24,8 +24,8 @@ struct CGameAdvertising {
     byte _final_padding[0xc]; // Total size: 0xe0
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ImpressionHelpers_Update(CGameAdvertising *this,CGameAdvertising *param_1);
     int __thiscall IsInit(CGameAdvertising *this,SVisualHandler *param_1);
+    void __thiscall ImpressionHelpers_Update(CGameAdvertising *this,CGameAdvertising *param_1);
     void __thiscall SetAdvertisingZone (CGameAdvertising *this,CGameAdvertising *param_1,CFastString *param_2, CFastString *param_3,CFastString *param_4,CFastString *param_5,CFastString *param_6, CFastString *param_7,CFastString *param_8);
 };
 

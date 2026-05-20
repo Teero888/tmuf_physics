@@ -28,9 +28,9 @@ struct CHmsVPackerCell {
     undefined4 field_0x88; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsVPackerCell(void *this,CHmsVPackerCell *param_1);
     void __thiscall AddTreeMip (void *this,CHmsVPackerCell *param_1,SHmsVPackerObject *param_2,GmBoxAligned *param_3, ulong *param_4);
     void __thiscall BBoxHasChanged(void *this,CHmsVPackerCell *param_1);
+    void __thiscall CHmsVPackerCell(void *this,CHmsVPackerCell *param_1);
     void __thiscall PrecalcLighting(void *this,CHmsZoneVPacker *param_1);
     void __thiscall PreloadVisionData (void *this,CHmsZoneVPacker *param_1,CHmsViewport *param_2,CHmsCamera *param_3);
     void __thiscall RemoveAllTreeMip(void *this,CHmsVPackerCell *param_1,CHmsCorpus *param_2);

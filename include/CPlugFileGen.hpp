@@ -19,14 +19,14 @@ struct CPlugFileGen {
     byte _final_padding[0x18]; // Total size: 0x50
 
     // Member Functions
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall GenChecker(CPlugFileGen *this,CPlugFileGen *param_1,ulong param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GenCubeNormals (CPlugFileGen *this,CPlugFileGen *param_1,ulong param_2,ulong param_3,GxColor *param_4, GxColor *param_5);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GenSLGradient(CPlugFileGen *this,CPlugFileGen *param_1,GmNat2 param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GenSpecularCubeVect (CPlugFileGen *this,CPlugFileGen *param_1,GmVec3 *param_2,ulong param_3,float param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GenSpecularCubeVectRgb (CPlugFileGen *this,CPlugFileGen *param_1,GmVec3 *param_2,GmVec3 *param_3,ulong param_4, float param_5);
-    /* WARNING: Removing unreachable block (ram,0x00877bd3) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugFileGen::GenHueGradient (CPlugFileGen *this,CPlugFileGen *param_1,GmNat2 param_2,float param_3,float param_4, float param_5,float param_6);
     void __thiscall CPlugFileGen(CPlugFileGen *this,CPlugFileGen *param_1);
+    void __thiscall GenChecker(CPlugFileGen *this,CPlugFileGen *param_1,ulong param_2);
+    void __thiscall GenCubeNormals (CPlugFileGen *this,CPlugFileGen *param_1,ulong param_2,ulong param_3,GxColor *param_4, GxColor *param_5);
+    void __thiscall GenHueGradient (CPlugFileGen *this,CPlugFileGen *param_1,GmNat2 param_2,float param_3,float param_4, float param_5,float param_6);
     void __thiscall GenRenderCube(CPlugFileGen *this,CPlugFileGen *param_1,ulong param_2,ulong param_3);
+    void __thiscall GenSLGradient(CPlugFileGen *this,CPlugFileGen *param_1,GmNat2 param_2,float param_3);
+    void __thiscall GenSpecularCubeVect (CPlugFileGen *this,CPlugFileGen *param_1,GmVec3 *param_2,ulong param_3,float param_4);
+    void __thiscall GenSpecularCubeVectRgb (CPlugFileGen *this,CPlugFileGen *param_1,GmVec3 *param_2,GmVec3 *param_3,ulong param_4, float param_5);
 };
 
 #endif // CPLUGFILEGEN_HPP

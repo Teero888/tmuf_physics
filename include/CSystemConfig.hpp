@@ -111,13 +111,13 @@ struct CSystemConfig {
     byte _final_padding[0x4]; // Total size: 0x1d0
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetAutoOrPresetTM(CSystemConfig *this,CSystemConfig *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetAutoOrPresetVsk3(CSystemConfig *this,CSystemConfig *param_1);
     int __thiscall GetNetworkIsFireWallTested(CSystemConfig *this,CSystemConfig *param_1);
     int __thiscall ParentalLock_ComputeIsLocked(CSystemConfig *this,CSystemConfig *param_1);
     void __thiscall ApplyDynamicPresets(CSystemConfig *this,CSystemConfigDisplay *param_1);
     void __thiscall CSystemConfig(CSystemConfig *this,CSystemConfig *param_1);
     void __thiscall SetAutoOrPresetAll(CSystemConfig *this,CSystemConfig *param_1);
+    void __thiscall SetAutoOrPresetTM(CSystemConfig *this,CSystemConfig *param_1);
+    void __thiscall SetAutoOrPresetVsk3(CSystemConfig *this,CSystemConfig *param_1);
     void __thiscall SetDefaultLanguage(CSystemConfig *this,CSystemConfig *param_1);
     void __thiscall SetDefaultsAdvertising(CSystemConfig *this,CSystemConfig *param_1);
     void __thiscall SetDefaultsAll(CSystemConfig *this,CSystemConfig *param_1);

@@ -21,8 +21,8 @@ struct SSysGraphicAdapter {
     byte field_0x36; // accesses: 6
 
     // Member Functions
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall CaptureInfoGpu(void *this,SSysGraphicAdapter *param_1,ulong param_2);
     int __thiscall IsDriverRecentOrEqual (void *this,SSysGraphicAdapter *param_1,ushort param_2,ushort param_3,ushort param_4, ushort param_5);
+    void __thiscall CaptureInfoGpu(void *this,SSysGraphicAdapter *param_1,ulong param_2);
 };
 
 #endif // SSYSGRAPHICADAPTER_HPP

@@ -31,10 +31,10 @@ struct CControlColorChooser {
     undefined4 field_0x1a8; // accesses: 4
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetCursorPosition (CControlColorChooser *this,CControlColorChooser *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetCursorPositionFromNormedPos (CControlColorChooser *this,CControlColorChooser *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetParamsFromRGB (CControlColorChooser *this,CControlColorChooser *param_1,GmVec3 *param_2,int param_3, int param_4,int param_5,int param_6);
     void __thiscall SetColorCursor (CControlColorChooser *this,CControlColorChooser *param_1,GxColor *param_2);
+    void __thiscall SetCursorPosition (CControlColorChooser *this,CControlColorChooser *param_1,float param_2,float param_3);
+    void __thiscall SetCursorPositionFromNormedPos (CControlColorChooser *this,CControlColorChooser *param_1,float param_2,float param_3);
+    void __thiscall SetParamsFromRGB (CControlColorChooser *this,CControlColorChooser *param_1,GmVec3 *param_2,int param_3, int param_4,int param_5,int param_6);
 };
 
 #endif // CCONTROLCOLORCHOOSER_HPP

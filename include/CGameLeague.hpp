@@ -14,9 +14,9 @@ struct CGameLeague {
     byte _final_padding[0x34]; // Total size: 0x58
 
     // Member Functions
-    /* WARNING: Removing unreachable block (ram,0x006484e5) */ void __cdecl CGameLeague::GetRecursivesPathsFromFullPath (CFastStringInt *param_1,CFastBuffer<class_CFastStringInt> *param_2);
     void __cdecl GetNameAndPathFromFullPath (CFastStringInt *param_1,CFastStringInt *param_2,CFastStringInt *param_3);
     void __cdecl GetPathStepsFromFullPath (CFastStringInt *param_1,CFastBuffer<class_CFastStringInt> *param_2);
+    void __cdecl GetRecursivesPathsFromFullPath (CFastStringInt *param_1,CFastBuffer<class_CFastStringInt> *param_2);
     void __thiscall GetFullPath(CGameLeague *this,CGameLeague *param_1,CFastStringInt *param_2);
     void __thiscall GetPathSteps (CGameLeague *this,CGameLeague *param_1,CFastBuffer<class_CFastStringInt> *param_2);
 };

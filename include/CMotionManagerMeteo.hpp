@@ -23,7 +23,7 @@ struct CMotionManagerMeteo {
     byte _final_padding[0x58]; // Total size: 0x188
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall StreamGetDirectionAndIntensityAt (CMotionManagerMeteo *this,CMotionManagerMeteo *param_1,GmVec2 *param_2,float *param_3, float *param_4);
+    void __thiscall StreamGetDirectionAndIntensityAt (CMotionManagerMeteo *this,CMotionManagerMeteo *param_1,GmVec2 *param_2,float *param_3, float *param_4);
     void __thiscall UpdateAsync(CMotionManagerMeteo *this,CInputPortDx8 *param_1);
     void __thiscall WindGetDirectionAndIntensityAt (CMotionManagerMeteo *this,CMotionManagerMeteo *param_1,GmVec2 *param_2,float *param_3, float *param_4,CMotionWindBlocker *param_5);
 };

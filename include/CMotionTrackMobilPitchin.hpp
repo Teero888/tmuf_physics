@@ -29,8 +29,8 @@ struct CMotionTrackMobilPitchin {
     uint field_0xb4; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeAngleAndMoyenne (CMotionTrackMobilPitchin *this,CMotionTrackMobilPitchin *param_1,float *param_2, float *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputePitchinLocation (CMotionTrackMobilPitchin *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
+    void __thiscall ComputeAngleAndMoyenne (CMotionTrackMobilPitchin *this,CMotionTrackMobilPitchin *param_1,float *param_2, float *param_3);
+    void __thiscall ComputePitchinLocation (CMotionTrackMobilPitchin *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
 };
 
 #endif // CMOTIONTRACKMOBILPITCHIN_HPP

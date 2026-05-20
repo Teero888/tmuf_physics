@@ -27,8 +27,6 @@ struct CSceneMobil {
     CMwNod * field_0x44; // accesses: 13
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CSceneMobil *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AddSolidMotionFromTree(CSceneMobil *this,CSceneMobil *param_1);
     CMotion * __thiscall SetMotion(CSceneMobil *this,CSceneObject *param_1,CMwNod *param_2,int param_3);
     CMwClassInfo * __thiscall MwGetClassInfo(CSceneMobil *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCSceneMobil(void);
@@ -51,6 +49,7 @@ struct CSceneMobil {
     ulong __thiscall LinkFindFromObjectId(CSceneMobil *this,CSceneMobil *param_1,CMwId *param_2);
     ulong __thiscall VirtualParam_Add (CSceneMobil *this,CMwCmdScriptVarClass *param_1,CMwStack *param_2,void *param_3);
     ulong __thiscall VirtualParam_Get (CSceneMobil *this,CPlugBlendShapes *param_1,CMwStack *param_2,CMwValueStd *param_3);
+    ulong __thiscall VirtualParam_Set (CSceneMobil *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
     ulong __thiscall VirtualParam_Sub (CSceneMobil *this,CGameCtnDecorationMood *param_1,CMwStack *param_2,void *param_3);
     void * __thiscall _scalar_deleting_destructor_(CSceneMobil *this,CPfmHeap *param_1,uint param_2);
     void __cdecl AddTree(CPlugTree *param_1);
@@ -58,6 +57,7 @@ struct CSceneMobil {
     void __thiscall AbsorbContact (CSceneMobil *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
     void __thiscall AddMotionSolid(CSceneMobil *this,CSceneMobil *param_1,CMotion *param_2);
     void __thiscall AddObject (CSceneMobil *this,CSceneMobil *param_1,CSceneObject *param_2,CSceneObjectLink **param_3);
+    void __thiscall AddSolidMotionFromTree(CSceneMobil *this,CSceneMobil *param_1);
     void __thiscall ArchiveOwnDataOld(CSceneMobil *this,CSceneToyTrain *param_1,CClassicArchive *param_2);
     void __thiscall CSceneMobil(CSceneMobil *this,CSceneMobil *param_1);
     void __thiscall Chunk(CSceneMobil *this,CFuncSegment *param_1,CClassicArchive *param_2,ulong param_3);

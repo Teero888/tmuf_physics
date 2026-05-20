@@ -11,7 +11,7 @@ struct CGameCtnMediaBlock3dStereo {
     float * field_0x34; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ GmVec3 __thiscall GetValue (CGameCtnMediaBlock3dStereo *this,CFuncColorGradient *param_1,float param_2);
+    GmVec3 __thiscall GetValue (CGameCtnMediaBlock3dStereo *this,CFuncColorGradient *param_1,float param_2);
 };
 
 #endif // CGAMECTNMEDIABLOCK3DSTEREO_HPP

@@ -15,7 +15,7 @@ struct CTrackManiaEditorPuzzle {
     byte _final_padding[0x460]; // Total size: 0x51c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateDefaultParams (CTrackManiaEditorPuzzle *this,CTrackManiaEditor *param_1,SStartParameters *param_2);
+    void __thiscall CreateDefaultParams (CTrackManiaEditorPuzzle *this,CTrackManiaEditor *param_1,SStartParameters *param_2);
     void __thiscall Start(CTrackManiaEditorPuzzle *this,CGameCtnBench *param_1);
 };
 

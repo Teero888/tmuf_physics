@@ -24,9 +24,9 @@ struct CBoatParam {
     byte _final_padding[0x68]; // Total size: 0x12c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BSCoefFromHeelGet(CBoatParam *this,CBoatParam *param_1,float param_2);
-    /* WARNING: Removing unreachable block (ram,0x007ffe57) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall CBoatParam::OldHeelGet (CBoatParam *this,CBoatParam *param_1,CBoatSail *param_2,int param_3,float param_4, float param_5);
+    float __thiscall BSCoefFromHeelGet(CBoatParam *this,CBoatParam *param_1,float param_2);
     float __thiscall DecelerationFromTillerGet (CBoatParam *this,CBoatParam *param_1,float param_2,float param_3,int param_4);
+    float __thiscall OldHeelGet (CBoatParam *this,CBoatParam *param_1,CBoatSail *param_2,int param_3,float param_4, float param_5);
 };
 
 #endif // CBOATPARAM_HPP

@@ -22,15 +22,15 @@ struct CPlugPhysicalObject {
     CPlugTree * field_0x44; // accesses: 6
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugPhysicalObject(void *this,CPlugPhysicalObject *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeInertiaMatrix (void *this,CPlugPhysicalObject *param_1,float param_2,int param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetInertiaMatrixBox (void *this,CPlugPhysicalObject *param_1,float param_2,GmVec3 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetInertiaMatrixSphere(void *this,CPlugPhysicalObject *param_1,float param_2);
-    /* WARNING: Removing unreachable block (ram,0x008a160f) */ /* WARNING: Removing unreachable block (ram,0x008a1627) */ /* WARNING: Removing unreachable block (ram,0x008a1613) */ /* WARNING: Removing unreachable block (ram,0x008a1635) */ /* WARNING: Removing unreachable block (ram,0x008a163b) */ /* WARNING: Removing unreachable block (ram,0x008a1651) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugPhysicalObject::ComputeComPos(void *this,CPlugPhysicalObject *param_1,int param_2);
+    void __thiscall CPlugPhysicalObject(void *this,CPlugPhysicalObject *param_1);
+    void __thiscall ComputeComPos(void *this,CPlugPhysicalObject *param_1,int param_2);
     void __thiscall ComputeComPosAndInertiaMatrix (void *this,CPlugPhysicalObject *param_1,float param_2,int param_3);
+    void __thiscall ComputeInertiaMatrix (void *this,CPlugPhysicalObject *param_1,float param_2,int param_3);
     void __thiscall CopyFrom(void *this,SParam_Set *param_1,SParam *param_2);
     void __thiscall SetComPos(void *this,CPlugPhysicalObject *param_1,GmVec3 *param_2);
     void __thiscall SetComPosAndInertiaMatrixFromTreeBoundingBox (void *this,CPlugPhysicalObject *param_1);
+    void __thiscall SetInertiaMatrixBox (void *this,CPlugPhysicalObject *param_1,float param_2,GmVec3 *param_3);
+    void __thiscall SetInertiaMatrixSphere(void *this,CPlugPhysicalObject *param_1,float param_2);
 };
 
 #endif // CPLUGPHYSICALOBJECT_HPP

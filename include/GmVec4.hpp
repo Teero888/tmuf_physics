@@ -12,12 +12,12 @@ struct GmVec4 {
     float field_0xc; // accesses: 25
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqInterLine(void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,float *param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqInterPlane(void *this,GmVec4 *param_1,GmVec4 *param_2,GmLine3 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqIsNearlyEqual(void *this,GmVec4 *param_1,GmVec4 *param_2,float param_3,float param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqSetFrom3Pos (void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl PolygonClip(CFastBuffer<class_GmVec4> *param_1, CFastBuffer<struct_GmClipFlag_HalfCube> *param_2);
+    ulong __thiscall PlaneEqInterLine(void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,float *param_4);
+    ulong __thiscall PlaneEqInterPlane(void *this,GmVec4 *param_1,GmVec4 *param_2,GmLine3 *param_3);
+    ulong __thiscall PlaneEqIsNearlyEqual(void *this,GmVec4 *param_1,GmVec4 *param_2,float param_3,float param_4);
+    ulong __thiscall PlaneEqSetFrom3Pos (void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4);
     void __cdecl GetClipFlags(GmVec4 *param_1,GmClipFlag_HalfCube *param_2,ulong param_3);
+    void __cdecl PolygonClip(CFastBuffer<class_GmVec4> *param_1, CFastBuffer<struct_GmClipFlag_HalfCube> *param_2);
     void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);
     void __thiscall GetClipFlag(void *this,GmReal4_64 *param_1,GmClipFlag_HalfCube *param_2);
     void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);

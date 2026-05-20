@@ -41,12 +41,12 @@ struct CGameCtnBlockInfo {
     undefined4 field_0x12c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnBlockInfo(CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1);
     CFastBuffer<class_CSceneMobil*> * __thiscall GetMobilBuffer (CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1,int param_2,ulong param_3);
     CGameCtnBlockUnitInfo * __thiscall GetBlockUnitInfo (CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1,ulong param_2,int param_3);
     CSceneMobil * __thiscall GetMobil (CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1,int param_2,ulong param_3, ulong param_4);
     ulong __thiscall GetNbBlockUnitInfos (CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1,int param_2);
     void __thiscall AddBlock (CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1,GmNat3 param_2,int param_3, ulong param_4,int param_5);
+    void __thiscall CGameCtnBlockInfo(CGameCtnBlockInfo *this,CGameCtnBlockInfo *param_1);
 };
 
 #endif // CGAMECTNBLOCKINFO_HPP

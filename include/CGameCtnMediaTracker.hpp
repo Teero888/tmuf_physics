@@ -57,7 +57,6 @@ struct CGameCtnMediaTracker {
     byte _final_padding[0x10]; // Total size: 0x464
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CGameCtnMediaTracker *this,CInputPortDx8 *param_1);
     CFastBufferRef<class_CGameCtnMediaTrack> * __thiscall GetTracks(CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1);
     CGameCtnMediaBlock * __thiscall GetSelBlock(CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1);
     CGameCtnMediaBlock3dStereo * __thiscall GetSelBlock<class_CGameCtnMediaBlock3dStereo> (CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1);
@@ -78,6 +77,7 @@ struct CGameCtnMediaTracker {
     SBlockEditInfo * __thiscall FindBlockEditInfoFromClassId (CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1,ulong param_2);
     int __thiscall IsBlockingMode(CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1);
     void __thiscall ButFrameKeyAdvanced(CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1);
+    void __thiscall UpdateAsync(CGameCtnMediaTracker *this,CInputPortDx8 *param_1);
     void __thiscall UpdateControlsState_FrameBlockFxBlurDepth (CGameCtnMediaTracker *this,CGameCtnMediaTracker *param_1);
 };
 

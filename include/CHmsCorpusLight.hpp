@@ -22,9 +22,9 @@ struct CHmsCorpusLight {
     undefined4 field_0x60; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall ComputeBBoxInWorld (CHmsCorpusLight *this,CHmsCorpusLight *param_1,GmBoxAligned *param_2,ERadius param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsCorpusLight(CHmsCorpusLight *this,CHmsCorpusLight *param_1);
     GmVec3 __thiscall GetPosition(CHmsCorpusLight *this,CGameControlCameraTarget *param_1);
+    int __thiscall ComputeBBoxInWorld (CHmsCorpusLight *this,CHmsCorpusLight *param_1,GmBoxAligned *param_2,ERadius param_3);
+    void __thiscall CHmsCorpusLight(CHmsCorpusLight *this,CHmsCorpusLight *param_1);
     void __thiscall ComputeReflectGroundLocation (CHmsCorpusLight *this,CHmsCorpusLight *param_1,GmIso4 *param_2);
     void __thiscall LightReflectGroundClean(CHmsCorpusLight *this,CHmsCorpusLight *param_1);
     void __thiscall SetLight(CHmsCorpusLight *this,CMotionLight *param_1,GxLight *param_2);

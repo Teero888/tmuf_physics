@@ -96,10 +96,10 @@ struct CControlStyle {
     CControlStyle * field_0x180; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CControlStyle(CControlStyle *this,CControlStyle *param_1);
     CControlStyle * __cdecl Fork(CControlStyle *param_1);
     int __thiscall InternalShouldFontBeTakenFromMaster (CControlStyle *this,CControlStyle *param_1,ETextMode param_2);
     ulong __thiscall GetMwClassId(CControlStyle *this,CControlStyle *param_1);
+    void __thiscall CControlStyle(CControlStyle *this,CControlStyle *param_1);
     void __thiscall InternalDetachFromStyleSheet (CControlStyle *this,CControlStyle *param_1,CControlStyleSheet *param_2);
     void __thiscall InternalGetTextSettings (CControlStyle *this,CControlStyle *param_1,ETextMode param_2,STextSettings *param_3, CControlStyleSheet *param_4);
     void __thiscall SetFocusGainedScript (CControlStyle *this,CControlStyle *param_1,CMwCmdBlockMain *param_2);

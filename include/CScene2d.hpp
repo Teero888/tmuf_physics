@@ -16,8 +16,8 @@ struct CScene2d {
     undefined4 field_0xb4; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CScene2d(CScene2d *this,CScene2d *param_1);
     void __cdecl SetVisibleInterface(CScene2d *param_1,int param_2);
+    void __thiscall CScene2d(CScene2d *this,CScene2d *param_1);
     void __thiscall CreateOverlay(CScene2d *this,CScene2d *param_1,GmRectAligned *param_2);
     void __thiscall SetVisible(CScene2d *this,CScene2d *param_1,int param_2);
 };

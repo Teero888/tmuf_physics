@@ -33,7 +33,6 @@ struct CTrackMania {
     byte _final_padding[0x9c]; // Total size: 0x5ec
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateWaterMap(CTrackMania *this,CTrackMania *param_1);
     CTrackManiaEditor * __thiscall GetTmBlockEditor(CTrackMania *this,CTrackMania *param_1);
     CTrackManiaNetworkServerInfo * __thiscall GetServerInfo(CTrackMania *this,CTrackManiaNetwork *param_1);
     CTrackManiaPlayerProfile * __thiscall GetTMCurrentProfile(CTrackMania *this,CTrackMania *param_1);
@@ -44,6 +43,7 @@ struct CTrackMania {
     void __thiscall CancelOfficialRecord(CTrackMania *this,CTrackMania *param_1);
     void __thiscall DoStopOfficialRecord (CTrackMania *this,CTrackMania *param_1,ulong param_2,ulong param_3);
     void __thiscall SetChallengeType(CTrackMania *this,CTrackMania *param_1,EChallengeType param_2);
+    void __thiscall UpdateWaterMap(CTrackMania *this,CTrackMania *param_1);
 };
 
 #endif // CTRACKMANIA_HPP

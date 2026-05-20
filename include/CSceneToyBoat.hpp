@@ -129,34 +129,34 @@ struct CSceneToyBoat {
     byte _final_padding[0x18]; // Total size: 0x41c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BSCoefSurfGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall RotationRadiusGet(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall TillerAngleNormedGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsOnTheWind(CSceneToyBoat *this,CSceneToyBoat *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl SolveContact (GmVec3 *param_1,GmVec3 *param_2,GmVec3 *param_3,CSceneMobil *param_4,CSceneMobil *param_5 );
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AbsorbContact (CSceneToyBoat *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall DeltaMoveGet (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,float *param_3,GmVec3 *param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Move(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall OldComputeOptimalSailAngles (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateBoatPhysics (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateHeel(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateNavValues(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2);
-    /* WARNING: Variable defined which should be unmapped: param_1 */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateSounds(CSceneToyBoat *this,CSceneToyBoat *param_1);
     CBoatSailState * __thiscall SailStateGet(CSceneToyBoat *this,CSceneToyBoat *param_1,ESailType param_2);
     ESailType __thiscall SailTypeAfterManoeuvresGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
     ESailType __thiscall SailTypeCurGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
     ESailType __thiscall SailTypeNextGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
     SSailManoeuvre __thiscall SailManoeuvreGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
     float __thiscall BSCoefGamePlayGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
+    float __thiscall BSCoefSurfGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
+    float __thiscall RotationRadiusGet(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2);
+    float __thiscall TillerAngleNormedGet(CSceneToyBoat *this,CSceneToyBoat *param_1);
+    int __thiscall IsOnTheWind(CSceneToyBoat *this,CSceneToyBoat *param_1);
     int __thiscall SailSwitchTo(CSceneToyBoat *this,CSceneToyBoat *param_1,ESailType param_2);
+    void __cdecl SolveContact (GmVec3 *param_1,GmVec3 *param_2,GmVec3 *param_3,CSceneMobil *param_4,CSceneMobil *param_5 );
+    void __thiscall AbsorbContact (CSceneToyBoat *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
     void __thiscall ComputeForces (CSceneToyBoat *this,CCallbackSceneToyBroomStickComputeForces *param_1,CHmsItem *param_2, float param_3);
+    void __thiscall DeltaMoveGet (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,float *param_3,GmVec3 *param_4);
     void __thiscall GlobalIsAutomaticSheetSet(CSceneToyBoat *this,CSceneToyBoat *param_1,int param_2);
     void __thiscall GlobalIsFullEaseOutSet(CSceneToyBoat *this,CSceneToyBoat *param_1,int param_2);
     void __thiscall GlobalSheetTargetNormedAngleSet (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2);
+    void __thiscall Move(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
+    void __thiscall OldComputeOptimalSailAngles (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,float param_3);
     void __thiscall RetrieveSounds(CSceneToyBoat *this,CSceneToyBoat *param_1);
     void __thiscall SailManoeuvreStop(CSceneToyBoat *this,CSceneToyBoat *param_1);
     void __thiscall SailManoeuvreUpdate(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2);
+    void __thiscall UpdateBoatPhysics (CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
     void __thiscall UpdateFromDynamicState (CSceneToyBoat *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,ulong param_3, ulong param_4);
+    void __thiscall UpdateHeel(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2,GmIso4 *param_3);
+    void __thiscall UpdateNavValues(CSceneToyBoat *this,CSceneToyBoat *param_1,float param_2);
+    void __thiscall UpdateSounds(CSceneToyBoat *this,CSceneToyBoat *param_1);
 };
 
 #endif // CSCENETOYBOAT_HPP

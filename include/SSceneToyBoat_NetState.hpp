@@ -22,8 +22,8 @@ struct SSceneToyBoat_NetState {
     CSceneToyBoat * field_0x48; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ApplyExtrapolatedStateToBoat (void *this,SSceneToyBoat_NetState *param_1,CSceneToyBoat *param_2,ulong param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RestoreFromBuffer (void *this,SSceneToyBoat_NetState *param_1,CClassicBufferMemory *param_2,ulong param_3);
+    void __thiscall ApplyExtrapolatedStateToBoat (void *this,SSceneToyBoat_NetState *param_1,CSceneToyBoat *param_2,ulong param_3);
+    void __thiscall RestoreFromBuffer (void *this,SSceneToyBoat_NetState *param_1,CClassicBufferMemory *param_2,ulong param_3);
 };
 
 #endif // SSCENETOYBOAT_NETSTATE_HPP

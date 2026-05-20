@@ -16,11 +16,11 @@ struct CMwTimerAdapter {
     undefined4 field_0x1c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall GetAsyncPeriodMwTime(void *this,CMwTimerAdapter *param_1);
     float __thiscall GetAsyncPeriod(void *this,CMwTimerAdapter *param_1);
     float __thiscall GetRelativeSpeed(void *this,CMwTimerAdapter *param_1);
     ulong * __thiscall GetTickTime(void *this,CMwTimerAdapter *param_1);
     ulong __thiscall ConvertHumanToGame(void *this,CMwTimerAdapter *param_1,ulong param_2);
+    ulong __thiscall GetAsyncPeriodMwTime(void *this,CMwTimerAdapter *param_1);
     ulong __thiscall GetTime(void *this,CMwTimerAdapter *param_1);
     ulong __thiscall GetTimeAtPreviousHumanTick(void *this,CMwTimerAdapter *param_1);
     void __thiscall ComputeTimeAtHumanTick(void *this,CMwTimerAdapter *param_1);

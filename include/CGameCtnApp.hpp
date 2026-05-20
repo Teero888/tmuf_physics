@@ -48,9 +48,8 @@ struct CGameCtnApp {
     byte _final_padding[0xc4]; // Total size: 0x410
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CInputBindingsConfig * __thiscall GetCurrentInputBindings(CGameCtnApp *this,CGameCtnApp *param_1,int param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CGameCtnApp *this,CInputPortDx8 *param_1);
     CGameCtnMasterServer * __thiscall GetMasterServer(CGameCtnApp *this,CGameCtnApp *param_1);
+    CInputBindingsConfig * __thiscall GetCurrentInputBindings(CGameCtnApp *this,CGameCtnApp *param_1,int param_2);
     CSystemFidsFolder * __thiscall GetWritableDir(CGameCtnApp *this,CGameCtnApp *param_1,EDirectory param_2);
     void __cdecl GetVehicleDisplayName(CMwId *param_1,CFastStringInt *param_2,CFastString *param_3);
     void __thiscall Advertising_SetZone (CGameCtnApp *this,CGameCtnApp *param_1,CGameCtnChallenge *param_2,int param_3);
@@ -60,6 +59,7 @@ struct CGameCtnApp {
     void __thiscall InputsSetToDefaultUnbidedDevices (CGameCtnApp *this,CGameCtnApp *param_1,CInputBindingsConfig *param_2, _func___cdecl_void_CInputBindingsConfig_ptr_CInputDevice_ptr_ulong *param_3);
     void __thiscall SaveValidationReplay (CGameCtnApp *this,CGameCtnApp *param_1,CGameCtnReplayRecord *param_2,int param_3);
     void __thiscall ShowDialogs(CGameCtnApp *this,CGameCtnMenus *param_1,CControlFrame *param_2);
+    void __thiscall UpdateAsync(CGameCtnApp *this,CInputPortDx8 *param_1);
 };
 
 #endif // CGAMECTNAPP_HPP

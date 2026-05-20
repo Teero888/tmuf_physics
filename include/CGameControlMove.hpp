@@ -29,7 +29,7 @@ struct CGameControlMove {
     undefined4 field_0xa4; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameControlMove(CGameControlMove *this,CGameControlMove *param_1);
+    void __thiscall CGameControlMove(CGameControlMove *this,CGameControlMove *param_1);
     void __thiscall LocationRefUpdate(CGameControlMove *this,CGameControlMove *param_1);
     void __thiscall LocationSet(CGameControlMove *this,CGameControlMove *param_1,GmIso4 *param_2);
 };

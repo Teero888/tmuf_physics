@@ -17,7 +17,7 @@ struct CGameCtnArticle {
     byte _final_padding[0x3c]; // Total size: 0x9c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CFuncEnum * __thiscall CreateIcon (CGameCtnArticle *this,CGameCtnArticle *param_1,ulong param_2,int param_3);
+    CFuncEnum * __thiscall CreateIcon (CGameCtnArticle *this,CGameCtnArticle *param_1,ulong param_2,int param_3);
     CPlugBitmap * __thiscall GetSkinIconByChecksum (CGameCtnArticle *this,CGameCtnArticle *param_1,SNat128 *param_2);
     CPlugBitmap * __thiscall GetSkinIconByIndex(CGameCtnArticle *this,CGameCtnArticle *param_1,ulong param_2);
     int __thiscall HasDefaultSkin(CGameCtnArticle *this,CGameCtnArticle *param_1);

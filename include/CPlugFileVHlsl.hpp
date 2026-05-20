@@ -20,7 +20,7 @@ struct CPlugFileVHlsl {
     undefined4 field_0xdc; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CPlugFileVHlsl * __cdecl GetFixedVHlsl(CPlugShader *param_1);
+    CPlugFileVHlsl * __cdecl GetFixedVHlsl(CPlugShader *param_1);
     void __cdecl LoadCommonVHlsl(void);
     void __thiscall ApplyFidParameter_Crypted (CPlugFileVHlsl *this,CPlugFilePHlsl *param_1,SParam_Id *param_2);
     void __thiscall CPlugFileVHlsl(CPlugFileVHlsl *this,CPlugFileVHlsl *param_1);

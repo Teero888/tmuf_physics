@@ -18,11 +18,11 @@ struct CHmsCollisionManager {
         int field_0x40; // accesses: 2
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeIsToPerformCollisions(void *this,SGroup *param_1);
         void __thiscall AddCorpus(void *this,SZone *param_1,CHmsCorpus *param_2);
         void __thiscall AddNonStaticCorpus(void *this,SGroup *param_1,CHmsCorpus *param_2);
         void __thiscall AddStaticSurfacesFromTree (void *this,SGroup *param_1,CHmsCorpus *param_2,CPlugTree *param_3,GmIso4 *param_4, CFastBuffer<struct_CHmsCollisionManager::SColOctreeCell> *param_5);
         void __thiscall ClearAllStatic(void *this,SGroup *param_1);
+        void __thiscall ComputeIsToPerformCollisions(void *this,SGroup *param_1);
         void __thiscall ComputeNonStaticCorpusInfos(void *this,SGroup *param_1);
         void __thiscall RemoveCorpus(void *this,CHmsZoneOverlay *param_1,CHmsCorpus *param_2);
         void __thiscall RemoveNonStaticCorpus(void *this,SGroup *param_1,CHmsCorpus *param_2);
@@ -69,13 +69,12 @@ struct CHmsCollisionManager {
         CMwNod * field_0x19c; // accesses: 3
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IntersectSegment (void *this,SZone *param_1,ECollisionGroup param_2,GmVec3 *param_3,GmVec3 *param_4, float *param_5,CPlugTree **param_6);
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IntersectSegment3 (void *this,SZone *param_1,ECollisionGroup param_2,GmVec3 *param_3,GmVec3 *param_4, float *param_5,ushort *param_6);
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SZone (void *this,SZone *param_1,ulong param_2,CHmsCollisionManager *param_3);
         int __cdecl ComputeCollision (LocatedGmSurf *param_1,LocatedGmSurf *param_2,CGmCollisionBuffer *param_3);
         int __thiscall ComputeCollisionTree1RootOnly (void *this,SZone *param_1,SPlugTreeLocatedPair *param_2,GmBoxAligned *param_3);
         int __thiscall ComputeCollisionTree2RootOnly (void *this,SZone *param_1,SPlugTreeLocatedPair *param_2,GmBoxAligned *param_3);
+        int __thiscall IntersectSegment (void *this,SZone *param_1,ECollisionGroup param_2,GmVec3 *param_3,GmVec3 *param_4, float *param_5,CPlugTree **param_6);
         int __thiscall IntersectSegment2 (void *this,SZone *param_1,ECollisionGroup param_2,GmVec3 *param_3,GmVec3 *param_4, int param_5,float *param_6,GmVec3 *param_7);
+        int __thiscall IntersectSegment3 (void *this,SZone *param_1,ECollisionGroup param_2,GmVec3 *param_3,GmVec3 *param_4, float *param_5,ushort *param_6);
         int __thiscall IntersectSegmentTree (void *this,SZone *param_1,GmVec3 *param_2,GmVec3 *param_3,CPlugTree *param_4, GmIso4 *param_5,float *param_6);
         int __thiscall IntersectSegmentTree2 (void *this,SZone *param_1,GmVec3 *param_2,GmVec3 *param_3,int param_4,CPlugTree *param_5, GmIso4 *param_6,float *param_7,GmVec3 *param_8);
         int __thiscall IntersectSegmentTree3 (void *this,SZone *param_1,GmVec3 *param_2,GmVec3 *param_3,CPlugTree *param_4, GmIso4 *param_5,float *param_6,ushort *param_7);
@@ -85,6 +84,7 @@ struct CHmsCollisionManager {
         void __thiscall DetectCollisionsCorpus (void *this,SZone *param_1,CHmsCollisionBuffer *param_2,CHmsCorpus *param_3);
         void __thiscall PrepareCollisions(void *this,SZone *param_1);
         void __thiscall RemoveCorpus(void *this,CHmsZoneOverlay *param_1,CHmsCorpus *param_2);
+        void __thiscall SZone (void *this,SZone *param_1,ulong param_2,CHmsCollisionManager *param_3);
         void __thiscall UpdateStaticCollisionTrees(void *this,CHmsCollisionManager *param_1);
     };
 
@@ -94,13 +94,13 @@ struct CHmsCollisionManager {
     byte _final_padding[0xc]; // Total size: 0x24
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CHmsCollisionManager *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
     CMwClassInfo * __thiscall MwGetClassInfo(CHmsCollisionManager *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCHmsCollisionManager(void);
     SZone * __thiscall AddZone (CHmsCollisionManager *this,CHmsCollisionManager *param_1,ulong param_2);
     int __thiscall MwIsKindOf (CHmsCollisionManager *this,CMwCmdAffectParam *param_1,ulong param_2);
     ulong __thiscall GetMwClassId(CHmsCollisionManager *this,CControlStyle *param_1);
     ulong __thiscall VirtualParam_Get (CHmsCollisionManager *this,CPlugBlendShapes *param_1,CMwStack *param_2, CMwValueStd *param_3);
+    ulong __thiscall VirtualParam_Set (CHmsCollisionManager *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
     void * __thiscall _vector_deleting_destructor_ (CHmsCollisionManager *this,CRpcCallInternal *param_1,uint param_2);
     void __cdecl StaticAddRef(void);
     void __cdecl StaticRelease(void);

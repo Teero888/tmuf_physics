@@ -21,8 +21,8 @@ struct CSceneVehicleCar {
         undefined4 field_0x20; // accesses: 1
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SDynaPart(void *this,SDynaPart *param_1);
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
+        void __thiscall SDynaPart(void *this,SDynaPart *param_1);
     };
 
     struct SEngine {
@@ -40,8 +40,8 @@ struct CSceneVehicleCar {
         undefined4 field_0x2c; // accesses: 1
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SEngine(void *this,SEngine *param_1);
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
+        void __thiscall SEngine(void *this,SEngine *param_1);
     };
 
     struct SSimulationWheel {
@@ -57,7 +57,7 @@ struct CSceneVehicleCar {
             float field_0xa4; // accesses: 5
 
             // Member Functions
-            /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Integrate (void *this,SRealTimeState *param_1,float param_2);
+            void __thiscall Integrate (void *this,SRealTimeState *param_1,float param_2);
         };
 
         struct SState {
@@ -81,8 +81,8 @@ struct CSceneVehicleCar {
             undefined4 field_0x60; // accesses: 1
 
             // Member Functions
-            /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetBlend (void *this,SParam *param_1,SParam *param_2,SParam *param_3,float param_4);
             void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
+            void __thiscall SetBlend (void *this,SParam *param_1,SParam *param_2,SParam *param_3,float param_4);
         };
 
         void** vftable; // accesses: 1
@@ -376,45 +376,16 @@ struct CSceneVehicleCar {
     undefined4 field_0x874; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __cdecl GetRouletteBoostFactorFromValue01(float param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __cdecl GetRouletteValue01(ulong param_1,ulong param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetMaxSpeed(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall ApplyWaterForces(CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Get (CSceneVehicleCar *this,CPlugBlendShapes *param_1,CMwStack *param_2,CMwValueStd *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CSceneVehicleCar *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AbsorbContact (CSceneVehicleCar *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AfterContacts (CSceneVehicleCar *this,CCallbackSceneVehicleBallAfterContacts *param_1,CHmsItem *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ApplyFrictionForces (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleCar(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeAirControl (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,ulong param_3, int param_4,int param_5);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeAsyncState(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForces (CSceneVehicleCar *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForcesModel3 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForcesModel4 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForcesModel5 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForcesModel6 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeVehicleGroundMaterialVals (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SBlendableVals *param_2,int *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateFakeContacts(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall EngineIntegrate (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetLateralFriction (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,GmVec3 *param_3, SBlendableVals *param_4,float param_5,int param_6,float *param_7,int *param_8);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetSlopeAdherence (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,float *param_3, float *param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall IntegrateVehicle(CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall OnEnterScene(CSceneVehicleCar *this,CSceneToyBroomstick *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RestoreStaticState (CSceneVehicleCar *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,int param_3, ulong param_4,ulong param_5,int param_6);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateParamsFromTuning(CSceneVehicleCar *this,CSceneToyCharacter *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateTurbo(CSceneVehicleCar *this,CSceneVehicleCar *param_1,ulong param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall VehicleUpdateAsync(CSceneVehicleCar *this,CSceneVehicleBall *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall WheelAbsorbContact (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2, CHmsPhysicalContact *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall WheelAddForceToVehicle (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2, GmVec3 *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall WheelIntegrate (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall WheelReset (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall WheelUpdateSpeedFromVehicleSpeed (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2,float param_3, float param_4);
     CMwClassInfo * __thiscall MwGetClassInfo(CSceneVehicleCar *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCSceneVehicleCar(void);
     GmVec3 * __thiscall WheelGetAsyncGroundContactPos (CSceneVehicleCar *this,CSceneVehicle *param_1,ulong param_2);
     SVehicleState * __thiscall VehicleStateAsyncGet(CSceneVehicleCar *this,CSceneVehicleBall *param_1);
     SVehicleState * __thiscall VehicleStatePrevAsyncGet(CSceneVehicleCar *this,CSceneVehicleBall *param_1);
+    float __cdecl GetRouletteBoostFactorFromValue01(float param_1);
+    float __cdecl GetRouletteValue01(ulong param_1,ulong param_2);
+    float __thiscall GetMaxSpeed(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
     float __thiscall GetRouletteCurrentBoostFactor(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
+    int __thiscall ApplyWaterForces(CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
     int __thiscall HasSavedStateChanged(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
     int __thiscall IsAllWheelGroundContactId (CSceneVehicleCar *this,CSceneVehicleCar *param_1,uchar param_2);
     int __thiscall IsGroundContact(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
@@ -426,29 +397,58 @@ struct CSceneVehicleCar {
     ulong __thiscall GetMwClassId(CSceneVehicleCar *this,CControlStyle *param_1);
     ulong __thiscall GetUidChunkFromIndex (CSceneVehicleCar *this,CMwCmdExpIso4Ident *param_1,ulong param_2);
     ulong __thiscall GetWheelFromSurfaceTree (CSceneVehicleCar *this,CSceneVehicleCar *param_1,CPlugTree *param_2);
+    ulong __thiscall VirtualParam_Get (CSceneVehicleCar *this,CPlugBlendShapes *param_1,CMwStack *param_2,CMwValueStd *param_3);
+    ulong __thiscall VirtualParam_Set (CSceneVehicleCar *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
     ulong __thiscall WheelGetCount(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
     ushort __thiscall WheelGetContactMaterial (CSceneVehicleCar *this,CSceneVehicle *param_1,ulong param_2);
     void * __thiscall _vector_deleting_destructor_ (CSceneVehicleCar *this,CRpcCallInternal *param_1,uint param_2);
+    void __thiscall AbsorbContact (CSceneVehicleCar *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
     void __thiscall AddStateForPrediction (CSceneVehicleCar *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,ulong param_3 ,ulong param_4);
     void __thiscall AddVehicleCentralForce (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
     void __thiscall AddVehicleForce (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,GmVec3 *param_3);
     void __thiscall AddVehicleImpulse (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
     void __thiscall AddVehicleTorque(CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
+    void __thiscall AfterContacts (CSceneVehicleCar *this,CCallbackSceneVehicleBallAfterContacts *param_1,CHmsItem *param_2);
+    void __thiscall ApplyFrictionForces (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
+    void __thiscall CSceneVehicleCar(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
     void __thiscall Chunk (CSceneVehicleCar *this,CFuncSegment *param_1,CClassicArchive *param_2,ulong param_3);
+    void __thiscall ComputeAirControl (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,ulong param_3, int param_4,int param_5);
+    void __thiscall ComputeAsyncState(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
+    void __thiscall ComputeForces (CSceneVehicleCar *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
+    void __thiscall ComputeForcesModel3 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
+    void __thiscall ComputeForcesModel4 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
+    void __thiscall ComputeForcesModel5 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
+    void __thiscall ComputeForcesModel6 (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, SBlendableVals *param_10,int *param_11,float *param_12);
+    void __thiscall ComputeVehicleGroundMaterialVals (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SBlendableVals *param_2,int *param_3);
     void __thiscall CreateDefaultData(CSceneVehicleCar *this,CCrystal *param_1);
+    void __thiscall CreateFakeContacts(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
     void __thiscall CreateOldStruct(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
     void __thiscall EnableTurbo (CSceneVehicleCar *this,CSceneVehicleCar *param_1,ulong param_2,ulong param_3, float param_4,ETurboType param_5,ulong param_6);
+    void __thiscall EngineIntegrate (CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2,float param_3);
+    void __thiscall GetLateralFriction (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,GmVec3 *param_3, SBlendableVals *param_4,float param_5,int param_6,float *param_7,int *param_8);
+    void __thiscall GetSlopeAdherence (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2,float *param_3, float *param_4);
+    void __thiscall IntegrateVehicle(CSceneVehicleCar *this,CSceneVehicleCar *param_1,float param_2);
     void __thiscall NewSolidInstance(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
+    void __thiscall OnEnterScene(CSceneVehicleCar *this,CSceneToyBroomstick *param_1);
     void __thiscall OnNodLoaded(CSceneVehicleCar *this,CDx9DeviceCaps *param_1);
+    void __thiscall RestoreStaticState (CSceneVehicleCar *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2,int param_3, ulong param_4,ulong param_5,int param_6);
     void __thiscall SaveState (CSceneVehicleCar *this,CSceneToyBoat *param_1,CClassicBufferMemory *param_2, ulong *param_3,ulong param_4);
     void __thiscall SetVehicleAngularSpeed (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
     void __thiscall SetVehicleLinearSpeed (CSceneVehicleCar *this,CSceneVehicleCar *param_1,GmVec3 *param_2);
+    void __thiscall UpdateParamsFromTuning(CSceneVehicleCar *this,CSceneToyCharacter *param_1);
+    void __thiscall UpdateTurbo(CSceneVehicleCar *this,CSceneVehicleCar *param_1,ulong param_2);
     void __thiscall VehicleAsyncWorldSpeedGet (CSceneVehicleCar *this,CSceneVehicle *param_1,GmVec3 *param_2);
     void __thiscall VehicleBlockSpeed2Set(CSceneVehicleCar *this,CSceneMobil *param_1,int param_2);
     void __thiscall VehicleBlockSpeedSet(CSceneVehicleCar *this,CSceneVehicleCar *param_1,int param_2);
     void __thiscall VehicleFreeWheelingSet (CSceneVehicleCar *this,CSceneVehicleCar *param_1,int param_2);
     void __thiscall VehicleInitFromSolid(CSceneVehicleCar *this,CSceneVehicle *param_1);
     void __thiscall VehicleReset(CSceneVehicleCar *this,CSceneVehicleBall *param_1);
+    void __thiscall VehicleUpdateAsync(CSceneVehicleCar *this,CSceneVehicleBall *param_1);
+    void __thiscall WheelAbsorbContact (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2, CHmsPhysicalContact *param_3);
+    void __thiscall WheelAddForceToVehicle (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2, GmVec3 *param_3);
+    void __thiscall WheelIntegrate (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2,float param_3);
+    void __thiscall WheelReset (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2);
+    void __thiscall WheelUpdateSpeedFromVehicleSpeed (CSceneVehicleCar *this,CSceneVehicleCar *param_1,SSimulationWheel *param_2,float param_3, float param_4);
     void __thiscall ~CSceneVehicleCar(CSceneVehicleCar *this,CSceneVehicleCar *param_1);
 };
 

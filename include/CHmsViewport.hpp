@@ -103,19 +103,19 @@ struct CHmsViewport {
     undefined4 field_0x38; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall RenderTree(CHmsViewport *this,CHmsViewport *param_1,CPlugTree *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsViewport(CHmsViewport *this,CHmsViewport *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RenderCorpus(CHmsViewport *this,CHmsViewport *param_1,CHmsCorpus *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RenderPortal (CHmsViewport *this,CHmsViewport *param_1,CHmsPortal *param_2,GmFrustum *param_3, int param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall RenderVisibleZone2ds (CHmsViewport *this,CHmsViewport *param_1,CFastBuffer<class_CHmsZoneOverlay*> *param_2, int param_3);
     CHmsViewport * __thiscall FindOrCreateViewport(CHmsViewport *this,CVisionEngine *param_1,CSystemWindow *param_2);
     int __thiscall OverlayRemove(CHmsViewport *this,CHmsViewport *param_1,CHmsZoneOverlay *param_2);
+    int __thiscall RenderTree(CHmsViewport *this,CHmsViewport *param_1,CPlugTree *param_2);
+    void __thiscall CHmsViewport(CHmsViewport *this,CHmsViewport *param_1);
     void __thiscall ConfigSet(CHmsViewport *this,CHmsViewport *param_1,CHmsConfig *param_2);
     void __thiscall LoadResourceCorpus(CHmsViewport *this,CHmsViewport *param_1,CHmsCorpus *param_2);
     void __thiscall LoadResourceZone(CHmsViewport *this,CHmsViewport *param_1,CHmsZone *param_2);
     void __thiscall OverlayAdd (CHmsViewport *this,CHmsViewport *param_1,CHmsZoneOverlay *param_2,ulong param_3);
     void __thiscall OverlaySetIndex (CHmsViewport *this,CHmsViewport *param_1,CHmsZoneOverlay *param_2,ulong param_3);
     void __thiscall PortalSetVisualLocation(CHmsViewport *this,CHmsViewport *param_1,CHmsPortal *param_2);
+    void __thiscall RenderCorpus(CHmsViewport *this,CHmsViewport *param_1,CHmsCorpus *param_2);
+    void __thiscall RenderPortal (CHmsViewport *this,CHmsViewport *param_1,CHmsPortal *param_2,GmFrustum *param_3, int param_4);
+    void __thiscall RenderVisibleZone2ds (CHmsViewport *this,CHmsViewport *param_1,CFastBuffer<class_CHmsZoneOverlay*> *param_2, int param_3);
     void __thiscall RenderZone(CHmsViewport *this,CHmsViewport *param_1,CHmsZone *param_2);
     void __thiscall ResetShadowVolumes(CHmsViewport *this,CHmsViewport *param_1);
 };

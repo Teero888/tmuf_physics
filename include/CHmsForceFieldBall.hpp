@@ -20,10 +20,9 @@ struct CHmsForceFieldBall {
     undefined4 field_0x78; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ GmVec3 __thiscall GetValue(CHmsForceFieldBall *this,CFuncColorGradient *param_1,float param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsForceFieldBall(CHmsForceFieldBall *this,CHmsForceFieldBall *param_1);
     CMwClassInfo * __thiscall MwGetClassInfo(CHmsForceFieldBall *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCHmsForceFieldBall(void);
+    GmVec3 __thiscall GetValue(CHmsForceFieldBall *this,CFuncColorGradient *param_1,float param_2);
     int __thiscall MwIsKindOf(CHmsForceFieldBall *this,CMwCmdAffectParam *param_1,ulong param_2);
     int __thiscall TestBoxOverlap (CHmsForceFieldBall *this,CHmsForceFieldBall *param_1,GmBoxAligned *param_2);
     ulong __thiscall GetChunkInfo(CHmsForceFieldBall *this,CFuncSegment *param_1,ulong param_2);
@@ -31,6 +30,7 @@ struct CHmsForceFieldBall {
     ulong __thiscall GetUidChunkFromIndex (CHmsForceFieldBall *this,CMwCmdExpIso4Ident *param_1,ulong param_2);
     ulong __thiscall VirtualParam_Set (CHmsForceFieldBall *this,CSystemData *param_1,CMwStack *param_2,void *param_3);
     void * __thiscall _scalar_deleting_destructor_ (CHmsForceFieldBall *this,CPfmHeap *param_1,uint param_2);
+    void __thiscall CHmsForceFieldBall(CHmsForceFieldBall *this,CHmsForceFieldBall *param_1);
     void __thiscall Chunk (CHmsForceFieldBall *this,CFuncSegment *param_1,CClassicArchive *param_2,ulong param_3);
     void __thiscall ComputeBoundingBox (CHmsForceFieldBall *this,CPlugVisualStrip *param_1,ulong param_2,ulong param_3);
     void __thiscall ~CHmsForceFieldBall(CHmsForceFieldBall *this,CHmsForceFieldBall *param_1);

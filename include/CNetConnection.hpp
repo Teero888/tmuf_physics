@@ -14,7 +14,7 @@ struct CNetConnection {
     undefined4 field_0x24; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CNetMasterServerRequest * __thiscall Disconnect(CNetConnection *this,CGameMasterServer *param_1);
+    CNetMasterServerRequest * __thiscall Disconnect(CNetConnection *this,CGameMasterServer *param_1);
     EState __thiscall GetState(CNetConnection *this,CMwCmdFiber *param_1);
     SNetConfig * __thiscall GetConfig(CNetConnection *this,CNetConnection *param_1);
     void __thiscall Poll(CNetConnection *this,CNetServer *param_1);

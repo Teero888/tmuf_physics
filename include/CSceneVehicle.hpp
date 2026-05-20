@@ -123,16 +123,13 @@ struct CSceneVehicle {
     byte _final_padding[0x8]; // Total size: 0xc
 
     // Member Functions
-    /* WARNING (jumptable): Unable to track spacebase fully for stack */ /* WARNING: Type propagation algorithm not settling */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicle::VisualUpdateAsync(CSceneVehicle *this,CSceneVehicle *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall VehicleStateComputeBlendVal(CSceneVehicle *this,CSceneVehicle *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall VehicleCurrentEnvironmentSet (CSceneVehicle *this,CSceneVehicle *param_1,int param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall VehicleHorn(CSceneVehicle *this,CSceneVehicle *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall VehicleUpdateAsync(CSceneVehicle *this,CSceneVehicleBall *param_1);
+    /* WARNING (jumptable): Unable to track spacebase fully for stack */ void __thiscall CSceneVehicle::VisualUpdateAsync(CSceneVehicle *this,CSceneVehicle *param_1);
     CMwClassInfo * __thiscall MwGetClassInfo(CSceneVehicle *this,CFuncSegment *param_1);
     CSceneMobil * __thiscall VehicleHelperNameGet(CSceneVehicle *this,CSceneVehicle *param_1);
     CSceneVehicleTuning * __thiscall GetVehicleTuning(CSceneVehicle *this,CSceneVehicle *param_1);
     GmVec3 * __thiscall WheelGetAsyncGroundContactPos (CSceneVehicle *this,CSceneVehicle *param_1,ulong param_2);
     float __thiscall VehicleInputSteerGet(CSceneVehicle *this,CSceneVehicleGlider *param_1);
+    float __thiscall VehicleStateComputeBlendVal(CSceneVehicle *this,CSceneVehicle *param_1);
     int __thiscall AllWheelsSliding(CSceneVehicle *this,CSceneVehicle *param_1);
     int __thiscall MwIsKindOf(CSceneVehicle *this,CMwCmdAffectParam *param_1,ulong param_2);
     int __thiscall UpdateEvent (CSceneVehicle *this,CSceneVehicle *param_1,EVehicleEvent param_2,ulong param_3);
@@ -171,13 +168,16 @@ struct CSceneVehicle {
     void __thiscall StopAllVehicleSounds(CSceneVehicle *this,CSceneVehicle *param_1);
     void __thiscall TuningsSet (CSceneVehicle *this,CSceneToyCharacter *param_1,CSceneToyCharacterTunings *param_2);
     void __thiscall VehicleAsyncWorldSpeedGet(CSceneVehicle *this,CSceneVehicle *param_1,GmVec3 *param_2);
+    void __thiscall VehicleCurrentEnvironmentSet (CSceneVehicle *this,CSceneVehicle *param_1,int param_2,float param_3);
     void __thiscall VehicleHelperNameSet(CSceneVehicle *this,CSceneVehicle *param_1,CSceneMobil *param_2);
+    void __thiscall VehicleHorn(CSceneVehicle *this,CSceneVehicle *param_1);
     void __thiscall VehicleInitFromSolid(CSceneVehicle *this,CSceneVehicle *param_1);
     void __thiscall VehicleInputBrakeSet(CSceneVehicle *this,CSceneVehicleGlider *param_1,float param_2);
     void __thiscall VehicleInputGasSet(CSceneVehicle *this,CSceneVehicleGlider *param_1,float param_2);
     void __thiscall VehicleInputSteerSet(CSceneVehicle *this,CSceneVehicleGlider *param_1,float param_2);
     void __thiscall VehicleIsNetworkedSet(CSceneVehicle *this,CSceneVehicle *param_1,int param_2);
     void __thiscall VehicleReset(CSceneVehicle *this,CSceneVehicleBall *param_1);
+    void __thiscall VehicleUpdateAsync(CSceneVehicle *this,CSceneVehicleBall *param_1);
     void __thiscall VisualEmittersInit(CSceneVehicle *this,CSceneVehicle *param_1);
     void __thiscall WaterSplash(CSceneVehicle *this,CSceneVehicle *param_1,GmVec3 *param_2);
     void __thiscall _vcall__372__flat______(CSceneVehicle *this,CSceneVehicle *param_1);

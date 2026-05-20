@@ -18,12 +18,12 @@ struct CSystemFile {
     CSystemFile * field_0x24; // accesses: 12
 
     // Member Functions
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ long __cdecl Open(_D3DXINCLUDE_TYPE param_1,char *param_2,void *param_3,void **param_4,uint *param_5 );
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ReadCallbackByteReaded(ulong param_1);
     float __thiscall GetLength(CSystemFile *this,CPlugFileSnd *param_1);
     int __thiscall SetOffset(CSystemFile *this,CSystemFile *param_1,ulong param_2);
+    long __cdecl Open(_D3DXINCLUDE_TYPE param_1,char *param_2,void *param_3,void **param_4,uint *param_5 );
     ulong __thiscall InternalChunkedRead(CSystemFile *this,CSystemFile *param_1,void *param_2,ulong param_3);
     ulong __thiscall Read(CSystemFile *this,CClassicBufferCrypted *param_1,void *param_2,ulong param_3);
+    void __cdecl ReadCallbackByteReaded(ulong param_1);
     void __cdecl UpdateAsyncIO(void);
     void __thiscall CSystemFile(CSystemFile *this,CSystemFile *param_1);
     void __thiscall Close(CSystemFile *this,CClassicLog *param_1);

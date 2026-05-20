@@ -12,8 +12,8 @@ struct CNetConnectedClient {
     uint field_0xc; // accesses: 2
 
     // Member Functions
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall Poll(void *this,CNetServer *param_1);
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall Send(void *this,CNetConnectedClient *param_1,CNetNod *param_2);
+    void __thiscall Poll(void *this,CNetServer *param_1);
+    void __thiscall Send(void *this,CNetConnectedClient *param_1,CNetNod *param_2);
 };
 
 #endif // CNETCONNECTEDCLIENT_HPP

@@ -43,10 +43,6 @@ struct CGameApp {
     int field_0x190; // accesses: 3
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl PlaySound(CPlugSound *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetCursorPos(CGameApp *this,CGameApp *param_1,GmVec2 *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall StopMusics(CGameApp *this,CGameApp *param_1,int param_2);
-    /* WARNING: Removing unreachable block (ram,0x0059d906) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameApp::PlayMusic(CGameApp *this,CGameApp *param_1,EInterfaceMusic param_2,int param_3);
     CAudioSound * __thiscall GetSound(CGameApp *this,CGameApp *param_1,EInterfaceSound param_2);
     CGameCtnMediaContext * __thiscall MediaContextCreate(CGameApp *this,CGameApp *param_1);
     CGameDialogs * __thiscall GetBasicDialogs(CGameApp *this,CGameApp *param_1);
@@ -61,9 +57,13 @@ struct CGameApp {
     int __thiscall Profile_IsChatEnabled(CGameApp *this,CGameApp *param_1);
     int __thiscall Profile_IsPackDescParentalLocked (CGameApp *this,CGameApp *param_1,CSystemPackDesc *param_2);
     int __thiscall Profile_IsSkinsEnabled (CGameApp *this,CGameApp *param_1,int param_2,CSystemPackDesc *param_3);
+    void __cdecl PlaySound(CPlugSound *param_1);
     void __thiscall EnablePick(CGameApp *this,CGameApp *param_1);
     void __thiscall HideMenu(CGameApp *this,CGameApp_MenuContext *param_1,CGameMenu *param_2);
+    void __thiscall PlayMusic(CGameApp *this,CGameApp *param_1,EInterfaceMusic param_2,int param_3);
+    void __thiscall SetCursorPos(CGameApp *this,CGameApp *param_1,GmVec2 *param_2);
     void __thiscall ShowMenu(CGameApp *this,CGameApp_MenuContext *param_1,CGameMenu *param_2);
+    void __thiscall StopMusics(CGameApp *this,CGameApp *param_1,int param_2);
     void __thiscall UpdateMusic(CGameApp *this,CGameApp *param_1);
 };
 

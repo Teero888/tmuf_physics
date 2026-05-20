@@ -9,7 +9,6 @@ struct CSystemFids {
     void** vftable; // accesses: 7
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall DeleteDown(CSystemFids *this,CSystemFids *param_1);
     CSystemFid * __thiscall FindFid (CSystemFids *this,CSystemFids *param_1,CFastStringInt *param_2,int param_3, EFindWay param_4);
     CSystemFid * __thiscall FindFidFromBaseNameAndClassId (CSystemFids *this,CSystemFids *param_1,CFastStringInt *param_2,ulong param_3);
     CSystemFid * __thiscall FindOrAddFid (CSystemFids *this,CSystemFids *param_1,CFastStringInt *param_2,ulong *param_3,int param_4 );
@@ -33,6 +32,7 @@ struct CSystemFids {
     void __thiscall ConnectLeave(CSystemFids *this,CSystemFids *param_1,CSystemFid *param_2);
     void __thiscall ConnectTree(CSystemFids *this,CSystemFids *param_1,CSystemFids *param_2);
     void __thiscall CreateIndex(CSystemFids *this,CSystemFids *param_1,ulong *param_2);
+    void __thiscall DeleteDown(CSystemFids *this,CSystemFids *param_1);
     void __thiscall FillPtrAtTravelIndex (CSystemFids *this,CSystemFids *param_1,CFastArray<class_CSystemFids*> *param_2);
     void __thiscall GetUp(CSystemFids *this,GmIso4 *param_1,GmVec3 *param_2);
     void __thiscall RefreshVirtualRecursive(CSystemFids *this,CSystemFids *param_1,int param_2);

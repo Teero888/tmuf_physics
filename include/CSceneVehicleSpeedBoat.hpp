@@ -25,14 +25,14 @@ struct CSceneVehicleSpeedBoat {
     byte _final_padding[0x204]; // Total size: 0x4f0
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall LimitTo (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AbsorbContact (CSceneVehicleSpeedBoat *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForces (CSceneVehicleSpeedBoat *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeImpulse (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2, GmMat3 *param_3,float param_4,GmVec3 *param_5,GmVec3 *param_6,GmVec3 *param_7, GmVec3 *param_8);
     float __thiscall GetWaterElevation (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,GmVec3 param_2);
+    float __thiscall LimitTo (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3);
     float __thiscall Max8 (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3, float param_4,float param_5,float param_6,float param_7,float param_8,float param_9);
     float __thiscall Min8 (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3, float param_4,float param_5,float param_6,float param_7,float param_8,float param_9);
     float __thiscall MultCoeff (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3);
+    void __thiscall AbsorbContact (CSceneVehicleSpeedBoat *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);
+    void __thiscall ComputeForces (CSceneVehicleSpeedBoat *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
+    void __thiscall ComputeImpulse (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2, GmMat3 *param_3,float param_4,GmVec3 *param_5,GmVec3 *param_6,GmVec3 *param_7, GmVec3 *param_8);
     void __thiscall ComputeIntertiaMatrix (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1);
 };
 

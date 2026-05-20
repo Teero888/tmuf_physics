@@ -34,9 +34,9 @@ struct CControlMediaPlayer {
     int * field_0x1a8; // accesses: 27
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateMediaButton(CControlMediaPlayer *this,CControlMediaPlayer *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall MediaPlay(CControlMediaPlayer *this,CControlMediaPlayer *param_1);
     void __thiscall CControlMediaPlayer(CControlMediaPlayer *this,CControlMediaPlayer *param_1);
+    void __thiscall CreateMediaButton(CControlMediaPlayer *this,CControlMediaPlayer *param_1);
+    void __thiscall MediaPlay(CControlMediaPlayer *this,CControlMediaPlayer *param_1);
     void __thiscall MediaStop(CControlMediaPlayer *this,CControlMediaPlayer *param_1);
     void __thiscall SetMediaData (CControlMediaPlayer *this,CControlMediaPlayer *param_1,CSystemData *param_2);
     void __thiscall SetMediaFileFid (CControlMediaPlayer *this,CControlMediaPlayer *param_1,CSystemFid *param_2);

@@ -21,7 +21,7 @@ struct CSceneVehicleMaterial {
     byte _final_padding[0x4]; // Total size: 0x48
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleMaterial (CSceneVehicleMaterial *this,CSceneVehicleMaterial *param_1);
+    void __thiscall CSceneVehicleMaterial (CSceneVehicleMaterial *this,CSceneVehicleMaterial *param_1);
 };
 
 #endif // CSCENEVEHICLEMATERIAL_HPP

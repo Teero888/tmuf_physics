@@ -14,7 +14,7 @@ struct CPfmPlane {
     float field_0x1c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Set(CPfmPlane *this,CMwCmdScriptVarBool *param_1,int param_2);
+    void __thiscall Set(CPfmPlane *this,CMwCmdScriptVarBool *param_1,int param_2);
 };
 
 #endif // CPFMPLANE_HPP

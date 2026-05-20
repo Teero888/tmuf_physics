@@ -18,11 +18,11 @@ struct CPlugTreeVisualMip {
     undefined4 field_0xd0; // accesses: 4
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugTreeVisualMip(CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetDistributionFromFarZs(CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1);
     void __thiscall AddLevel (CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1,CPlugTree *param_2,float param_3);
+    void __thiscall CPlugTreeVisualMip(CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1);
     void __thiscall DeleteAllChilds(CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1);
     void __thiscall GetMipOptimizedGroups (CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1,int param_2, CFastBuffer<struct_SPlugTreeOptimGroup*> *param_3,SPlugTreeOptimCriteria *param_4, SPlugTreeOptimTravel *param_5);
+    void __thiscall SetDistributionFromFarZs(CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1);
     void __thiscall SetLevelFarZ (CPlugTreeVisualMip *this,CPlugTreeVisualMip *param_1,ulong param_2,float param_3);
 };
 

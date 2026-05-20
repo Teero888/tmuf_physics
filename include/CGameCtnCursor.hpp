@@ -70,13 +70,13 @@ struct CGameCtnCursor {
     SVolatileTreePointer * field_0xf4; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall Update(CGameCtnCursor *this,SGmSmoothReal2 *param_1,int param_2,ulong param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnCursor(CGameCtnCursor *this,CGameCtnCursor *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateCursorColor(CGameCtnCursor *this,CGameCtnCursor *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateShadow (CGameCtnCursor *this,CGameCtnCursor *param_1,CGameCtnBlockInfo *param_2,int param_3);
+    float __thiscall Update(CGameCtnCursor *this,SGmSmoothReal2 *param_1,int param_2,ulong param_3);
     void __thiscall AddBlocksToCursor (CGameCtnCursor *this,CGameCtnCursor *param_1,CGameCtnBlockInfo *param_2,int param_3, ulong param_4);
+    void __thiscall CGameCtnCursor(CGameCtnCursor *this,CGameCtnCursor *param_1);
     void __thiscall GetMobilLocation(CGameCtnCursor *this,CGameCtnCursor *param_1,GmIso4 *param_2);
     void __thiscall UpdateColor (CGameCtnCursor *this,CGameCtnCursor *param_1,int param_2,int param_3,int param_4, int param_5,int param_6,int param_7,int param_8);
+    void __thiscall UpdateCursorColor(CGameCtnCursor *this,CGameCtnCursor *param_1);
+    void __thiscall UpdateShadow (CGameCtnCursor *this,CGameCtnCursor *param_1,CGameCtnBlockInfo *param_2,int param_3);
 };
 
 #endif // CGAMECTNCURSOR_HPP

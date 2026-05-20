@@ -27,8 +27,6 @@ struct CPlugSolid {
     uint field_0x70; // accesses: 10
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateDefaultData(CPlugSolid *this,CCrystal *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ExclusionEllipsoidRadiusCompute(CPlugSolid *this,CPlugSolid *param_1);
     CMwClassInfo * __thiscall MwGetClassInfo(CPlugSolid *this,CFuncSegment *param_1);
     CMwNod * __cdecl MwNewCPlugSolid(void);
     CPlugSolid * __cdecl LoadFromFidForBeingUseAsAModel(CSystemFid *param_1,int param_2);
@@ -47,7 +45,9 @@ struct CPlugSolid {
     void __thiscall ApplyFidParameters (CPlugSolid *this,CPlugFontBitmap *param_1,CSystemFidParameters *param_2, CSystemFidParameters *param_3,CFastBuffer<struct_CMwNod::SManuallyLoadedFid> *param_4);
     void __thiscall CPlugSolid(CPlugSolid *this,CPlugSolid *param_1);
     void __thiscall Chunk(CPlugSolid *this,CFuncSegment *param_1,CClassicArchive *param_2,ulong param_3);
+    void __thiscall CreateDefaultData(CPlugSolid *this,CCrystal *param_1);
     void __thiscall DisconnectFromModel(CPlugSolid *this,CPlugSolid *param_1,int param_2);
+    void __thiscall ExclusionEllipsoidRadiusCompute(CPlugSolid *this,CPlugSolid *param_1);
     void __thiscall GivePlugId(CPlugSolid *this,CPlugSolid *param_1,CMwId *param_2);
     void __thiscall InternalConnectSubTree(CPlugSolid *this,CPlugSolid *param_1,CPlugTree *param_2);
     void __thiscall InternalDisconnectSubTree(CPlugSolid *this,CPlugSolid *param_1,CPlugTree *param_2);

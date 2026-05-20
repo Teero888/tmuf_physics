@@ -21,10 +21,10 @@ struct CMotionCmdBase {
     undefined4 field_0x4c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetPeriod(CMotionCmdBase *this,CFuncPlug *param_1,float param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetPhase(CMotionCmdBase *this,CFuncPlug *param_1,float param_2);
     ulong __thiscall GetBaseTime(CMotionCmdBase *this,CMotionCmdBase *param_1);
     void __thiscall CMotionCmdBase(CMotionCmdBase *this,CMotionCmdBase *param_1);
+    void __thiscall SetPeriod(CMotionCmdBase *this,CFuncPlug *param_1,float param_2);
+    void __thiscall SetPhase(CMotionCmdBase *this,CFuncPlug *param_1,float param_2);
 };
 
 #endif // CMOTIONCMDBASE_HPP

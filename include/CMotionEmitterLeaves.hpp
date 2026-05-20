@@ -10,7 +10,7 @@ struct CMotionEmitterLeaves {
     byte _final_padding[0x1c]; // Total size: 0x44
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall OnAbsorbContact (CMotionEmitterLeaves *this,CMotions *param_1,CHmsPhysicalContact *param_2);
+    void __thiscall OnAbsorbContact (CMotionEmitterLeaves *this,CMotions *param_1,CHmsPhysicalContact *param_2);
 };
 
 #endif // CMOTIONEMITTERLEAVES_HPP

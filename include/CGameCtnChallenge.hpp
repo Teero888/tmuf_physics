@@ -30,7 +30,6 @@ struct CGameCtnChallenge {
     byte _final_padding[0x4c]; // Total size: 0x1f8
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetStartLight(CGameCtnChallenge *this,CGameCtnChallenge *param_1,ulong param_2);
     CGameCtnBlock * __thiscall GetBlockFromPlayField (CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
     CGameCtnBlock * __thiscall GetGroundBlock(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
     CGameCtnBlock * __thiscall GetStartLine(CGameCtnChallenge *this,CGameCtnChallenge *param_1,ulong param_2);
@@ -49,6 +48,7 @@ struct CGameCtnChallenge {
     uchar __thiscall GetZoneHeight(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
     void __thiscall GetCoordFromPos (CGameCtnChallenge *this,GmField2Base *param_1,GmVec2 *param_2,GmNat2 *param_3);
     void __thiscall SetIsBlockHelpers (CGameCtnChallenge *this,CGameCtnChallenge *param_1,int param_2,int param_3);
+    void __thiscall SetStartLight(CGameCtnChallenge *this,CGameCtnChallenge *param_1,ulong param_2);
 };
 
 #endif // CGAMECTNCHALLENGE_HPP

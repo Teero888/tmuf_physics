@@ -30,7 +30,7 @@ struct CPlugSound {
     undefined4 field_0x6c; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugSound(CPlugSound *this,CPlugSound *param_1);
+    void __thiscall CPlugSound(CPlugSound *this,CPlugSound *param_1);
 };
 
 #endif // CPLUGSOUND_HPP

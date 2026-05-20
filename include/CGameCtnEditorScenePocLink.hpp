@@ -22,10 +22,10 @@ struct CGameCtnEditorScenePocLink {
     undefined4 field_0xbc; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ECardinalDir __thiscall GetForwardDirectionFromCurrentHAngle (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsHAngleNeedClamp (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CGameCtnEditorScenePocLink (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ClampHAngle (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1,float *param_2);
+    ECardinalDir __thiscall GetForwardDirectionFromCurrentHAngle (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1);
+    int __thiscall IsHAngleNeedClamp (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1);
+    void __thiscall CGameCtnEditorScenePocLink (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1);
+    void __thiscall ClampHAngle (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1,float *param_2);
     void __thiscall SetTarget (CGameCtnEditorScenePocLink *this,CGameCtnEditorScenePocLink *param_1,CSceneMobil *param_2 );
 };
 

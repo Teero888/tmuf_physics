@@ -8,7 +8,7 @@ struct CPlugFileSnd {
     byte _final_padding[0x6]; // Total size: 0xa
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetLength(CPlugFileSnd *this,CPlugFileSnd *param_1);
+    float __thiscall GetLength(CPlugFileSnd *this,CPlugFileSnd *param_1);
     ulong __thiscall GetNbBlocks(CPlugFileSnd *this,CPlugFileSnd *param_1);
 };
 

@@ -133,15 +133,10 @@ struct CTrackManiaRaceInterface {
     byte _final_padding[0xc]; // Total size: 0x31c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateDownloadProgress (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateNoMoveMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdatePodium (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateRaceMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
-    /* WARNING: Removing unreachable block (ram,0x004c0282) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CTrackManiaRaceInterface::UpdateScores (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
-    /* WARNING: Removing unreachable block (ram,0x004c2f89) */ /* WARNING: Removing unreachable block (ram,0x004c30b3) */ /* WARNING: Removing unreachable block (ram,0x004c30b7) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl CTrackManiaRaceInterface::GetStuntMessages (int param_1,SEventStunt *param_2,CFastStringInt *param_3,CFastStringInt *param_4, CFastStringInt *param_5);
     CTrackMania * __thiscall GetGame (CTrackManiaRaceInterface *this,CTrackManiaEnvironmentManager *param_1);
     CTrackManiaRaceNet * __thiscall GetRace(CTrackManiaRaceInterface *this,CTrackManiaNetwork *param_1);
     int __thiscall IsMeaningFulPosition (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
+    void __cdecl GetStuntMessages (int param_1,SEventStunt *param_2,CFastStringInt *param_3,CFastStringInt *param_4, CFastStringInt *param_5);
     void __thiscall CallVoteMessage_Hide (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall GetKeyFromActionIndex (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1, SInputActionDesc *param_2,CFastStringInt *param_3);
     void __thiscall NoMoveMessage_Start (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1,CFastStringInt *param_2);
@@ -156,13 +151,18 @@ struct CTrackManiaRaceInterface {
     void __thiscall UpdateChat (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateChatIcon (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateCheckpointInfo (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
+    void __thiscall UpdateDownloadProgress (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateEndMatchCountdown (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateLapsCounter (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateMainFramesVisibility (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateMultiCountdown (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
+    void __thiscall UpdateNoMoveMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdatePleaseWaitMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
+    void __thiscall UpdatePodium (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateRaceCountdown (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
+    void __thiscall UpdateRaceMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateRefereesWorkingMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
+    void __thiscall UpdateScores (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateSpectatorCounter (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateStuntMessage (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);
     void __thiscall UpdateTimeColor (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);

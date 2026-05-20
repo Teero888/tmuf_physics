@@ -29,7 +29,7 @@ struct CSceneVehicleGlider {
     float field_0x424; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeForces (CSceneVehicleGlider *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
+    void __thiscall ComputeForces (CSceneVehicleGlider *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);
 };
 
 #endif // CSCENEVEHICLEGLIDER_HPP

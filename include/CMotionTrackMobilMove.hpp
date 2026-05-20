@@ -16,7 +16,7 @@ struct CMotionTrackMobilMove {
     undefined4 field_0x74; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CMotionTrackMobilMove (CMotionTrackMobilMove *this,CMotionTrackMobilMove *param_1);
+    void __thiscall CMotionTrackMobilMove (CMotionTrackMobilMove *this,CMotionTrackMobilMove *param_1);
 };
 
 #endif // CMOTIONTRACKMOBILMOVE_HPP

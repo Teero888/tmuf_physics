@@ -19,8 +19,8 @@ struct CControlQuad {
     int field_0x140; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CControlQuad(CControlQuad *this,CControlQuad *param_1);
     void __thiscall AddMargin(CControlQuad *this,CControlQuad *param_1,GmBoxAligned *param_2);
+    void __thiscall CControlQuad(CControlQuad *this,CControlQuad *param_1);
 };
 
 #endif // CCONTROLQUAD_HPP

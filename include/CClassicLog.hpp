@@ -12,10 +12,10 @@ struct CClassicLog {
     int * field_0x14; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall FlushWhenTimeOut(CClassicLog *this,CClassicLog *param_1,int param_2);
     void __cdecl AddLogStringInFile(void);
     void __cdecl ConsoleAddLogString(ulong param_1,CFastString *param_2);
     void __cdecl InternalAddLogString(int param_1,int param_2,int param_3);
+    void __thiscall FlushWhenTimeOut(CClassicLog *this,CClassicLog *param_1,int param_2);
     void __thiscall SetOutputFile (CClassicLog *this,CClassicLog *param_1,CFastStringInt *param_2,CFastStringInt *param_3, int param_4);
 };
 

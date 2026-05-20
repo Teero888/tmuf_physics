@@ -51,7 +51,7 @@ struct CHmsPicker {
     byte _final_padding[0x24]; // Total size: 0x10c
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsPicker(CHmsPicker *this,CHmsPicker *param_1);
+    void __thiscall CHmsPicker(CHmsPicker *this,CHmsPicker *param_1);
     void __thiscall CopyFromPicker(CHmsPicker *this,CHmsPicker *param_1,CHmsPicker *param_2);
 };
 

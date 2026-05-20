@@ -11,8 +11,8 @@ struct CPlugFilePHlsl {
     undefined4 field_0xc8; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ApplyFidParameter_Crypted (CPlugFilePHlsl *this,CPlugFilePHlsl *param_1,SParam_Id *param_2);
     void __cdecl LoadCommonPHlsl(void);
+    void __thiscall ApplyFidParameter_Crypted (CPlugFilePHlsl *this,CPlugFilePHlsl *param_1,SParam_Id *param_2);
     void __thiscall CPlugFilePHlsl(CPlugFilePHlsl *this,CPlugFilePHlsl *param_1);
 };
 

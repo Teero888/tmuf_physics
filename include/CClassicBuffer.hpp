@@ -9,14 +9,14 @@ struct CClassicBuffer {
     undefined4 field_0x8; // accesses: 1
 
     // Member Functions
-    /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall IsEqualBuffer (CClassicBuffer *this,CClassicBufferMemory *param_1,CClassicBufferMemory *param_2);
-    /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ ulong __thiscall Skip(CClassicBuffer *this,CClassicBuffer *param_1,ulong param_2);
-    /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall CopyFrom(CClassicBuffer *this,SParam_Set *param_1,SParam *param_2);
-    /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ void __thiscall AddCompressedBlock (CClassicBuffer *this,CClassicBuffer *param_1,CClassicBufferMemory *param_2);
     CClassicBufferMemory * __thiscall CreateUncompressedBlock(CClassicBuffer *this,CClassicBuffer *param_1);
+    int __thiscall IsEqualBuffer (CClassicBuffer *this,CClassicBufferMemory *param_1,CClassicBufferMemory *param_2);
     int __thiscall ReadAll(CClassicBuffer *this,CClassicBuffer *param_1,void *param_2,ulong param_3);
     int __thiscall WriteAll(CClassicBuffer *this,CClassicBuffer *param_1,void *param_2,ulong param_3);
+    ulong __thiscall Skip(CClassicBuffer *this,CClassicBuffer *param_1,ulong param_2);
+    void __thiscall AddCompressedBlock (CClassicBuffer *this,CClassicBuffer *param_1,CClassicBufferMemory *param_2);
     void __thiscall CClassicBuffer(CClassicBuffer *this,CClassicBuffer *param_1);
+    void __thiscall CopyFrom(CClassicBuffer *this,SParam_Set *param_1,SParam *param_2);
     void __thiscall ~CClassicBuffer(CClassicBuffer *this,CClassicBuffer *param_1);
 };
 

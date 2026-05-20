@@ -76,22 +76,22 @@ struct CHmsCamera {
     undefined4 field_0x210; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetFov(CHmsCamera *this,CHmsCamera *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsCamera(CHmsCamera *this,CHmsCamera *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetCamVal(CHmsCamera *this,GmCamFreeVal *param_1,GmCamVal *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetRenderFrustum(CHmsCamera *this,CHmsCamera *param_1,GmFrustum *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall LensUpdateFocalSize(CHmsCamera *this,CHmsCamera *param_1);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ScissorRectSet(CHmsCamera *this,CHmsCamera *param_1,GmRectAligned *param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetCamVal (CHmsCamera *this,CSceneCamera *param_1,GmCamVal *param_2,GmVec3 *param_3,int param_4);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetNearZ(CHmsCamera *this,GmFrustum *param_1,float param_2);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ZClipCompute (CHmsCamera *this,CHmsCamera *param_1,float param_2,GmFrustum *param_3, SHmsRenderRect *param_4);
+    float __thiscall GetFov(CHmsCamera *this,CHmsCamera *param_1);
+    void __thiscall CHmsCamera(CHmsCamera *this,CHmsCamera *param_1);
     void __thiscall ForceLocation(CHmsCamera *this,CHmsCamera *param_1,GmIso4 *param_2);
+    void __thiscall GetCamVal(CHmsCamera *this,GmCamFreeVal *param_1,GmCamVal *param_2);
+    void __thiscall GetRenderFrustum(CHmsCamera *this,CHmsCamera *param_1,GmFrustum *param_2);
+    void __thiscall LensUpdateFocalSize(CHmsCamera *this,CHmsCamera *param_1);
+    void __thiscall ScissorRectSet(CHmsCamera *this,CHmsCamera *param_1,GmRectAligned *param_2);
     void __thiscall ScissorRectSetEnable(CHmsCamera *this,CHmsCamera *param_1,int param_2);
+    void __thiscall SetCamVal (CHmsCamera *this,CSceneCamera *param_1,GmCamVal *param_2,GmVec3 *param_3,int param_4);
     void __thiscall SetDrawRect(CHmsCamera *this,CHmsCamera *param_1,GmRectAligned *param_2);
     void __thiscall SetFov(CHmsCamera *this,CHmsCamera *param_1,float param_2);
     void __thiscall SetFrustum(CHmsCamera *this,CHmsCamera *param_1,GmFrustum *param_2);
     void __thiscall SetLocation(CHmsCamera *this,CPlugTree *param_1,GmIso4 *param_2);
+    void __thiscall SetNearZ(CHmsCamera *this,GmFrustum *param_1,float param_2);
     void __thiscall SetZone(CHmsCamera *this,CSceneSector *param_1,CHmsZone *param_2);
+    void __thiscall ZClipCompute (CHmsCamera *this,CHmsCamera *param_1,float param_2,GmFrustum *param_3, SHmsRenderRect *param_4);
     void __thiscall ~CHmsCamera(CHmsCamera *this,CHmsCamera *param_1);
 };
 

@@ -20,8 +20,8 @@ struct CSystemFid {
         SCallStackFidContext * field_0x4; // accesses: 3
 
         // Member Functions
-        /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ~SCallStackFidContext(void *this,SCallStackFidContext *param_1);
         void __thiscall SCallStackFidContext (void *this,SCallStackFidContext *param_1,CSystemFid *param_2);
+        void __thiscall ~SCallStackFidContext(void *this,SCallStackFidContext *param_1);
     };
 
     struct SHeaderUserData {
@@ -46,8 +46,7 @@ struct CSystemFid {
     CLoader * field_0x70; // accesses: 2
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CClassicArchive * __thiscall LoadHeaderUserDataFromChunkId_Begin (CSystemFid *this,CSystemFid *param_1,ulong param_2,int param_3);
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall LoadHeaderUserDataFromChunkId_End (CSystemFid *this,CSystemFid *param_1,CClassicArchive **param_2);
+    CClassicArchive * __thiscall LoadHeaderUserDataFromChunkId_Begin (CSystemFid *this,CSystemFid *param_1,ulong param_2,int param_3);
     CMwNod * __thiscall ParametrizedGetAnyLoadedNodLooselyFittingTheParams (CSystemFid *this,CSystemFid *param_1,CSystemFidParameters *param_2);
     CPlugMaterial * __thiscall GetNod(CSystemFid *this,CSysFidNodRef<class_CPlugMaterial> *param_1);
     CSystemFid * __thiscall ParametrizedGetFid(CSystemFid *this,CSystemFid *param_1,CSystemFidParameters *param_2);
@@ -63,6 +62,7 @@ struct CSystemFid {
     void __thiscall ConcatLocation(CSystemFid *this,CSystemFid *param_1,int param_2);
     void __thiscall DetachNod(CSystemFid *this,CSystemFid *param_1,CMwNod *param_2);
     void __thiscall LoadHeaderUserData(CSystemFid *this,CSystemFid *param_1,CClassicBuffer *param_2);
+    void __thiscall LoadHeaderUserDataFromChunkId_End (CSystemFid *this,CSystemFid *param_1,CClassicArchive **param_2);
     void __thiscall MergeLocation(CSystemFid *this,CSystemFid *param_1,int param_2);
     void __thiscall ParametrizedAddFid(CSystemFid *this,CSystemFid *param_1,CSystemFid *param_2);
     void __thiscall ResetHeaderUserDatas(CSystemFid *this,CSystemFid *param_1);

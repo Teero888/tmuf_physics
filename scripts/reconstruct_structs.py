@@ -7,20 +7,11 @@ from collections import Counter
 # Resolve absolute paths relative to this script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Standard sizes for core math types
-HARDCODED_SIZES = {
-    'GmVec2': 8, 'GmVec3': 12, 'GmVec4': 16, 'GmQuat': 16,
-    'GmMat2': 16, 'GmMat3': 36, 'GmMat4': 64, 'GmIso3': 36, 'GmIso4': 48,
-    'GmBoxAligned': 24, 'GmRectAligned': 16
-}
-
 def analyze_src(src_dir):
     if not os.path.isabs(src_dir):
         src_dir = os.path.join(SCRIPT_DIR, src_dir)
         
-    # Match: *(type *)( (int)ptr + offset )
     ptr_offset_re = re.compile(r'\*\s*\(([\w\s\*:]+)\s*\*\)\s*\(\s*(?:\(int\))?\s*([\w]+)\s*\+\s*(0x[0-9a-fA-F]+|[0-9]+)\s*\)')
-    # Match: *(type *)ptr
     ptr_zero_re = re.compile(r'\*\s*\(([\w\s\*:]+)\s*\*\)\s*([\w]+)\b')
     
     structs = {}
@@ -42,12 +33,8 @@ def analyze_src(src_dir):
                 signature = match.group(2).strip()
                 body = match.group(3)
                 
-                # Check if this function belongs to a class
                 if "::" not in header_name: continue
                 
-                # STRICT LOCAL LOGIC:
-                # We ONLY trust memory accesses to 'this' within a class's own methods.
-                # Accesses to parameters are ignored because those classes will be defined in their own files.
                 class_name = header_name.rsplit("::", 1)[0].strip().lstrip(": ")
                 if class_name not in structs:
                     structs[class_name] = {'offsets': {}, 'functions': []}
@@ -56,7 +43,6 @@ def analyze_src(src_dir):
                 for m in ptr_offset_re.finditer(body):
                     ptr_name = m.group(2)
                     offset_str = m.group(3)
-                    
                     if ptr_name == 'this':
                         try:
                             offset = int(offset_str, 0)
@@ -76,6 +62,11 @@ def analyze_src(src_dir):
                 
                 # 3. Save function signature
                 clean_sig = signature
+                
+                # REMOVE DECOMPILER WARNINGS
+                # Match /* WARNING: ... */ and remove it
+                clean_sig = re.sub(r'/\* WARNING:.*?\*/', '', clean_sig, flags=re.DOTALL)
+                
                 paren_pos = clean_sig.find('(')
                 if paren_pos != -1:
                     colon_pos = clean_sig.rfind('::', 0, paren_pos)

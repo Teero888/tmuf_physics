@@ -14,8 +14,8 @@ struct CGameCtnBench {
     int field_0x44; // accesses: 1
 
     // Member Functions
-    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CGameCtnBench *this,CInputPortDx8 *param_1);
     void __thiscall Start(CGameCtnBench *this,CGameCtnBench *param_1);
+    void __thiscall UpdateAsync(CGameCtnBench *this,CInputPortDx8 *param_1);
 };
 
 #endif // CGAMECTNBENCH_HPP

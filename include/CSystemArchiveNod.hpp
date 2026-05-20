@@ -52,11 +52,6 @@ struct CSystemArchiveNod {
     CClassicBufferMemory * field_0xa4; // accesses: 12
 
     // Member Functions
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall DoFidSaveFile(CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2);
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall DoFidSaveFileSafe (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2,ulong param_3);
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall DoLoadHeader(CSystemArchiveNod *this,CSystemArchiveNod *param_1);
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall DoLoadRef(CSystemArchiveNod *this,CSystemArchiveNod *param_1);
-    /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall ExtractExternalLocations (CSystemArchiveNod *this,CSystemArchiveNod *param_1, CFastBuffer<class_CSystemFids*> **param_2,CSystemFidsDrive *param_3);
     CPlugVisual * __thiscall Duplicate(CSystemArchiveNod *this,CPlugVisualVertexs *param_1);
     int __cdecl LoadFileFrom (CFastStringInt *param_1,CMwNod **param_2,CSystemFids *param_3,EArchive param_4);
     int __cdecl LoadFromFid(CMwNod **param_1,CSystemFid *param_2,EArchive param_3);
@@ -74,6 +69,8 @@ struct CSystemArchiveNod {
     int __thiscall DoFidLoadFile (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod **param_2);
     int __thiscall DoFidLoadMemory (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod **param_2);
     int __thiscall DoFidLoadRefs (CSystemArchiveNod *this,CSystemArchiveNod *param_1,EArchive param_2, CClassicBuffer *param_3);
+    int __thiscall DoFidSaveFile(CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2);
+    int __thiscall DoFidSaveFileSafe (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2,ulong param_3);
     int __thiscall DoFidSaveMemory (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2);
     int __thiscall DoFindNod (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod **param_2,CSystemFid *param_3);
     int __thiscall DoIsFileSame (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CSystemFid *param_2, CClassicBufferMemory *param_3);
@@ -82,8 +79,10 @@ struct CSystemArchiveNod {
     int __thiscall DoLoadBody(CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod **param_2);
     int __thiscall DoLoadFile (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CFastStringInt *param_2, CMwNod **param_3,CSystemFids *param_4,EArchive param_5);
     int __thiscall DoLoadFromFid (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod **param_2);
+    int __thiscall DoLoadHeader(CSystemArchiveNod *this,CSystemArchiveNod *param_1);
     int __thiscall DoLoadMemory (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CClassicBufferMemory *param_2, CMwNod **param_3);
     int __thiscall DoLoadMemoryTemp (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CClassicBufferMemory *param_2, CMwNod **param_3);
+    int __thiscall DoLoadRef(CSystemArchiveNod *this,CSystemArchiveNod *param_1);
     int __thiscall DoLoadResource (CSystemArchiveNod *this,CSystemArchiveNod *param_1,ulong param_2,CMwNod **param_3);
     int __thiscall DoSave (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2,ulong param_3, EArchive param_4,int param_5);
     int __thiscall DoSaveAll(CSystemArchiveNod *this,CSystemArchiveNod *param_1);
@@ -94,6 +93,7 @@ struct CSystemArchiveNod {
     int __thiscall DoSaveMemory (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CClassicBufferMemory *param_2, CMwNod *param_3,ulong param_4);
     int __thiscall DoSaveMemoryTemp (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CClassicBufferMemory *param_2, CMwNod *param_3,ulong param_4,int param_5);
     int __thiscall DoSaveRef(CSystemArchiveNod *this,CSystemArchiveNod *param_1);
+    int __thiscall ExtractExternalLocations (CSystemArchiveNod *this,CSystemArchiveNod *param_1, CFastBuffer<class_CSystemFids*> **param_2,CSystemFidsDrive *param_3);
     int __thiscall InsertExternalLocations (CSystemArchiveNod *this,CSystemArchiveNod *param_1,CSystemFids *param_2, CFastBuffer<class_CSystemFids*> *param_3);
     int __thiscall LoadCurrentHeader (CSystemArchiveNod *this,CSystemArchiveNod *param_1,EVersion param_2);
     void __cdecl ComputeCrcNat32(CMwNod *param_1,ulong *param_2);
