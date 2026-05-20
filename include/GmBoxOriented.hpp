@@ -13,6 +13,7 @@ struct GmBoxOriented {
     float field_0x18; // accesses: 1
     float field_0x1c; // accesses: 1
     float field_0x20; // accesses: 1
+    byte _final_padding[0x1c]; // Total size: 0x40
 
     // Member Functions
     void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);

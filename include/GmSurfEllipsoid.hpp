@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmSurfEllipsoid {
-    undefined ** field_0x0; // accesses: 1
+    float field_0x0; // accesses: 1
     byte _padding_0x4[4];
     float field_0x8; // accesses: 2
     float field_0xc; // accesses: 2

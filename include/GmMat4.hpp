@@ -16,7 +16,7 @@ struct GmMat4 {
     float field_0x1c; // accesses: 13
     float field_0x20; // accesses: 13
     float field_0x24; // accesses: 13
-    GmFrustum * field_0x28; // accesses: 13
+    float field_0x28; // accesses: 13
     float field_0x2c; // accesses: 13
     float field_0x30; // accesses: 13
     float field_0x34; // accesses: 13

@@ -6,7 +6,7 @@
 struct GmIso4;
 
 struct GmBoxAligned {
-    GmIso4 * field_0x0; // accesses: 19
+    float field_0x0; // accesses: 19
     float field_0x4; // accesses: 17
     float field_0x8; // accesses: 18
     float field_0xc; // accesses: 25

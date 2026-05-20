@@ -7,7 +7,7 @@ struct CFastString;
 
 struct CFastStringInt {
     void** vftable; // accesses: 20
-    undefined2 * field_0x4; // accesses: 29
+    int field_0x4; // accesses: 29
 
     // Member Functions
     CFastString __thiscall GetLatin1(void *this,CFastStringInt *param_1);

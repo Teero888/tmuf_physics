@@ -5,7 +5,7 @@
 
 struct GmOctree<struct_SMeshOctreeCell> {
     byte _padding_0x0[4];
-    CNetNod_CheckedArchive * field_0x4; // accesses: 1
+    float field_0x4; // accesses: 1
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall BuildOctreeRecurse (void *this,GmOctree<struct_SMeshOctreeCell> *param_1,ulong param_2, SMeshOctreeCell *param_3);

@@ -741,22 +741,6 @@ CGameNetwork::GetPlayerInfoFromUId(CGameNetwork *this,CGameNetwork *param_1,ucha
 }
 
 // =================================================
-// Function: CGameNetwork::GetState
-// =================================================
-EState __thiscall CGameNetwork::GetState(CGameNetwork *this,CMwCmdFiber *param_1)
-{
-{
-  SCasterCat *pSVar1;
-  ulong unaff_retaddr;
-  
-  pSVar1 = CFastBuffer<class_GmVector2<unsigned_short>_>::operator[]
-                     (this + 0x2fc,(CFastBuffer<struct_CVisionHmsZone::SCasterCat> *)0x0,
-                      unaff_retaddr);
-  return *(EState *)(*(int *)pSVar1 + 0x124);
-}
-}
-
-// =================================================
 // Function: CGameNetwork::IsChatCommand
 // =================================================
 int __thiscall

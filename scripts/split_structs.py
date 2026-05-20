@@ -5,29 +5,33 @@ import re
 # Resolve absolute paths relative to this script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Standard sizes for core math types
+# Standard sizes for core math types in Nadeo engine
 HARDCODED_SIZES = {
     'GmVec2': 8, 'GmVec3': 12, 'GmVec4': 16, 'GmQuat': 16,
     'GmMat2': 16, 'GmMat3': 36, 'GmMat4': 64, 'GmIso3': 36, 'GmIso4': 48,
-    'GmBoxAligned': 24, 'GmRectAligned': 16
+    'GmBoxAligned': 24, 'GmBoxOriented': 64, 'GmRectAligned': 16,
+    'GmFrustum': 96, 'GmCone3': 16, 'GmLine3': 24, 'GmPlane': 16, 'GmSphere': 16
 }
 
 def get_best_type(type_counts, offset, class_name):
     if not type_counts:
         return "undefined4"
     
+    # 1. Math Classes ('Gm' prefix) -> Always prefer float
+    if class_name.startswith('Gm'):
+        return 'float'
+
+    # 2. Game Classes ('C' prefix) -> Offset 0 is vftable
     if offset == 0 and class_name.startswith('C'):
         return "void**"
 
+    # 3. Specific Struct Pointers
     ptrs = {t: c for t, c in type_counts.items() if '*' in t}
     for t in sorted(ptrs, key=ptrs.get, reverse=True):
-        if t.strip() not in ['void *', 'void**', 'undefined4 *', 'undefined *']:
+        if t.strip() not in ['void *', 'void**', 'void * *', 'undefined4 *', 'undefined *', 'undefined1 *', 'undefined2 *', 'undefined8 *']:
             return t
 
-    if class_name.startswith('Gm'):
-        if 'float' in type_counts: return 'float'
-        return 'float'
-
+    # 4. Fallback to most frequent
     sorted_types = sorted(type_counts.items(), key=lambda x: x[1], reverse=True)
     return sorted_types[0][0]
 
@@ -59,7 +63,7 @@ def write_struct_body(name, data, structs, sizes, f, indent=""):
     offsets = data['offsets']
     max_size = sizes.get(name, HARDCODED_SIZES.get(name, 0))
     
-    # Force vftable at offset 0 for functional 'C' classes
+    # Ensure vftable for 'C' classes with functions
     if '0' not in offsets and name.startswith('C') and data['functions']:
         offsets['0'] = {"void**": 0}
 
@@ -70,21 +74,19 @@ def write_struct_body(name, data, structs, sizes, f, indent=""):
         last_offset = 0
         
         for offset in int_offsets:
-            off_str = str(offset)
-            # NO FREQUENCY FILTERING (as requested)
-            # Only filter if we have a real size and it's out of bounds
+            # ONLY filter if we are over the real known size
             if max_size > 0 and offset >= max_size: continue
                 
             if offset > last_offset:
                 f.write(f"{indent}    byte _padding_0x{last_offset:x}[{offset - last_offset}];\n")
             
-            type_counts = offsets[off_str]
+            type_counts = offsets[str(offset)]
             main_type = get_best_type(type_counts, offset, name)
             field_name = f"field_0x{offset:x}"
             if offset == 0 and main_type == "void**": field_name = "vftable"
             
-            # Show access count if it's not a forced field
-            count_suffix = f" // accesses: {sum(type_counts.values())}" if sum(type_counts.values()) > 0 else ""
+            count = sum(type_counts.values())
+            count_suffix = f" // accesses: {count}" if count > 0 else ""
             f.write(f"{indent}    {main_type} {field_name};{count_suffix}\n")
             
             if '*' in main_type or 'undefined4' in main_type or 'int' in main_type or 'float' in main_type:

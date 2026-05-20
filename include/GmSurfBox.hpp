@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmSurfBox {
-    undefined ** field_0x0; // accesses: 1
+    float field_0x0; // accesses: 1
 
     // Member Functions
     void __thiscall GmSurfBox(GmSurfBox *this,GmSurfBox *param_1);

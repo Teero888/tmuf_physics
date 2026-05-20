@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmSurfPolygon {
-    undefined ** field_0x0; // accesses: 1
+    float field_0x0; // accesses: 1
     byte _padding_0x4[68];
     float field_0x48; // accesses: 1
 

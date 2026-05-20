@@ -12,7 +12,8 @@ struct GmFrustum {
     float field_0xc; // accesses: 19
     float field_0x10; // accesses: 22
     float field_0x14; // accesses: 19
-    CHmsCamera * field_0x18; // accesses: 18
+    float field_0x18; // accesses: 18
+    byte _final_padding[0x44]; // Total size: 0x60
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetFovY(void *this,GmFrustum *param_1);

@@ -6,7 +6,7 @@
 struct GmIso4;
 
 struct GmVec4 {
-    GmIso4 * field_0x0; // accesses: 28
+    float field_0x0; // accesses: 28
     float field_0x4; // accesses: 27
     float field_0x8; // accesses: 26
     float field_0xc; // accesses: 25

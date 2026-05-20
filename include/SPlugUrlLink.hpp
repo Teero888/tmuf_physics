@@ -5,7 +5,7 @@
 
 struct SPlugUrlLink {
     undefined4 field_0x0; // accesses: 3
-    undefined2 * field_0x4; // accesses: 3
+    undefined * field_0x4; // accesses: 3
     undefined4 field_0x8; // accesses: 2
     undefined4 field_0xc; // accesses: 2
     undefined4 field_0x10; // accesses: 1

@@ -4,15 +4,15 @@
 #include "typedefs.h"
 
 struct GmIso4 {
-    GmIso4 * field_0x0; // accesses: 13
+    float field_0x0; // accesses: 13
     float field_0x4; // accesses: 13
     float field_0x8; // accesses: 13
     float field_0xc; // accesses: 12
-    GmIso4 * field_0x10; // accesses: 13
+    float field_0x10; // accesses: 13
     float field_0x14; // accesses: 13
     float field_0x18; // accesses: 12
     float field_0x1c; // accesses: 13
-    GmIso4 * field_0x20; // accesses: 13
+    float field_0x20; // accesses: 13
     float field_0x24; // accesses: 21
     float field_0x28; // accesses: 21
     float field_0x2c; // accesses: 21

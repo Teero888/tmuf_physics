@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmSurfMesh {
-    undefined ** field_0x0; // accesses: 1
+    float field_0x0; // accesses: 1
     byte _padding_0x4[32];
     float field_0x24; // accesses: 3
 

@@ -6,7 +6,7 @@
 struct GmIso4;
 
 struct GmMat2 {
-    GmIso4 * field_0x0; // accesses: 7
+    float field_0x0; // accesses: 7
     float field_0x4; // accesses: 6
     float field_0x8; // accesses: 6
     float field_0xc; // accesses: 6

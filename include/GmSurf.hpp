@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmSurf {
-    undefined ** field_0x0; // accesses: 1
+    float field_0x0; // accesses: 1
     float field_0x4; // accesses: 1
     float field_0x8; // accesses: 3
     float field_0xc; // accesses: 2

@@ -33,7 +33,7 @@ struct CGameCtnApp {
     byte _padding_0x214[96];
     int field_0x274; // accesses: 1
     byte _padding_0x278[16];
-    undefined1 * field_0x288; // accesses: 2
+    int field_0x288; // accesses: 2
     void * field_0x28c; // accesses: 1
     byte _padding_0x290[52];
     CInputBindingsConfig * field_0x2c4; // accesses: 1
