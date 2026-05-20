@@ -13,7 +13,6 @@ This guide explains how to go from a raw Ghidra C dump to a modular, semi-compil
 ### 1. Extract the Physics Subset
 Extracts only the code reachable from `CTrackManiaRace::Validate` and core physics classes.
 ```bash
-cd scripts
 python3 recursive_extract.py dump.cpp CTrackManiaRace::Validate
 ```
 - **Output:** `scripts/physics_extracted_code.c`
@@ -30,16 +29,23 @@ Performs static analysis on the `src/` files to identify memory offsets and func
 ```bash
 python3 reconstruct_structs.py
 ```
-- **Output:** `scripts/reconstructed_structs.json`, `scripts/reconstructed_structs.h`
+- **Output:** `scripts/reconstructed_structs.json`
 
-### 4. Split into Modular Header Files
-Generates individual `.hpp` files in the root `include/` directory.
+### 4. Extract Real Class Sizes
+Scans the dump for allocation sizes to ensure structs are the correct length.
+```bash
+python3 extract_struct_sizes.py dump.cpp
+```
+- **Output:** `scripts/struct_sizes.json`
+
+### 5. Split into Modular Header Files
+Generates individual `.hpp` files in the root `include/` directory, using both layouts and real sizes.
 ```bash
 python3 split_structs.py
 ```
 - **Output:** `include/*.hpp` (root directory)
 
-### 5. Finalize Dependencies (Typedefs)
+### 6. Finalize Dependencies (Typedefs)
 Analyzes the generated headers to find unknown types and creates `typedefs.h`.
 ```bash
 # 1. Extract potential enums from the source code
@@ -51,6 +57,4 @@ python3 find_unknown_types.py > unknown_types.txt
 # 3. Build the comprehensive typedefs header
 python3 make_typedefs.py
 ```
-
 - **Output:** `include/typedefs.h` (root directory)
-
