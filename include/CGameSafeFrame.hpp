@@ -7,9 +7,8 @@ struct CScene2d;
 struct CSceneCamera;
 
 struct CGameSafeFrame {
-    void** vftable; // accesses: 1
-    float field_0x4; // accesses: 1
-    byte _padding_0x8[16];
+    void** vftable;
+    byte _padding_0x4[20];
     int field_0x18; // accesses: 2
     float field_0x1c; // accesses: 4
     float field_0x20; // accesses: 2
@@ -21,8 +20,9 @@ struct CGameSafeFrame {
     float field_0x38; // accesses: 1
     int field_0x3c; // accesses: 1
     CScene2d * field_0x40; // accesses: 1
-    int field_0x44; // accesses: 2
+    CScene2d * field_0x44; // accesses: 2
     CScene2d * field_0x48; // accesses: 2
+    byte _final_padding[0x14]; // Total size: 0x60
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ GmVec2 __thiscall GetWindowSize(CGameSafeFrame *this,CGameSafeFrame *param_1);

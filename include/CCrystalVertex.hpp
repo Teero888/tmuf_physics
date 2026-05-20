@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CCrystalVertex {
-    byte _padding_0x0[56];
+    void** vftable;
+    byte _padding_0x4[52];
     int field_0x38; // accesses: 1
 
     // Member Functions

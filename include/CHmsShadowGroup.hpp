@@ -34,6 +34,7 @@ struct CHmsShadowGroup {
     undefined4 field_0x78; // accesses: 1
     undefined4 field_0x7c; // accesses: 1
     undefined4 field_0x80; // accesses: 1
+    byte _final_padding[0x18]; // Total size: 0x9c
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsShadowGroup(CHmsShadowGroup *this,CHmsShadowGroup *param_1);

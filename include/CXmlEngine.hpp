@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CXmlEngine {
+    void** vftable;
 
     // Member Functions
     void __cdecl ReadAssociatedText(TiXmlElement *param_1,CFastStringInt *param_2);

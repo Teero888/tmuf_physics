@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct SPlugVisibleFilter {
-    void** vftable; // accesses: 1
+    undefined2 field_0x0; // accesses: 1
     undefined2 field_0x2; // accesses: 1
 
     // Member Functions

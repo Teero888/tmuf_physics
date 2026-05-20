@@ -6,7 +6,8 @@
 struct CNetHttpResult;
 
 struct CNetMasterServerRequest {
-    byte _padding_0x0[80];
+    void** vftable;
+    byte _padding_0x4[76];
     CNetHttpResult * field_0x50; // accesses: 2
 
     // Member Functions

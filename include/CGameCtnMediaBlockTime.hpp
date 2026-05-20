@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaBlockTime {
-    byte _padding_0x0[36];
+    void** vftable;
+    byte _padding_0x4[32];
     int field_0x24; // accesses: 1
     byte _padding_0x28[44];
     undefined4 * field_0x54; // accesses: 1

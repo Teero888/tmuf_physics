@@ -10,8 +10,8 @@ struct CHmsForceFieldBall {
     float field_0x40; // accesses: 1
     float field_0x44; // accesses: 1
     byte _padding_0x48[20];
-    float field_0x5c; // accesses: 7
-    float field_0x60; // accesses: 2
+    undefined4 field_0x5c; // accesses: 7
+    undefined4 field_0x60; // accesses: 2
     undefined4 field_0x64; // accesses: 1
     undefined4 field_0x68; // accesses: 1
     undefined4 field_0x6c; // accesses: 1

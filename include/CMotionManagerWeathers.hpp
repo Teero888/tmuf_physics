@@ -3,12 +3,10 @@
 
 #include "typedefs.h"
 
-struct CFuncWeather;
 struct CHmsViewport;
 struct CHmsZoneVPacker;
 struct CMotionTimerLoop;
 struct CMotionWeather;
-struct CMwCmdScriptVarBool;
 struct CMwNod;
 struct CPlugFileGen;
 struct CPlugFileImg;
@@ -17,7 +15,6 @@ struct CPlugShader;
 struct CSceneLight;
 struct CSceneSector;
 struct GmVec4;
-struct GxBGRAColor_conflict;
 struct GxFog;
 struct GxLight;
 
@@ -34,19 +31,19 @@ struct CMotionManagerWeathers {
     byte _padding_0x30[48];
     int field_0x60; // accesses: 2
     byte _padding_0x64[12];
-    CMwCmdScriptVarBool * field_0x70; // accesses: 6
+    CMotionManagerWeathers * field_0x70; // accesses: 6
     byte _padding_0x74[60];
     CMotionWeather * field_0xb0; // accesses: 7
     CFuncWeather * field_0xb4; // accesses: 13
-    GxFog * field_0xb8; // accesses: 15
-    undefined4 field_0xbc; // accesses: 4
-    int field_0xc0; // accesses: 2
+    CHmsZoneVPacker * field_0xb8; // accesses: 15
+    int field_0xbc; // accesses: 4
+    GxLight * field_0xc0; // accesses: 2
     GxLight * field_0xc4; // accesses: 32
-    CSceneLight * field_0xc8; // accesses: 7
+    int * field_0xc8; // accesses: 7
     byte _padding_0xcc[32];
-    GmVec4 * field_0xec; // accesses: 3
-    CPlugShader * field_0xf0; // accesses: 12
-    int field_0xf4; // accesses: 2
+    float * field_0xec; // accesses: 3
+    CSceneSector * field_0xf0; // accesses: 12
+    CHmsViewport * field_0xf4; // accesses: 2
     uint field_0xf8; // accesses: 3
     CMwNod * field_0xfc; // accesses: 14
     CPlugBitmapAddress * field_0x100; // accesses: 4
@@ -59,6 +56,7 @@ struct CMotionManagerWeathers {
     undefined4 field_0x11c; // accesses: 2
     undefined4 field_0x120; // accesses: 2
     undefined4 field_0x124; // accesses: 1
+    byte _final_padding[0x8]; // Total size: 0x130
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall ChangeWeatherAt (CMotionManagerWeathers *this,CMotionManagerWeathers *param_1,ulong param_2);

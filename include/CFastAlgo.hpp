@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CFastAlgo {
+    void** vftable;
 
     // Member Functions
     /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ ulong __cdecl ComputeCrc32(CClassicBuffer *param_1,ulong param_2);

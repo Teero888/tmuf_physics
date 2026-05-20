@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CPfmMesh {
+    void** vftable;
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AddCell(CPfmMesh *this,CPfmMesh *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4);

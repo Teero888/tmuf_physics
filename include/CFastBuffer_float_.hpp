@@ -4,7 +4,6 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct ulong;
 
 struct CFastBuffer<float> {
     void** vftable; // accesses: 12

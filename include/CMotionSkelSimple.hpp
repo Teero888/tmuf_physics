@@ -8,6 +8,7 @@ struct CMotionSkelSimple {
     byte _padding_0x4[40];
     undefined4 field_0x2c; // accesses: 1
     undefined4 field_0x30; // accesses: 1
+    byte _final_padding[0xc]; // Total size: 0x40
 
     // Member Functions
     void __thiscall CMotionSkelSimple(CMotionSkelSimple *this,CMotionSkelSimple *param_1);

@@ -6,10 +6,9 @@
 struct CMwCmdBlockMain;
 struct CMwNod;
 struct CSceneMobilAbsorbContact;
-struct ulong;
 
 struct CSceneMessageHandler {
-    void** vftable; // accesses: 1
+    void** vftable;
     byte _padding_0x4[20];
     uint field_0x18; // accesses: 1
     CMwCmdBlockMain * field_0x1c; // accesses: 2
@@ -17,7 +16,7 @@ struct CSceneMessageHandler {
     byte _padding_0x24[4];
     CSceneMobilAbsorbContact * field_0x28; // accesses: 4
     ulong field_0x2c; // accesses: 2
-    undefined4 field_0x30; // accesses: 2
+    int field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 2
     undefined4 field_0x38; // accesses: 1
     undefined4 field_0x3c; // accesses: 1

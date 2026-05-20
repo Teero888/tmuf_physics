@@ -7,6 +7,7 @@ struct CGameCtnNetForm {
     void** vftable; // accesses: 2
     byte _padding_0x4[28];
     undefined4 field_0x20; // accesses: 1
+    byte _final_padding[0x20]; // Total size: 0x44
 
     // Member Functions
     int __cdecl ValidatePacketForcedMods (int param_1,int param_2,int param_3,uchar param_4,uchar *param_5,ulong param_6);

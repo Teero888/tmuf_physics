@@ -6,54 +6,50 @@
 struct CClassicBuffer;
 struct CClassicBufferMemory;
 struct CMwNod;
-struct CPlugFile;
 struct CSystemEngine;
 struct CSystemFid;
 struct CSystemFidFile;
 struct CSystemFidMemory;
 struct CSystemFidParameters;
 struct CSystemFids;
-struct ulong;
-struct ushort;
 
 struct CSystemArchiveNod {
     struct SHeaderFolderDep {
+        void** vftable;
 
         // Member Functions
         int __thiscall FillHeaderUserData (void *this,SHeader *param_1,ulong param_2,CGameSkin *param_3,int *param_4);
         void __thiscall Archive (void *this,CFastCrypt<unsigned_long> *param_1,CClassicArchive *param_2);
     };
 
-    void** vftable; // accesses: 38
-    EArchive field_0x4; // accesses: 37
-    CSystemEngine * field_0x8; // accesses: 10
-    int field_0xc; // accesses: 6
+    void** vftable; // accesses: 2
+    int * field_0x4; // accesses: 37
+    undefined4 field_0x8; // accesses: 7
+    uint field_0xc; // accesses: 6
     undefined4 field_0x10; // accesses: 5
-    CSystemEngine * field_0x14; // accesses: 1
-    short field_0x18; // accesses: 6
+    byte _padding_0x14[4];
+    undefined2 field_0x18; // accesses: 4
     byte _padding_0x1a[2];
     CSystemEngine * field_0x1c; // accesses: 38
     byte _padding_0x20[44];
-    ulong field_0x4c; // accesses: 6
-    CMwNod * field_0x50; // accesses: 85
+    undefined4 field_0x4c; // accesses: 6
+    CSystemFid * field_0x50; // accesses: 85
     byte _padding_0x54[4];
     CSystemFids * field_0x58; // accesses: 2
     CSystemFidParameters * field_0x5c; // accesses: 12
-    byte _padding_0x60[12];
-    int * field_0x6c; // accesses: 2
-    byte _padding_0x70[8];
-    EArchive field_0x78; // accesses: 9
+    byte _padding_0x60[24];
+    CSystemArchiveNod * field_0x78; // accesses: 9
     undefined4 field_0x7c; // accesses: 4
     undefined4 field_0x80; // accesses: 2
     undefined4 field_0x84; // accesses: 5
-    ulong field_0x88; // accesses: 5
-    undefined4 field_0x8c; // accesses: 9
-    CMwNod * field_0x90; // accesses: 7
+    undefined4 field_0x88; // accesses: 5
+    int field_0x8c; // accesses: 9
+    CSystemArchiveNod * field_0x90; // accesses: 7
     undefined4 field_0x94; // accesses: 2
     uint * field_0x98; // accesses: 5
     CClassicBufferMemory * field_0x9c; // accesses: 6
-    undefined4 field_0xa0; // accesses: 2
-    int field_0xa4; // accesses: 12
+    int field_0xa0; // accesses: 2
+    CClassicBufferMemory * field_0xa4; // accesses: 12
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ int __thiscall DoFidSaveFile(CSystemArchiveNod *this,CSystemArchiveNod *param_1,CMwNod *param_2);

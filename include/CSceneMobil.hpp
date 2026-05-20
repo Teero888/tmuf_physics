@@ -3,10 +3,8 @@
 
 #include "typedefs.h"
 
-struct CHmsCorpus;
 struct CHmsItem;
 struct CHmsZone;
-struct CMotionLight;
 struct CMotions;
 struct CMwNod;
 struct CPlugSolid;
@@ -15,31 +13,18 @@ struct CSceneObject;
 struct CSceneToyBroomstick;
 
 struct CSceneMobil {
-    void** vftable; // accesses: 29
-    byte _padding_0x4[4];
-    CSceneMobil * field_0x8; // accesses: 2
-    byte _padding_0xc[8];
-    int field_0x14; // accesses: 12
-    int field_0x18; // accesses: 1
-    byte _padding_0x1c[4];
+    void** vftable; // accesses: 19
+    byte _padding_0x4[16];
+    int * field_0x14; // accesses: 11
+    byte _padding_0x18[8];
     int * field_0x20; // accesses: 13
-    uint field_0x24; // accesses: 2
-    int field_0x28; // accesses: 58
+    byte _padding_0x24[4];
+    CHmsItem * field_0x28; // accesses: 56
     CMwNod * field_0x2c; // accesses: 8
-    CMwNod * field_0x30; // accesses: 26
-    CMwNod * field_0x34; // accesses: 14
-    float field_0x38; // accesses: 1
-    float field_0x3c; // accesses: 1
-    CHmsCorpus * field_0x40; // accesses: 1
-    CMwNod * field_0x44; // accesses: 14
-    float field_0x48; // accesses: 1
-    byte _padding_0x4c[12];
-    int field_0x58; // accesses: 1
-    byte _padding_0x5c[40];
-    float field_0x84; // accesses: 1
-    byte _padding_0x88[36];
-    int field_0xac; // accesses: 2
-    int * field_0xb0; // accesses: 4
+    int * field_0x30; // accesses: 26
+    int * field_0x34; // accesses: 13
+    byte _padding_0x38[12];
+    CMwNod * field_0x44; // accesses: 13
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CSceneMobil *this,CSystemData *param_1,CMwStack *param_2,void *param_3);

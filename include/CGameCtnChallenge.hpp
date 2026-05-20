@@ -15,22 +15,19 @@ struct CGameCtnChallenge {
         void __thiscall ~SHeaderCommunity(void *this,SHeaderCommunity *param_1);
     };
 
-    void** vftable; // accesses: 1
-    byte _padding_0x4[32];
-    int field_0x24; // accesses: 4
-    byte _padding_0x28[56];
-    uint field_0x60; // accesses: 1
-    byte _padding_0x64[44];
-    CGameCtnChapter * field_0x90; // accesses: 4
+    void** vftable;
+    byte _padding_0x4[140];
+    CGameCtnCollection * field_0x90; // accesses: 4
     byte _padding_0x94[20];
     CGameCtnChallenge * field_0xa8; // accesses: 1
     uint field_0xac; // accesses: 1
-    uint field_0xb0; // accesses: 3
+    int field_0xb0; // accesses: 3
     byte _padding_0xb4[32];
     CGameCtnChallenge * field_0xd4; // accesses: 3
     int field_0xd8; // accesses: 3
     byte _padding_0xdc[204];
     int field_0x1a8; // accesses: 2
+    byte _final_padding[0x4c]; // Total size: 0x1f8
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetStartLight(CGameCtnChallenge *this,CGameCtnChallenge *param_1,ulong param_2);

@@ -5,7 +5,7 @@
 
 struct CFastArray<struct_SGameCtnIdentifier> {
     void** vftable; // accesses: 2
-    undefined4 * field_0x4; // accesses: 3
+    int field_0x4; // accesses: 3
 
     // Member Functions
     int __thiscall IsEmpty(void *this,SShaderCustom *param_1);

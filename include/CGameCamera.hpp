@@ -6,14 +6,10 @@
 struct CSceneCamera;
 
 struct CGameCamera {
-    byte _padding_0x0[68];
-    undefined4 field_0x44; // accesses: 1
-    undefined4 field_0x48; // accesses: 1
-    undefined4 field_0x4c; // accesses: 1
-    undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 1
-    undefined4 field_0x58; // accesses: 2
-    undefined4 field_0x5c; // accesses: 2
+    void** vftable;
+    byte _padding_0x4[84];
+    undefined4 field_0x58; // accesses: 1
+    undefined4 field_0x5c; // accesses: 1
     undefined4 field_0x60; // accesses: 1
     undefined4 field_0x64; // accesses: 1
     undefined4 field_0x68; // accesses: 1

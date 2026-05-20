@@ -17,7 +17,7 @@ struct CGameCtnMediaClipViewer {
     undefined4 field_0x20; // accesses: 1
     undefined4 field_0x24; // accesses: 2
     CGameCtnMediaClipViewer * field_0x28; // accesses: 1
-    CGameCtnMediaClipPlayer * field_0x2c; // accesses: 13
+    CMwNod * field_0x2c; // accesses: 13
     CGameCtnMediaClipPlayer * field_0x30; // accesses: 23
     CMwNod * field_0x34; // accesses: 6
     CMwNod * field_0x38; // accesses: 7
@@ -25,7 +25,7 @@ struct CGameCtnMediaClipViewer {
     byte _padding_0x40[4];
     CGameCtnMediaClipGroup * field_0x44; // accesses: 11
     undefined4 field_0x48; // accesses: 1
-    CGameCtnMediaClipPlayer * field_0x4c; // accesses: 12
+    CMwNod * field_0x4c; // accesses: 12
     undefined4 field_0x50; // accesses: 1
     undefined4 field_0x54; // accesses: 1
     undefined4 field_0x58; // accesses: 1

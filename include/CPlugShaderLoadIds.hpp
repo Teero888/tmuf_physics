@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugShaderLoadIds {
-    byte _padding_0x0[16];
+    void** vftable;
+    byte _padding_0x4[12];
     int field_0x10; // accesses: 1
 
     // Member Functions

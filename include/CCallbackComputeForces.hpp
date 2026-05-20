@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CCallbackComputeForces {
+    void** vftable;
 
     // Member Functions
     void __thiscall ComputeForces (CCallbackComputeForces *this,CCallbackSceneToyBroomStickComputeForces *param_1, CHmsItem *param_2,float param_3);

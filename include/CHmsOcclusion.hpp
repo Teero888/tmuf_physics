@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CHmsOcclusion {
-    byte _padding_0x0[4];
+    void** vftable;
     float field_0x4; // accesses: 1
     float field_0x8; // accesses: 1
     float field_0xc; // accesses: 1

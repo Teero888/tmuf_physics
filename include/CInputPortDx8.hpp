@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CInputPortDx8 {
-    byte _padding_0x0[32];
+    void** vftable;
+    byte _padding_0x4[28];
     int field_0x20; // accesses: 3
     byte _padding_0x24[16];
     int field_0x34; // accesses: 2
@@ -20,6 +21,7 @@ struct CInputPortDx8 {
     int field_0xe8; // accesses: 1
     byte _padding_0xec[8];
     uint field_0xf4; // accesses: 3
+    byte _final_padding[0x4]; // Total size: 0xfc
 
     // Member Functions
     void __thiscall ApplyMouseSettings(CInputPortDx8 *this,CInputPortDx8 *param_1);

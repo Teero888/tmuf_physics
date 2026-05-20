@@ -10,7 +10,8 @@ struct CSceneObject;
 struct GmIso3;
 
 struct CGameAdvertising {
-    byte _padding_0x0[40];
+    void** vftable;
+    byte _padding_0x4[36];
     CFastString * field_0x28; // accesses: 3
     byte _padding_0x2c[44];
     CGameAdvertisingRadial * field_0x58; // accesses: 1
@@ -20,6 +21,7 @@ struct CGameAdvertising {
     int field_0xc8; // accesses: 3
     CMwNod * field_0xcc; // accesses: 17
     GmIso3 * field_0xd0; // accesses: 6
+    byte _final_padding[0xc]; // Total size: 0xe0
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ImpressionHelpers_Update(CGameAdvertising *this,CGameAdvertising *param_1);

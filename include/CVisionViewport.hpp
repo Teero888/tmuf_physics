@@ -42,9 +42,7 @@ struct CVisionViewport {
     };
 
     void** vftable; // accesses: 5
-    byte _padding_0x4[48];
-    int field_0x34; // accesses: 1
-    byte _padding_0x38[424];
+    byte _padding_0x4[476];
     undefined4 field_0x1e0; // accesses: 1
     undefined4 field_0x1e4; // accesses: 1
     undefined4 field_0x1e8; // accesses: 1

@@ -7,7 +7,7 @@ struct CSceneVehicleTunings {
     void** vftable; // accesses: 2
     byte _padding_0x4[28];
     undefined4 field_0x20; // accesses: 1
-    undefined4 field_0x24; // accesses: 3
+    uint field_0x24; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Get (CSceneVehicleTunings *this,CPlugBlendShapes *param_1,CMwStack *param_2, CMwValueStd *param_3);

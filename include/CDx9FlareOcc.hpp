@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CDx9FlareOcc {
-    byte _padding_0x0[28];
+    void** vftable;
+    byte _padding_0x4[24];
     undefined4 field_0x1c; // accesses: 1
     byte _padding_0x20[4];
     undefined4 field_0x24; // accesses: 1

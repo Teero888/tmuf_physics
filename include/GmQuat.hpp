@@ -4,10 +4,10 @@
 #include "typedefs.h"
 
 struct GmQuat {
-    void** vftable; // accesses: 20
-    float field_0x4; // accesses: 16
-    GmQuat * field_0x8; // accesses: 18
-    float field_0xc; // accesses: 17
+    float field_0x0; // accesses: 13
+    float field_0x4; // accesses: 14
+    float field_0x8; // accesses: 15
+    float field_0xc; // accesses: 15
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ArchiveGmQuatCompact(void *this,GmQuat *param_1,CClassicArchive *param_2);

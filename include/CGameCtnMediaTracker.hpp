@@ -13,7 +13,8 @@ struct CGameCtnMediaClipPlayer;
 struct CGameSafeFrame;
 
 struct CGameCtnMediaTracker {
-    byte _padding_0x0[32];
+    void** vftable;
+    byte _padding_0x4[28];
     CGameCtnChallenge * field_0x20; // accesses: 2
     byte _padding_0x24[8];
     int field_0x2c; // accesses: 1
@@ -24,21 +25,21 @@ struct CGameCtnMediaTracker {
     byte _padding_0xb0[4];
     CGameCtnMediaClipPlayer * field_0xb4; // accesses: 16
     byte _padding_0xb8[20];
-    CControlTimeLine2 * field_0xcc; // accesses: 9
+    int * field_0xcc; // accesses: 9
     byte _padding_0xd0[12];
     int field_0xdc; // accesses: 1
     byte _padding_0xe0[28];
-    undefined4 field_0xfc; // accesses: 2
+    int field_0xfc; // accesses: 2
     byte _padding_0x100[24];
-    undefined4 field_0x118; // accesses: 2
+    int field_0x118; // accesses: 2
     int field_0x11c; // accesses: 7
     int * field_0x120; // accesses: 2
     byte _padding_0x124[108];
-    undefined4 field_0x190; // accesses: 10
+    int field_0x190; // accesses: 10
     int field_0x194; // accesses: 1
-    int field_0x198; // accesses: 5
+    CGameCtnCursor * field_0x198; // accesses: 5
     byte _padding_0x19c[116];
-    undefined4 field_0x210; // accesses: 2
+    int field_0x210; // accesses: 2
     byte _padding_0x214[20];
     CControlSimi2 * field_0x228; // accesses: 3
     byte _padding_0x22c[92];
@@ -53,6 +54,7 @@ struct CGameCtnMediaTracker {
     byte _padding_0x3f0[92];
     int field_0x44c; // accesses: 4
     int * field_0x450; // accesses: 4
+    byte _final_padding[0x10]; // Total size: 0x464
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CGameCtnMediaTracker *this,CInputPortDx8 *param_1);

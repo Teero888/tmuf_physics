@@ -3,13 +3,11 @@
 
 #include "typedefs.h"
 
-struct CDx9IndexBuffer;
-
 struct CVisionShaderKeeper {
     void** vftable; // accesses: 2
     byte _padding_0x4[4];
     CVisionShaderKeeper * field_0x8; // accesses: 4
-    CDx9IndexBuffer * field_0xc; // accesses: 2
+    CVisionShaderKeeper * field_0xc; // accesses: 2
     uint field_0x10; // accesses: 16
 
     // Member Functions

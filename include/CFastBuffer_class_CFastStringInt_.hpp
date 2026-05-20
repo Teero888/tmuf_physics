@@ -5,7 +5,7 @@
 
 struct CFastBuffer<class_CFastStringInt> {
     void** vftable; // accesses: 3
-    void * field_0x4; // accesses: 4
+    int field_0x4; // accesses: 4
 
     // Member Functions
     SBitmapSpecular * __thiscall InsertNewElemAt (void *this,CFastBuffer<struct_CVisionViewportDx9::SBitmapSpecular> *param_1,ulong param_2 );

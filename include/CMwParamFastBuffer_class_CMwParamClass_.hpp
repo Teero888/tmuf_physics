@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMwParamFastBuffer<class_CMwParamClass> {
+    void** vftable;
 
     // Member Functions
     ulong __cdecl SubValue (CFastBufferCat<class_GmVec2,struct_SFastCat> *param_1,CMwStack *param_2,void *param_3);

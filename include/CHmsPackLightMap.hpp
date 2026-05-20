@@ -6,7 +6,8 @@
 struct CMwNod;
 
 struct CHmsPackLightMap {
-    byte _padding_0x0[20];
+    void** vftable;
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 2
     undefined4 field_0x18; // accesses: 2
     byte _padding_0x1c[4];
@@ -14,12 +15,11 @@ struct CHmsPackLightMap {
     byte _padding_0x24[8];
     undefined4 field_0x2c; // accesses: 2
     int field_0x30; // accesses: 1
-    byte _padding_0x34[20];
-    int field_0x48; // accesses: 6
-    byte _padding_0x4c[368];
+    byte _padding_0x34[392];
     CHmsPackLightMap * field_0x1bc; // accesses: 3
     byte _padding_0x1c0[4];
-    undefined4 field_0x1c4; // accesses: 6
+    int field_0x1c4; // accesses: 6
+    byte _final_padding[0x150]; // Total size: 0x318
 
     // Member Functions
     EDbgLight __thiscall DynaDbgLightGet(CHmsPackLightMap *this,CHmsPackLightMap *param_1);

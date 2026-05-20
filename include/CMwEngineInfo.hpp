@@ -5,7 +5,6 @@
 
 struct CMwEngineInfo {
     void** vftable; // accesses: 1
-    uint field_0x4; // accesses: 3
 
     // Member Functions
     void __thiscall AddClass(CMwEngineInfo *this,CMwEngineInfo *param_1,CMwClassInfo *param_2);

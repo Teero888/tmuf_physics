@@ -3,12 +3,8 @@
 
 #include "typedefs.h"
 
-struct SVehicleCarState;
-struct uchar;
-struct ushort;
-
 struct SVehicleSimpleState_ReplayAfter081205 {
-    void** vftable; // accesses: 2
+    ushort field_0x0; // accesses: 2
     ushort field_0x2; // accesses: 2
     ushort field_0x4; // accesses: 2
     ushort field_0x6; // accesses: 2
@@ -29,7 +25,7 @@ struct SVehicleSimpleState_ReplayAfter081205 {
     byte field_0x19; // accesses: 2
     byte field_0x1a; // accesses: 2
     byte field_0x1b; // accesses: 2
-    byte field_0x1c; // accesses: 16
+    uint field_0x1c; // accesses: 16
     byte field_0x1d; // accesses: 2
     byte field_0x1e; // accesses: 2
     byte field_0x1f; // accesses: 1

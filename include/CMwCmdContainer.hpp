@@ -6,7 +6,7 @@
 struct CMwCmdContainer {
     void** vftable; // accesses: 1
     byte _padding_0x4[28];
-    undefined4 field_0x20; // accesses: 2
+    int field_0x20; // accesses: 2
 
     // Member Functions
     CMwCmdFastCall * __thiscall AddFastCall (CMwCmdContainer *this,CMwCmdContainer *param_1,CMwNod *param_2, _func___cdecl_void *param_3,ulong param_4);

@@ -8,29 +8,28 @@ struct CMwCmdBuffer;
 struct CMwTimer;
 struct CMwTimerAdapter;
 struct CPlugAudio;
-struct ulong;
 
 struct CMwCmdBufferCore {
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 2
     byte _padding_0x4[16];
     CPlugAudio * field_0x14; // accesses: 2
-    undefined4 field_0x18; // accesses: 4
+    CMwTimer * field_0x18; // accesses: 4
     byte _padding_0x1c[16];
     CMwCmdBuffer * field_0x2c; // accesses: 10
-    undefined4 field_0x30; // accesses: 7
+    int field_0x30; // accesses: 7
     undefined4 field_0x34; // accesses: 5
-    undefined4 field_0x38; // accesses: 5
-    ulong field_0x3c; // accesses: 6
-    uint field_0x40; // accesses: 6
+    int field_0x38; // accesses: 5
+    int field_0x3c; // accesses: 6
+    undefined4 field_0x40; // accesses: 6
     undefined4 field_0x44; // accesses: 1
     undefined4 field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
     undefined4 field_0x50; // accesses: 1
     byte _padding_0x54[4];
-    undefined4 field_0x58; // accesses: 5
+    uint field_0x58; // accesses: 5
     undefined4 field_0x5c; // accesses: 4
-    undefined4 field_0x60; // accesses: 6
-    undefined4 field_0x64; // accesses: 5
+    int field_0x60; // accesses: 6
+    CMwCmdBufferCore * field_0x64; // accesses: 5
     undefined4 field_0x68; // accesses: 4
     byte _padding_0x6c[8];
     undefined4 field_0x74; // accesses: 1
@@ -38,10 +37,11 @@ struct CMwCmdBufferCore {
     undefined4 field_0xb4; // accesses: 1
     undefined4 field_0xb8; // accesses: 1
     CMwTimerAdapter * field_0xbc; // accesses: 5
-    undefined4 field_0xc0; // accesses: 5
-    undefined4 field_0xc4; // accesses: 3
+    int field_0xc0; // accesses: 5
+    CMwCmdBufferCore * field_0xc4; // accesses: 3
     byte _padding_0xc8[56];
     CMwCmdBuffer * field_0x100; // accesses: 19
+    byte _final_padding[0x4]; // Total size: 0x108
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ForceFpuCwForSimulationX86(char *param_1);

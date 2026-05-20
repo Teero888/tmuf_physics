@@ -6,7 +6,7 @@
 struct CMwNod;
 
 struct CControlStyle {
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 1
     byte _padding_0x4[20];
     undefined4 field_0x18; // accesses: 1
     CMwNod * field_0x1c; // accesses: 4

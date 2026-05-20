@@ -3,13 +3,9 @@
 
 #include "typedefs.h"
 
-struct CMwNod;
-
 struct CFuncColorGradient {
-    void** vftable; // accesses: 7
-    float field_0x4; // accesses: 5
-    float field_0x8; // accesses: 4
-    byte _padding_0xc[8];
+    void** vftable;
+    byte _padding_0x4[16];
     float field_0x14; // accesses: 2
     float field_0x18; // accesses: 2
     float field_0x1c; // accesses: 2

@@ -8,7 +8,8 @@ struct CHmsLight;
 struct CSceneLight {
     void** vftable; // accesses: 1
     byte _padding_0x4[44];
-    int field_0x30; // accesses: 4
+    CHmsLight * field_0x30; // accesses: 4
+    byte _final_padding[0x4]; // Total size: 0x38
 
     // Member Functions
     ESceneLight __thiscall GetKindLight(CSceneLight *this,CSceneLight *param_1);

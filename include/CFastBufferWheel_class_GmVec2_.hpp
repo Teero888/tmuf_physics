@@ -3,14 +3,12 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBufferWheel<class_GmVec2> {
     void** vftable; // accesses: 6
     int field_0x4; // accesses: 3
     uint field_0x8; // accesses: 6
-    undefined4 field_0xc; // accesses: 12
-    ulong field_0x10; // accesses: 3
+    int field_0xc; // accesses: 12
+    int field_0x10; // accesses: 3
 
     // Member Functions
     SHistoryPoint * __thiscall InsertNewElemFromStart (void *this,CFastBufferWheel<struct_CHmsDyna::SHistoryPoint> *param_1,ulong param_2);

@@ -11,14 +11,14 @@ struct CGbxGame {
     void** vftable; // accesses: 1
     byte _padding_0x4[40];
     HINSTANCE field_0x2c; // accesses: 1
-    LPVOID field_0x30; // accesses: 8
+    CSystemConfig * field_0x30; // accesses: 8
     byte _padding_0x34[8];
     int field_0x3c; // accesses: 1
     byte _padding_0x40[16];
     HWND field_0x50; // accesses: 1
     byte _padding_0x54[40];
     undefined4 field_0x7c; // accesses: 1
-    DWORD field_0x80; // accesses: 3
+    wchar_t * field_0x80; // accesses: 3
     byte _padding_0x84[124];
     int field_0x100; // accesses: 2
     int field_0x104; // accesses: 1

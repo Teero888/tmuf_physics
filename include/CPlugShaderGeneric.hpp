@@ -4,33 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugShaderGeneric {
-    void** vftable; // accesses: 4
-    undefined4 field_0x4; // accesses: 3
-    undefined4 field_0x8; // accesses: 3
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[40];
-    undefined4 field_0x38; // accesses: 2
-    undefined4 field_0x3c; // accesses: 2
-    undefined4 field_0x40; // accesses: 2
-    float field_0x44; // accesses: 5
-    float field_0x48; // accesses: 5
-    float field_0x4c; // accesses: 4
-    float field_0x50; // accesses: 5
-    undefined4 field_0x54; // accesses: 1
-    undefined4 field_0x58; // accesses: 1
-    undefined4 field_0x5c; // accesses: 1
-    undefined4 field_0x60; // accesses: 1
-    undefined4 field_0x64; // accesses: 3
-    undefined4 field_0x68; // accesses: 3
-    undefined4 field_0x6c; // accesses: 3
-    undefined4 field_0x70; // accesses: 1
-    undefined4 field_0x74; // accesses: 1
-    undefined4 field_0x78; // accesses: 1
-    undefined4 field_0x7c; // accesses: 1
-    undefined4 field_0x80; // accesses: 1
-    undefined4 field_0x84; // accesses: 1
-    undefined4 field_0x88; // accesses: 1
-    uint field_0x8c; // accesses: 32
+    void** vftable; // accesses: 1
+    byte _final_padding[0x11]; // Total size: 0x15
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CPlugShaderGeneric(CPlugShaderGeneric *this,CPlugShaderGeneric *param_1);

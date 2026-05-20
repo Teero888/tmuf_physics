@@ -4,13 +4,13 @@
 #include "typedefs.h"
 
 struct GmMap2<unsigned_char> {
-    void** vftable; // accesses: 4
+    float field_0x0; // accesses: 4
     float field_0x4; // accesses: 4
     float field_0x8; // accesses: 4
     float field_0xc; // accesses: 4
-    undefined4 field_0x10; // accesses: 7
-    undefined4 field_0x14; // accesses: 5
-    char field_0x18; // accesses: 1
+    float field_0x10; // accesses: 7
+    float field_0x14; // accesses: 5
+    float field_0x18; // accesses: 1
 
     // Member Functions
     GmVec3 __thiscall GetValue(void *this,CFuncColorGradient *param_1,float param_2);

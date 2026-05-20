@@ -4,7 +4,6 @@
 #include "typedefs.h"
 
 struct CMwNod;
-struct ulong;
 
 struct CMwCmdFastCallUser {
     void** vftable; // accesses: 1

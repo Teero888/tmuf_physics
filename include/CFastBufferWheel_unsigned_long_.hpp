@@ -3,12 +3,10 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBufferWheel<unsigned_long> {
     void** vftable; // accesses: 4
     int field_0x4; // accesses: 2
-    ulong field_0x8; // accesses: 4
+    uint field_0x8; // accesses: 4
     undefined4 field_0xc; // accesses: 3
     ulong field_0x10; // accesses: 2
 

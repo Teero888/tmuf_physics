@@ -6,8 +6,9 @@
 struct CHmsItem;
 
 struct CSceneVehicleGlider {
-    byte _padding_0x0[40];
-    int field_0x28; // accesses: 8
+    void** vftable;
+    byte _padding_0x4[36];
+    CHmsItem * field_0x28; // accesses: 8
     byte _padding_0x2c[692];
     float field_0x2e0; // accesses: 1
     float field_0x2e4; // accesses: 1

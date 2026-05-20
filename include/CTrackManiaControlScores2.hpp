@@ -16,7 +16,7 @@ struct CTrackManiaControlScores2 {
     int field_0x1c4; // accesses: 1
     int field_0x1c8; // accesses: 1
     byte _padding_0x1cc[24];
-    undefined4 field_0x1e4; // accesses: 4
+    int field_0x1e4; // accesses: 4
     CControlBase * field_0x1e8; // accesses: 2
     CControlBase * field_0x1ec; // accesses: 2
     byte _padding_0x1f0[4];
@@ -25,7 +25,7 @@ struct CTrackManiaControlScores2 {
     CControlBase * field_0x1fc; // accesses: 1
     byte _padding_0x200[20];
     int field_0x214; // accesses: 5
-    undefined4 field_0x218; // accesses: 4
+    int field_0x218; // accesses: 4
     uint field_0x21c; // accesses: 4
     int field_0x220; // accesses: 1
     undefined4 field_0x224; // accesses: 3

@@ -3,20 +3,12 @@
 
 #include "typedefs.h"
 
-struct CFastString;
-struct CSystemFid;
-struct CSystemFids;
-struct ulong;
-
 struct CMwNod {
-    void** vftable; // accesses: 27
-    ulong field_0x4; // accesses: 9
-    undefined4 field_0x8; // accesses: 3
+    void** vftable; // accesses: 13
+    CMwNod * field_0x4; // accesses: 9
+    undefined4 field_0x8; // accesses: 2
     void * field_0xc; // accesses: 16
-    CMwNod * field_0x10; // accesses: 15
-    CSystemFids * field_0x14; // accesses: 1
-    int field_0x18; // accesses: 11
-    undefined4 field_0x1c; // accesses: 1
+    CMwNod * field_0x10; // accesses: 11
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall Param_Check(CMwNod *this,CMwNod *param_1,CMwStack *param_2);

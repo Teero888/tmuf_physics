@@ -7,24 +7,18 @@ struct CSystemFids;
 struct CSystemFidsFolder;
 
 struct CSystemPackManager {
-    void** vftable; // accesses: 5
-    short * field_0x4; // accesses: 2
-    int field_0x8; // accesses: 1
-    byte _padding_0xc[8];
-    int field_0x14; // accesses: 1
-    byte _padding_0x18[8];
+    void** vftable;
+    byte _padding_0x4[28];
     int field_0x20; // accesses: 1
     void * field_0x24; // accesses: 1
     byte _padding_0x28[4];
     code * field_0x2c; // accesses: 1
     byte _padding_0x30[8];
-    int field_0x38; // accesses: 3
-    int field_0x3c; // accesses: 3
-    int field_0x40; // accesses: 2
-    byte _padding_0x44[4];
-    int field_0x48; // accesses: 2
-    CSystemFids * field_0x4c; // accesses: 1
-    CSystemFids * field_0x50; // accesses: 3
+    code * field_0x38; // accesses: 2
+    code * field_0x3c; // accesses: 2
+    int field_0x40; // accesses: 1
+    byte _padding_0x44[12];
+    CSystemFidsFolder * field_0x50; // accesses: 3
     byte _padding_0x54[24];
     int field_0x6c; // accesses: 1
 

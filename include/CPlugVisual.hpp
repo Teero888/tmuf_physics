@@ -4,26 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugVisual {
-    void** vftable; // accesses: 8
-    undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
-    undefined4 field_0x10; // accesses: 1
-    undefined4 field_0x14; // accesses: 3
-    byte _padding_0x18[4];
-    uint field_0x1c; // accesses: 15
-    byte _padding_0x20[20];
-    undefined4 field_0x34; // accesses: 2
-    undefined4 field_0x38; // accesses: 2
-    undefined4 field_0x3c; // accesses: 2
-    undefined4 field_0x40; // accesses: 2
-    undefined4 field_0x44; // accesses: 2
-    undefined4 field_0x48; // accesses: 2
-    undefined4 field_0x4c; // accesses: 1
-    byte _padding_0x50[28];
-    undefined4 field_0x6c; // accesses: 1
-    undefined4 field_0x70; // accesses: 1
-    undefined4 field_0x74; // accesses: 1
+    void** vftable; // accesses: 6
+    byte _final_padding[0x6]; // Total size: 0xa
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall AddTexCoordSet (CPlugVisual *this,CPlugVisualSprite *param_1,float param_2,float param_3,ulong param_4, float param_5,float param_6);

@@ -6,14 +6,15 @@
 struct GmMat2;
 
 struct CMotionTrackMobilPitchin {
-    byte _padding_0x0[84];
+    void** vftable;
+    byte _padding_0x4[80];
     float field_0x54; // accesses: 2
     byte _padding_0x58[12];
     float field_0x64; // accesses: 4
     float field_0x68; // accesses: 4
     float field_0x6c; // accesses: 3
     undefined4 field_0x70; // accesses: 2
-    float field_0x74; // accesses: 2
+    undefined4 field_0x74; // accesses: 2
     undefined4 field_0x78; // accesses: 2
     undefined4 field_0x7c; // accesses: 2
     float field_0x80; // accesses: 2

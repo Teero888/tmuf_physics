@@ -4,21 +4,20 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct CHmsPortal;
 struct CMwNod;
 struct CPlugSolid;
 struct CSceneToyMotorbike;
-struct ulong;
-struct ushort;
 
 struct CHmsItem {
     struct CCallback {
+        void** vftable; // accesses: 1
 
         // Member Functions
         void __thiscall ~CCallback(CCallback *this,CCallback *param_1);
     };
 
     struct CCallbackRenderBeforeTree {
+        void** vftable; // accesses: 1
 
         // Member Functions
         void __thiscall ~CCallbackRenderBeforeTree (CCallbackRenderBeforeTree *this,CCallbackRenderBeforeTree *param_1);
@@ -37,29 +36,23 @@ struct CHmsItem {
         void __thiscall ~SCallbackList(void *this,SCallbackList *param_1);
     };
 
-    void** vftable; // accesses: 21
-    float field_0x4; // accesses: 11
-    float field_0x8; // accesses: 11
-    float field_0xc; // accesses: 2
-    float field_0x10; // accesses: 2
-    CClassicArchive * field_0x14; // accesses: 16
-    ulong field_0x18; // accesses: 110
-    EDynamicType field_0x1c; // accesses: 73
-    ushort field_0x20; // accesses: 32
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
+    CPlugSolid * field_0x14; // accesses: 14
+    uint field_0x18; // accesses: 106
+    uint field_0x1c; // accesses: 69
+    ushort field_0x20; // accesses: 28
     byte _padding_0x22[2];
-    void * field_0x24; // accesses: 9
-    float field_0x28; // accesses: 1
-    float field_0x2c; // accesses: 1
+    int * field_0x24; // accesses: 8
+    byte _padding_0x28[8];
     undefined4 field_0x30; // accesses: 1
-    byte _padding_0x34[8];
-    undefined4 field_0x3c; // accesses: 1
-    int * field_0x40; // accesses: 3
+    byte _padding_0x34[12];
+    char * field_0x40; // accesses: 2
     CMwNod * field_0x44; // accesses: 3
-    short field_0x48; // accesses: 5
-    byte _padding_0x4a[2];
-    undefined4 field_0x4c; // accesses: 4
+    int field_0x48; // accesses: 4
+    int field_0x4c; // accesses: 4
     undefined4 field_0x50; // accesses: 1
-    void * field_0x54; // accesses: 3
+    undefined4 field_0x54; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetAsyncBlendBetweenPreviousAndNextStates(CHmsItem *this,CHmsItem *param_1);

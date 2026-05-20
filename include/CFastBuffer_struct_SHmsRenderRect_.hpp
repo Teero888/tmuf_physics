@@ -5,7 +5,7 @@
 
 struct CFastBuffer<struct_SHmsRenderRect> {
     void** vftable; // accesses: 3
-    void * field_0x4; // accesses: 4
+    int field_0x4; // accesses: 4
     uint field_0x8; // accesses: 1
 
     // Member Functions

@@ -4,13 +4,13 @@
 #include "typedefs.h"
 
 struct TiXmlDocument {
-    void** vftable; // accesses: 4
+    undefined ** field_0x0; // accesses: 3
     undefined4 field_0x4; // accesses: 6
     undefined4 field_0x8; // accesses: 6
     byte _padding_0xc[12];
     int field_0x18; // accesses: 1
     byte _padding_0x1c[20];
-    undefined4 field_0x30; // accesses: 3
+    TiXmlDocument * field_0x30; // accesses: 3
     undefined4 * field_0x34; // accesses: 1
     undefined4 field_0x38; // accesses: 1
     undefined4 field_0x3c; // accesses: 5

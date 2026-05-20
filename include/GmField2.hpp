@@ -5,7 +5,7 @@
 
 struct GmField2 {
     byte _padding_0x0[28];
-    int field_0x1c; // accesses: 1
+    float field_0x1c; // accesses: 1
     byte _padding_0x20[4];
     float field_0x24; // accesses: 1
 

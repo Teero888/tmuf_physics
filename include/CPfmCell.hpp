@@ -6,19 +6,17 @@
 struct GmVec2;
 
 struct CPfmCell {
-    void** vftable; // accesses: 5
-    undefined4 field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 3
-    byte _padding_0xc[20];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[28];
     undefined4 field_0x20; // accesses: 3
     float field_0x24; // accesses: 3
-    float field_0x28; // accesses: 5
+    undefined4 field_0x28; // accesses: 5
     undefined4 field_0x2c; // accesses: 1
     float field_0x30; // accesses: 3
-    float field_0x34; // accesses: 5
+    undefined4 field_0x34; // accesses: 5
     undefined4 field_0x38; // accesses: 1
     float field_0x3c; // accesses: 4
-    float field_0x40; // accesses: 6
+    undefined4 field_0x40; // accesses: 6
     float field_0x44; // accesses: 1
     float field_0x48; // accesses: 1
     float field_0x4c; // accesses: 1

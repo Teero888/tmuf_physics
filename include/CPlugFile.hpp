@@ -7,8 +7,6 @@ struct CSystemFidFile;
 
 struct CPlugFile {
     void** vftable; // accesses: 1
-    byte _padding_0x4[4];
-    CSystemFidFile * field_0x8; // accesses: 1
 
     // Member Functions
     CPlugFile * __cdecl CreateFromFid(CSystemFidFile *param_1);

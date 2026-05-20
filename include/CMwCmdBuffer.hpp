@@ -6,11 +6,11 @@
 struct CMwCmd;
 
 struct CMwCmdBuffer {
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 2
     byte _padding_0x4[16];
-    uint field_0x14; // accesses: 7
-    undefined4 field_0x18; // accesses: 2
-    uint field_0x1c; // accesses: 9
+    int field_0x14; // accesses: 7
+    CMwCmd * field_0x18; // accesses: 2
+    int field_0x1c; // accesses: 9
     byte _padding_0x20[36];
     undefined4 field_0x44; // accesses: 4
 

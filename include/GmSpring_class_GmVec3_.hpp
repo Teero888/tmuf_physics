@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmSpring<class_GmVec3> {
-    void** vftable; // accesses: 1
+    float field_0x0; // accesses: 1
     float field_0x4; // accesses: 1
     float field_0x8; // accesses: 4
     float field_0xc; // accesses: 4

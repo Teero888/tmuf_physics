@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CDx9VisualKeeper {
-    void** vftable; // accesses: 15
-    uint field_0x4; // accesses: 20
+    void** vftable;
+    int * field_0x4; // accesses: 20
     byte _padding_0x8[144];
     int field_0x98; // accesses: 2
 

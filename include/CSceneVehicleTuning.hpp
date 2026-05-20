@@ -5,16 +5,10 @@
 
 struct CClassicArchive;
 struct CFuncKeysReal;
-struct CFuncSegment;
 struct CMwNod;
 
 struct CSceneVehicleTuning {
     void** vftable; // accesses: 2
-    byte _padding_0x4[20];
-    undefined4 field_0x18; // accesses: 1
-    undefined4 field_0x1c; // accesses: 1
-    undefined4 field_0x20; // accesses: 1
-    CClassicArchive * field_0x24; // accesses: 15
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleTuning(CSceneVehicleTuning *this,CSceneVehicleTuning *param_1);

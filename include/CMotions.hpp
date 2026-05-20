@@ -8,9 +8,7 @@ struct GxTexCoordSet;
 
 struct CMotions {
     void** vftable; // accesses: 1
-    byte _padding_0x4[4];
-    short field_0x8; // accesses: 1
-    byte _padding_0xa[22];
+    byte _padding_0x4[28];
     CMotionTrack * field_0x20; // accesses: 3
 
     // Member Functions

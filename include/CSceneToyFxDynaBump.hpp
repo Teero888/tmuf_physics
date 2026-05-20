@@ -11,7 +11,7 @@ struct CSceneToyFxDynaBump {
     byte _padding_0x4[36];
     CHmsItem * field_0x28; // accesses: 1
     byte _padding_0x2c[64];
-    undefined4 field_0x6c; // accesses: 5
+    int field_0x6c; // accesses: 5
     float field_0x70; // accesses: 7
     float field_0x74; // accesses: 7
     float field_0x78; // accesses: 10
@@ -20,7 +20,7 @@ struct CSceneToyFxDynaBump {
     float field_0x84; // accesses: 4
     float field_0x88; // accesses: 4
     float field_0x8c; // accesses: 4
-    undefined4 field_0x90; // accesses: 3
+    int field_0x90; // accesses: 3
     CPlugMaterialFx * field_0x94; // accesses: 6
     byte _padding_0x98[4];
     float * field_0x9c; // accesses: 2
@@ -31,7 +31,7 @@ struct CSceneToyFxDynaBump {
     byte _padding_0xb0[4];
     float * field_0xb4; // accesses: 3
     byte _padding_0xb8[4];
-    GmVec4 * field_0xbc; // accesses: 3
+    float * field_0xbc; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateAsync(CSceneToyFxDynaBump *this,CInputPortDx8 *param_1);

@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct GmFunc {
+    // No fields detected
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __cdecl AsinSafe(float param_1);

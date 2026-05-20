@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct SFastTokenInt {
-    void** vftable; // accesses: 1
+    uint field_0x0; // accesses: 1
     undefined4 field_0x4; // accesses: 2
     undefined * field_0x8; // accesses: 3
     undefined4 field_0xc; // accesses: 1

@@ -4,9 +4,9 @@
 #include "typedefs.h"
 
 struct GmSurfPolygon {
-    void** vftable; // accesses: 1
+    undefined ** field_0x0; // accesses: 1
     byte _padding_0x4[68];
-    undefined4 field_0x48; // accesses: 1
+    float field_0x48; // accesses: 1
 
     // Member Functions
     void __thiscall GmSurfPolygon(GmSurfPolygon *this,GmSurfPolygon *param_1,uchar param_2);

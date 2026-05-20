@@ -4,12 +4,8 @@
 #include "typedefs.h"
 
 struct GmVec2 {
-    void** vftable; // accesses: 56
-    int field_0x4; // accesses: 53
-    float field_0x8; // accesses: 8
-    float field_0xc; // accesses: 1
-    float field_0x10; // accesses: 1
-    float field_0x14; // accesses: 1
+    float field_0x0; // accesses: 21
+    float field_0x4; // accesses: 20
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __cdecl IsInTriangle (GmVec2 *param_1,GmVec2 *param_2,GmVec2 *param_3,GmVec2 *param_4,float *param_5, float *param_6,int *param_7);

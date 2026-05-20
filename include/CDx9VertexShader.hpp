@@ -6,8 +6,8 @@
 struct SPlugFaceCull;
 
 struct CDx9VertexShader {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
+    void** vftable;
+    SPlugFaceCull * field_0x4; // accesses: 2
 
     // Member Functions
     int __cdecl FilterSetVertexShader(CDx9VertexShader *param_1);

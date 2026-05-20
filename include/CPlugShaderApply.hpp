@@ -5,16 +5,14 @@
 
 struct CPlugShaderApply {
     void** vftable; // accesses: 2
-    byte _padding_0x4[16];
-    int field_0x14; // accesses: 1
-    byte _padding_0x18[4];
-    uint field_0x1c; // accesses: 4
+    byte _padding_0x4[28];
     EGxTexOp field_0x20; // accesses: 2
     byte _padding_0x24[108];
     undefined4 field_0x90; // accesses: 1
     byte _padding_0x94[8];
-    EGxAlphaCmp field_0x9c; // accesses: 10
-    undefined4 field_0xa0; // accesses: 3
+    uint field_0x9c; // accesses: 10
+    uint field_0xa0; // accesses: 3
+    byte _final_padding[0x4]; // Total size: 0xa8
 
     // Member Functions
     CPlugBitmapApply * __thiscall AddTextureApply (CPlugShaderApply *this,CPlugShaderApply *param_1,CPlugBitmap *param_2,EGxTexOp param_3, ulong param_4);

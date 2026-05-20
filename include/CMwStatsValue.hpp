@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CMwStatsValue {
-    void** vftable; // accesses: 2
-    undefined2 * field_0x4; // accesses: 1
+    void** vftable;
+    byte _final_padding[0x11]; // Total size: 0x15
 
     // Member Functions
     void __thiscall SetSize(CMwStatsValue *this,CMwStatsValue *param_1,ulong param_2);

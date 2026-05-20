@@ -4,15 +4,10 @@
 #include "typedefs.h"
 
 struct CHmsItem;
-struct CHmsStateDyna;
-struct CMwCmdScriptVarBool;
 struct GmMat3;
 struct GmQuat;
-struct SHistoryPoint;
 
 struct CHmsDyna {
-    struct CMwCmdScriptVarBool;
-
     struct CHmsStateDyna {
         void** vftable; // accesses: 2
         int field_0x4; // accesses: 2
@@ -44,42 +39,13 @@ struct CHmsDyna {
         void __thiscall RestoreState (void *this,CHmsStateDyna *param_1,CClassicBufferMemory *param_2,uchar param_3);
     };
 
-    void** vftable; // accesses: 25
-    float field_0x4; // accesses: 23
-    float field_0x8; // accesses: 22
-    float field_0xc; // accesses: 3
-    byte _padding_0x10[20];
-    float field_0x24; // accesses: 1
-    float field_0x28; // accesses: 1
-    float field_0x2c; // accesses: 1
-    byte _padding_0x30[4];
-    float field_0x34; // accesses: 1
-    float field_0x38; // accesses: 1
-    float field_0x3c; // accesses: 1
-    float field_0x40; // accesses: 2
-    float field_0x44; // accesses: 2
-    float field_0x48; // accesses: 2
-    float field_0x4c; // accesses: 1
-    float field_0x50; // accesses: 1
-    float field_0x54; // accesses: 1
-    float field_0x58; // accesses: 7
-    float field_0x5c; // accesses: 7
-    float field_0x60; // accesses: 7
-    float field_0x64; // accesses: 1
-    float field_0x68; // accesses: 1
-    float field_0x6c; // accesses: 1
-    byte _padding_0x70[64];
-    SHistoryPoint * field_0xb0; // accesses: 1
-    SHistoryPoint * field_0xb4; // accesses: 1
-    SHistoryPoint * field_0xb8; // accesses: 1
-    SHistoryPoint * field_0xbc; // accesses: 1
-    SHistoryPoint * field_0xc0; // accesses: 3
-    SHistoryPoint * field_0xc4; // accesses: 3
-    byte _padding_0xc8[12];
-    SHistoryPoint * field_0xd4; // accesses: 1
-    SHistoryPoint * field_0xd8; // accesses: 1
-    SHistoryPoint * field_0xdc; // accesses: 1
-    byte _padding_0xe0[24];
+    void** vftable; // accesses: 1
+    undefined4 field_0x4; // accesses: 2
+    undefined4 field_0x8; // accesses: 1
+    byte _padding_0xc[180];
+    undefined4 field_0xc0; // accesses: 2
+    undefined4 field_0xc4; // accesses: 2
+    byte _padding_0xc8[48];
     float field_0xf8; // accesses: 1
     float field_0xfc; // accesses: 1
     float field_0x100; // accesses: 1
@@ -90,8 +56,8 @@ struct CHmsDyna {
     byte _padding_0x1c0[176];
     void * field_0x270; // accesses: 1
     byte _padding_0x274[180];
-    void * field_0x328; // accesses: 18
-    void * field_0x32c; // accesses: 33
+    GmQuat * field_0x328; // accesses: 18
+    CHmsStateDyna * field_0x32c; // accesses: 33
     byte _padding_0x330[12];
     undefined4 field_0x33c; // accesses: 5
     CHmsItem * field_0x340; // accesses: 7
@@ -156,7 +122,7 @@ struct CHmsDyna {
     byte _padding_0x4a4[60];
     undefined4 field_0x4e0; // accesses: 4
     byte _padding_0x4e4[52];
-    uint field_0x518; // accesses: 13
+    int field_0x518; // accesses: 13
     undefined4 field_0x51c; // accesses: 8
     undefined4 field_0x520; // accesses: 7
     undefined4 field_0x524; // accesses: 6

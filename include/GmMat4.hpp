@@ -4,16 +4,15 @@
 #include "typedefs.h"
 
 struct GmFrustum;
-struct GmVec4;
 
 struct GmMat4 {
-    void** vftable; // accesses: 20
-    float field_0x4; // accesses: 19
-    float field_0x8; // accesses: 19
-    float field_0xc; // accesses: 19
-    float field_0x10; // accesses: 19
-    float field_0x14; // accesses: 19
-    float field_0x18; // accesses: 16
+    float field_0x0; // accesses: 13
+    float field_0x4; // accesses: 13
+    float field_0x8; // accesses: 13
+    float field_0xc; // accesses: 13
+    float field_0x10; // accesses: 13
+    float field_0x14; // accesses: 13
+    float field_0x18; // accesses: 13
     float field_0x1c; // accesses: 13
     float field_0x20; // accesses: 13
     float field_0x24; // accesses: 13

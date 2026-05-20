@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CMwClassInfo {
-    byte _padding_0x0[4];
-    int field_0x4; // accesses: 2
+    void** vftable;
+    uint field_0x4; // accesses: 2
     CMwClassInfo * field_0x8; // accesses: 3
     byte _padding_0xc[12];
     CMwClassInfo * field_0x18; // accesses: 1

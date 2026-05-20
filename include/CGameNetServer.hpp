@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CGameNetServer {
+    void** vftable;
 
     // Member Functions
     CNetConnectedClient * __thiscall FindConnection(CGameNetServer *this,CGameNetServer *param_1,ulong param_2);

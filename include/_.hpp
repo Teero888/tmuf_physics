@@ -4,9 +4,9 @@
 #include "typedefs.h"
 
 struct > {
-    void** vftable; // accesses: 35
-    void * field_0x4; // accesses: 40
-    uint field_0x8; // accesses: 19
+    int field_0x0; // accesses: 28
+    int * field_0x4; // accesses: 32
+    uint field_0x8; // accesses: 11
     int field_0xc; // accesses: 17
     int field_0x10; // accesses: 2
 

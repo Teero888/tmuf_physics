@@ -6,18 +6,10 @@
 struct GmIso4;
 
 struct GmMat2 {
-    void** vftable; // accesses: 10
-    float field_0x4; // accesses: 9
-    float field_0x8; // accesses: 9
-    float field_0xc; // accesses: 9
-    undefined4 field_0x10; // accesses: 3
-    undefined4 field_0x14; // accesses: 3
-    undefined4 field_0x18; // accesses: 3
-    undefined4 field_0x1c; // accesses: 3
-    undefined4 field_0x20; // accesses: 3
-    undefined4 field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 1
-    undefined4 field_0x2c; // accesses: 1
+    GmIso4 * field_0x0; // accesses: 7
+    float field_0x4; // accesses: 6
+    float field_0x8; // accesses: 6
+    float field_0xc; // accesses: 6
 
     // Member Functions
     void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);

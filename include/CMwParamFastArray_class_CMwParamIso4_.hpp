@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMwParamFastArray<class_CMwParamIso4> {
+    void** vftable;
 
     // Member Functions
     GmVec4 * __cdecl GetElemFromStack (CFastBufferCat<class_GmVec4,struct_SFastCat> *param_1,CMwStack *param_2);

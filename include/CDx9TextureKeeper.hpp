@@ -3,35 +3,24 @@
 
 #include "typedefs.h"
 
-struct CPlugBitmap;
 struct CPlugFileImg;
-struct CSystemFidFile;
-struct CVisionViewportDx9;
-struct ulong;
 
 struct CDx9TextureKeeper {
-    void** vftable; // accesses: 11
-    undefined4 field_0x4; // accesses: 3
-    CPlugFileImg * field_0x8; // accesses: 7
-    CPlugBitmap * field_0xc; // accesses: 11
+    void** vftable; // accesses: 10
+    uint field_0x4; // accesses: 2
+    CPlugFileImg * field_0x8; // accesses: 4
+    int * field_0xc; // accesses: 11
     int field_0x10; // accesses: 5
-    undefined4 field_0x14; // accesses: 4
-    char field_0x18; // accesses: 2
-    byte _padding_0x19[3];
+    int field_0x14; // accesses: 4
+    uint field_0x18; // accesses: 2
     uint field_0x1c; // accesses: 2
-    byte field_0x20; // accesses: 18
-    byte _padding_0x21[3];
+    uint field_0x20; // accesses: 18
     CDx9TextureKeeper * field_0x24; // accesses: 7
     CDx9TextureKeeper * field_0x28; // accesses: 8
     uint field_0x2c; // accesses: 1
     int field_0x30; // accesses: 4
-    byte _padding_0x34[20];
-    CPlugFileImg * field_0x48; // accesses: 5
-    uint field_0x4c; // accesses: 8
-    CVisionViewportDx9 field_0x4d; // accesses: 1
-    uint field_0x50; // accesses: 2
-    byte _padding_0x54[32];
-    ulong field_0x74; // accesses: 7
+    byte _padding_0x34[64];
+    undefined4 field_0x74; // accesses: 6
     ulong field_0x78; // accesses: 6
     ulong field_0x7c; // accesses: 2
     undefined4 field_0x80; // accesses: 3

@@ -5,7 +5,6 @@
 
 struct CHmsItem;
 struct CMwCmdBlockMain;
-struct ulong;
 
 struct CSceneToyBroomstick {
     void** vftable; // accesses: 2
@@ -27,6 +26,7 @@ struct CSceneToyBroomstick {
     float field_0x178; // accesses: 3
     float field_0x17c; // accesses: 3
     float field_0x180; // accesses: 3
+    byte _final_padding[0x10]; // Total size: 0x194
 
     // Member Functions
     void __thiscall AbsorbContact (CSceneToyBroomstick *this,CSceneMobilAbsorbContact *param_1,CHmsItem *param_2, CHmsPhysicalContact *param_3);

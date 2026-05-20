@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct GmQuadTree<struct_SQuadTreeMeshUv> {
+    // No fields detected
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall BuildBintreeRecurse (void *this,GmQuadTree<struct_SQuadTreeMeshUv> *param_1,ulong param_2, SQuadTreeMeshUv *param_3,ulong param_4,ulong param_5,ulong param_6,float param_7);

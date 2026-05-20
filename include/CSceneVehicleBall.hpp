@@ -37,7 +37,7 @@ struct CSceneVehicleBall {
 
     void** vftable; // accesses: 1
     byte _padding_0x4[36];
-    int field_0x28; // accesses: 2
+    CHmsItem * field_0x28; // accesses: 2
     byte _padding_0x2c[36];
     undefined4 field_0x50; // accesses: 1
     undefined4 field_0x54; // accesses: 1
@@ -73,6 +73,7 @@ struct CSceneVehicleBall {
     float field_0x4cc; // accesses: 1
     float field_0x4d0; // accesses: 1
     float field_0x4d4; // accesses: 1
+    byte _final_padding[0x8]; // Total size: 0x4e0
 
     // Member Functions
     void __thiscall AfterContacts (CSceneVehicleBall *this,CCallbackSceneVehicleBallAfterContacts *param_1,CHmsItem *param_2 );

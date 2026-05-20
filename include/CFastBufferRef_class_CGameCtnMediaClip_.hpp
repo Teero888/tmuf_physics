@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBufferRef<class_CGameCtnMediaClip> {
     void** vftable; // accesses: 5
     int * field_0x4; // accesses: 4

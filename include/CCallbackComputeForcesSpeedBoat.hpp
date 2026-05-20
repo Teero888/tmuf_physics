@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CCallbackComputeForcesSpeedBoat {
+    void** vftable;
 
     // Member Functions
     void * __thiscall _vector_deleting_destructor_ (CCallbackComputeForcesSpeedBoat *this,CRpcCallInternal *param_1,uint param_2);

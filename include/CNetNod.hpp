@@ -4,9 +4,9 @@
 #include "typedefs.h"
 
 struct CNetNod {
-    void** vftable; // accesses: 11
+    void** vftable; // accesses: 7
     byte _padding_0x4[16];
-    undefined4 field_0x14; // accesses: 3
+    undefined4 * field_0x14; // accesses: 3
     undefined4 field_0x18; // accesses: 1
 
     // Member Functions

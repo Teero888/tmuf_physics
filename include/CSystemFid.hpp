@@ -4,21 +4,16 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct CFastString;
 struct CMwNod;
 struct CSystemFids;
-struct CSystemPackDesc;
-struct CSystemPackManager;
-struct ulong;
 
 struct CSystemFid {
     struct LoadHeaderUserDataFromChunkId<struct_CSystemArchiveNod {
+        void** vftable;
 
         // Member Functions
         SHeaderFolderDep> (CSystemFid *this,CSystemFid *param_1,SHeaderFolderDep *param_2,ulong param_3,int param_4);
     };
-
-    struct ulong;
 
     struct SCallStackFidContext {
         void** vftable; // accesses: 3
@@ -36,24 +31,19 @@ struct CSystemFid {
         ulong __thiscall ComputeByteSizeTotalInFile(void *this,SHeaderUserData *param_1);
     };
 
-    void** vftable; // accesses: 13
-    CSystemPackManager * field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 2
-    byte _padding_0xc[8];
-    CSystemFids * field_0x14; // accesses: 11
+    void** vftable; // accesses: 4
+    byte _padding_0x4[16];
+    CSystemFids * field_0x14; // accesses: 10
     byte _padding_0x18[4];
-    undefined4 field_0x1c; // accesses: 3
-    CMwNod * field_0x20; // accesses: 11
+    uint field_0x1c; // accesses: 3
+    int * field_0x20; // accesses: 11
     byte _padding_0x24[12];
-    undefined4 field_0x30; // accesses: 7
+    CSystemFid * field_0x30; // accesses: 7
     byte _padding_0x34[48];
     ulong field_0x64; // accesses: 6
-    CClassicArchive * field_0x68; // accesses: 44
-    undefined ** field_0x6c; // accesses: 15
+    uint * field_0x68; // accesses: 44
+    int * field_0x6c; // accesses: 9
     CLoader * field_0x70; // accesses: 2
-    byte _padding_0x74[12];
-    uint field_0x80; // accesses: 3
-    int field_0x84; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CClassicArchive * __thiscall LoadHeaderUserDataFromChunkId_Begin (CSystemFid *this,CSystemFid *param_1,ulong param_2,int param_3);

@@ -8,6 +8,7 @@ struct CMwNod;
 
 struct CSceneVehicleStruct {
     struct SSimulationWheel {
+        void** vftable;
 
         // Member Functions
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
@@ -23,6 +24,7 @@ struct CSceneVehicleStruct {
     };
 
     struct SVisualWheel {
+        void** vftable;
 
         // Member Functions
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);

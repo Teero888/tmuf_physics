@@ -3,24 +3,9 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CInputPort {
     void** vftable; // accesses: 2
-    byte _padding_0x4[28];
-    int field_0x20; // accesses: 5
-    byte _padding_0x24[4];
-    float field_0x28; // accesses: 1
-    byte _padding_0x2c[8];
-    int field_0x34; // accesses: 1
-    ulong field_0x38; // accesses: 2
-    byte _padding_0x3c[80];
-    undefined4 field_0x8c; // accesses: 4
-    undefined4 field_0x90; // accesses: 5
-    int field_0x94; // accesses: 1
-    undefined4 field_0x98; // accesses: 3
-    byte _padding_0x9c[44];
-    ulong field_0xc8; // accesses: 1
+    byte _final_padding[0x11]; // Total size: 0x15
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ SInputEvent * __thiscall GetActionState(CInputPort *this,CInputPort *param_1,SInputActionDesc *param_2);

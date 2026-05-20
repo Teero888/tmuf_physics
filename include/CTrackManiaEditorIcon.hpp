@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CTrackManiaEditorIcon {
-    byte _padding_0x0[28];
+    void** vftable;
+    byte _padding_0x4[24];
     CTrackManiaEditorIcon * field_0x1c; // accesses: 1
 
     // Member Functions

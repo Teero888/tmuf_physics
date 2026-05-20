@@ -6,28 +6,28 @@
 struct CControlContainer;
 struct CScene2d;
 struct CTrackManiaEditor;
-struct ulong;
 
 struct CTrackManiaEditorInterface {
     void** vftable; // accesses: 1
     byte _padding_0x4[36];
     CScene2d * field_0x28; // accesses: 2
     byte _padding_0x2c[8];
-    int field_0x34; // accesses: 4
-    undefined4 field_0x38; // accesses: 10
+    CTrackManiaEditor * field_0x34; // accesses: 4
+    int field_0x38; // accesses: 10
     byte _padding_0x3c[12];
-    undefined4 field_0x48; // accesses: 2
+    CTrackManiaEditorInterface * field_0x48; // accesses: 2
     byte _padding_0x4c[12];
     int field_0x58; // accesses: 1
     byte _padding_0x5c[4];
     int field_0x60; // accesses: 2
     int field_0x64; // accesses: 3
     byte _padding_0x68[8];
-    undefined4 field_0x70; // accesses: 11
+    int field_0x70; // accesses: 11
     ulong field_0x74; // accesses: 2
     ulong field_0x78; // accesses: 1
     byte _padding_0x7c[8];
-    int field_0x84; // accesses: 3
+    CControlContainer * field_0x84; // accesses: 3
+    byte _final_padding[0x8]; // Total size: 0x90
 
     // Member Functions
     CGameCtnArticle * __thiscall GetCurrentArticle (CTrackManiaEditorInterface *this,CTrackManiaEditorInterface *param_1);

@@ -6,13 +6,15 @@
 struct CHmsCollisionManager {
     struct SGroup {
         struct SAgainstGroup {
+            void** vftable;
 
             // Member Functions
             void __thiscall SAgainstGroup(void *this,SAgainstGroup *param_1);
             void __thiscall ~SAgainstGroup(void *this,SAgainstGroup *param_1);
         };
 
-        byte _padding_0x0[64];
+        void** vftable;
+        byte _padding_0x4[60];
         int field_0x40; // accesses: 2
 
         // Member Functions
@@ -32,8 +34,6 @@ struct CHmsCollisionManager {
     struct CHmsCollisionBuffer;
     struct CHmsCorpus;
     struct CMwNod;
-    struct LocatedGmSurf;
-    struct SZone;
 
     struct SZone {
         void** vftable; // accesses: 3
@@ -62,8 +62,8 @@ struct CHmsCollisionManager {
         undefined4 field_0x180; // accesses: 1
         undefined4 field_0x184; // accesses: 4
         SZone * field_0x188; // accesses: 5
-        undefined4 field_0x18c; // accesses: 3
-        SZone * field_0x190; // accesses: 3
+        CHmsCorpus * field_0x18c; // accesses: 3
+        LocatedGmSurf * field_0x190; // accesses: 3
         int field_0x194; // accesses: 1
         undefined1 * field_0x198; // accesses: 1
         CMwNod * field_0x19c; // accesses: 3
@@ -91,6 +91,7 @@ struct CHmsCollisionManager {
     void** vftable; // accesses: 2
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
+    byte _final_padding[0xc]; // Total size: 0x24
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Set (CHmsCollisionManager *this,CSystemData *param_1,CMwStack *param_2,void *param_3);

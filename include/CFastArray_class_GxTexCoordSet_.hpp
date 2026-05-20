@@ -3,12 +3,9 @@
 
 #include "typedefs.h"
 
-struct SFormat;
-
 struct CFastArray<class_GxTexCoordSet> {
-    void** vftable; // accesses: 6
-    void * field_0x4; // accesses: 8
-    int field_0x8; // accesses: 1
+    void** vftable; // accesses: 3
+    SFormat * field_0x4; // accesses: 6
 
     // Member Functions
     void __thiscall AddTail (void *this,CFastArray<struct_CDx9DeviceCaps::SFormat> *param_1,SFormat *param_2);

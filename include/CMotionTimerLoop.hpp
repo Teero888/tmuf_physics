@@ -4,10 +4,12 @@
 #include "typedefs.h"
 
 struct CMotionTimerLoop {
-    byte _padding_0x0[24];
+    void** vftable;
+    byte _padding_0x4[20];
     int field_0x18; // accesses: 2
     byte _padding_0x1c[4];
     int field_0x20; // accesses: 2
+    byte _final_padding[0x10]; // Total size: 0x34
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetNormedTime(CMotionTimerLoop *this,CMotionTimerLoop *param_1);

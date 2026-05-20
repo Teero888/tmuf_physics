@@ -7,7 +7,6 @@ struct CGameMasterServer;
 struct CGameNetClient;
 struct CGameNetServer;
 struct CNetServer;
-struct ushort;
 
 struct CGameNetwork {
     struct SBill {
@@ -24,36 +23,14 @@ struct CGameNetwork {
         void __thiscall SBill (void *this,SBill *param_1,CFastString *param_2,CFastString *param_3, CFastStringInt *param_4,int param_5);
     };
 
-    void** vftable; // accesses: 16
-    short * field_0x4; // accesses: 9
-    byte _padding_0x8[12];
-    undefined4 field_0x14; // accesses: 1
-    byte _padding_0x18[148];
-    undefined4 field_0xac; // accesses: 1
-    ushort field_0xb0; // accesses: 1
-    byte _padding_0xb2[2];
-    int field_0xb4; // accesses: 3
-    byte _padding_0xb8[108];
-    int field_0x124; // accesses: 1
-    undefined4 field_0x128; // accesses: 1
-    byte _padding_0x12c[124];
-    CGameNetClient * field_0x1a8; // accesses: 8
-    CGameNetServer * field_0x1ac; // accesses: 10
-    CGameMasterServer * field_0x1b0; // accesses: 2
-    byte _padding_0x1b4[4];
-    int field_0x1b8; // accesses: 6
-    byte _padding_0x1bc[20];
-    int field_0x1d0; // accesses: 11
-    int field_0x1d4; // accesses: 5
-    byte _padding_0x1d8[100];
-    int * field_0x23c; // accesses: 15
-    byte _padding_0x240[896];
-    int field_0x5c0; // accesses: 2
+    void** vftable; // accesses: 13
+    byte _final_padding[0x28]; // Total size: 0x2c
 
     // Member Functions
     CGameNetPlayerInfo * __thiscall FindPlayerInfoFromLogin(CGameNetwork *this,CGameNetwork *param_1,CFastString *param_2);
     CGameNetPlayerInfo * __thiscall GetPlayerInfoFromUId(CGameNetwork *this,CGameNetwork *param_1,uchar param_2);
     CSystemData * __thiscall FindManiaNetData(CGameNetwork *this,CGameNetwork *param_1,CFastString *param_2);
+    EState __thiscall GetState(CGameNetwork *this,CMwCmdFiber *param_1);
     int __thiscall ChatSend (CGameNetwork *this,CGameNetwork *param_1,CFastStringInt *param_2,uchar param_3, uchar param_4,uchar param_5,uchar param_6,int param_7,int param_8);
     int __thiscall DisconnectPlayer (CGameNetwork *this,CGameNetwork *param_1,char *param_2,CFastStringInt *param_3, uchar param_4);
     int __thiscall IsChatCommand(CGameNetwork *this,CGameNetwork *param_1,CFastStringInt *param_2);

@@ -6,9 +6,10 @@
 struct CSceneFxNod;
 
 struct CScene3d {
-    byte _padding_0x0[344];
+    void** vftable;
+    byte _padding_0x4[340];
     CSceneFxNod * field_0x158; // accesses: 4
-    int field_0x15c; // accesses: 2
+    CScene3d * field_0x15c; // accesses: 2
 
     // Member Functions
     CSceneFx * __thiscall SceneFxFindFromClassId (CScene3d *this,CScene3d *param_1,ulong param_2,CSceneFxNod **param_3);

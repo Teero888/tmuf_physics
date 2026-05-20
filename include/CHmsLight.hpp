@@ -10,14 +10,14 @@ struct CHmsLight {
     byte _padding_0x4[100];
     undefined4 field_0x68; // accesses: 1
     undefined4 field_0x6c; // accesses: 1
-    CMwNod * field_0x70; // accesses: 5
+    CHmsLight * field_0x70; // accesses: 5
     undefined4 field_0x74; // accesses: 1
     undefined4 field_0x78; // accesses: 1
     undefined4 field_0x7c; // accesses: 1
     undefined4 field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1
-    CMwNod * field_0x88; // accesses: 5
-    undefined4 field_0x8c; // accesses: 9
+    CHmsLight * field_0x88; // accesses: 5
+    uint field_0x8c; // accesses: 9
 
     // Member Functions
     void __thiscall CHmsLight(CHmsLight *this,CHmsLight *param_1);

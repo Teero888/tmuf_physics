@@ -15,6 +15,7 @@ struct COalDevice {
     undefined * field_0x30; // accesses: 1
     undefined4 field_0x34; // accesses: 1
     undefined * field_0x38; // accesses: 1
+    byte _final_padding[0x2c]; // Total size: 0x68
 
     // Member Functions
     void __thiscall COalDevice(COalDevice *this,COalDevice *param_1);

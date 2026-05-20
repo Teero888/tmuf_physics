@@ -3,18 +3,15 @@
 
 #include "typedefs.h"
 
-struct SStringParam;
-struct ulong;
-
 struct CGameCtnGhost {
-    byte _padding_0x0[4];
-    SStringParam * field_0x4; // accesses: 1
-    byte _padding_0x8[224];
+    void** vftable;
+    byte _padding_0x4[228];
     CGameCtnGhost * field_0xe8; // accesses: 1
     ulong field_0xec; // accesses: 1
     ulong field_0xf0; // accesses: 1
     byte _padding_0xf4[12];
     EReplayGhostVersion field_0x100; // accesses: 2
+    byte _final_padding[0x94]; // Total size: 0x198
 
     // Member Functions
     int __thiscall CanValidate (CGameCtnGhost *this,CGameCtnGhost *param_1,CGameApp *param_2,CFastStringInt *param_3);

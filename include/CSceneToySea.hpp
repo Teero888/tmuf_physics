@@ -6,10 +6,10 @@
 struct CSceneToySeaHouleTable;
 struct CSystemFileMemMapped;
 struct GmVec4;
-struct ulong;
 
 struct CSceneToySea {
-    byte _padding_0x0[192];
+    void** vftable;
+    byte _padding_0x4[188];
     CSceneToySeaHouleTable * field_0xc0; // accesses: 7
     byte _padding_0xc4[16];
     GmVec4 * field_0xd4; // accesses: 1
@@ -21,6 +21,7 @@ struct CSceneToySea {
     GmVec4 * field_0xf0; // accesses: 1
     byte _padding_0xf4[56];
     CSystemFileMemMapped * field_0x12c; // accesses: 2
+    byte _final_padding[0x1c]; // Total size: 0x14c
 
     // Member Functions
     ulong __thiscall SetSamplingTime_Async(CSceneToySea *this,CSceneToySea *param_1,int param_2);

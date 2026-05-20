@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMwEngineManager {
+    void** vftable;
 
     // Member Functions
     CMwClassInfo * __thiscall GetClassInfo(CMwEngineManager *this,CMwEngineManager *param_1,ulong param_2);

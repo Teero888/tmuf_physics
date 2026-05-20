@@ -3,14 +3,12 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBufferWheel<struct_SMwTimedValueInstant<struct_SInputEventsStoreElem>_> {
-    void** vftable; // accesses: 6
-    int field_0x4; // accesses: 8
-    ulong field_0x8; // accesses: 6
-    undefined4 field_0xc; // accesses: 7
-    undefined4 field_0x10; // accesses: 5
+    void** vftable; // accesses: 2
+    int field_0x4; // accesses: 3
+    uint field_0x8; // accesses: 6
+    undefined4 field_0xc; // accesses: 3
+    undefined4 field_0x10; // accesses: 1
 
     // Member Functions
     /* WARNING: Variable defined which should be unmapped: param_1 */ void __thiscall CopyFromWheel (void *this, CFastBufferWheel<struct_SMwTimedValueInstant<struct_SInputEventsStoreElem>_> *param_1, CFastBufferWheel<struct_SMwTimedValueInstant<struct_SInputEventsStoreElem>_> *param_2);

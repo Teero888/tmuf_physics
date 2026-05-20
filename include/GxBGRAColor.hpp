@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GxBGRAColor {
-    void** vftable; // accesses: 2
+    undefined1 field_0x0; // accesses: 2
     undefined1 field_0x1; // accesses: 2
     undefined1 field_0x2; // accesses: 2
     undefined1 field_0x3; // accesses: 2

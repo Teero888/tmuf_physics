@@ -18,6 +18,7 @@ struct CSceneVehicleMaterial {
     byte _padding_0x38[4];
     undefined4 field_0x3c; // accesses: 1
     undefined4 field_0x40; // accesses: 1
+    byte _final_padding[0x4]; // Total size: 0x48
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CSceneVehicleMaterial (CSceneVehicleMaterial *this,CSceneVehicleMaterial *param_1);

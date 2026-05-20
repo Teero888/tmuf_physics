@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CCallbackSceneVehicleCarAfterContacts {
+    void** vftable;
 
     // Member Functions
     void __thiscall AfterContacts (CCallbackSceneVehicleCarAfterContacts *this, CCallbackSceneVehicleBallAfterContacts *param_1,CHmsItem *param_2);

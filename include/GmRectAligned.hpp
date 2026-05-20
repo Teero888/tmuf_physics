@@ -4,12 +4,10 @@
 #include "typedefs.h"
 
 struct GmRectAligned {
-    void** vftable; // accesses: 15
-    float field_0x4; // accesses: 14
-    float field_0x8; // accesses: 14
-    float field_0xc; // accesses: 14
-    float field_0x10; // accesses: 4
-    float field_0x14; // accesses: 4
+    float field_0x0; // accesses: 4
+    float field_0x4; // accesses: 4
+    float field_0x8; // accesses: 5
+    float field_0xc; // accesses: 5
 
     // Member Functions
     int __thiscall TestInter (void *this,CPlugVolumeProjector *param_1,GmBoxAligned *param_2,GmIso4 *param_3);

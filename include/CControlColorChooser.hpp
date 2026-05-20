@@ -9,10 +9,8 @@ struct CPlugVisualQuads2D;
 struct GmVec3;
 
 struct CControlColorChooser {
-    void** vftable; // accesses: 5
-    undefined4 field_0x4; // accesses: 4
-    undefined4 field_0x8; // accesses: 4
-    byte _padding_0xc[340];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[348];
     int field_0x160; // accesses: 2
     undefined4 * field_0x164; // accesses: 1
     undefined4 * field_0x168; // accesses: 1

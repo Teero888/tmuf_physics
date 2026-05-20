@@ -4,10 +4,10 @@
 #include "typedefs.h"
 
 struct CSystemFidsDrive {
-    void** vftable; // accesses: 4
-    undefined4 field_0x4; // accesses: 1
-    byte _padding_0x8[16];
+    void** vftable; // accesses: 3
+    byte _padding_0x4[20];
     CSystemFidsDrive * field_0x18; // accesses: 1
+    byte _final_padding[0x2c]; // Total size: 0x48
 
     // Member Functions
     void __thiscall CSystemFidsDrive(CSystemFidsDrive *this,CSystemFidsDrive *param_1);

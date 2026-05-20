@@ -3,28 +3,9 @@
 
 #include "typedefs.h"
 
-struct ushort;
-
 struct CHmsZoneDynamic {
-    void** vftable; // accesses: 1
-    byte _padding_0x4[4];
-    int field_0x8; // accesses: 1
-    byte _padding_0xc[8];
-    void * field_0x14; // accesses: 4
-    void * field_0x18; // accesses: 4
-    float field_0x1c; // accesses: 4
-    float field_0x20; // accesses: 4
-    float field_0x24; // accesses: 4
-    byte _padding_0x28[4];
-    float field_0x2c; // accesses: 2
-    float field_0x30; // accesses: 2
-    ushort field_0x34; // accesses: 1
-    ushort field_0x36; // accesses: 1
-    byte _padding_0x38[16];
-    int field_0x48; // accesses: 1
-    byte _padding_0x4c[12];
-    void * field_0x58; // accesses: 2
-    byte _padding_0x5c[192];
+    void** vftable;
+    byte _padding_0x4[280];
     float field_0x11c; // accesses: 1
     float field_0x120; // accesses: 1
     byte _padding_0x124[16];
@@ -34,6 +15,7 @@ struct CHmsZoneDynamic {
     int field_0x158; // accesses: 1
     byte _padding_0x15c[12];
     void * field_0x168; // accesses: 10
+    byte _final_padding[0xc]; // Total size: 0x178
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall PhysicsStep2(CHmsZoneDynamic *this,CHmsZoneDynamic *param_1);

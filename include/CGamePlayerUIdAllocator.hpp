@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGamePlayerUIdAllocator {
-    byte _padding_0x0[1292];
+    void** vftable;
+    byte _padding_0x4[1288];
     char field_0x50c; // accesses: 2
     char field_0x50d; // accesses: 4
 

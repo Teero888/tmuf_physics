@@ -4,19 +4,18 @@
 #include "typedefs.h"
 
 struct CFastStringInt;
-struct ulong;
 
 struct CSystemFile {
     void** vftable; // accesses: 2
     undefined4 field_0x4; // accesses: 2
     byte _padding_0x8[4];
-    undefined4 field_0xc; // accesses: 12
+    HANDLE field_0xc; // accesses: 12
     CFastStringInt * field_0x10; // accesses: 6
     undefined4 field_0x14; // accesses: 2
     undefined * field_0x18; // accesses: 3
-    ulong field_0x1c; // accesses: 5
-    void * field_0x20; // accesses: 12
-    undefined4 field_0x24; // accesses: 12
+    undefined4 field_0x1c; // accesses: 5
+    CSystemFile * field_0x20; // accesses: 12
+    CSystemFile * field_0x24; // accesses: 12
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ long __cdecl Open(_D3DXINCLUDE_TYPE param_1,char *param_2,void *param_3,void **param_4,uint *param_5 );

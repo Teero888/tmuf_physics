@@ -3,29 +3,55 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CSystemFidParameters {
     struct SParam {
+        void** vftable; // accesses: 2
+        SParam * field_0x4; // accesses: 1
+        EParamType field_0x8; // accesses: 1
+        ulong * field_0xc; // accesses: 1
 
         // Member Functions
         void __thiscall SParam (SParam *this,SParam *param_1,EParamType param_2,ulong *param_3,int param_4);
         void __thiscall ~SParam(SParam *this,SParam *param_1);
     };
 
+    struct CSystemFid;
+
     struct SParam_Fid {
+        void** vftable; // accesses: 1
+        byte _padding_0x4[32];
+        CSystemFid * field_0x24; // accesses: 1
 
         // Member Functions
         void __thiscall SParam_Fid (SParam_Fid *this,SParam_Fid *param_1,CSystemFid *param_2);
     };
 
+    struct CSystemPackDesc;
+
     struct SParam_Fid_Common {
+        void** vftable; // accesses: 1
+        byte _padding_0x4[12];
+        ulong field_0x10; // accesses: 1
+        CSystemPackDesc * field_0x14; // accesses: 1
+        byte _padding_0x18[8];
+        undefined4 field_0x20; // accesses: 1
 
         // Member Functions
         void __thiscall SParam_Fid_Common (SParam_Fid_Common *this,SParam_Fid_Common *param_1,EParamType param_2, CSystemPackDesc *param_3,CFastString *param_4,ulong param_5);
     };
 
+    struct CSystemFids;
+
     struct SParam_Fids {
+        void** vftable; // accesses: 1
+        int field_0x4; // accesses: 1
+        byte _padding_0x8[8];
+        int field_0x10; // accesses: 1
+        int field_0x14; // accesses: 1
+        int * field_0x18; // accesses: 2
+        undefined * field_0x1c; // accesses: 2
+        byte _padding_0x20[4];
+        CSystemFids * field_0x24; // accesses: 2
 
         // Member Functions
         void __thiscall Compare (SParam_Fids *this,SParam_Fids *param_1,SParam *param_2,int *param_3,int *param_4);
@@ -34,17 +60,19 @@ struct CSystemFidParameters {
     };
 
     struct SParam_Id {
+        void** vftable; // accesses: 1
+        byte _padding_0x4[16];
+        EParamType field_0x14; // accesses: 1
 
         // Member Functions
         void __thiscall SParam_Id(SParam_Id *this,SParam_Id *param_1);
         void __thiscall ~SParam_Id(SParam_Id *this,SParam_Id *param_1);
     };
 
-    void** vftable; // accesses: 5
-    ulong field_0x4; // accesses: 1
-    byte _padding_0x8[32];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[36];
     undefined4 field_0x28; // accesses: 2
-    undefined4 field_0x2c; // accesses: 9
+    int field_0x2c; // accesses: 6
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall GetParamValue (CSystemFidParameters *this,CSystemFidParameters *param_1,SParam *param_2);

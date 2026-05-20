@@ -3,9 +3,6 @@
 
 #include "typedefs.h"
 
-struct CHmsZone;
-struct ulong;
-
 struct CAudioPort {
     struct SFadingSound {
         void** vftable; // accesses: 1
@@ -24,19 +21,10 @@ struct CAudioPort {
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     };
 
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 2
     byte _padding_0x4[16];
-    CHmsZone * field_0x14; // accesses: 2
-    byte _padding_0x18[8];
-    ulong field_0x20; // accesses: 1
-    byte _padding_0x24[24];
-    int field_0x3c; // accesses: 1
-    byte _padding_0x40[16];
-    int field_0x50; // accesses: 2
-    byte _padding_0x54[8];
-    undefined4 field_0x5c; // accesses: 1
-    byte _padding_0x60[16];
-    undefined4 field_0x70; // accesses: 2
+    int field_0x14; // accesses: 1
+    byte _final_padding[0x3]; // Total size: 0x1b
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Fade(CAudioPort *this,CAudioPort *param_1,CAudioSound *param_2,float param_3, float param_4,float param_5,int param_6);

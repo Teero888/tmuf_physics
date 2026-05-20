@@ -4,10 +4,12 @@
 #include "typedefs.h"
 
 struct CGameGhost {
-    byte _padding_0x0[68];
+    void** vftable;
+    byte _padding_0x4[64];
     int field_0x44; // accesses: 1
     byte _padding_0x48[32];
     int field_0x68; // accesses: 2
+    byte _final_padding[0x1c]; // Total size: 0x88
 
     // Member Functions
     int __thiscall IsFixedTimeStep(CGameGhost *this,CGameGhost *param_1);

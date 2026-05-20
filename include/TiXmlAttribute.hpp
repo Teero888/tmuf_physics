@@ -4,12 +4,7 @@
 #include "typedefs.h"
 
 struct TiXmlAttribute {
-    void** vftable; // accesses: 16
-    undefined4 field_0x4; // accesses: 8
-    undefined4 field_0x8; // accesses: 5
-    undefined4 field_0xc; // accesses: 3
-    undefined4 field_0x10; // accesses: 2
-    undefined4 field_0x14; // accesses: 1
+    byte _padding_0x0[24];
     int field_0x18; // accesses: 2
 
     // Member Functions

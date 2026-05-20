@@ -6,7 +6,7 @@
 struct CFastBuffer<class_CMwId> {
     void** vftable; // accesses: 4
     void * field_0x4; // accesses: 6
-    undefined4 field_0x8; // accesses: 2
+    code * field_0x8; // accesses: 2
 
     // Member Functions
     void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);

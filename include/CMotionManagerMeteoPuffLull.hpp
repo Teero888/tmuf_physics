@@ -6,8 +6,10 @@
 struct CFuncPuffLull;
 
 struct CMotionManagerMeteoPuffLull {
-    byte _padding_0x0[24];
+    void** vftable;
+    byte _padding_0x4[20];
     CFuncPuffLull * field_0x18; // accesses: 1
+    byte _final_padding[0x28]; // Total size: 0x44
 
     // Member Functions
     void __thiscall UpdateAsync(CMotionManagerMeteoPuffLull *this,CInputPortDx8 *param_1);

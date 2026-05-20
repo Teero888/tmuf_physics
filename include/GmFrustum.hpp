@@ -4,34 +4,15 @@
 #include "typedefs.h"
 
 struct CHmsCamera;
-struct GmIso4;
-struct GmVec3;
 
 struct GmFrustum {
-    void** vftable; // accesses: 19
-    float field_0x4; // accesses: 29
-    int field_0x8; // accesses: 31
-    GmIso4 * field_0xc; // accesses: 26
-    float field_0x10; // accesses: 29
-    uint field_0x14; // accesses: 30
-    float field_0x18; // accesses: 22
-    float field_0x1c; // accesses: 3
-    float field_0x20; // accesses: 3
-    float field_0x24; // accesses: 3
-    float field_0x28; // accesses: 3
-    float field_0x2c; // accesses: 3
-    float field_0x30; // accesses: 2
-    float field_0x34; // accesses: 2
-    float field_0x38; // accesses: 2
-    float field_0x3c; // accesses: 2
-    float field_0x40; // accesses: 2
-    float field_0x44; // accesses: 2
-    float field_0x48; // accesses: 2
-    float field_0x4c; // accesses: 2
-    undefined4 field_0x50; // accesses: 2
-    undefined4 field_0x54; // accesses: 2
-    undefined4 field_0x58; // accesses: 2
-    float field_0x5c; // accesses: 1
+    float field_0x0; // accesses: 12
+    float field_0x4; // accesses: 21
+    float field_0x8; // accesses: 19
+    float field_0xc; // accesses: 19
+    float field_0x10; // accesses: 22
+    float field_0x14; // accesses: 19
+    CHmsCamera * field_0x18; // accesses: 18
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall GetFovY(void *this,GmFrustum *param_1);

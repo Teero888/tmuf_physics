@@ -7,14 +7,12 @@ struct CSceneMobilClouds;
 struct CSceneToySea;
 
 struct CMotionWeather {
-    void** vftable; // accesses: 2
+    void** vftable; // accesses: 1
     byte _padding_0x4[20];
     CSceneToySea * field_0x18; // accesses: 2
     byte _padding_0x1c[20];
-    undefined4 field_0x30; // accesses: 3
-    undefined4 field_0x34; // accesses: 10
-    byte _padding_0x38[172];
-    int field_0xe4; // accesses: 1
+    int field_0x30; // accesses: 3
+    int field_0x34; // accesses: 10
 
     // Member Functions
     int __thiscall GetSkyGradVBitmapAdr (CMotionWeather *this,CMotionWeather *param_1,CPlugBitmapAddress **param_2);

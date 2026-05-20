@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct CLoadGeomDynaSprite;
-
 struct CSceneMobilSnow {
     void** vftable; // accesses: 1
     byte _padding_0x4[36];

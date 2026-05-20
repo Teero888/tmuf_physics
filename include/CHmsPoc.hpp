@@ -9,7 +9,7 @@ struct CHmsPoc {
     undefined4 field_0x48; // accesses: 1
     undefined4 field_0x4c; // accesses: 1
     undefined4 field_0x50; // accesses: 1
-    undefined4 field_0x54; // accesses: 3
+    int field_0x54; // accesses: 3
 
     // Member Functions
     ulong __thiscall VirtualParam_Set(CHmsPoc *this,CSystemData *param_1,CMwStack *param_2,void *param_3);

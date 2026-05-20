@@ -6,12 +6,8 @@
 struct CSceneToySea;
 
 struct CScene {
-    void** vftable; // accesses: 2
-    byte _padding_0x4[76];
-    undefined4 field_0x50; // accesses: 1
-    CSceneToySea * field_0x54; // accesses: 2
-    byte _padding_0x58[68];
-    undefined4 field_0x9c; // accesses: 2
+    void** vftable; // accesses: 1
+    byte _final_padding[0x2]; // Total size: 0x6
 
     // Member Functions
     CMotionManager * __thiscall GetManager(CScene *this,CScene *param_1,ulong param_2);

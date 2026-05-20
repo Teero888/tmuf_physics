@@ -6,9 +6,10 @@
 struct CMotionDayTime {
     void** vftable; // accesses: 1
     byte _padding_0x4[32];
-    undefined4 field_0x24; // accesses: 3
+    CMotionDayTime * field_0x24; // accesses: 3
     undefined4 field_0x28; // accesses: 1
     undefined4 field_0x2c; // accesses: 1
+    byte _final_padding[0x18]; // Total size: 0x48
 
     // Member Functions
     void __thiscall CMotionDayTime(CMotionDayTime *this,CMotionDayTime *param_1);

@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CHmsSoundSource {
-    byte _padding_0x0[84];
+    void** vftable;
+    byte _padding_0x4[80];
     int field_0x54; // accesses: 1
     byte _padding_0x58[24];
     undefined4 field_0x70; // accesses: 1

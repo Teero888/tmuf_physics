@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct SGpuConst {
+    // No fields detected
 
     // Member Functions
     void __thiscall ~SGpuConst(void *this,SGpuConst *param_1);

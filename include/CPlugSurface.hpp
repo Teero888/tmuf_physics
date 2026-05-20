@@ -4,13 +4,13 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct CFuncSegment;
 struct CMwNod;
 
 struct CPlugSurface {
     void** vftable; // accesses: 2
     byte _padding_0x4[16];
-    CClassicArchive * field_0x14; // accesses: 8
+    CMwNod * field_0x14; // accesses: 8
+    byte _final_padding[0xc]; // Total size: 0x24
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl StaticInit(void);

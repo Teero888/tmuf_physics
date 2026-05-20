@@ -3,13 +3,11 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct SItTracksBlock {
-    void** vftable; // accesses: 2
-    undefined4 field_0x4; // accesses: 5
+    SItTracksBlock * field_0x0; // accesses: 2
+    int field_0x4; // accesses: 5
     byte _padding_0x8[4];
-    undefined4 field_0xc; // accesses: 6
+    int field_0xc; // accesses: 6
     ulong field_0x10; // accesses: 4
 
     // Member Functions

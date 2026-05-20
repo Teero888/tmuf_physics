@@ -3,23 +3,18 @@
 
 #include "typedefs.h"
 
-struct CMwNod;
 struct CSystemFids;
 struct CSystemFidsDrive;
 struct CSystemManagerFile;
 
 struct CSystemEngine {
-    void** vftable; // accesses: 5
-    short * field_0x4; // accesses: 1
-    CMwNod * field_0x8; // accesses: 4
-    byte _padding_0xc[8];
-    CSystemFids * field_0x14; // accesses: 4
-    byte _padding_0x18[8];
-    CSystemEngine * field_0x20; // accesses: 4
+    void** vftable; // accesses: 1
+    byte _padding_0x4[28];
+    CSystemManagerFile * field_0x20; // accesses: 3
     int * field_0x24; // accesses: 6
     CSystemFids * field_0x28; // accesses: 6
-    CSystemFids * field_0x2c; // accesses: 5
-    CSystemFids * field_0x30; // accesses: 5
+    int * field_0x2c; // accesses: 5
+    int * field_0x30; // accesses: 5
     undefined4 field_0x34; // accesses: 1
     byte _padding_0x38[20];
     CSystemFids * field_0x4c; // accesses: 3
@@ -30,7 +25,7 @@ struct CSystemEngine {
     undefined4 field_0x60; // accesses: 1
     undefined4 field_0x64; // accesses: 1
     undefined * field_0x68; // accesses: 1
-    int * field_0x6c; // accesses: 3
+    undefined4 field_0x6c; // accesses: 1
 
     // Member Functions
     /* WARNING: Function: __alloca_probe replaced with injection: alloca_probe */ ulong __cdecl GetExeCheckSum(void);

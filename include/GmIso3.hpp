@@ -4,18 +4,13 @@
 #include "typedefs.h"
 
 struct GmIso3 {
-    void** vftable; // accesses: 21
-    float field_0x4; // accesses: 21
-    float field_0x8; // accesses: 21
-    float field_0xc; // accesses: 21
-    float field_0x10; // accesses: 28
-    float field_0x14; // accesses: 29
-    float field_0x18; // accesses: 14
-    float field_0x1c; // accesses: 14
-    float field_0x20; // accesses: 14
-    float field_0x24; // accesses: 6
-    float field_0x28; // accesses: 6
-    float field_0x2c; // accesses: 6
+    float field_0x0; // accesses: 2
+    float field_0x4; // accesses: 2
+    float field_0x8; // accesses: 2
+    float field_0xc; // accesses: 2
+    float field_0x10; // accesses: 13
+    float field_0x14; // accesses: 14
+    byte _final_padding[0xc]; // Total size: 0x24
 
     // Member Functions
     void __thiscall ArchiveGmIso3(void *this,GmIso3 *param_1,CClassicArchive *param_2);

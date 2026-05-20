@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CClassicCrypto_BlowFish {
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 1
     byte _padding_0x4[64];
     uint field_0x44; // accesses: 1
 

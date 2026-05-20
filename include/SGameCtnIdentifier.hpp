@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct SGameCtnIdentifier {
-    void** vftable; // accesses: 1
+    // No fields detected
 
     // Member Functions
     void __thiscall SGameCtnIdentifier(void *this,SGameCtnIdentifier *param_1);

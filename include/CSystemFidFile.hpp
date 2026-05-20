@@ -4,15 +4,14 @@
 #include "typedefs.h"
 
 struct CSystemFidFile {
-    void** vftable; // accesses: 4
-    undefined4 field_0x4; // accesses: 1
-    byte _padding_0x8[12];
+    void** vftable; // accesses: 3
+    byte _padding_0x4[16];
     int * field_0x14; // accesses: 4
     undefined4 field_0x18; // accesses: 1
     uint field_0x1c; // accesses: 2
     byte _padding_0x20[84];
     undefined4 field_0x74; // accesses: 3
-    undefined4 field_0x78; // accesses: 4
+    undefined * field_0x78; // accesses: 4
     byte _padding_0x7c[4];
     undefined4 field_0x80; // accesses: 1
     undefined4 field_0x84; // accesses: 1

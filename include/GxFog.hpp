@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GxFog {
-    void** vftable; // accesses: 1
+    undefined ** field_0x0; // accesses: 1
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1

@@ -4,9 +4,8 @@
 #include "typedefs.h"
 
 struct CNetServer {
-    void** vftable; // accesses: 2
-    byte _padding_0x4[152];
-    int field_0x9c; // accesses: 1
+    void** vftable; // accesses: 1
+    byte _final_padding[0x15]; // Total size: 0x19
 
     // Member Functions
     CNetMasterServerRequest * __thiscall Disconnect(CNetServer *this,CGameMasterServer *param_1);

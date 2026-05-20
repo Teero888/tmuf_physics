@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CDx9VertexDeclaration {
+    void** vftable;
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl StaticSetStream01Decl(SStreamDecl param_1,SStreamDecl param_2);

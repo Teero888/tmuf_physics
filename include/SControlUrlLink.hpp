@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct SControlUrlLink {
-    void** vftable; // accesses: 1
+    undefined4 field_0x0; // accesses: 1
     undefined * field_0x4; // accesses: 1
     byte _padding_0x8[8];
     undefined4 field_0x10; // accesses: 1

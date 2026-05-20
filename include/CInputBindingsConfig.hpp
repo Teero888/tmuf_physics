@@ -3,14 +3,12 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CInputBindingsConfig {
-    void** vftable; // accesses: 2
+    void** vftable; // accesses: 1
     byte _padding_0x4[64];
     undefined4 field_0x44; // accesses: 1
     undefined * field_0x48; // accesses: 1
-    ulong field_0x4c; // accesses: 2
+    undefined4 field_0x4c; // accesses: 2
 
     // Member Functions
     int __thiscall IsDeviceConfigured (CInputBindingsConfig *this,CInputBindingsConfig *param_1,CMwId *param_2);

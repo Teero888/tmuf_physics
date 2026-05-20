@@ -6,9 +6,8 @@
 struct CMwRefBuffer;
 
 struct CControlStyleSheet {
-    byte _padding_0x0[20];
-    int field_0x14; // accesses: 4
-    byte _padding_0x18[16];
+    void** vftable;
+    byte _padding_0x4[36];
     CMwRefBuffer * field_0x28; // accesses: 2
 
     // Member Functions

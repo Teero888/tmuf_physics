@@ -5,17 +5,17 @@
 
 struct CHmsZoneVPacker;
 struct CMwNod;
-struct ushort;
 
 struct CHmsZone {
     struct CVisionData {
+        void** vftable;
 
         // Member Functions
         /* WARNING: Control flow encountered bad instruction data */ /* WARNING: Instruction at (ram,0x009c0f9a) overlaps instruction at (ram,0x009c0f99) */ /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void * __thiscall CHmsZone::CVisionData::_vector_deleting_destructor_ (CVisionData *this,CRpcCallInternal *param_1,uint param_2);
         void __thiscall ~CVisionData(CVisionData *this,CVisionData *param_1);
     };
 
-    void** vftable; // accesses: 7
+    void** vftable; // accesses: 5
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     byte _padding_0x18[20];
@@ -27,7 +27,7 @@ struct CHmsZone {
     undefined4 field_0xa0; // accesses: 2
     undefined4 field_0xa4; // accesses: 2
     undefined4 field_0xa8; // accesses: 2
-    undefined4 field_0xac; // accesses: 13
+    uint field_0xac; // accesses: 13
     CMwNod * field_0xb0; // accesses: 8
     undefined4 field_0xb4; // accesses: 2
     undefined4 field_0xb8; // accesses: 3
@@ -46,11 +46,11 @@ struct CHmsZone {
     ushort field_0xf0; // accesses: 43
     ushort field_0xf2; // accesses: 43
     byte _padding_0xf4[12];
-    undefined4 field_0x100; // accesses: 6
+    int field_0x100; // accesses: 6
     CHmsZoneVPacker * field_0x104; // accesses: 42
     CHmsZone * field_0x108; // accesses: 6
     byte _padding_0x10c[12];
-    undefined4 field_0x118; // accesses: 3
+    undefined4 * field_0x118; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall VirtualParam_Get (CHmsZone *this,CPlugBlendShapes *param_1,CMwStack *param_2,CMwValueStd *param_3);

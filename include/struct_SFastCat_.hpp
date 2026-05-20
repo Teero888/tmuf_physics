@@ -3,18 +3,14 @@
 
 #include "typedefs.h"
 
-struct CMwNod;
-struct ulong;
-
 struct struct_SFastCat> {
-    void** vftable; // accesses: 3
-    ulong * field_0x4; // accesses: 2
-    byte _padding_0x8[4];
+    uint * field_0x0; // accesses: 1
+    byte _padding_0x4[8];
     int field_0xc; // accesses: 2
-    undefined4 field_0x10; // accesses: 3
+    int field_0x10; // accesses: 3
     byte _padding_0x14[4];
     undefined4 field_0x18; // accesses: 1
-    ulong field_0x1c; // accesses: 2
+    undefined4 field_0x1c; // accesses: 2
     undefined4 field_0x20; // accesses: 2
 
     // Member Functions

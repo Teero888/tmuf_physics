@@ -6,8 +6,7 @@
 struct CSystemPackManager;
 
 struct CGameAvatar {
-    byte _padding_0x0[32];
-    CSystemPackManager * field_0x20; // accesses: 3
+    void** vftable;
 
     // Member Functions
     CPlugBitmap * __thiscall BitmapGet(CGameAvatar *this,CGameAvatar *param_1,EAvatarVariant param_2);

@@ -6,10 +6,9 @@
 struct CPlugTree;
 
 struct CPlugPhysicalObject {
-    void** vftable; // accesses: 6
-    float field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 1
-    byte _padding_0xc[8];
+    void** vftable; // accesses: 5
+    float field_0x4; // accesses: 1
+    byte _padding_0x8[12];
     float field_0x14; // accesses: 1
     byte _padding_0x18[12];
     float field_0x24; // accesses: 1
@@ -17,9 +16,9 @@ struct CPlugPhysicalObject {
     undefined4 field_0x2c; // accesses: 2
     undefined4 field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 2
-    float field_0x38; // accesses: 5
-    float field_0x3c; // accesses: 5
-    float field_0x40; // accesses: 5
+    undefined4 field_0x38; // accesses: 5
+    undefined4 field_0x3c; // accesses: 5
+    undefined4 field_0x40; // accesses: 5
     CPlugTree * field_0x44; // accesses: 6
 
     // Member Functions

@@ -5,7 +5,7 @@
 
 struct CFastArray<class_CMwId> {
     void** vftable; // accesses: 3
-    void * field_0x4; // accesses: 6
+    undefined4 * field_0x4; // accesses: 6
 
     // Member Functions
     void __thiscall AddTail (void *this,CFastArray<struct_CDx9DeviceCaps::SFormat> *param_1,SFormat *param_2);

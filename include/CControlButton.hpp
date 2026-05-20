@@ -3,12 +3,9 @@
 
 #include "typedefs.h"
 
-struct SStringParam;
-
 struct CControlButton {
-    void** vftable; // accesses: 3
-    SStringParam * field_0x4; // accesses: 4
-    byte _padding_0x8[296];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[300];
     undefined4 field_0x130; // accesses: 1
     undefined4 field_0x134; // accesses: 1
     undefined4 field_0x138; // accesses: 1
@@ -26,6 +23,7 @@ struct CControlButton {
     undefined4 field_0x168; // accesses: 1
     undefined4 field_0x16c; // accesses: 1
     undefined4 field_0x170; // accesses: 1
+    byte _final_padding[0x4]; // Total size: 0x178
 
     // Member Functions
     void __cdecl InitFuncEnum(CFuncEnum *param_1);

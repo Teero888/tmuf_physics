@@ -3,21 +3,19 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastMapTable<unsigned_long> {
     struct SScanner {
         void** vftable; // accesses: 2
-        int field_0x4; // accesses: 4
+        uint field_0x4; // accesses: 4
 
         // Member Functions
         int __thiscall GetNext (void *this,SScanner *param_1,ulong *param_2,SFillValue *param_3);
     };
 
     void** vftable; // accesses: 1
-    void * field_0x4; // accesses: 11
+    int field_0x4; // accesses: 11
     int field_0x8; // accesses: 9
-    ulong field_0xc; // accesses: 9
+    uint field_0xc; // accesses: 9
 
     // Member Functions
     CFastString __thiscall GetElem (CFastMapTable<unsigned_long> *this,CVirtualisedBuffer<class_CFastString> *param_1, ulong param_2);

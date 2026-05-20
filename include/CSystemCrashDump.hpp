@@ -6,7 +6,7 @@
 struct CSystemCrashDump {
     void** vftable; // accesses: 4
     byte _padding_0x4[36];
-    undefined4 field_0x28; // accesses: 2
+    uint field_0x28; // accesses: 2
 
     // Member Functions
     int __thiscall IsValid(CSystemCrashDump *this,CGameScoresVersion *param_1);

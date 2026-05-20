@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CNetUPnP {
-    byte _padding_0x0[20];
+    void** vftable;
+    byte _padding_0x4[16];
     int * field_0x14; // accesses: 3
     int * field_0x18; // accesses: 5
 

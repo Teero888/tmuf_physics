@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct GmArchive {
+    // No fields detected
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl ReadQuat_6(CClassicBuffer *param_1,GmQuat *param_2);

@@ -4,19 +4,9 @@
 #include "typedefs.h"
 
 struct CMwNod;
-struct CSystemFidFile;
-struct SStringParam;
-struct ulong;
 
 struct CSystemFids {
-    void** vftable; // accesses: 19
-    undefined * field_0x4; // accesses: 3
-    CSystemFidFile * field_0x8; // accesses: 1
-    byte _padding_0xc[8];
-    CMwNod * field_0x14; // accesses: 14
-    undefined4 field_0x18; // accesses: 5
-    byte _padding_0x1c[24];
-    undefined4 field_0x34; // accesses: 3
+    void** vftable; // accesses: 7
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall DeleteDown(CSystemFids *this,CSystemFids *param_1);

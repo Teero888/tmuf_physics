@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMwDeprecated {
+    void** vftable;
 
     // Member Functions
     ulong __cdecl WrapClassId(ulong param_1);

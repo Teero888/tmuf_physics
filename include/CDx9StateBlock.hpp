@@ -4,9 +4,8 @@
 #include "typedefs.h"
 
 struct CDx9StateBlock {
-    byte _padding_0x0[4];
-    int * field_0x4; // accesses: 1
-    byte _padding_0x8[4];
+    void** vftable;
+    byte _padding_0x4[8];
     int field_0xc; // accesses: 2
 
     // Member Functions

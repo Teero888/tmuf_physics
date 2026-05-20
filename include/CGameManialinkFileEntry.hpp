@@ -3,10 +3,8 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CGameManialinkFileEntry {
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 1
     byte _padding_0x4[32];
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 9

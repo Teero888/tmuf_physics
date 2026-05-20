@@ -6,29 +6,25 @@
 struct CClassicArchive;
 struct CMwNod;
 struct CPlugTree;
-struct GmVec3;
-struct ulong;
 
 struct CPlugSolid {
-    void** vftable; // accesses: 9
-    byte _padding_0x4[8];
-    float field_0xc; // accesses: 3
-    byte _padding_0x10[4];
+    void** vftable; // accesses: 2
+    byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
-    float field_0x18; // accesses: 4
+    undefined4 field_0x18; // accesses: 1
     byte _padding_0x1c[36];
     undefined4 field_0x40; // accesses: 1
     undefined4 field_0x44; // accesses: 1
     undefined4 field_0x48; // accesses: 1
     byte _padding_0x4c[8];
     CClassicArchive * field_0x54; // accesses: 1
-    ulong field_0x58; // accesses: 2
-    undefined4 field_0x5c; // accesses: 5
-    undefined4 field_0x60; // accesses: 5
-    CMwNod * field_0x64; // accesses: 37
-    CMwNod * field_0x68; // accesses: 27
+    CClassicArchive * field_0x58; // accesses: 2
+    CPlugSolid * field_0x5c; // accesses: 5
+    undefined4 field_0x60; // accesses: 4
+    int * field_0x64; // accesses: 37
+    CPlugSolid * field_0x68; // accesses: 27
     float field_0x6c; // accesses: 6
-    ulong field_0x70; // accesses: 10
+    uint field_0x70; // accesses: 10
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateDefaultData(CPlugSolid *this,CCrystal *param_1);

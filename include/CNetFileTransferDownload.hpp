@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CNetFileTransferDownload {
     struct CNetFileTransferDataToWrite {
         void** vftable; // accesses: 1
@@ -19,14 +17,8 @@ struct CNetFileTransferDownload {
         void __thiscall CNetFileTransferDataToWrite (void *this,CNetFileTransferDataToWrite *param_1);
     };
 
-    void** vftable; // accesses: 2
-    byte _padding_0x4[60];
-    undefined4 field_0x40; // accesses: 4
-    ulong field_0x44; // accesses: 1
-    byte _padding_0x48[20];
-    int field_0x5c; // accesses: 2
-    byte _padding_0x60[12];
-    int field_0x6c; // accesses: 1
+    void** vftable;
+    byte _final_padding[0x15]; // Total size: 0x19
 
     // Member Functions
     void __thiscall AddDataToWrite (CNetFileTransferDownload *this,CNetFileTransferDownload *param_1,CFastString *param_2);

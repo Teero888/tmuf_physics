@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugFilePack {
+    void** vftable;
+    byte _final_padding[0xac]; // Total size: 0xb0
 
     // Member Functions
     CSystemFid * __cdecl GetPackListFid(CSystemFids *param_1,int param_2);

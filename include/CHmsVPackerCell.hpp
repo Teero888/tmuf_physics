@@ -3,11 +3,8 @@
 
 #include "typedefs.h"
 
-struct GmBoxAligned;
-struct ulong;
-
 struct CHmsVPackerCell {
-    void** vftable; // accesses: 2
+    void** vftable; // accesses: 1
     undefined4 field_0x4; // accesses: 1
     undefined4 field_0x8; // accesses: 1
     float field_0xc; // accesses: 3
@@ -22,10 +19,7 @@ struct CHmsVPackerCell {
     undefined4 field_0x48; // accesses: 1
     byte _padding_0x4c[12];
     undefined4 field_0x58; // accesses: 3
-    GmBoxAligned * field_0x5c; // accesses: 1
-    CHmsVPackerCell * field_0x60; // accesses: 1
-    ulong * field_0x64; // accesses: 1
-    byte _padding_0x68[12];
+    byte _padding_0x5c[24];
     undefined4 field_0x74; // accesses: 1
     undefined4 field_0x78; // accesses: 1
     undefined4 field_0x7c; // accesses: 1

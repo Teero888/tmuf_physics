@@ -4,23 +4,17 @@
 #include "typedefs.h"
 
 struct CClassicArchive;
-struct CFuncSegment;
-struct CHmsItem;
 struct CMotions;
 struct CMwNod;
-struct CSceneMobil;
-struct CSceneObjectLink;
 
 struct CSceneObject {
-    void** vftable; // accesses: 18
+    void** vftable; // accesses: 6
     byte _padding_0x4[16];
     int * field_0x14; // accesses: 5
     byte _padding_0x18[4];
     undefined4 field_0x1c; // accesses: 1
-    CClassicArchive * field_0x20; // accesses: 28
-    undefined4 field_0x24; // accesses: 5
-    byte _padding_0x28[16];
-    CHmsItem * field_0x38; // accesses: 1
+    CMwNod * field_0x20; // accesses: 28
+    uint field_0x24; // accesses: 5
 
     // Member Functions
     CMotion * __thiscall SetMotion(CSceneObject *this,CSceneObject *param_1,CMwNod *param_2,int param_3);

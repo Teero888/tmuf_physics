@@ -4,8 +4,10 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaBlockFxBloom {
-    byte _padding_0x0[52];
+    void** vftable;
+    byte _padding_0x4[48];
     int field_0x34; // accesses: 1
+    byte _final_padding[0xc]; // Total size: 0x44
 
     // Member Functions
     GmVec3 __thiscall GetValue (CGameCtnMediaBlockFxBloom *this,CFuncColorGradient *param_1,float param_2);

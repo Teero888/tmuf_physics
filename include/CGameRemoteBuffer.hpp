@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CGameRemoteBuffer {
+    void** vftable;
+    byte _final_padding[0x6]; // Total size: 0xa
 
     // Member Functions
     int __thiscall CleanRequestingUser (CGameRemoteBuffer *this,CGameRemoteBuffer *param_1,SUser *param_2);

@@ -34,6 +34,8 @@ struct CGameCtnMediaBlockCameraCustom {
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     };
 
+    void** vftable;
+    byte _final_padding[0x34]; // Total size: 0x38
 
     // Member Functions
     GmVec3 __thiscall GetValue (CGameCtnMediaBlockCameraCustom *this,CFuncColorGradient *param_1,float param_2);

@@ -6,7 +6,8 @@
 struct CNetConnection;
 
 struct CGameNetClient {
-    byte _padding_0x0[348];
+    void** vftable;
+    byte _padding_0x4[344];
     CNetConnection * field_0x15c; // accesses: 2
 
     // Member Functions

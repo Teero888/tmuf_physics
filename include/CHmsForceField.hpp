@@ -8,7 +8,7 @@ struct CHmsZone;
 struct CHmsForceField {
     void** vftable; // accesses: 2
     byte _padding_0x4[16];
-    CHmsZone * field_0x14; // accesses: 6
+    CHmsZone * field_0x14; // accesses: 5
     byte _padding_0x18[64];
     undefined4 field_0x58; // accesses: 1
 

@@ -7,6 +7,7 @@ struct CHmsZoneElem {
     void** vftable; // accesses: 2
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
+    byte _final_padding[0x30]; // Total size: 0x48
 
     // Member Functions
     void __thiscall CHmsZoneElem(CHmsZoneElem *this,CHmsZoneElem *param_1);

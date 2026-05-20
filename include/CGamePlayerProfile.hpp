@@ -6,8 +6,10 @@
 struct CGameLeague;
 
 struct CGamePlayerProfile {
-    byte _padding_0x0[40];
+    void** vftable;
+    byte _padding_0x4[36];
     CGameLeague * field_0x28; // accesses: 1
+    byte _final_padding[0x264]; // Total size: 0x290
 
     // Member Functions
     ulong __thiscall FindVehicleProfileFromVehicleIdent (CGamePlayerProfile *this,CGamePlayerProfile *param_1,SGameCtnIdentifier *param_2);

@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CGamePlayerInfo {
-    void** vftable; // accesses: 2
+    void** vftable; // accesses: 1
     byte _padding_0x4[384];
     undefined4 field_0x184; // accesses: 1
     undefined * field_0x188; // accesses: 1
@@ -37,6 +37,7 @@ struct CGamePlayerInfo {
     undefined * field_0x230; // accesses: 1
     undefined4 field_0x234; // accesses: 1
     undefined4 field_0x238; // accesses: 1
+    byte _final_padding[0x4]; // Total size: 0x240
 
     // Member Functions
     int __thiscall PlayerTags_IsLoaded(CGamePlayerInfo *this,CGamePlayerInfo *param_1);

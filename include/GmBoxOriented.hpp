@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GmBoxOriented {
-    void** vftable; // accesses: 1
+    float field_0x0; // accesses: 1
     float field_0x4; // accesses: 1
     float field_0x8; // accesses: 1
     float field_0xc; // accesses: 1

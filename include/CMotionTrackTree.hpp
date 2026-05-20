@@ -15,6 +15,7 @@ struct CMotionTrackTree {
     CMwNod * field_0x30; // accesses: 4
     undefined4 field_0x34; // accesses: 1
     CMwCmd * field_0x38; // accesses: 3
+    byte _final_padding[0x4]; // Total size: 0x40
 
     // Member Functions
     void __thiscall CMotionTrackTree(CMotionTrackTree *this,CMotionTrackTree *param_1);

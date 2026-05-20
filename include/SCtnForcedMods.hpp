@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct SCtnForcedMods {
+    // No fields detected
 
     // Member Functions
     void __thiscall ~SCtnForcedMods(void *this,SCtnForcedMods *param_1);

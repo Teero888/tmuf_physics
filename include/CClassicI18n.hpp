@@ -4,19 +4,17 @@
 #include "typedefs.h"
 
 struct SStringParam;
-struct ulong;
-struct ushort;
 
 struct CClassicI18n {
-    void** vftable; // accesses: 1
-    SStringParam * field_0x4; // accesses: 22
-    void * field_0x8; // accesses: 7
-    void * field_0xc; // accesses: 8
+    void** vftable;
+    wchar_t * field_0x4; // accesses: 22
+    int field_0x8; // accesses: 7
+    int field_0xc; // accesses: 8
     byte _padding_0x10[8];
     CClassicI18n * field_0x18; // accesses: 5
-    void * field_0x1c; // accesses: 10
-    int field_0x20; // accesses: 8
-    void * field_0x24; // accesses: 3
+    int field_0x1c; // accesses: 10
+    CClassicI18n * field_0x20; // accesses: 8
+    ushort * field_0x24; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall IsLatinCharsInCurCatalog(CClassicI18n *this,CClassicI18n *param_1,ulong param_2);

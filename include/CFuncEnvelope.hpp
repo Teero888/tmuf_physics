@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CFuncEnvelope {
-    byte _padding_0x0[48];
+    void** vftable;
+    byte _padding_0x4[44];
     float field_0x30; // accesses: 1
     int field_0x34; // accesses: 1
 

@@ -5,6 +5,7 @@
 
 struct CTrackManiaReplayRecord {
     void** vftable; // accesses: 1
+    byte _final_padding[0x48]; // Total size: 0x4c
 
     // Member Functions
     void __thiscall CTrackManiaReplayRecord (CTrackManiaReplayRecord *this,CTrackManiaReplayRecord *param_1);

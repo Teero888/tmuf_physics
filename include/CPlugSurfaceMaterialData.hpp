@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CPlugSurfaceMaterialData {
-    byte _padding_0x0[4];
-    float field_0x4; // accesses: 9
+    void** vftable;
+    float field_0x4; // accesses: 4
 
     // Member Functions
     float __thiscall GetRestitutionCoefWith (void *this,CPlugSurfaceMaterialData *param_1,CPlugSurfaceMaterialData *param_2);

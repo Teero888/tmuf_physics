@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameCtnBlock {
-    byte _padding_0x0[36];
+    void** vftable;
+    byte _padding_0x4[32];
     int field_0x24; // accesses: 4
     byte _padding_0x28[56];
     uint field_0x60; // accesses: 1

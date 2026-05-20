@@ -15,7 +15,7 @@ struct CHmsPortal {
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     undefined4 field_0x18; // accesses: 1
-    undefined4 field_0x1c; // accesses: 3
+    undefined4 field_0x1c; // accesses: 1
     undefined4 field_0x20; // accesses: 1
     undefined4 field_0x24; // accesses: 1
     undefined4 field_0x28; // accesses: 1
@@ -37,7 +37,7 @@ struct CHmsPortal {
     undefined4 field_0x68; // accesses: 1
     byte _padding_0x6c[12];
     int * field_0x78; // accesses: 5
-    GmVec4 * field_0x7c; // accesses: 6
+    GmVec4 * field_0x7c; // accesses: 5
     undefined4 field_0x80; // accesses: 3
     CMwNod * field_0x84; // accesses: 12
     CMwNod * field_0x88; // accesses: 24
@@ -46,19 +46,19 @@ struct CHmsPortal {
     float field_0x94; // accesses: 1
     float field_0x98; // accesses: 1
     float field_0x9c; // accesses: 1
-    float field_0xa0; // accesses: 4
+    float field_0xa0; // accesses: 1
     float field_0xa4; // accesses: 1
     float field_0xa8; // accesses: 1
     float field_0xac; // accesses: 1
     float field_0xb0; // accesses: 4
     float field_0xb4; // accesses: 4
-    float field_0xb8; // accesses: 4
-    float field_0xbc; // accesses: 2
-    float field_0xc0; // accesses: 2
-    float field_0xc4; // accesses: 2
-    float field_0xc8; // accesses: 2
+    CHmsPortal * field_0xb8; // accesses: 4
+    undefined4 field_0xbc; // accesses: 2
+    undefined4 field_0xc0; // accesses: 2
+    undefined4 field_0xc4; // accesses: 2
+    undefined4 field_0xc8; // accesses: 2
     byte _padding_0xcc[48];
-    undefined4 field_0xfc; // accesses: 6
+    uint field_0xfc; // accesses: 1
     float field_0x100; // accesses: 7
     float field_0x104; // accesses: 7
 

@@ -3,14 +3,12 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBufferWheel<class_GmVec3> {
     void** vftable; // accesses: 6
     int field_0x4; // accesses: 7
-    ulong field_0x8; // accesses: 10
-    undefined4 field_0xc; // accesses: 14
-    ulong field_0x10; // accesses: 4
+    uint field_0x8; // accesses: 10
+    int field_0xc; // accesses: 14
+    int field_0x10; // accesses: 4
 
     // Member Functions
     GmVec3 * __thiscall Tail(void *this,CFastBufferWheel<class_GmVec3> *param_1);

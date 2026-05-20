@@ -5,21 +5,21 @@
 
 struct CPlugFileGpuBuilder {
     void** vftable; // accesses: 2
-    undefined4 field_0x4; // accesses: 8
-    GmFrustumIso4 * field_0x8; // accesses: 7
+    int field_0x4; // accesses: 8
+    int * field_0x8; // accesses: 7
     undefined4 field_0xc; // accesses: 4
     undefined1 * field_0x10; // accesses: 4
     char * field_0x14; // accesses: 5
-    undefined1 * field_0x18; // accesses: 3
-    undefined4 field_0x1c; // accesses: 3
+    char * field_0x18; // accesses: 3
+    int field_0x1c; // accesses: 3
     undefined1 * field_0x20; // accesses: 1
-    undefined4 field_0x24; // accesses: 3
+    int field_0x24; // accesses: 3
     undefined1 * field_0x28; // accesses: 1
-    undefined4 field_0x2c; // accesses: 3
+    int field_0x2c; // accesses: 3
     undefined1 * field_0x30; // accesses: 1
-    undefined4 field_0x34; // accesses: 3
+    int field_0x34; // accesses: 3
     undefined1 * field_0x38; // accesses: 1
-    undefined4 field_0x3c; // accesses: 3
+    int field_0x3c; // accesses: 3
     undefined1 * field_0x40; // accesses: 1
 
     // Member Functions

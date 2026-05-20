@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CGameLeagueManager {
+    void** vftable;
 
     // Member Functions
     CGameLeague * __cdecl InternalGetLeagueFromPathAndName (CFastBufferRef<class_CGameLeague> *param_1,CFastStringInt *param_2, CFastStringInt *param_3);

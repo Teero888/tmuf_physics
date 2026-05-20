@@ -7,12 +7,13 @@ struct CHmsViewport;
 struct CMwNod;
 
 struct CSceneFxNod {
-    byte _padding_0x0[20];
+    void** vftable;
+    byte _padding_0x4[16];
     CSceneFxNod * field_0x14; // accesses: 4
     CHmsViewport * field_0x18; // accesses: 3
     CSceneFxNod * field_0x1c; // accesses: 8
     byte _padding_0x20[16];
-    CMwNod * field_0x30; // accesses: 13
+    int * field_0x30; // accesses: 13
     byte _padding_0x34[16];
     CSceneFxNod * field_0x44; // accesses: 2
 

@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBuffer<struct_SHmsVPackerObject> {
     void** vftable; // accesses: 8
     int field_0x4; // accesses: 3

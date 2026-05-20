@@ -3,14 +3,12 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBufferWheel<struct_CGamePlaygroundInterface {
     struct SAvatarMessage> {
         void** vftable; // accesses: 4
         int field_0x4; // accesses: 5
         uint field_0x8; // accesses: 8
-        undefined4 field_0xc; // accesses: 13
+        int field_0xc; // accesses: 13
         int field_0x10; // accesses: 2
 
         // Member Functions

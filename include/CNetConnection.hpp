@@ -5,35 +5,13 @@
 
 struct CClassicBufferMemory;
 struct CNetNod;
-struct ulong;
 
 struct CNetConnection {
-    void** vftable; // accesses: 1
+    void** vftable;
     byte _padding_0x4[24];
     undefined4 field_0x1c; // accesses: 5
     undefined4 field_0x20; // accesses: 2
     undefined4 field_0x24; // accesses: 2
-    ulong field_0x28; // accesses: 1
-    byte _padding_0x2c[4];
-    ulong field_0x30; // accesses: 2
-    byte _padding_0x34[60];
-    CNetConnection * field_0x70; // accesses: 3
-    byte _padding_0x74[20];
-    int field_0x88; // accesses: 1
-    byte _padding_0x8c[4];
-    int field_0x90; // accesses: 3
-    byte _padding_0x94[8];
-    int field_0x9c; // accesses: 4
-    int * field_0xa0; // accesses: 4
-    int * field_0xa4; // accesses: 4
-    byte _padding_0xa8[12];
-    int field_0xb4; // accesses: 2
-    int field_0xb8; // accesses: 2
-    int field_0xbc; // accesses: 2
-    byte _padding_0xc0[12];
-    int field_0xcc; // accesses: 2
-    int field_0xd0; // accesses: 2
-    int field_0xd4; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CNetMasterServerRequest * __thiscall Disconnect(CNetConnection *this,CGameMasterServer *param_1);

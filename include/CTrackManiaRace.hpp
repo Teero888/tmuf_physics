@@ -6,26 +6,22 @@
 struct CAudioSound;
 struct CGameApp;
 struct CGameCamera;
-struct CGameCtnBlock;
 struct CGameCtnChallenge;
 struct CGameCtnGhost;
 struct CGameCtnMediaClipPlayer;
-struct CGamePlayerCameraSet;
 struct CInputPort;
 struct CMwNod;
 struct CTrackMania;
 struct CTrackManiaPlayerInfo;
 struct CTrackManiaRaceInterface;
-struct ulong;
 
 struct CTrackManiaRace {
     void** vftable; // accesses: 16
     byte _padding_0x4[20];
-    CTrackMania * field_0x18; // accesses: 37
-    CGameCtnBlock * field_0x1c; // accesses: 2
-    CGamePlayerCameraSet * field_0x20; // accesses: 14
-    int * field_0x24; // accesses: 3
-    byte _padding_0x28[8];
+    int * field_0x18; // accesses: 37
+    byte _padding_0x1c[4];
+    CInputPort * field_0x20; // accesses: 12
+    byte _padding_0x24[12];
     int field_0x30; // accesses: 3
     CGameCamera * field_0x34; // accesses: 8
     byte _padding_0x38[16];
@@ -47,7 +43,7 @@ struct CTrackManiaRace {
     undefined4 field_0xcc; // accesses: 1
     CTrackManiaRace * field_0xd0; // accesses: 4
     byte _padding_0xd4[24];
-    ulong field_0xec; // accesses: 9
+    undefined4 field_0xec; // accesses: 9
     int field_0xf0; // accesses: 1
     int field_0xf4; // accesses: 3
     byte _padding_0xf8[4];
@@ -67,25 +63,25 @@ struct CTrackManiaRace {
     ulong field_0x274; // accesses: 3
     float field_0x278; // accesses: 2
     byte _padding_0x27c[12];
-    undefined4 field_0x288; // accesses: 3
+    int field_0x288; // accesses: 3
     byte _padding_0x28c[52];
     undefined4 field_0x2c0; // accesses: 2
-    ulong field_0x2c4; // accesses: 5
+    CGameCtnGhost * field_0x2c4; // accesses: 5
     byte _padding_0x2c8[52];
     int field_0x2fc; // accesses: 9
     void * field_0x300; // accesses: 1
     undefined4 field_0x304; // accesses: 2
     void * field_0x308; // accesses: 8
-    undefined4 field_0x30c; // accesses: 3
+    int field_0x30c; // accesses: 3
     byte _padding_0x310[4];
     void * field_0x314; // accesses: 2
     undefined4 field_0x318; // accesses: 2
-    float field_0x31c; // accesses: 3
+    undefined4 field_0x31c; // accesses: 3
     undefined4 field_0x320; // accesses: 5
-    undefined4 field_0x324; // accesses: 2
-    float field_0x328; // accesses: 2
+    char * field_0x324; // accesses: 2
+    undefined4 field_0x328; // accesses: 2
     int field_0x32c; // accesses: 4
-    CMwNod * field_0x330; // accesses: 11
+    CTrackManiaPlayerInfo * field_0x330; // accesses: 11
     undefined4 field_0x334; // accesses: 1
     undefined4 field_0x338; // accesses: 1
     undefined4 field_0x33c; // accesses: 2
@@ -111,14 +107,14 @@ struct CTrackManiaRace {
     undefined4 field_0x4e0; // accesses: 1
     byte _padding_0x4e4[4];
     undefined4 field_0x4e8; // accesses: 2
-    undefined4 field_0x4ec; // accesses: 4
+    int field_0x4ec; // accesses: 4
     undefined4 field_0x4f0; // accesses: 2
     undefined4 field_0x4f4; // accesses: 2
     undefined4 field_0x4f8; // accesses: 2
     undefined4 field_0x4fc; // accesses: 2
     CGameCtnChallenge * field_0x500; // accesses: 2
     byte _padding_0x504[12];
-    CAudioSound * field_0x510; // accesses: 11
+    int * field_0x510; // accesses: 11
     CAudioSound * field_0x514; // accesses: 5
     int * field_0x518; // accesses: 4
     ECallback field_0x51c; // accesses: 1
@@ -126,7 +122,7 @@ struct CTrackManiaRace {
     int field_0x538; // accesses: 3
     byte _padding_0x53c[4];
     undefined4 field_0x540; // accesses: 3
-    undefined4 field_0x544; // accesses: 2
+    int field_0x544; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Ghosts_UpdateAsync(CTrackManiaRace *this,CTrackManiaRace *param_1);

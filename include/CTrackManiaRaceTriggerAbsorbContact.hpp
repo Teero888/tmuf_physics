@@ -7,7 +7,7 @@ struct CTrackManiaRace;
 
 struct CTrackManiaRaceTriggerAbsorbContact {
     void** vftable; // accesses: 1
-    CTrackManiaRaceTriggerAbsorbContact * field_0x4; // accesses: 8
+    CTrackManiaRace * field_0x4; // accesses: 8
 
     // Member Functions
     void __thiscall AbsorbContact (CTrackManiaRaceTriggerAbsorbContact *this,CSceneMobilAbsorbContact *param_1, CHmsItem *param_2,CHmsPhysicalContact *param_3);

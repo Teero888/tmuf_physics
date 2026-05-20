@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct GxTexCoordSet {
-    void** vftable; // accesses: 1
+    uint field_0x0; // accesses: 1
     void * field_0x4; // accesses: 1
 
     // Member Functions

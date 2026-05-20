@@ -6,9 +6,8 @@
 struct CSystemFidsFolder;
 
 struct CSystemDataFolders {
-    void** vftable; // accesses: 2
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 1
+    void** vftable; // accesses: 1
+    CSystemFidsFolder * field_0x4; // accesses: 1
 
     // Member Functions
     CSystemFidFile * __thiscall FindFidFromRelativeName (void *this,CSystemDataFolders *param_1,ulong param_2,CFastStringInt *param_3,int param_4, int param_5,int param_6);

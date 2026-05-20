@@ -5,6 +5,7 @@
 
 struct CPlugVisualQuads2D {
     void** vftable; // accesses: 2
+    byte _final_padding[0x80]; // Total size: 0x84
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateQuad (CPlugVisualQuads2D *this,CPlugVisualQuads2D *param_1,GmVec2 param_2,float param_3, float param_4,GxColor *param_5,ulong param_6,float param_7);

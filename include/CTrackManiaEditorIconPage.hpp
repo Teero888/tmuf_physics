@@ -4,8 +4,10 @@
 #include "typedefs.h"
 
 struct CTrackManiaEditorIconPage {
-    byte _padding_0x0[40];
+    void** vftable;
+    byte _padding_0x4[36];
     int field_0x28; // accesses: 1
+    byte _final_padding[0x4]; // Total size: 0x30
 
     // Member Functions
     CFastString __thiscall GetName (CTrackManiaEditorIconPage *this,CTrackManiaEditorIconPage *param_1);

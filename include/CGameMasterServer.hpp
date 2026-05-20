@@ -3,12 +3,10 @@
 
 #include "typedefs.h"
 
-struct CNetConnection;
-struct ulong;
-
 struct CGameMasterServer {
     struct SCriteria {
-        byte _padding_0x0[8];
+        void** vftable;
+        byte _padding_0x4[4];
         undefined4 field_0x8; // accesses: 1
         undefined * field_0xc; // accesses: 2
 
@@ -25,7 +23,8 @@ struct CGameMasterServer {
     };
 
     struct SLadderStats {
-        byte _padding_0x0[28];
+        void** vftable;
+        byte _padding_0x4[24];
         undefined4 field_0x1c; // accesses: 1
         undefined * field_0x20; // accesses: 1
 
@@ -33,21 +32,8 @@ struct CGameMasterServer {
         void __thiscall SLadderStats(void *this,SLadderStats *param_1);
     };
 
-    void** vftable; // accesses: 1
-    byte _padding_0x4[48];
-    undefined4 field_0x34; // accesses: 3
-    byte _padding_0x38[320];
-    undefined4 field_0x178; // accesses: 2
-    byte _padding_0x17c[8];
-    int field_0x184; // accesses: 3
-    byte _padding_0x188[56];
-    int field_0x1c0; // accesses: 1
-    byte _padding_0x1c4[12];
-    void * field_0x1d0; // accesses: 1
-    byte _padding_0x1d4[12];
-    ulong field_0x1e0; // accesses: 1
-    byte _padding_0x1e4[252];
-    undefined2 * field_0x2e0; // accesses: 1
+    void** vftable;
+    byte _final_padding[0x28]; // Total size: 0x2c
 
     // Member Functions
     CNetMasterServerRequest * __thiscall AddAbuse (CGameMasterServer *this,CGameMasterServer *param_1,CFastString *param_2, CFastStringInt *param_3,CFastStringInt *param_4,CFastStringInt *param_5, CSystemPackDesc *param_6,CSystemPackDesc *param_7,CFastStringInt *param_8,CMwId *param_9);

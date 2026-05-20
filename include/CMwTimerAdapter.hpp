@@ -4,14 +4,13 @@
 #include "typedefs.h"
 
 struct CMwTimer;
-struct ulong;
 
 struct CMwTimerAdapter {
     void** vftable; // accesses: 8
-    DWORD field_0x4; // accesses: 6
-    float field_0x8; // accesses: 5
-    ulong field_0xc; // accesses: 4
-    ulong field_0x10; // accesses: 5
+    int field_0x4; // accesses: 6
+    CMwTimer * field_0x8; // accesses: 5
+    CMwTimerAdapter * field_0xc; // accesses: 4
+    uint field_0x10; // accesses: 5
     ulong field_0x14; // accesses: 2
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1

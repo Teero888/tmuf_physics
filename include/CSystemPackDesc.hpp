@@ -6,14 +6,8 @@
 struct CSystemFid;
 
 struct CSystemPackDesc {
-    void** vftable; // accesses: 4
-    int field_0x4; // accesses: 3
-    byte _padding_0x8[64];
-    undefined4 field_0x48; // accesses: 6
-    int field_0x4c; // accesses: 1
-    int field_0x50; // accesses: 1
-    byte _padding_0x54[36];
-    int * field_0x78; // accesses: 3
+    void** vftable; // accesses: 1
+    byte _final_padding[0x3]; // Total size: 0x7
 
     // Member Functions
     SNat128 __cdecl ComputeChecksum (ulong param_1,ulong param_2,ulong param_3,ulong param_4,uchar *param_5);

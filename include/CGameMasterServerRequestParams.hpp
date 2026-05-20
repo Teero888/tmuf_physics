@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CGameMasterServerRequestParams {
+    void** vftable;
 
     // Member Functions
     SParam * __thiscall InternalGetParam (CGameMasterServerRequestParams *this,CGameMasterServerRequestParams *param_1, CFastString *param_2);

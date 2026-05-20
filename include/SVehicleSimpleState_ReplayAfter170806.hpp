@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct uchar;
-
 struct SVehicleSimpleState_ReplayAfter170806 {
     byte _padding_0x0[34];
     byte field_0x22; // accesses: 2

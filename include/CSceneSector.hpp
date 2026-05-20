@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CSceneSector {
-    void** vftable; // accesses: 2
+    void** vftable; // accesses: 1
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     byte _padding_0x18[4];

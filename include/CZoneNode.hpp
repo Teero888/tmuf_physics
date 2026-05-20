@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CZoneNode {
-    byte _padding_0x0[8];
+    void** vftable;
+    byte _padding_0x4[4];
     int field_0x8; // accesses: 1
 
     // Member Functions

@@ -3,10 +3,8 @@
 
 #include "typedefs.h"
 
-struct ushort;
-
 struct SVehicleSimpleState_ReplayAfter211003 {
-    void** vftable; // accesses: 1
+    ushort field_0x0; // accesses: 1
     ushort field_0x2; // accesses: 1
     ushort field_0x4; // accesses: 1
     byte field_0x6; // accesses: 1
@@ -23,7 +21,7 @@ struct SVehicleSimpleState_ReplayAfter211003 {
     byte field_0x11; // accesses: 1
     byte field_0x12; // accesses: 1
     byte field_0x13; // accesses: 1
-    ushort field_0x14; // accesses: 10
+    byte field_0x14; // accesses: 10
     byte field_0x15; // accesses: 1
 
     // Member Functions

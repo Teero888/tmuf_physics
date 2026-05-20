@@ -3,10 +3,8 @@
 
 #include "typedefs.h"
 
-struct ushort;
-
 struct SPlugVisibleFilterOptim {
-    void** vftable; // accesses: 3
+    ushort field_0x0; // accesses: 2
     ushort field_0x2; // accesses: 1
 
     // Member Functions

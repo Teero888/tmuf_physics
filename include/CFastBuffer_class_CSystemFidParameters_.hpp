@@ -5,7 +5,7 @@
 
 struct CFastBuffer<class_CSystemFidParameters> {
     void** vftable; // accesses: 4
-    undefined4 * field_0x4; // accesses: 3
+    int field_0x4; // accesses: 3
     undefined4 field_0x8; // accesses: 1
 
     // Member Functions

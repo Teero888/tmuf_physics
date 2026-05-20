@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CMwParamFastBuffer<class_CMwParamReal> {
+    void** vftable;
 
     // Member Functions
     void __thiscall SetValue (CMwParamFastBuffer<class_CMwParamReal> *this,CMwCmdAffectParamBool *param_1);

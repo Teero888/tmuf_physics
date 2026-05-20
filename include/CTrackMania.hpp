@@ -4,7 +4,6 @@
 #include "typedefs.h"
 
 struct CTrackManiaEditor;
-struct ulong;
 
 struct CTrackMania {
     void** vftable; // accesses: 2
@@ -27,10 +26,11 @@ struct CTrackMania {
     ulong field_0x504; // accesses: 1
     CTrackMania * field_0x508; // accesses: 1
     byte _padding_0x50c[52];
-    undefined4 field_0x540; // accesses: 2
+    int field_0x540; // accesses: 2
     undefined2 * field_0x544; // accesses: 1
-    undefined4 field_0x548; // accesses: 2
+    int field_0x548; // accesses: 2
     undefined2 * field_0x54c; // accesses: 1
+    byte _final_padding[0x9c]; // Total size: 0x5ec
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateWaterMap(CTrackMania *this,CTrackMania *param_1);

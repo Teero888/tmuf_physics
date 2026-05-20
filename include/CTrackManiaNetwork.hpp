@@ -11,28 +11,7 @@ struct CGameMasterServer;
 struct CTrackMania;
 
 struct CTrackManiaNetwork {
-    void** vftable; // accesses: 67
-    byte _padding_0x4[276];
-    CGameDialogs * field_0x118; // accesses: 4
-    byte _padding_0x11c[148];
-    CGameMasterServer * field_0x1b0; // accesses: 8
-    byte _padding_0x1b4[28];
-    int field_0x1d0; // accesses: 3
-    byte _padding_0x1d4[104];
-    CTrackManiaNetworkServerInfo * field_0x23c; // accesses: 1
-    byte _padding_0x240[952];
-    CTrackMania * field_0x5f8; // accesses: 16
-    byte _padding_0x5fc[96];
-    undefined4 field_0x65c; // accesses: 2
-    int field_0x660; // accesses: 8
-    byte _padding_0x664[372];
-    undefined4 field_0x7d8; // accesses: 4
-    byte _padding_0x7dc[68];
-    undefined4 field_0x820; // accesses: 4
-    byte _padding_0x824[8];
-    undefined4 field_0x82c; // accesses: 1
-    byte _padding_0x830[32];
-    CClassicArchive * field_0x850; // accesses: 2
+    void** vftable; // accesses: 4
 
     // Member Functions
     CTrackManiaMenus * __thiscall GetMenuManager(CTrackManiaNetwork *this,CTrackManiaNetwork *param_1);

@@ -6,7 +6,8 @@
 struct CPlugTree;
 
 struct CControlTimeLine2 {
-    byte _padding_0x0[312];
+    void** vftable;
+    byte _padding_0x4[308];
     CControlTimeLine2 * field_0x138; // accesses: 2
     float field_0x13c; // accesses: 2
     float field_0x140; // accesses: 1
@@ -15,6 +16,7 @@ struct CControlTimeLine2 {
     float field_0x158; // accesses: 1
     byte _padding_0x15c[292];
     CPlugTree * field_0x280; // accesses: 4
+    byte _final_padding[0x70]; // Total size: 0x2f4
 
     // Member Functions
     void __thiscall GetTreeXFromTime (CControlTimeLine2 *this,CControlTimeLine2 *param_1,float param_2,float *param_3, int *param_4);

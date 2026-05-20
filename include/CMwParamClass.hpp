@@ -4,6 +4,8 @@
 #include "typedefs.h"
 
 struct CMwParamClass {
+    void** vftable;
+    byte _final_padding[0x10]; // Total size: 0x14
 
     // Member Functions
     GmVec3 __thiscall GetValue(CMwParamClass *this,CFuncColorGradient *param_1,float param_2);

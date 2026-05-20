@@ -3,20 +3,9 @@
 
 #include "typedefs.h"
 
-struct uchar;
-struct ulong;
-
 struct CPlugFileImg {
-    void** vftable; // accesses: 3
-    byte _padding_0x4[16];
-    undefined4 field_0x14; // accesses: 1
-    ulong field_0x18; // accesses: 9
-    ulong field_0x1c; // accesses: 11
-    ulong field_0x20; // accesses: 6
-    undefined4 field_0x24; // accesses: 33
-    uchar * field_0x28; // accesses: 19
-    ulong field_0x2c; // accesses: 4
-    undefined4 field_0x30; // accesses: 1
+    void** vftable; // accesses: 2
+    byte _final_padding[0x5]; // Total size: 0x9
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall Force1stPixelAlpha0(CPlugFileImg *this,CPlugFileImg *param_1);

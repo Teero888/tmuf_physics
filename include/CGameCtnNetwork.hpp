@@ -7,16 +7,7 @@ struct CNetMasterServer;
 
 struct CGameCtnNetwork {
     void** vftable; // accesses: 1
-    byte _padding_0x4[32];
-    CNetMasterServer * field_0x24; // accesses: 2
-    CNetMasterServer * field_0x28; // accesses: 2
-    byte _padding_0x2c[20];
-    undefined4 field_0x40; // accesses: 2
-    int field_0x44; // accesses: 1
-    byte _padding_0x48[360];
-    CNetMasterServer * field_0x1b0; // accesses: 2
-    byte _padding_0x1b4[1092];
-    int * field_0x5f8; // accesses: 9
+    byte _final_padding[0x3]; // Total size: 0x7
 
     // Member Functions
     ulong __thiscall GetNbAutoSpectators(CGameCtnNetwork *this,CGameCtnNetwork *param_1);

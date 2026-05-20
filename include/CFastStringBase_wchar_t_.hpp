@@ -6,8 +6,8 @@
 struct CClassicBufferMemory;
 
 struct CFastStringBase<wchar_t> {
-    void** vftable; // accesses: 8
-    void * field_0x4; // accesses: 15
+    void** vftable; // accesses: 6
+    wchar_t * field_0x4; // accesses: 13
 
     // Member Functions
     void __thiscall AllocAtLeast (void *this,CFastStringBase<wchar_t> *param_1,ulong param_2,int param_3,SOldChars *param_4 );

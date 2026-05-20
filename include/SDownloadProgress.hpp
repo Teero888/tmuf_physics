@@ -4,10 +4,10 @@
 #include "typedefs.h"
 
 struct SDownloadProgress {
-    void** vftable; // accesses: 2
-    undefined4 field_0x4; // accesses: 3
-    undefined4 field_0x8; // accesses: 3
-    undefined4 field_0xc; // accesses: 2
+    int field_0x0; // accesses: 2
+    int field_0x4; // accesses: 3
+    int field_0x8; // accesses: 3
+    int field_0xc; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall UpdateDownloadProgress(void)'::__l2:: SDownloadProgress::GetCurProgress(void *this,SDownloadProgress *param_1);

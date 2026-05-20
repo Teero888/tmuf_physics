@@ -3,22 +3,20 @@
 
 #include "typedefs.h"
 
-struct CMwCmdBufferCore;
 struct CPlugFileImg;
 struct GxColor;
 
 struct CPlugFileGen {
-    void** vftable; // accesses: 3
-    CPlugFileImg * field_0x4; // accesses: 2
-    CPlugFileImg * field_0x8; // accesses: 3
-    byte _padding_0xc[12];
-    int field_0x18; // accesses: 19
-    int field_0x1c; // accesses: 19
+    void** vftable; // accesses: 1
+    byte _padding_0x4[20];
+    CPlugFileImg * field_0x18; // accesses: 19
+    CPlugFileGen * field_0x1c; // accesses: 19
     int field_0x20; // accesses: 1
     uint field_0x24; // accesses: 32
-    void * field_0x28; // accesses: 9
+    int * field_0x28; // accesses: 9
     byte _padding_0x2c[8];
     undefined4 field_0x34; // accesses: 7
+    byte _final_padding[0x18]; // Total size: 0x50
 
     // Member Functions
     /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */ void __thiscall GenChecker(CPlugFileGen *this,CPlugFileGen *param_1,ulong param_2);

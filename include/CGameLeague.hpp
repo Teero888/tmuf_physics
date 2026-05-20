@@ -6,11 +6,12 @@
 struct SStringParam;
 
 struct CGameLeague {
-    void** vftable; // accesses: 1
+    void** vftable;
     byte _padding_0x4[20];
     SStringParam * field_0x18; // accesses: 1
     byte _padding_0x1c[4];
     undefined4 field_0x20; // accesses: 1
+    byte _final_padding[0x34]; // Total size: 0x58
 
     // Member Functions
     /* WARNING: Removing unreachable block (ram,0x006484e5) */ void __cdecl CGameLeague::GetRecursivesPathsFromFullPath (CFastStringInt *param_1,CFastBuffer<class_CFastStringInt> *param_2);

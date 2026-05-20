@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct SPlugUrlLink {
-    void** vftable; // accesses: 3
+    undefined4 field_0x0; // accesses: 3
     undefined2 * field_0x4; // accesses: 3
     undefined4 field_0x8; // accesses: 2
     undefined4 field_0xc; // accesses: 2

@@ -8,15 +8,7 @@ struct CTrackManiaPlayerInfo;
 
 struct CTrackManiaRaceScore {
     void** vftable; // accesses: 1
-    byte _padding_0x4[16];
-    int field_0x14; // accesses: 1
-    int field_0x18; // accesses: 1
-    int field_0x1c; // accesses: 1
-    byte _padding_0x20[44];
-    undefined4 field_0x4c; // accesses: 3
-    undefined4 field_0x50; // accesses: 2
-    CMwNod * field_0x54; // accesses: 7
-    undefined4 field_0x58; // accesses: 1
+    byte _final_padding[0x8]; // Total size: 0xc
 
     // Member Functions
     int __thiscall IsNullScore(CTrackManiaRaceScore *this,CTrackManiaRaceScore *param_1);

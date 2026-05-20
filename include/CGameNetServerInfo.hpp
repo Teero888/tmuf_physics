@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CGameNetServerInfo {
-    byte _padding_0x0[180];
-    CGameNetServerInfo * field_0xb4; // accesses: 2
+    void** vftable;
+    byte _final_padding[0xe]; // Total size: 0x12
 
     // Member Functions
     void __thiscall SetReloadNeeded (CGameNetServerInfo *this,CGameNetServerInfo *param_1,EReload param_2);

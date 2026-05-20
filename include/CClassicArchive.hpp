@@ -6,12 +6,12 @@
 struct CClassicBuffer;
 
 struct CClassicArchive {
-    void** vftable; // accesses: 7
+    void** vftable; // accesses: 3
     CClassicBuffer * field_0x4; // accesses: 27
-    int field_0x8; // accesses: 10
+    int field_0x8; // accesses: 9
     int field_0xc; // accesses: 14
     byte _padding_0x10[4];
-    undefined4 field_0x14; // accesses: 5
+    int field_0x14; // accesses: 3
 
     // Member Functions
     CClassicBuffer * __thiscall DetachBuffer(CClassicArchive *this,CClassicArchive *param_1,int param_2);

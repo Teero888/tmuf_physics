@@ -5,17 +5,17 @@
 
 struct CGameRemoteBuffer;
 struct CGameRemoteBufferPool;
-struct ulong;
 
 struct CGameControlGrid {
     void** vftable; // accesses: 1
     byte _padding_0x4[460];
-    undefined4 field_0x1d0; // accesses: 3
+    uint field_0x1d0; // accesses: 3
     byte _padding_0x1d4[48];
-    CGameRemoteBufferPool * field_0x204; // accesses: 3
+    CGameControlGrid * field_0x204; // accesses: 3
     byte _padding_0x208[16];
-    ulong field_0x218; // accesses: 5
+    CGameRemoteBuffer * field_0x218; // accesses: 5
     CGameRemoteBuffer * field_0x21c; // accesses: 1
+    byte _final_padding[0x34]; // Total size: 0x254
 
     // Member Functions
     CGameRemoteBuffer * __thiscall Remote_InternalGetBuffer (CGameControlGrid *this,CGameControlGrid *param_1,int param_2);

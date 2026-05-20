@@ -7,23 +7,23 @@ struct CMotionTrackTree;
 struct CMwCmd;
 struct CMwNod;
 struct CTrackManiaEditorIcon;
-struct ulong;
 
 struct CMotionPlayer {
-    void** vftable; // accesses: 3
+    void** vftable; // accesses: 1
     byte _padding_0x4[20];
     undefined4 field_0x18; // accesses: 1
     undefined4 field_0x1c; // accesses: 1
     int * field_0x20; // accesses: 5
     undefined4 field_0x24; // accesses: 1
-    CMotionTrackTree * field_0x28; // accesses: 6
+    CMotionTrackTree * field_0x28; // accesses: 5
     undefined4 field_0x2c; // accesses: 1
-    CMwNod * field_0x30; // accesses: 8
+    CTrackManiaEditorIcon * field_0x30; // accesses: 8
     CMwNod * field_0x34; // accesses: 2
     undefined4 field_0x38; // accesses: 1
     byte _padding_0x3c[12];
     undefined4 field_0x48; // accesses: 2
     undefined4 field_0x4c; // accesses: 1
+    byte _final_padding[0x8]; // Total size: 0x58
 
     // Member Functions
     int __thiscall IsPlaying(CMotionPlayer *this,COalAudioSound *param_1);

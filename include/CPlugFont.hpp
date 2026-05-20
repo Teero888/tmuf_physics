@@ -5,6 +5,11 @@
 
 struct CPlugFont {
     struct CUrlLinks {
+        void** vftable;
+        byte _padding_0x4[28];
+        int field_0x20; // accesses: 1
+        byte _padding_0x24[4];
+        undefined4 field_0x28; // accesses: 1
 
         // Member Functions
         /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall AddLineFeed(CUrlLinks *this,CUrlLinks *param_1);
@@ -15,7 +20,7 @@ struct CPlugFont {
         undefined4 field_0x4; // accesses: 2
         undefined4 field_0x8; // accesses: 2
         undefined4 field_0xc; // accesses: 2
-        undefined4 field_0x10; // accesses: 3
+        uint field_0x10; // accesses: 3
         uint field_0x14; // accesses: 2
         undefined4 field_0x18; // accesses: 1
 
@@ -27,6 +32,7 @@ struct CPlugFont {
         void __thiscall ~SCharStyle(void *this,SCharStyle *param_1);
     };
 
+    void** vftable;
 
     // Member Functions
     float __thiscall GetLength(CPlugFont *this,CPlugFileSnd *param_1);

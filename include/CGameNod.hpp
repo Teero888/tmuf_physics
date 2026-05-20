@@ -5,8 +5,6 @@
 
 struct CGameNod {
     void** vftable; // accesses: 2
-    byte _padding_0x4[20];
-    undefined4 field_0x18; // accesses: 1
 
     // Member Functions
     ulong __thiscall GetChunkInfo(CGameNod *this,CFuncSegment *param_1,ulong param_2);

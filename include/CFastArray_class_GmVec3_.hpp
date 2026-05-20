@@ -3,11 +3,9 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastArray<class_GmVec3> {
     void** vftable; // accesses: 2
-    ulong field_0x4; // accesses: 10
+    void * field_0x4; // accesses: 10
 
     // Member Functions
     void __thiscall AllocateMore (void *this,CFastArray<struct_CDx9DeviceCaps::SFormat> *param_1,ulong param_2);

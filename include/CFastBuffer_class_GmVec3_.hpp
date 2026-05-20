@@ -5,7 +5,7 @@
 
 struct CFastBuffer<class_GmVec3> {
     void** vftable; // accesses: 2
-    void * field_0x4; // accesses: 4
+    int field_0x4; // accesses: 4
     uint field_0x8; // accesses: 1
 
     // Member Functions

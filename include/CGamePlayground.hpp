@@ -4,22 +4,9 @@
 #include "typedefs.h"
 
 struct CMwNod;
-struct TiXmlDeclaration;
 
 struct CGamePlayground {
-    void** vftable; // accesses: 7
-    TiXmlDeclaration * field_0x4; // accesses: 1
-    byte _padding_0x8[16];
-    undefined4 field_0x18; // accesses: 1
-    byte _padding_0x1c[4];
-    undefined4 field_0x20; // accesses: 1
-    byte _padding_0x24[12];
-    CMwNod * field_0x30; // accesses: 6
-    CMwNod * field_0x34; // accesses: 6
-    byte _padding_0x38[12];
-    CMwNod * field_0x44; // accesses: 8
-    undefined4 field_0x48; // accesses: 1
-    undefined4 field_0x4c; // accesses: 1
+    void** vftable; // accesses: 6
 
     // Member Functions
     int __thiscall UpdateFromSettings (CGamePlayground *this,CGamePlayground *param_1,CFastString *param_2,int param_3);

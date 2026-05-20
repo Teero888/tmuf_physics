@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CVisionVisualKeeper {
-    byte _padding_0x0[4];
+    void** vftable;
     CVisionVisualKeeper * field_0x4; // accesses: 1
 
     // Member Functions

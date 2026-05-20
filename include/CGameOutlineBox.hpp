@@ -6,10 +6,8 @@
 struct CPlugTree;
 
 struct CGameOutlineBox {
-    void** vftable; // accesses: 2
-    undefined4 field_0x4; // accesses: 1
-    uint field_0x8; // accesses: 1
-    byte _padding_0xc[8];
+    void** vftable; // accesses: 1
+    byte _padding_0x4[16];
     CPlugTree * field_0x14; // accesses: 8
     CPlugTree * field_0x18; // accesses: 8
     undefined4 field_0x1c; // accesses: 1

@@ -4,8 +4,8 @@
 #include "typedefs.h"
 
 struct CGameSystemOverlay {
-    byte _padding_0x0[56];
-    uint field_0x38; // accesses: 4
+    void** vftable;
+    byte _final_padding[0x5]; // Total size: 0x9
 
     // Member Functions
     void __thiscall ToolBarSetForceOpen (CGameSystemOverlay *this,CGameSystemOverlay *param_1,int param_2,EForceOpen param_3);

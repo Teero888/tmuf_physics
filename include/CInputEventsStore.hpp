@@ -15,10 +15,11 @@ struct CInputEventsStore {
         void __thiscall SCachedValue(void *this,SCachedValue *param_1,ulong param_2);
     };
 
-    byte _padding_0x0[20];
+    void** vftable;
+    byte _padding_0x4[16];
     CDx9DynamicVB * field_0x14; // accesses: 2
     int field_0x18; // accesses: 1
-    undefined4 field_0x1c; // accesses: 3
+    int field_0x1c; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ short __cdecl Convert(int param_1);

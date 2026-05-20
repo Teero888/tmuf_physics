@@ -14,6 +14,7 @@ struct CControlGrid {
     undefined4 field_0x194; // accesses: 1
     undefined4 field_0x198; // accesses: 1
     undefined4 field_0x19c; // accesses: 1
+    byte _final_padding[0x20]; // Total size: 0x1c0
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CControlGrid(CControlGrid *this,CControlGrid *param_1);

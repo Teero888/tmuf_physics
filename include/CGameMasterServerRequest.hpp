@@ -6,7 +6,8 @@
 struct CMwNod;
 
 struct CGameMasterServerRequest {
-    byte _padding_0x0[88];
+    void** vftable;
+    byte _padding_0x4[84];
     CGameMasterServerRequest * field_0x58; // accesses: 1
     CMwNod * field_0x5c; // accesses: 1
     CGameMasterServerRequest * field_0x60; // accesses: 1

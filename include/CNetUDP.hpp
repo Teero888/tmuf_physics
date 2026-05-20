@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CNetUDP {
+    void** vftable;
 
     // Member Functions
     ERetCode __thiscall SendTo(void *this,CNetUDP *param_1,CNetIPAddress *param_2,CClassicBufferMemory *param_3);

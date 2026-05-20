@@ -9,8 +9,6 @@ struct CHmsPackLightMap;
 struct CHmsVPackerCell;
 struct CMwNod;
 struct CSceneSector;
-struct SHmsVPackerCreate;
-struct ushort;
 
 struct CHmsZoneVPacker {
     struct SLocationAlloc {
@@ -21,20 +19,8 @@ struct CHmsZoneVPacker {
         void __thiscall FreeAt(void *this,SLocationAlloc *param_1,ulong param_2);
     };
 
-    void** vftable; // accesses: 7
-    byte _padding_0x4[8];
-    int field_0xc; // accesses: 2
-    int field_0x10; // accesses: 1
-    CHmsZoneVPacker * field_0x14; // accesses: 1
-    CHmsPackLightMap * field_0x18; // accesses: 1
-    SHmsVPackerCreate * field_0x1c; // accesses: 1
-    byte _padding_0x20[4];
-    CHmsZoneVPacker * field_0x24; // accesses: 2
-    byte _padding_0x28[32];
-    CHmsItem * field_0x48; // accesses: 5
-    byte _padding_0x4c[12];
-    undefined4 field_0x58; // accesses: 2
-    byte _padding_0x5c[4];
+    void** vftable; // accesses: 6
+    byte _padding_0x4[92];
     CHmsZoneVPacker * field_0x60; // accesses: 4
     byte _padding_0x64[8];
     int field_0x6c; // accesses: 2
@@ -55,23 +41,23 @@ struct CHmsZoneVPacker {
     undefined4 field_0xd8; // accesses: 1
     undefined4 field_0xdc; // accesses: 1
     undefined4 field_0xe0; // accesses: 1
-    undefined4 field_0xe4; // accesses: 3
-    undefined4 field_0xe8; // accesses: 2
+    CSceneSector * field_0xe4; // accesses: 3
+    CHmsCorpus * field_0xe8; // accesses: 2
     CHmsItem * field_0xec; // accesses: 8
-    CHmsZoneVPacker * field_0xf0; // accesses: 13
+    CHmsPackLightMap * field_0xf0; // accesses: 13
     undefined4 field_0xf4; // accesses: 4
-    undefined4 field_0xf8; // accesses: 27
+    uint field_0xf8; // accesses: 27
     byte _padding_0xfc[40];
     CHmsZoneVPacker * field_0x124; // accesses: 4
     byte _padding_0x128[96];
     CHmsZoneVPacker * field_0x188; // accesses: 3
     void * field_0x18c; // accesses: 3
-    void * field_0x190; // accesses: 2
-    void * field_0x194; // accesses: 3
+    undefined4 field_0x190; // accesses: 2
+    undefined4 field_0x194; // accesses: 3
     void * field_0x198; // accesses: 2
     byte _padding_0x19c[4];
     uint * field_0x1a0; // accesses: 5
-    int field_0x1a4; // accesses: 2
+    SFlags * field_0x1a4; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall AddNewLight (CHmsZoneVPacker *this,CHmsZoneVPacker *param_1,CHmsCorpusLight *param_2);

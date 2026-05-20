@@ -10,31 +10,29 @@ struct CControlLabel;
 struct CControlText;
 struct CGameNetwork;
 struct CGameRace;
-struct CMwCmdScriptVarBool;
 struct CTrackManiaControlScores2;
 struct CTrackManiaNetwork;
 struct CTrackManiaRaceNet;
-struct ulong;
 
 struct CTrackManiaRaceInterface {
-    void** vftable; // accesses: 4
+    void** vftable; // accesses: 3
     byte _padding_0x4[152];
     int field_0x9c; // accesses: 2
-    CTrackManiaRaceNet * field_0xa0; // accesses: 59
+    CGameRace * field_0xa0; // accesses: 59
     byte _padding_0xa4[4];
-    CGameNetwork * field_0xa8; // accesses: 37
+    CTrackManiaNetwork * field_0xa8; // accesses: 37
     byte _padding_0xac[4];
     CControlBase * field_0xb0; // accesses: 7
-    undefined4 field_0xb4; // accesses: 4
+    int field_0xb4; // accesses: 4
     uint field_0xb8; // accesses: 1
     uint field_0xbc; // accesses: 2
-    undefined4 field_0xc0; // accesses: 5
+    int field_0xc0; // accesses: 5
     int field_0xc4; // accesses: 2
-    undefined4 field_0xc8; // accesses: 2
+    uint field_0xc8; // accesses: 2
     CControlBase * field_0xcc; // accesses: 1
     byte _padding_0xd0[8];
     CControlBase * field_0xd8; // accesses: 2
-    CControlBase * field_0xdc; // accesses: 9
+    CControlContainer * field_0xdc; // accesses: 9
     CControlBase * field_0xe0; // accesses: 1
     CControlBase * field_0xe4; // accesses: 1
     CControlBase * field_0xe8; // accesses: 1
@@ -45,9 +43,9 @@ struct CTrackManiaRaceInterface {
     CControlBase * field_0xfc; // accesses: 3
     CControlBase * field_0x100; // accesses: 1
     CControlBase * field_0x104; // accesses: 1
-    CControlBase * field_0x108; // accesses: 14
-    CControlBase * field_0x10c; // accesses: 6
-    undefined4 field_0x110; // accesses: 5
+    int * field_0x108; // accesses: 14
+    CTrackManiaControlScores2 * field_0x10c; // accesses: 6
+    uint field_0x110; // accesses: 5
     CControlBase * field_0x114; // accesses: 3
     CControlBase * field_0x118; // accesses: 1
     byte _padding_0x11c[12];
@@ -56,8 +54,8 @@ struct CTrackManiaRaceInterface {
     CControlBase * field_0x130; // accesses: 2
     byte _padding_0x134[4];
     CControlBase * field_0x138; // accesses: 1
-    undefined4 field_0x13c; // accesses: 3
-    CControlBase * field_0x140; // accesses: 6
+    int field_0x13c; // accesses: 3
+    int * field_0x140; // accesses: 6
     uint field_0x144; // accesses: 3
     CControlBase * field_0x148; // accesses: 5
     CControlBase * field_0x14c; // accesses: 5
@@ -75,7 +73,7 @@ struct CTrackManiaRaceInterface {
     CControlBase * field_0x17c; // accesses: 1
     CControlBase * field_0x180; // accesses: 1
     CControlBase * field_0x184; // accesses: 1
-    undefined4 field_0x188; // accesses: 3
+    int field_0x188; // accesses: 3
     byte _padding_0x18c[16];
     CControlBase * field_0x19c; // accesses: 1
     CControlBase * field_0x1a0; // accesses: 6
@@ -104,34 +102,35 @@ struct CTrackManiaRaceInterface {
     byte _padding_0x1fc[8];
     CControlBase * field_0x204; // accesses: 1
     byte _padding_0x208[8];
-    CControlEntry * field_0x210; // accesses: 6
-    CControlText * field_0x214; // accesses: 11
+    int * field_0x210; // accesses: 6
+    int * field_0x214; // accesses: 11
     int * field_0x218; // accesses: 3
-    ulong field_0x21c; // accesses: 5
+    uint field_0x21c; // accesses: 5
     byte _padding_0x220[56];
     CControlBase * field_0x258; // accesses: 1
-    CControlEntry * field_0x25c; // accesses: 7
+    int * field_0x25c; // accesses: 7
     int * field_0x260; // accesses: 3
     CControlBase * field_0x264; // accesses: 1
     CControlBase * field_0x268; // accesses: 1
     byte _padding_0x26c[4];
     uint field_0x270; // accesses: 1
     byte _padding_0x274[36];
-    undefined4 field_0x298; // accesses: 2
-    undefined4 field_0x29c; // accesses: 2
+    int field_0x298; // accesses: 2
+    int field_0x29c; // accesses: 2
     int field_0x2a0; // accesses: 1
-    ulong field_0x2a4; // accesses: 4
+    int field_0x2a4; // accesses: 4
     byte _padding_0x2a8[8];
     int * field_0x2b0; // accesses: 4
     byte _padding_0x2b4[60];
-    ulong field_0x2f0; // accesses: 3
+    uint field_0x2f0; // accesses: 3
     float field_0x2f4; // accesses: 2
     float field_0x2f8; // accesses: 2
     float field_0x2fc; // accesses: 2
-    ulong field_0x300; // accesses: 4
+    int field_0x300; // accesses: 4
     float field_0x304; // accesses: 1
     float field_0x308; // accesses: 1
     float field_0x30c; // accesses: 1
+    byte _final_padding[0xc]; // Total size: 0x31c
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall UpdateDownloadProgress (CTrackManiaRaceInterface *this,CTrackManiaRaceInterface *param_1);

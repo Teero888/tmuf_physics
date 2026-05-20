@@ -4,14 +4,14 @@
 #include "typedefs.h"
 
 struct GmSurf {
-    void** vftable; // accesses: 2
-    undefined4 field_0x4; // accesses: 2
-    undefined4 field_0x8; // accesses: 4
-    undefined4 field_0xc; // accesses: 3
-    undefined4 field_0x10; // accesses: 3
-    undefined4 field_0x14; // accesses: 3
-    undefined4 field_0x18; // accesses: 2
-    undefined4 field_0x1c; // accesses: 2
+    undefined ** field_0x0; // accesses: 1
+    float field_0x4; // accesses: 1
+    float field_0x8; // accesses: 3
+    float field_0xc; // accesses: 2
+    float field_0x10; // accesses: 2
+    float field_0x14; // accesses: 2
+    float field_0x18; // accesses: 2
+    float field_0x1c; // accesses: 2
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl StaticInit(void);

@@ -9,7 +9,8 @@ struct CPlugMaterial {
     struct CSystemFid;
 
     struct SDeviceMat {
-        byte _padding_0x0[20];
+        void** vftable;
+        byte _padding_0x4[16];
         CSystemFid * field_0x14; // accesses: 2
         CMwNod * field_0x18; // accesses: 9
 
@@ -21,11 +22,12 @@ struct CPlugMaterial {
     void** vftable; // accesses: 1
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
-    undefined4 field_0x18; // accesses: 3
+    uint field_0x18; // accesses: 3
     int * field_0x1c; // accesses: 4
     byte _padding_0x20[8];
     undefined4 field_0x28; // accesses: 2
-    undefined4 field_0x2c; // accesses: 2
+    SDeviceMat * field_0x2c; // accesses: 2
+    byte _final_padding[0x8]; // Total size: 0x38
 
     // Member Functions
     CPlugMaterialFx * __thiscall AddMobil_GetMatFx(CPlugMaterial *this,CPlugMaterialFxs *param_1);

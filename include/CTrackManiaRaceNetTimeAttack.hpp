@@ -6,10 +6,12 @@
 struct CTrackManiaRaceInterface;
 
 struct CTrackManiaRaceNetTimeAttack {
-    byte _padding_0x0[496];
-    undefined4 field_0x1f0; // accesses: 3
+    void** vftable;
+    byte _padding_0x4[492];
+    uint field_0x1f0; // accesses: 3
     byte _padding_0x1f4[804];
     CTrackManiaRaceInterface * field_0x518; // accesses: 2
+    byte _final_padding[0x174]; // Total size: 0x690
 
     // Member Functions
     void __thiscall UpdateAsync(CTrackManiaRaceNetTimeAttack *this,CInputPortDx8 *param_1);

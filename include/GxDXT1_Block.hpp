@@ -3,11 +3,8 @@
 
 #include "typedefs.h"
 
-struct ulong;
-struct ushort;
-
 struct GxDXT1_Block {
-    void** vftable; // accesses: 4
+    ushort field_0x0; // accesses: 1
     ushort field_0x2; // accesses: 1
 
     // Member Functions

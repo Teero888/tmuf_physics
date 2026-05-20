@@ -3,23 +3,13 @@
 
 #include "typedefs.h"
 
-struct CPlugShader;
-struct CVisionViewportDx9;
 struct GmIso4;
 
 struct GmVec4 {
-    void** vftable; // accesses: 53
-    float field_0x4; // accesses: 52
-    float field_0x8; // accesses: 51
-    CVisionViewportDx9 * field_0xc; // accesses: 44
-    float field_0x10; // accesses: 7
-    float field_0x14; // accesses: 5
-    float field_0x18; // accesses: 2
-    float field_0x1c; // accesses: 2
-    float field_0x20; // accesses: 2
-    float field_0x24; // accesses: 2
-    float field_0x28; // accesses: 2
-    float field_0x2c; // accesses: 2
+    GmIso4 * field_0x0; // accesses: 28
+    float field_0x4; // accesses: 27
+    float field_0x8; // accesses: 26
+    float field_0xc; // accesses: 25
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqInterLine(void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,float *param_4);

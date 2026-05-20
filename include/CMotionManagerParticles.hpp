@@ -3,12 +3,12 @@
 
 #include "typedefs.h"
 
-struct CMotionParticleType;
 struct CSceneMobil;
 
 struct CMotionManagerParticles {
     struct SEmitParams {
-        byte _padding_0x0[48];
+        void** vftable;
+        byte _padding_0x4[44];
         undefined4 field_0x30; // accesses: 1
         undefined4 field_0x34; // accesses: 1
         undefined4 field_0x38; // accesses: 1
@@ -24,16 +24,12 @@ struct CMotionManagerParticles {
         void __thiscall Reset(void *this,GmFrustumIso4 *param_1);
     };
 
-    void** vftable; // accesses: 3
-    int field_0x4; // accesses: 1
-    undefined4 field_0x8; // accesses: 1
-    undefined4 field_0xc; // accesses: 1
-    byte _padding_0x10[12];
+    void** vftable;
+    byte _padding_0x4[24];
     CSceneMobil * field_0x1c; // accesses: 2
     byte _padding_0x20[4];
     int field_0x24; // accesses: 1
-    byte _padding_0x28[84];
-    int field_0x7c; // accesses: 1
+    byte _final_padding[0x1c]; // Total size: 0x44
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall GroupUpdateParticles (CMotionManagerParticles *this,CMotionManagerParticles *param_1,ulong param_2, ulong param_3);

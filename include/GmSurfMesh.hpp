@@ -4,11 +4,9 @@
 #include "typedefs.h"
 
 struct GmSurfMesh {
-    void** vftable; // accesses: 3
-    float field_0x4; // accesses: 3
-    float field_0x8; // accesses: 4
-    byte _padding_0xc[24];
-    int field_0x24; // accesses: 3
+    undefined ** field_0x0; // accesses: 1
+    byte _padding_0x4[32];
+    float field_0x24; // accesses: 3
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall ClipSegment (GmSurfMesh *this,GmSurfSphere *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4, float *param_5);

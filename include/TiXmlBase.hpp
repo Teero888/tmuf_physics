@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct TiXmlBase {
+    // No fields detected
 
     // Member Functions
     bool __cdecl StringEqual(char *param_1,char *param_2,bool param_3,TiXmlEncoding param_4);

@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameCtnMediaClip {
-    byte _padding_0x0[60];
+    void** vftable;
+    byte _padding_0x4[56];
     float field_0x3c; // accesses: 1
     float field_0x40; // accesses: 2
 

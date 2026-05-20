@@ -12,6 +12,7 @@ struct CTrackManiaEditorPuzzle {
     CGameCtnChallenge * field_0x20; // accesses: 5
     byte _padding_0x24[148];
     CTrackManiaEditorInterface * field_0xb8; // accesses: 1
+    byte _final_padding[0x460]; // Total size: 0x51c
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CreateDefaultParams (CTrackManiaEditorPuzzle *this,CTrackManiaEditor *param_1,SStartParameters *param_2);

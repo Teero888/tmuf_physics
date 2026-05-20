@@ -10,15 +10,14 @@ struct CGameScene;
 struct CMwCmd;
 struct CMwNod;
 struct CScene2d;
-struct ulong;
 
 struct CGameCtnMediaClipPlayer {
-    void** vftable; // accesses: 4
+    void** vftable; // accesses: 1
     byte _padding_0x4[16];
-    CGameCtnMediaClipPlayer * field_0x14; // accesses: 17
+    CGameCtnMediaClip * field_0x14; // accesses: 17
     CGameCtnMediaClipViewer * field_0x18; // accesses: 19
-    CGameControlCameraMaster * field_0x1c; // accesses: 12
-    CGameCtnMediaClipPlayer * field_0x20; // accesses: 5
+    CMwNod * field_0x1c; // accesses: 12
+    undefined4 field_0x20; // accesses: 4
     undefined4 field_0x24; // accesses: 4
     undefined4 field_0x28; // accesses: 4
     undefined4 field_0x2c; // accesses: 4
@@ -27,13 +26,13 @@ struct CGameCtnMediaClipPlayer {
     CGameCtnMediaClipPlayer * field_0x38; // accesses: 2
     CMwNod * field_0x3c; // accesses: 2
     CGameCtnMediaClipPlayer * field_0x40; // accesses: 4
-    undefined4 field_0x44; // accesses: 2
+    CPlugFileVideo * field_0x44; // accesses: 2
     CMwNod * field_0x48; // accesses: 10
     CGameCtnMediaClipPlayer * field_0x4c; // accesses: 3
     undefined4 field_0x50; // accesses: 2
     CMwNod * field_0x54; // accesses: 19
     undefined4 field_0x58; // accesses: 1
-    ulong field_0x5c; // accesses: 8
+    CGameScene * field_0x5c; // accesses: 8
     CMwNod * field_0x60; // accesses: 12
     byte _padding_0x64[12];
     undefined4 field_0x70; // accesses: 2

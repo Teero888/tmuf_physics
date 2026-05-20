@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct CPlugTreeMapShaderFill {
+    void** vftable;
 
     // Member Functions
     SFillValue * __cdecl GetTreeShaderFill(CPlugTree *param_1);

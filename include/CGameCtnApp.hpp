@@ -18,9 +18,7 @@ struct CGameCtnApp {
     };
 
     void** vftable; // accesses: 1
-    byte _padding_0x4[32];
-    int field_0x24; // accesses: 1
-    byte _padding_0x28[68];
+    byte _padding_0x4[104];
     CInputPort * field_0x6c; // accesses: 6
     byte _padding_0x70[188];
     int field_0x12c; // accesses: 2
@@ -31,7 +29,7 @@ struct CGameCtnApp {
     byte _padding_0x178[28];
     int * field_0x194; // accesses: 5
     byte _padding_0x198[120];
-    int field_0x210; // accesses: 4
+    CGameAdvertising * field_0x210; // accesses: 4
     byte _padding_0x214[96];
     int field_0x274; // accesses: 1
     byte _padding_0x278[16];
@@ -43,10 +41,11 @@ struct CGameCtnApp {
     CInputBindingsConfig * field_0x2cc; // accesses: 1
     CInputBindingsConfig * field_0x2d0; // accesses: 1
     byte _padding_0x2d4[104];
-    undefined4 field_0x33c; // accesses: 2
-    undefined4 field_0x340; // accesses: 3
+    int field_0x33c; // accesses: 2
+    int field_0x340; // accesses: 3
     float field_0x344; // accesses: 2
-    undefined4 field_0x348; // accesses: 3
+    uint field_0x348; // accesses: 3
+    byte _final_padding[0xc4]; // Total size: 0x410
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ CInputBindingsConfig * __thiscall GetCurrentInputBindings(CGameCtnApp *this,CGameCtnApp *param_1,int param_2);

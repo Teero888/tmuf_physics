@@ -4,7 +4,8 @@
 #include "typedefs.h"
 
 struct CGameControlCameraFree {
-    byte _padding_0x0[456];
+    void** vftable;
+    byte _padding_0x4[452];
     CGameControlCameraFree * field_0x1c8; // accesses: 1
     SInputActionDesc * field_0x1cc; // accesses: 1
     SInputActionDesc * field_0x1d0; // accesses: 1
@@ -12,6 +13,7 @@ struct CGameControlCameraFree {
     SInputActionDesc * field_0x1d8; // accesses: 1
     SInputActionDesc * field_0x1dc; // accesses: 1
     SInputActionDesc * field_0x1e0; // accesses: 1
+    byte _final_padding[0xf0]; // Total size: 0x2d4
 
     // Member Functions
     void __thiscall SetKeysAction (CGameControlCameraFree *this,CGameControlCameraFree *param_1,SInputActionDesc *param_2, SInputActionDesc *param_3,SInputActionDesc *param_4,SInputActionDesc *param_5, SInputActionDesc *param_6,SInputActionDesc *param_7,SInputActionDesc *param_8);

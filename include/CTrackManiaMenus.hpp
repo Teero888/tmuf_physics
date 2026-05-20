@@ -19,7 +19,8 @@ struct CTrackManiaMenus {
     CTrackMania * field_0x784; // accesses: 10
     int field_0x788; // accesses: 1
     byte _padding_0x78c[180];
-    CGameNetwork * field_0x840; // accesses: 3
+    CTrackManiaNetwork * field_0x840; // accesses: 3
+    byte _final_padding[0x324]; // Total size: 0xb68
 
     // Member Functions
     void __thiscall DialogInGameMenu_OnRetire(CTrackManiaMenus *this,CTrackManiaMenus *param_1);

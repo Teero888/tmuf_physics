@@ -6,9 +6,8 @@
 struct CSystemEngine;
 
 struct SNodFid {
-    void** vftable; // accesses: 2
+    SNodFid * field_0x0; // accesses: 2
     int field_0x4; // accesses: 1
-    int field_0x8; // accesses: 1
 
     // Member Functions
     void __thiscall SetNoDuplicate(void *this,SNodFid *param_1,CMwNod *param_2);

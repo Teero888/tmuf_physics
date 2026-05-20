@@ -4,10 +4,9 @@
 #include "typedefs.h"
 
 struct CFastString;
-struct ulong;
 
 struct CGameCtnReplayRecord {
-    void** vftable; // accesses: 6
+    void** vftable; // accesses: 3
     byte _padding_0x4[16];
     undefined4 field_0x14; // accesses: 1
     byte _padding_0x18[12];

@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CFastBuffer<class_GmQuat> {
     void** vftable; // accesses: 7
     int field_0x4; // accesses: 2

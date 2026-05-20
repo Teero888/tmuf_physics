@@ -3,19 +3,15 @@
 
 #include "typedefs.h"
 
-struct CClassicBuffer;
-struct CMwNod;
-struct CSystemEngine;
-
 struct CClassicBufferMemory {
-    void** vftable; // accesses: 10
+    void** vftable; // accesses: 2
     undefined4 field_0x4; // accesses: 1
-    CMwNod * field_0x8; // accesses: 2
-    void * field_0xc; // accesses: 9
-    uint field_0x10; // accesses: 7
-    uint field_0x14; // accesses: 12
+    int field_0x8; // accesses: 1
+    CClassicBufferMemory * field_0xc; // accesses: 7
+    uint field_0x10; // accesses: 6
+    CClassicBufferMemory * field_0x14; // accesses: 12
     CClassicBufferMemory * field_0x18; // accesses: 7
-    undefined4 field_0x1c; // accesses: 9
+    uint field_0x1c; // accesses: 9
 
     // Member Functions
     int __thiscall IsEqualBuffer (CClassicBufferMemory *this,CClassicBufferMemory *param_1,CClassicBufferMemory *param_2);

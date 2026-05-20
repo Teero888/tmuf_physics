@@ -6,7 +6,7 @@
 struct CPfmMesh;
 
 struct CPfmMeshInterface {
-    byte _padding_0x0[4];
+    void** vftable;
     CPfmMesh * field_0x4; // accesses: 3
 
     // Member Functions

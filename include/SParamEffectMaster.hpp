@@ -6,7 +6,7 @@
 struct CMwNod;
 
 struct SParamEffectMaster {
-    void** vftable; // accesses: 5
+    int * field_0x0; // accesses: 5
     CMwNod * field_0x4; // accesses: 3
     undefined4 field_0x8; // accesses: 1
     byte _padding_0xc[24];

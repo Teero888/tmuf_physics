@@ -16,9 +16,9 @@ struct CSystemConfigDisplay {
     undefined4 field_0x30; // accesses: 2
     undefined4 field_0x34; // accesses: 3
     undefined4 field_0x38; // accesses: 3
-    undefined4 field_0x3c; // accesses: 3
-    undefined4 field_0x40; // accesses: 5
-    undefined4 field_0x44; // accesses: 5
+    int field_0x3c; // accesses: 3
+    int field_0x40; // accesses: 5
+    CSystemConfigDisplay * field_0x44; // accesses: 5
     undefined4 field_0x48; // accesses: 9
     undefined4 field_0x4c; // accesses: 15
     undefined4 field_0x50; // accesses: 4
@@ -27,14 +27,14 @@ struct CSystemConfigDisplay {
     undefined4 field_0x5c; // accesses: 11
     undefined4 field_0x60; // accesses: 8
     undefined4 field_0x64; // accesses: 8
-    uint field_0x68; // accesses: 12
+    undefined4 field_0x68; // accesses: 12
     undefined4 field_0x6c; // accesses: 7
     undefined4 field_0x70; // accesses: 7
     undefined4 field_0x74; // accesses: 7
     undefined4 field_0x78; // accesses: 13
     undefined4 field_0x7c; // accesses: 10
     undefined4 field_0x80; // accesses: 2
-    float field_0x84; // accesses: 10
+    undefined4 field_0x84; // accesses: 10
     undefined4 field_0x88; // accesses: 2
     undefined4 field_0x8c; // accesses: 2
     undefined4 field_0x90; // accesses: 3

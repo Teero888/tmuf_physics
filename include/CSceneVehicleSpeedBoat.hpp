@@ -7,7 +7,8 @@ struct CHmsItem;
 struct CScene;
 
 struct CSceneVehicleSpeedBoat {
-    byte _padding_0x0[20];
+    void** vftable;
+    byte _padding_0x4[16];
     CScene * field_0x14; // accesses: 2
     byte _padding_0x18[16];
     CHmsItem * field_0x28; // accesses: 29
@@ -21,6 +22,7 @@ struct CSceneVehicleSpeedBoat {
     undefined4 field_0x2e0; // accesses: 3
     undefined4 field_0x2e4; // accesses: 2
     float field_0x2e8; // accesses: 5
+    byte _final_padding[0x204]; // Total size: 0x4f0
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall LimitTo (CSceneVehicleSpeedBoat *this,CSceneVehicleSpeedBoat *param_1,float param_2,float param_3);

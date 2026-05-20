@@ -3,8 +3,6 @@
 
 #include "typedefs.h"
 
-struct ulong;
-
 struct CPlugFileGPU {
     struct SLoadDesc {
         void** vftable; // accesses: 1
@@ -15,24 +13,6 @@ struct CPlugFileGPU {
     };
 
     void** vftable; // accesses: 6
-    byte _padding_0x4[20];
-    int field_0x18; // accesses: 1
-    undefined4 field_0x1c; // accesses: 1
-    uint field_0x20; // accesses: 1
-    undefined4 field_0x24; // accesses: 1
-    undefined4 field_0x28; // accesses: 1
-    undefined4 field_0x2c; // accesses: 2
-    byte _padding_0x30[24];
-    ulong field_0x48; // accesses: 3
-    byte _padding_0x4c[84];
-    undefined4 field_0xa0; // accesses: 1
-    byte _padding_0xa4[8];
-    undefined4 field_0xac; // accesses: 1
-    byte _padding_0xb0[4];
-    ID3DXConstantTable * field_0xb4; // accesses: 1
-    ID3DXConstantTable * field_0xb8; // accesses: 3
-    undefined4 field_0xbc; // accesses: 5
-    uint field_0xc0; // accesses: 4
 
     // Member Functions
     CFastString * __thiscall DefineGetValue(CPlugFileGPU *this,CPlugFileGPU *param_1,CMwId *param_2);

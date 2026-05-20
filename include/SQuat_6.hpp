@@ -4,6 +4,7 @@
 #include "typedefs.h"
 
 struct SQuat_6 {
+    // No fields detected
 
     // Member Functions
     void __thiscall GetGmQuat(void *this,SQuat_6 *param_1,GmQuat *param_2);

@@ -17,7 +17,8 @@ struct CTrackManiaRaceNetLaps {
     byte _padding_0x9c[1320];
     int field_0x5c4; // accesses: 2
     byte _padding_0x5c8[184];
-    undefined4 field_0x680; // accesses: 2
+    int field_0x680; // accesses: 2
+    byte _final_padding[0xc]; // Total size: 0x690
 
     // Member Functions
     void __thiscall UpdateAsync(CTrackManiaRaceNetLaps *this,CInputPortDx8 *param_1);

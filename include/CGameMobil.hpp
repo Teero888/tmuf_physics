@@ -16,6 +16,7 @@ struct CGameMobil {
     undefined * field_0x28; // accesses: 3
     CMwNod * field_0x2c; // accesses: 3
     undefined4 field_0x30; // accesses: 1
+    byte _final_padding[0x4]; // Total size: 0x38
 
     // Member Functions
     CMwClassInfo * __thiscall MwGetClassInfo(CGameMobil *this,CFuncSegment *param_1);

@@ -5,6 +5,7 @@
 
 struct CPlugVisual3D {
     void** vftable; // accesses: 1
+    byte _final_padding[0x2]; // Total size: 0x6
 
     // Member Functions
     void __thiscall CPlugVisual3D(CPlugVisual3D *this,CPlugVisual3D *param_1,CPlugVisual3D *param_2);

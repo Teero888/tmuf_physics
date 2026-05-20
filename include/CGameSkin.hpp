@@ -4,9 +4,8 @@
 #include "typedefs.h"
 
 struct CGameSkin {
-    byte _padding_0x0[28];
-    undefined * field_0x1c; // accesses: 1
-    undefined4 field_0x20; // accesses: 1
+    void** vftable;
+    byte _final_padding[0xa0]; // Total size: 0xa4
 
     // Member Functions
     ulong __thiscall GetIconIndex(CGameSkin *this,CGameSkin *param_1);

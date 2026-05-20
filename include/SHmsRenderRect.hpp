@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct SHmsRenderRect {
-    void** vftable; // accesses: 1
+    undefined4 field_0x0; // accesses: 1
     undefined4 field_0x4; // accesses: 1
     byte _padding_0x8[28];
     undefined4 field_0x24; // accesses: 2

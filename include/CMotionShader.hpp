@@ -8,8 +8,9 @@ struct CPlugMaterial;
 struct CPlugShader;
 
 struct CMotionShader {
-    byte _padding_0x0[44];
-    CMwNod * field_0x2c; // accesses: 5
+    void** vftable;
+    byte _padding_0x4[40];
+    CPlugMaterial * field_0x2c; // accesses: 5
     CMwNod * field_0x30; // accesses: 3
     byte _padding_0x34[4];
     undefined4 * field_0x38; // accesses: 6

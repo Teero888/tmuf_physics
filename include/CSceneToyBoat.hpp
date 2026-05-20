@@ -23,11 +23,11 @@ struct CSceneToyBoat {
         CManoeuvre * __thiscall ManoeuvreGet(void *this,SSailManoeuvre *param_1);
     };
 
-    void** vftable; // accesses: 4
+    void** vftable; // accesses: 1
     byte _padding_0x4[16];
-    int field_0x14; // accesses: 2
+    CScene * field_0x14; // accesses: 2
     byte _padding_0x18[16];
-    int field_0x28; // accesses: 4
+    int field_0x28; // accesses: 3
     byte _padding_0x2c[64];
     float field_0x6c; // accesses: 1
     float field_0x70; // accesses: 1
@@ -39,24 +39,24 @@ struct CSceneToyBoat {
     undefined4 field_0x88; // accesses: 1
     float field_0x8c; // accesses: 1
     float field_0x90; // accesses: 2
-    undefined4 field_0x94; // accesses: 16
-    GmVec3 * field_0x98; // accesses: 12
+    CBoatSail * field_0x94; // accesses: 16
+    CBoatSail * field_0x98; // accesses: 12
     undefined4 field_0x9c; // accesses: 1
     float field_0xa0; // accesses: 1
     float field_0xa4; // accesses: 1
     undefined4 field_0xa8; // accesses: 1
     float field_0xac; // accesses: 1
-    float field_0xb0; // accesses: 10
+    CBoatSail * field_0xb0; // accesses: 10
     float field_0xb4; // accesses: 2
-    undefined4 field_0xb8; // accesses: 2
-    float field_0xbc; // accesses: 3
+    undefined4 field_0xb8; // accesses: 1
+    GmVec3 * field_0xbc; // accesses: 2
     byte _padding_0xc0[12];
     float field_0xcc; // accesses: 4
     float field_0xd0; // accesses: 4
     float field_0xd4; // accesses: 4
-    float field_0xd8; // accesses: 9
-    CBoatParam * field_0xdc; // accesses: 16
-    undefined4 field_0xe0; // accesses: 2
+    CSceneToyBoat * field_0xd8; // accesses: 9
+    CBoatParam * field_0xdc; // accesses: 15
+    GmVec3 * field_0xe0; // accesses: 2
     byte _padding_0xe4[4];
     int field_0xe8; // accesses: 3
     uint field_0xec; // accesses: 3
@@ -67,16 +67,16 @@ struct CSceneToyBoat {
     float field_0x100; // accesses: 1
     float field_0x104; // accesses: 1
     undefined4 field_0x108; // accesses: 1
-    float field_0x10c; // accesses: 6
+    CBoatSail * field_0x10c; // accesses: 5
     float field_0x110; // accesses: 2
     float field_0x114; // accesses: 2
-    float field_0x118; // accesses: 8
-    float field_0x11c; // accesses: 3
+    CSceneToyBoat * field_0x118; // accesses: 7
+    CSceneToyBoat * field_0x11c; // accesses: 2
     float field_0x120; // accesses: 1
     byte _padding_0x124[12];
-    ESailType field_0x130; // accesses: 20
+    CBoatSailState * field_0x130; // accesses: 20
     CBoatSailState * field_0x134; // accesses: 8
-    undefined4 field_0x138; // accesses: 3
+    int field_0x138; // accesses: 3
     float field_0x13c; // accesses: 3
     byte _padding_0x140[36];
     int field_0x164; // accesses: 2
@@ -86,13 +86,13 @@ struct CSceneToyBoat {
     byte _padding_0x18c[12];
     float field_0x198; // accesses: 4
     byte _padding_0x19c[16];
-    uint field_0x1ac; // accesses: 8
+    CBoatSailState * field_0x1ac; // accesses: 8
     uint field_0x1b0; // accesses: 1
     byte _padding_0x1b4[20];
-    undefined4 field_0x1c8; // accesses: 10
+    int field_0x1c8; // accesses: 10
     float field_0x1cc; // accesses: 10
     byte _padding_0x1d0[48];
-    undefined4 field_0x200; // accesses: 3
+    int field_0x200; // accesses: 2
     byte _padding_0x204[336];
     int field_0x354; // accesses: 1
     int field_0x358; // accesses: 1
@@ -118,14 +118,15 @@ struct CSceneToyBoat {
     float field_0x3d8; // accesses: 4
     float field_0x3dc; // accesses: 4
     float field_0x3e0; // accesses: 4
-    float field_0x3e4; // accesses: 2
-    float field_0x3e8; // accesses: 2
-    float field_0x3ec; // accesses: 2
+    undefined4 field_0x3e4; // accesses: 2
+    undefined4 field_0x3e8; // accesses: 2
+    undefined4 field_0x3ec; // accesses: 2
     byte _padding_0x3f0[4];
     undefined4 field_0x3f4; // accesses: 1
     CMwNod * field_0x3f8; // accesses: 4
     float field_0x3fc; // accesses: 2
-    undefined4 field_0x400; // accesses: 2
+    int field_0x400; // accesses: 2
+    byte _final_padding[0x18]; // Total size: 0x41c
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ float __thiscall BSCoefSurfGet(CSceneToyBoat *this,CSceneToyBoat *param_1);

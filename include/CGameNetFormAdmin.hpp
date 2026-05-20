@@ -7,6 +7,7 @@ struct CGameNetFormAdmin {
     void** vftable; // accesses: 2
     byte _padding_0x4[24];
     undefined4 field_0x1c; // accesses: 1
+    byte _final_padding[0x20]; // Total size: 0x40
 
     // Member Functions
     void __thiscall CGameNetFormAdmin (CGameNetFormAdmin *this,CGameNetFormAdmin *param_1,EMessageType param_2);

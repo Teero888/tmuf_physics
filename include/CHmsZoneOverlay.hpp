@@ -3,15 +3,11 @@
 
 #include "typedefs.h"
 
-struct CHmsItem;
-
 struct CHmsZoneOverlay {
     void** vftable; // accesses: 1
     byte _padding_0x4[20];
     undefined4 field_0x18; // accesses: 1
-    byte _padding_0x1c[44];
-    CHmsItem * field_0x48; // accesses: 2
-    byte _padding_0x4c[236];
+    byte _padding_0x1c[284];
     undefined4 field_0x138; // accesses: 1
     undefined4 field_0x13c; // accesses: 1
     undefined4 field_0x140; // accesses: 1
@@ -27,6 +23,7 @@ struct CHmsZoneOverlay {
     undefined4 field_0x168; // accesses: 1
     undefined4 field_0x16c; // accesses: 1
     undefined4 field_0x170; // accesses: 1
+    byte _final_padding[0x18]; // Total size: 0x18c
 
     // Member Functions
     /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall CHmsZoneOverlay(CHmsZoneOverlay *this,CHmsZoneOverlay *param_1);

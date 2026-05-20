@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct CClassicLog {
-    byte _padding_0x0[4];
+    void** vftable;
     int * field_0x4; // accesses: 2
     int field_0x8; // accesses: 1
     code * field_0xc; // accesses: 1

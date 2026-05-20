@@ -4,7 +4,7 @@
 #include "typedefs.h"
 
 struct TiXmlUnknown {
-    void** vftable; // accesses: 1
+    undefined ** field_0x0; // accesses: 1
 
     // Member Functions
     void __thiscall TiXmlUnknown(TiXmlUnknown *this,TiXmlUnknown *param_1);
