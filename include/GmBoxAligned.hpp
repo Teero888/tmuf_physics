@@ -1,43 +1,39 @@
 #ifndef GMBOXALIGNED_HPP
 #define GMBOXALIGNED_HPP
 
-#include "GmVec3.hpp"
 #include "typedefs.h"
 
-class GmIso4;
-class GmFrustum;
-class GmBoxOriented;
-class GmCone3;
-class CClassicArchive;
+struct GmBoxAligned {
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 29
+    undefined4 field_0x8; // accesses: 31
+    undefined4 field_0xc; // accesses: 13
+    undefined4 field_0x10; // accesses: 10
+    undefined4 field_0x14; // accesses: 12
+    float field_0x18; // accesses: 3
+    float field_0x1c; // accesses: 2
+    float field_0x20; // accesses: 2
+    float field_0x24; // accesses: 1
+    float field_0x28; // accesses: 1
+    float field_0x2c; // accesses: 1
 
-class GmBoxAligned {
-  // TODO: this is an assumption, check if correct
-  GmVec3 m_Center;
-  GmVec3 m_HalfDiag;
-
-  void __thiscall ArchiveABox(CClassicArchive *param_1);
-  void __thiscall ArchiveABoxOld1(CClassicArchive *param_1);
-  void __thiscall GetDiag(GmVec3 *param_1);
-  void __thiscall GetMax(float *param_1);
-  void __thiscall GetMin(float *param_1);
-  void __thiscall GetMinMax(GmVec3 *param_1, GmVec3 *param_2);
-  int __thiscall Inter(GmBoxAligned *param_1);
-  int __thiscall IsIncluded(GmFrustum *param_1);
-  int __thiscall IsIncluded(GmBoxAligned *param_1);
-  int __thiscall IsNull();
-  void __thiscall Mult(GmIso4 *param_1);
-  void __thiscall Set(GmBoxAligned *param_1);
-  void __thiscall Set(GmBoxOriented *param_1);
-  void __thiscall SetCenter0HalfDiag(GmVec3 *param_1);
-  void __thiscall SetCenterHalfDiag(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall SetFromConeAndRadius(GmCone3 *param_1, float param_2);
-  void __thiscall SetMinMax(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall SetMult(GmBoxAligned *param_1, GmIso4 *param_2);
-  int __thiscall TestInter(GmBoxAligned *param_1);
-  int __thiscall TestInter(GmVec3 *param_1);
-  int __thiscall TestInterSegment(GmVec3 *param_1, GmVec3 *param_2);
-  int __thiscall TestInterSegment_MiddleVectAB(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall Union(GmBoxAligned *param_1);
+    // Member Functions
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall TestInterSegment_MiddleVectAB (void *this,GmBoxAligned *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall TestInterSegment(void *this,GmRectAligned *param_1,GmVec2 *param_2,GmVec2 *param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetDiag(void *this,GmBoxAligned *param_1,GmVec3 *param_2);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetFromConeAndRadius(void *this,GmBoxAligned *param_1,GmCone3 *param_2,float param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetMinMax(void *this,GmBoxAligned *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    GmVec3 __thiscall GetMin(void *this,GmBoxAligned *param_1);
+    int __thiscall IsIncluded(void *this,GmBoxAligned *param_1,GmBoxAligned *param_2);
+    int __thiscall IsNull(void *this,CSysFidNodRef<class_CPlugBitmap> *param_1);
+    int __thiscall TestInter (void *this,CPlugVolumeProjector *param_1,GmBoxAligned *param_2,GmIso4 *param_3);
+    void __thiscall ArchiveABox(void *this,GmBoxAligned *param_1,CClassicArchive *param_2);
+    void __thiscall ArchiveABoxOld1(void *this,GmBoxAligned *param_1,CClassicArchive *param_2);
+    void __thiscall GetMinMax(void *this,GmBoxAligned *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
+    void __thiscall SetCenterHalfDiag(void *this,GmBoxAligned *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
+    void __thiscall Union(void *this,GmRectAligned *param_1,GmVec2 *param_2);
 };
 
 #endif // GMBOXALIGNED_HPP

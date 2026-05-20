@@ -1,0 +1,15 @@
+#ifndef CMOTIONSKEL_HPP
+#define CMOTIONSKEL_HPP
+
+#include "typedefs.h"
+
+struct CMotionSkel {
+    byte _padding_0x0[64];
+    undefined4 field_0x40; // accesses: 1
+    undefined4 field_0x44; // accesses: 1
+
+    // Member Functions
+    void __thiscall CMotionSkel(CMotionSkel *this,CMotionSkel *param_1);
+};
+
+#endif // CMOTIONSKEL_HPP

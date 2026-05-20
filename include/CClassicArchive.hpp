@@ -1,63 +1,52 @@
-// Derived from: GbxDump/GbxDump/Archive.h and GbxDump/GbxDump/Archive.cpp
-
 #ifndef CCLASSICARCHIVE_HPP
 #define CCLASSICARCHIVE_HPP
+
 #include "typedefs.h"
 
-class CClassicBuffer;
-class SNat128;
+struct CClassicBuffer;
 
-class CClassicArchive {
-  // TODO: figure out fields and types
+struct CClassicArchive {
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 27
+    int field_0x8; // accesses: 9
+    int field_0xc; // accesses: 14
+    byte _padding_0x10[4];
+    undefined4 field_0x14; // accesses: 3
 
-  __thiscall CClassicArchive();
-  __thiscall ~CClassicArchive();
-
-  CClassicBuffer *__thiscall DetachBuffer(int param_1);
-
-  void __thiscall DoBool(int *param_1, ulong param_2);
-  void __thiscall DoData(void *param_1, ulong param_2);
-  void __thiscall DoInteger(int *param_1, ulong param_2, int param_3);
-  void __thiscall DoMarker(char *param_1);
-  void __thiscall DoMask(ulong *param_1, ulong param_2);
-  void __thiscall DoNat128(SNat128 *param_1, ulong param_2);
-  void __thiscall DoNat16(ushort *param_1, ulong param_2, int param_3);
-  void __thiscall DoNat64(__uint64 *param_1, ulong param_2, int param_3);
-  void __thiscall DoNat8(uchar *param_1, ulong param_2, int param_3);
-  void __thiscall DoNatural(ulong *param_1, ulong param_2, int param_3);
-  void __thiscall DoReal(float *param_1, ulong param_2);
-  void __thiscall DoString(CFastString *param_1, ulong param_2);
-  void __thiscall DoString(CFastStringInt *param_1, ulong param_2);
-  void __thiscall DoStringI18nComment(CFastStringInt *param_1, char *param_2);
-  void __thiscall MwDoNodRef<CMwRefBuffer>(CMwNodRef<CMwRefBuffer> *param_1);
-
-  void __thiscall ReadBool(int *param_1, ulong param_2);
-  void __thiscall ReadData(void *param_1, ulong param_2);
-  void __thiscall ReadInteger(int *param_1, ulong param_2, int param_3);
-  int __thiscall ReadLine();
-  void __thiscall ReadMask(ulong *param_1, ulong param_2);
-  void __thiscall ReadNat16(ushort *param_1, ulong param_2, int param_3);
-  void __thiscall ReadNat64(__uint64 *param_1, ulong param_2, int param_3);
-  void __thiscall ReadNat8(uchar *param_1, ulong param_2, int param_3);
-  void __thiscall ReadNatural(ulong *param_1, ulong param_2, int param_3);
-  void __thiscall ReadReal(float *param_1, ulong param_2);
-  void __thiscall ReadString(CFastString *param_1, ulong param_2);
-  void __thiscall ReadString(CFastStringInt *param_1, ulong param_2);
-
-  void __thiscall SkipData(ulong param_1);
-
-  void __thiscall WriteBool(int *param_1, ulong param_2);
-  void __thiscall WriteData(void *param_1, ulong param_2);
-  void __thiscall WriteInteger(int *param_1, ulong param_2, int param_3);
-  void __thiscall WriteLine();
-  void __thiscall WriteMask(ulong *param_1, ulong param_2);
-  void __thiscall WriteNat16(ushort *param_1, ulong param_2, int param_3);
-  void __thiscall WriteNat64(__uint64 *param_1, ulong param_2, int param_3);
-  void __thiscall WriteNat8(uchar *param_1, ulong param_2, int param_3);
-  void __thiscall WriteNatural(ulong *param_1, ulong param_2, int param_3);
-  void __thiscall WriteReal(float *param_1, ulong param_2);
-  void __thiscall WriteString(CFastString *param_1, ulong param_2);
-  void __thiscall WriteString(CFastStringInt *param_1, ulong param_2);
+    // Member Functions
+    CClassicBuffer * __thiscall DetachBuffer(CClassicArchive *this,CClassicArchive *param_1,int param_2);
+    int __thiscall DoData (CClassicArchive *this,CNetNod_CheckedArchive *param_1,void *param_2,ulong param_3);
+    int __thiscall ReadLine(CClassicArchive *this,CClassicArchive *param_1);
+    void __thiscall CClassicArchive(CClassicArchive *this,CClassicArchive *param_1);
+    void __thiscall DoBool(CClassicArchive *this,CClassicArchive *param_1,int *param_2,ulong param_3);
+    void __thiscall DoInteger (CClassicArchive *this,CClassicArchive *param_1,int *param_2,ulong param_3,int param_4);
+    void __thiscall DoNat16 (CClassicArchive *this,CClassicArchive *param_1,ushort *param_2,ulong param_3,int param_4);
+    void __thiscall DoNat8 (CClassicArchive *this,CClassicArchive *param_1,uchar *param_2,ulong param_3,int param_4);
+    void __thiscall DoNatural (CClassicArchive *this,CClassicArchive *param_1,ulong *param_2,ulong param_3,int param_4);
+    void __thiscall DoReal(CClassicArchive *this,CClassicArchive *param_1,float *param_2,ulong param_3);
+    void __thiscall DoString (CClassicArchive *this,CClassicCrypto_BlowFish *param_1,CFastString *param_2, CFastString *param_3,ECipherOpMode param_4,uint64 *param_5,int param_6);
+    void __thiscall MwDoNodRef<class_CMwRefBuffer> (CClassicArchive *this,CClassicArchive *param_1,CMwNodRef<class_CMwRefBuffer> *param_2);
+    void __thiscall ReadBool(CClassicArchive *this,CClassicArchive *param_1,int *param_2,ulong param_3);
+    void __thiscall ReadData (CClassicArchive *this,CClassicArchive *param_1,void *param_2,ulong param_3);
+    void __thiscall ReadInteger (CClassicArchive *this,CClassicArchive *param_1,int *param_2,ulong param_3,int param_4);
+    void __thiscall ReadMask (CClassicArchive *this,CClassicArchive *param_1,ulong *param_2,ulong param_3);
+    void __thiscall ReadNat16 (CClassicArchive *this,CClassicArchive *param_1,ushort *param_2,ulong param_3,int param_4);
+    void __thiscall ReadNat8 (CClassicArchive *this,CClassicArchive *param_1,uchar *param_2,ulong param_3,int param_4);
+    void __thiscall ReadNatural (CClassicArchive *this,CClassicArchive *param_1,ulong *param_2,ulong param_3,int param_4);
+    void __thiscall ReadReal (CClassicArchive *this,CClassicArchive *param_1,float *param_2,ulong param_3);
+    void __thiscall ReadString (CClassicArchive *this,CClassicArchive *param_1,CFastStringInt *param_2,ulong param_3);
+    void __thiscall SkipData(CClassicArchive *this,CClassicArchive *param_1,ulong param_2);
+    void __thiscall WriteBool (CClassicArchive *this,CClassicArchive *param_1,int *param_2,ulong param_3);
+    void __thiscall WriteData (CClassicArchive *this,CClassicArchive *param_1,void *param_2,ulong param_3);
+    void __thiscall WriteInteger (CClassicArchive *this,CClassicArchive *param_1,int *param_2,ulong param_3,int param_4);
+    void __thiscall WriteLine(CClassicArchive *this,CClassicArchive *param_1);
+    void __thiscall WriteMask (CClassicArchive *this,CClassicArchive *param_1,ulong *param_2,ulong param_3);
+    void __thiscall WriteNat16 (CClassicArchive *this,CClassicArchive *param_1,ushort *param_2,ulong param_3,int param_4);
+    void __thiscall WriteNat8 (CClassicArchive *this,CClassicArchive *param_1,uchar *param_2,ulong param_3,int param_4);
+    void __thiscall WriteNatural (CClassicArchive *this,CClassicArchive *param_1,ulong *param_2,ulong param_3,int param_4);
+    void __thiscall WriteReal (CClassicArchive *this,CClassicArchive *param_1,float *param_2,ulong param_3);
+    void __thiscall WriteString (CClassicArchive *this,CClassicArchive *param_1,CFastStringInt *param_2,ulong param_3);
+    void __thiscall ~CClassicArchive(CClassicArchive *this,CClassicArchive *param_1);
 };
 
 #endif // CCLASSICARCHIVE_HPP

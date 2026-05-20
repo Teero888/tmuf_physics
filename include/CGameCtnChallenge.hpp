@@ -1,0 +1,65 @@
+#ifndef CGAMECTNCHALLENGE_HPP
+#define CGAMECTNCHALLENGE_HPP
+
+#include "typedefs.h"
+
+struct CGameCtnBlockUnitInfo;
+struct CGameCtnChapter;
+struct CGameCtnCollection;
+
+struct CGameCtnChallenge {
+    struct SHeaderCommunity {
+
+        // Member Functions
+        void __thiscall ~SHeaderCommunity(void *this,SHeaderCommunity *param_1);
+    };
+
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 5
+    undefined4 field_0x8; // accesses: 2
+    byte _padding_0xc[12];
+    CGameCtnBlockUnitInfo * field_0x18; // accesses: 1
+    byte _padding_0x1c[8];
+    int field_0x24; // accesses: 5
+    byte _padding_0x28[56];
+    uint field_0x60; // accesses: 1
+    byte _padding_0x64[24];
+    float field_0x7c; // accesses: 1
+    float field_0x80; // accesses: 1
+    byte _padding_0x84[12];
+    CGameCtnChapter * field_0x90; // accesses: 4
+    byte _padding_0x94[8];
+    uint field_0x9c; // accesses: 6
+    byte _padding_0xa0[8];
+    CGameCtnChallenge * field_0xa8; // accesses: 1
+    uint field_0xac; // accesses: 1
+    int field_0xb0; // accesses: 4
+    byte _padding_0xb4[32];
+    int field_0xd4; // accesses: 3
+    int field_0xd8; // accesses: 3
+    byte _padding_0xdc[204];
+    int field_0x1a8; // accesses: 2
+
+    // Member Functions
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetStartLight(CGameCtnChallenge *this,CGameCtnChallenge *param_1,ulong param_2);
+    CGameCtnBlock * __thiscall GetBlockFromPlayField (CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CGameCtnBlock * __thiscall GetGroundBlock(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CGameCtnBlock * __thiscall GetStartLine(CGameCtnChallenge *this,CGameCtnChallenge *param_1,ulong param_2);
+    CGameCtnBlockUnit * __thiscall GetBlockUnitFromPlayField (CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CGameCtnBlockUnitInfo * __thiscall GetBlockUnitInfoFromPlayField (CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CGameCtnFieldUnit * __thiscall GetFieldUnit(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CGameCtnZone * __thiscall GetRealZone(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CGameCtnZone * __thiscall GetZone(CGameCtnChallenge *this,CGameCtnCollection *param_1,CMwId *param_2);
+    CMwId * __thiscall GetRealZoneId(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    CMwId * __thiscall GetZoneId(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    SGameCtnIdentifier * __thiscall GetVehicleIdent(CGameCtnChallenge *this,CGameCtnChallenge *param_1);
+    int __thiscall IsCheckpointBlock (CGameCtnChallenge *this,CGameCtnChallenge *param_1,CGameCtnBlock *param_2);
+    int __thiscall IsEditableCoord (CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    int __thiscall IsStartBlock (CGameCtnChallenge *this,CGameCtnChallenge *param_1,CGameCtnBlock *param_2);
+    int __thiscall IsStartFinishBlock (CGameCtnChallenge *this,CGameCtnChallenge *param_1,CGameCtnBlock *param_2);
+    uchar __thiscall GetZoneHeight(CGameCtnChallenge *this,CGameCtnChallenge *param_1,GmNat3 param_2);
+    void __thiscall GetCoordFromPos (CGameCtnChallenge *this,GmField2Base *param_1,GmVec2 *param_2,GmNat2 *param_3);
+    void __thiscall SetIsBlockHelpers (CGameCtnChallenge *this,CGameCtnChallenge *param_1,int param_2,int param_3);
+};
+
+#endif // CGAMECTNCHALLENGE_HPP

@@ -3,15 +3,15 @@
 
 #include "typedefs.h"
 
-class GmMat2 {
-  float m[4];
+struct GmMat2 {
 
-  void __thiscall Mult(GmMat2 *param_1);
-  void __thiscall Rotate(float param_1);
-  void __thiscall SetIdentity();
-  void __thiscall SetMult(GmMat2 *param_1, GmMat2 *param_2);
-  void __thiscall SetRotation(float param_1);
-  void __thiscall SetTranspose(GmMat2 *param_1);
+    // Member Functions
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
+    void __thiscall Rotate(void *this,GmMat2 *param_1,float param_2);
+    void __thiscall SetIdentity(void *this,GmMat43 *param_1);
+    void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
+    void __thiscall SetRotation(void *this,GmMat2 *param_1,float param_2);
+    void __thiscall SetTranspose(void *this,GmMat2 *param_1,GmMat2 *param_2);
 };
 
-#endif //  GMMAT2_HPP
+#endif // GMMAT2_HPP

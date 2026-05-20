@@ -1,0 +1,12 @@
+#ifndef TIXMLCOMMENT_HPP
+#define TIXMLCOMMENT_HPP
+
+#include "typedefs.h"
+
+struct TiXmlComment {
+
+    // Member Functions
+    void __thiscall TiXmlComment(TiXmlComment *this,TiXmlComment *param_1);
+};
+
+#endif // TIXMLCOMMENT_HPP

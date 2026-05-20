@@ -1,0 +1,26 @@
+#ifndef CSYSTEMFIDSFOLDER_HPP
+#define CSYSTEMFIDSFOLDER_HPP
+
+#include "typedefs.h"
+
+struct CSystemFidsFolder {
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 1
+    byte _padding_0x8[12];
+    int * field_0x14; // accesses: 1
+    byte _padding_0x18[28];
+    uint field_0x34; // accesses: 2
+    undefined4 field_0x38; // accesses: 1
+    undefined4 field_0x3c; // accesses: 1
+    undefined4 field_0x40; // accesses: 2
+    undefined * field_0x44; // accesses: 3
+
+    // Member Functions
+    /* WARNING: Removing unreachable block (ram,0x0042a80f) */ EMakeDir __cdecl CSystemFidsFolder::MakeDir(CFastStringInt *param_1);
+    void __thiscall CSystemFidsFolder(CSystemFidsFolder *this,CSystemFidsFolder *param_1);
+    void __thiscall GetFullName(CSystemFidsFolder *this,CPlugFile *param_1,CFastStringInt *param_2);
+    void __thiscall SetDirName (CSystemFidsFolder *this,CSystemFidsFolder *param_1,CFastStringInt *param_2);
+    void __thiscall ~CSystemFidsFolder(CSystemFidsFolder *this,CSystemFidsFolder *param_1);
+};
+
+#endif // CSYSTEMFIDSFOLDER_HPP

@@ -1,54 +1,47 @@
-// PDB Verified Layout & Functions derived from ghidra/GmMat3.cpp
-
 #ifndef GMMAT3_HPP
 #define GMMAT3_HPP
 
 #include "typedefs.h"
 
-class CClassicArchive;
-class GmQuat;
-class GmVec3;
-class GmIso3;
-
-#pragma pack(push, 4)
 struct GmMat3 {
-public:
-  float XX, XY, XZ;
-  float YX, YY, YZ;
-  float ZX, ZY, ZZ;
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 34
+    undefined4 field_0x8; // accesses: 35
+    undefined4 field_0xc; // accesses: 9
+    undefined4 field_0x10; // accesses: 9
+    undefined4 field_0x14; // accesses: 9
+    undefined4 field_0x18; // accesses: 9
+    undefined4 field_0x1c; // accesses: 9
+    undefined4 field_0x20; // accesses: 9
 
-  GmMat3() : XX(1), XY(0), XZ(0), YX(0), YY(1), YZ(0), ZX(0), ZY(0), ZZ(1) {}
-
-  void __thiscall ArchiveGmMat3(CClassicArchive *param_1);
-  void __thiscall GetLine(ulong param_1, GmVec3 *param_2) const;
-  ulong __thiscall Inverse(void);
-  ulong __thiscall IsIndirect(void) const;
-  ulong __thiscall IsNearlyEqual(GmMat3 *param_1) const;
-  ulong __thiscall IsOrthogonal(void) const;
-  ulong __thiscall IsOrthonormal(void) const;
-  void __thiscall LeftMult(GmMat3 *param_1);
-  void __thiscall Mult(float param_1);
-  void __thiscall Mult(GmMat3 *param_1);
-  void __thiscall MultTranspose(GmMat3 *param_1);
-  void __thiscall OrthoNormalize(void);
-  void __thiscall RotateX(float param_1);
-  void __thiscall RotateY(float param_1);
-  void __thiscall RotateZ(float param_1);
-  void __thiscall Set(GmMat3 *param_1);
-  void __thiscall Set(float param_1, float param_2, float param_3, float param_4);
-  void __thiscall SetBlend(GmMat3 *param_1, GmMat3 *param_2, float param_3);
-  void __thiscall SetDOV(GmVec3 *param_1, ulong param_2);
-  int __thiscall SetDOVInverse(GmVec3 *param_1);
-  void __thiscall SetDOVandLeftV(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall SetDOVandUpV(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall SetIdentity(void);
-  void __thiscall SetLine(ulong param_1, GmVec3 *param_2);
-  void __thiscall SetMult(GmMat3 *param_1, GmMat3 *param_2);
-  void __thiscall SetRotateQuarterY(ulong param_1);
-  void __thiscall SetTranspose(GmMat3 *param_1);
-  void __thiscall SetUpVandDOV(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall Transpose(void);
+    // Member Functions
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ int __thiscall SetDOVInverse(void *this,GmMat3 *param_1,GmVec3 *param_2);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall IsIndirect(void *this,GmMat3 *param_1);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall IsOrthogonal(void *this,GmMat3 *param_1);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall IsOrthonormal(void *this,GmMat3 *param_1);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall OrthoNormalize(void *this,GmMat3 *param_1);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Set(void *this,CMwCmdScriptVarBool *param_1,int param_2);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetBlend(void *this,SParam *param_1,SParam *param_2,SParam *param_3,float param_4);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetDOV(void *this,GmMat3 *param_1,GmVec3 *param_2,ulong param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetDOVandLeftV(void *this,GmMat3 *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetDOVandUpV(void *this,GmMat3 *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetUpVandDOV(void *this,GmMat3 *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    ulong __thiscall IsNearlyEqual(void *this,GmVec2 *param_1,GmVec2 *param_2);
+    void __thiscall ArchiveGmMat3(void *this,GmMat3 *param_1,CClassicArchive *param_2);
+    void __thiscall GetLine(void *this,GmMat3 *param_1,ulong param_2,GmVec3 *param_3);
+    void __thiscall Inverse(void *this,GmIso4 *param_1);
+    void __thiscall LeftMult(void *this,GmScaleTrans2 *param_1,GmScaleTrans2 *param_2);
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
+    void __thiscall MultTranspose(void *this,GmMat3 *param_1,GmMat3 *param_2);
+    void __thiscall RotateX(void *this,GmIso4 *param_1,float param_2);
+    void __thiscall RotateY(void *this,GmIso4 *param_1,float param_2);
+    void __thiscall RotateZ(void *this,GmIso4 *param_1,float param_2);
+    void __thiscall SetIdentity(void *this,GmMat43 *param_1);
+    void __thiscall SetLine(void *this,GmMat3 *param_1,ulong param_2,GmVec3 *param_3);
+    void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
+    void __thiscall SetRotateQuarterY(void *this,GmMat3 *param_1,ulong param_2);
+    void __thiscall SetTranspose(void *this,GmMat2 *param_1,GmMat2 *param_2);
+    void __thiscall Transpose(void *this,GmMat4 *param_1);
 };
-#pragma pack(pop)
 
 #endif // GMMAT3_HPP

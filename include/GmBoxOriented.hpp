@@ -1,22 +1,21 @@
 #ifndef GMBOXORIENTED_HPP
 #define GMBOXORIENTED_HPP
 
-#include "GmMat3.hpp"
-#include "GmVec3.hpp"
 #include "typedefs.h"
 
-class GmIso4;
-class GmBoxAligned;
+struct GmBoxOriented {
+    byte _padding_0x0[4];
+    float field_0x4; // accesses: 3
+    float field_0x8; // accesses: 3
+    float field_0xc; // accesses: 3
+    float field_0x10; // accesses: 3
+    float field_0x14; // accesses: 3
+    float field_0x18; // accesses: 3
+    float field_0x1c; // accesses: 3
+    float field_0x20; // accesses: 3
 
-class GmBoxOriented {
-  // TODO: this is an assumption, check if correct
-  GmMat3 m_OrthonormalBasis;
-  GmVec3 m_Center;
-  GmVec3 m_HalfDiag;
-
-  void __thiscall Mult(GmIso4 *param_1);
-  void __thiscall Set(GmBoxAligned *param_1);
-  void __thiscall SetNull();
+    // Member Functions
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
 };
 
 #endif // GMBOXORIENTED_HPP

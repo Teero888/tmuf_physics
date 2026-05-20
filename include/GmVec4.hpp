@@ -3,37 +3,40 @@
 
 #include "typedefs.h"
 
-class GmIso4;
-class GmMat4;
-class GmLine3;
-class GmVec3;
+struct GmVec4 {
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 37
+    undefined4 field_0x8; // accesses: 41
+    undefined4 field_0xc; // accesses: 25
+    double field_0x10; // accesses: 11
+    float field_0x14; // accesses: 5
+    double field_0x18; // accesses: 9
+    float field_0x1c; // accesses: 2
+    float field_0x20; // accesses: 2
+    float field_0x24; // accesses: 2
+    float field_0x28; // accesses: 2
+    float field_0x2c; // accesses: 2
 
-class GmVec4 {
-  float x, y, z, w;
-
-  static void __cdecl PolygonClip(CFastBuffer<> *param_1, CFastBuffer<> *param_2);
-  static void __cdecl GetClipFlags(GmVec4 *param_1, GmClipFlag_HalfCube *param_2, ulong param_3);
-  void __thiscall Add(float param_1, float param_2, float param_3, float param_4);
-  void __thiscall GetClipFlag(GmClipFlag_HalfCube *param_1);
-  void __thiscall Mult(float *param_1);
-  void __thiscall Mult(GmMat4 *param_1);
-  void __thiscall Neg();
-  ulong __thiscall PlaneEqInterLine(GmVec3 *param_1, GmVec3 *param_2, float *param_3);
-  ulong __thiscall PlaneEqInterPlane(GmVec4 *param_1, GmLine3 *param_2);
-  ulong __thiscall PlaneEqIsNearlyEqual(GmVec4 *param_1, float param_2, float param_3);
-  void __thiscall PlaneEqMult(GmIso4 *param_1);
-  ulong __thiscall PlaneEqSetFrom3Pos(GmVec3 *param_1, GmVec3 *param_2, GmVec3 *param_3);
-  void __thiscall PlaneEqSetMult(GmVec4 *param_1, GmIso4 *param_2);
-  void __thiscall PlaneEqSetNormPos(GmVec3 *param_1, GmVec3 *param_2);
-  void __thiscall Set(float param_1, float param_2, float param_3, float param_4);
-  void __thiscall Set(GmVec3 *param_1, float param_2);
-  void __thiscall Set(GmVec4 *param_1);
-  void __thiscall SetBlend(GmVec4 *param_1, GmVec4 *param_2, float param_3);
-  void __thiscall SetLeftMult(GmIso4 *param_1, GmVec4 *param_2);
-  void __thiscall SetMult(float param_1, GmVec4 *param_2);
-  void __thiscall SetMult(GmVec4 *param_1, GmMat4 *param_2);
-  void __thiscall SetSub(GmVec4 *param_1, GmVec4 *param_2);
-  void __thiscall Sub(float param_1, float param_2, float param_3, float param_4);
+    // Member Functions
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqInterLine(void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,float *param_4);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqInterPlane(void *this,GmVec4 *param_1,GmVec4 *param_2,GmLine3 *param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqIsNearlyEqual(void *this,GmVec4 *param_1,GmVec4 *param_2,float param_3,float param_4);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ ulong __thiscall PlaneEqSetFrom3Pos (void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3,GmVec3 *param_4);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __cdecl PolygonClip(CFastBuffer<class_GmVec4> *param_1, CFastBuffer<struct_GmClipFlag_HalfCube> *param_2);
+    void __cdecl GetClipFlags(GmVec4 *param_1,GmClipFlag_HalfCube *param_2,ulong param_3);
+    void __thiscall Add(void *this,TiXmlAttributeSet *param_1,TiXmlAttribute *param_2);
+    void __thiscall GetClipFlag(void *this,GmReal4_64 *param_1,GmClipFlag_HalfCube *param_2);
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
+    void __thiscall Neg(void *this,GmCollision *param_1);
+    void __thiscall PlaneEqMult(void *this,GmVec4 *param_1,GmIso4 *param_2);
+    void __thiscall PlaneEqSetMult(void *this,GmVec4 *param_1,GmVec4 *param_2,GmIso4 *param_3);
+    void __thiscall PlaneEqSetNormPos(void *this,GmVec4 *param_1,GmVec3 *param_2,GmVec3 *param_3);
+    void __thiscall Set(void *this,CMwCmdScriptVarBool *param_1,int param_2);
+    void __thiscall SetBlend(void *this,SParam *param_1,SParam *param_2,SParam *param_3,float param_4);
+    void __thiscall SetLeftMult(void *this,GmVec4 *param_1,GmIso4 *param_2,GmVec4 *param_3);
+    void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
+    void __thiscall SetSub(void *this,GmVec4 *param_1,GmVec4 *param_2,GmVec4 *param_3);
+    void __thiscall Sub(void *this,GmVec4 *param_1,GmVec4 param_2);
 };
 
 #endif // GMVEC4_HPP

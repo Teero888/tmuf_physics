@@ -1,38 +1,37 @@
-// PDB Verified Layout & Functions derived from ghidra/GmQuat.cpp
-
 #ifndef GMQUAT_HPP
 #define GMQUAT_HPP
 
 #include "typedefs.h"
 
-class CClassicArchive;
-class GmMat3;
-class GmVec3;
+struct CClassicBuffer;
 
-#pragma pack(push, 4)
 struct GmQuat {
-public:
-  float w, x, y, z;
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 15
+    int field_0x8; // accesses: 14
+    float field_0xc; // accesses: 13
+    float field_0x10; // accesses: 2
+    float field_0x14; // accesses: 1
+    float field_0x18; // accesses: 1
+    float field_0x1c; // accesses: 1
+    float field_0x20; // accesses: 2
 
-  GmQuat() : w(1), x(0), y(0), z(0) {}
-
-  void __thiscall ArchiveGmQuat(CClassicArchive *param_1);
-  void __thiscall ArchiveGmQuatCompact(CClassicArchive *param_1);
-  void __thiscall ComputeSquad(GmQuat *param_1, GmQuat *param_2, GmQuat *param_3, GmQuat *param_4, float param_5);
-  void __thiscall GetRotation(float *param_1, GmVec3 *param_2);
-  void __thiscall GetYawPitchRoll(float *param_1, float *param_2, float *param_3);
-  void __thiscall Mult(GmQuat *param_1);
-  void __thiscall Normalize(void);
-  void __thiscall Set(float param_1, GmVec3 *param_2);
-  void __thiscall Set(GmMat3 *param_1);
-  void __thiscall SetIdentity(void);
-  void __thiscall SetInverse(GmQuat *param_1);
-  void __thiscall SetMult(GmQuat *param_1, GmQuat *param_2);
-  void __thiscall SetRotation(float param_1, GmVec3 *param_2);
-  void __thiscall SetSlerp(float param_1, float param_2, float param_3, float param_4, float *param_5, float param_6);
-  void __thiscall SetSquad(float param_1, float param_2, float param_3, float param_4, float *param_5, float *param_6, float *param_7, float param_8);
-  void __thiscall SetYawPitchRoll(float param_1, float param_2, float param_3);
+    // Member Functions
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ArchiveGmQuatCompact(void *this,GmQuat *param_1,CClassicArchive *param_2);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall ComputeSquad (void *this,GmQuat *param_1,GmQuat *param_2,GmQuat *param_3,GmQuat *param_4, GmQuat *param_5,float param_6);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetRotation(void *this,GmQuat *param_1,float *param_2,GmVec3 *param_3);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall GetYawPitchRoll(void *this,GmQuat *param_1,float *param_2,float *param_3,float *param_4);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall Set(void *this,CMwCmdScriptVarBool *param_1,int param_2);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetRotation(void *this,GmMat2 *param_1,float param_2);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetSlerp(void *this,GmQuat *param_1,GmQuat param_2,GmQuat *param_3,float param_4);
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetYawPitchRoll(void *this,GmQuat *param_1,float param_2,float param_3,float param_4);
+    void __thiscall ArchiveGmQuat(void *this,GmQuat *param_1,CClassicArchive *param_2);
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
+    void __thiscall Normalize(void *this,GmQuat *param_1);
+    void __thiscall SetIdentity(void *this,GmMat43 *param_1);
+    void __thiscall SetInverse(void *this,GmScaleTrans2 *param_1,GmScaleTrans2 *param_2);
+    void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
+    void __thiscall SetSquad(void *this,GmQuat *param_1,GmQuat param_2,GmQuat *param_3,GmQuat *param_4, GmQuat *param_5,float param_6);
 };
-#pragma pack(pop)
 
 #endif // GMQUAT_HPP

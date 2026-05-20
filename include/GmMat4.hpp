@@ -3,35 +3,35 @@
 
 #include "typedefs.h"
 
-class GmFrustum;
-class GmIso3;
-class GmIso4;
-class GmVec3;
-class GmVec4;
-class CClassicArchive;
+struct GmMat4 {
+    byte _padding_0x0[4];
+    undefined4 field_0x4; // accesses: 17
+    undefined4 field_0x8; // accesses: 17
+    undefined4 field_0xc; // accesses: 17
+    undefined4 field_0x10; // accesses: 11
+    undefined4 field_0x14; // accesses: 11
+    undefined4 field_0x18; // accesses: 9
+    undefined4 field_0x1c; // accesses: 6
+    undefined4 field_0x20; // accesses: 6
+    undefined4 field_0x24; // accesses: 6
+    undefined4 field_0x28; // accesses: 6
+    undefined4 field_0x2c; // accesses: 6
 
-class GmMat4 {
-  float m[16];
-
-  void __thiscall ArchiveGmMat4(CClassicArchive *param_1);
-  void __thiscall Mult(GmMat4 *param_1);
-  void __thiscall Mult(GmIso4 *param_1);
-  GmVec4 *__thiscall operator[](ulong param_1);
-  void __thiscall Set(GmMat4 *param_1);
-  void __thiscall Set(GmIso4 *param_1);
-  void __thiscall SetFrustumProjection(GmFrustum *param_1, ulong param_2);
-  void __thiscall SetIdentity();
-  void __thiscall SetMult(GmIso4 *param_1, GmMat4 *param_2);
-  void __thiscall SetMult(GmMat4 *param_1, GmMat4 *param_2);
-  void __thiscall SetShadowPlaneProjection(GmVec4 *param_1, GmVec4 *param_2);
-  void __thiscall SetShadowPlaneProjectionDirectional(GmVec3 *param_1, GmVec4 *param_2);
-  void __thiscall SetShadowPlaneProjectionPoint(GmVec3 *param_1, GmVec4 *param_2);
-  void __thiscall SetTranspose(GmMat4 *param_1);
-  void __thiscall SetTranspose(GmIso4 *param_1);
-  void __thiscall SetTransposeXY(GmIso3 *param_1);
-  void __thiscall SetTransposeXY_TransZ(GmIso3 *param_1);
-  void __thiscall SetXY(GmIso3 *param_1);
-  void __thiscall Transpose();
+    // Member Functions
+    /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */ void __thiscall SetFrustumProjection(void *this,GmMat4 *param_1,GmFrustum *param_2,ulong param_3);
+    void __thiscall ArchiveGmMat4(void *this,GmMat4 *param_1,CClassicArchive *param_2);
+    void __thiscall Mult(void *this,GmIso3 *param_1,GmIso3 *param_2);
+    void __thiscall Set(void *this,CMwCmdScriptVarBool *param_1,int param_2);
+    void __thiscall SetIdentity(void *this,GmMat43 *param_1);
+    void __thiscall SetMult(void *this,SPlugFaceCull *param_1,SPlugFaceCull *param_2,GmIso4 *param_3);
+    void __thiscall SetShadowPlaneProjection(void *this,GmMat4 *param_1,GmVec4 *param_2,GmVec4 *param_3);
+    void __thiscall SetShadowPlaneProjectionDirectional (void *this,GmMat4 *param_1,GmVec3 *param_2,GmVec4 *param_3);
+    void __thiscall SetShadowPlaneProjectionPoint(void *this,GmMat4 *param_1,GmVec3 *param_2,GmVec4 *param_3);
+    void __thiscall SetTranspose(void *this,GmMat2 *param_1,GmMat2 *param_2);
+    void __thiscall SetTransposeXY(void *this,GmMat4 *param_1,GmIso3 *param_2);
+    void __thiscall SetTransposeXY_TransZ(void *this,GmMat4 *param_1,GmIso3 *param_2);
+    void __thiscall SetXY(void *this,GmMat4 *param_1,GmIso3 *param_2);
+    void __thiscall Transpose(void *this,GmMat4 *param_1);
 };
 
 #endif // GMMAT4_HPP
