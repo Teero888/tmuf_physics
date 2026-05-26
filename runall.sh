@@ -1,5 +1,8 @@
 #!/bin/bash
 
+rm include/*
+rm src/*
+
 # 1. Extract subset
 python3 scripts/recursive_extract.py scripts/dump.cpp CTrackManiaRace::Validate
 

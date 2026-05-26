@@ -1,0 +1,16 @@
+#ifndef GMOCTREE_STRUCT_SMESHOCTREECELL__HPP
+#define GMOCTREE_STRUCT_SMESHOCTREECELL__HPP
+
+#include "typedefs.h"
+
+struct GmOctree<struct_SMeshOctreeCell> {
+    byte _padding_0x0[4];
+    float field_0x4; // accesses: 1
+
+    // Member Functions
+    ulong __thiscall BuildOctreeRecurse (void *this,GmOctree<struct_SMeshOctreeCell> *param_1,ulong param_2, SMeshOctreeCell *param_3);
+    void __thiscall Archive (void *this,CFastCrypt<unsigned_long> *param_1,CClassicArchive *param_2);
+    void __thiscall Build (void *this,NvStripInfo *param_1, vector<class_NvEdgeInfo*,class_std::allocator<class_NvEdgeInfo*>_> *param_2, vector<class_NvFaceInfo*,class_std::allocator<class_NvFaceInfo*>_> *param_3);
+};
+
+#endif // GMOCTREE_STRUCT_SMESHOCTREECELL__HPP

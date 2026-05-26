@@ -21,3 +21,6 @@ exe/*
 # OS files
 .DS_Store
 Thumbs.db
+
+lib
+scripts/venv
