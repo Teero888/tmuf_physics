@@ -162,6 +162,13 @@ typedef uint EXCEPTION_RECORD;
 typedef uint EXmlParamAction;
 
 // Missing Classes/Structs
+struct CFastMapTable;
+struct CGenAudioSoundEngine;
+struct CGenAudioSoundMulti;
+struct CMwNodRef;
+struct CStridedArray;
+struct CSysFidNodRef;
+struct SControlFlags;
 
 // Common Nadeo Templates (opaque for now)
 template<typename T> struct CFastBuffer { uint count; T* data; };

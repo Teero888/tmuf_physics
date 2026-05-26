@@ -30,6 +30,7 @@ struct CGameNetwork {
     CGameNetPlayerInfo * __thiscall FindPlayerInfoFromLogin(CGameNetwork *this,CGameNetwork *param_1,CFastString *param_2);
     CGameNetPlayerInfo * __thiscall GetPlayerInfoFromUId(CGameNetwork *this,CGameNetwork *param_1,uchar param_2);
     CSystemData * __thiscall FindManiaNetData(CGameNetwork *this,CGameNetwork *param_1,CFastString *param_2);
+    EState __thiscall GetState(CGameNetwork *this,CMwCmdFiber *param_1);
     int __thiscall ChatSend (CGameNetwork *this,CGameNetwork *param_1,CFastStringInt *param_2,uchar param_3, uchar param_4,uchar param_5,uchar param_6,int param_7,int param_8);
     int __thiscall DisconnectPlayer (CGameNetwork *this,CGameNetwork *param_1,char *param_2,CFastStringInt *param_3, uchar param_4);
     int __thiscall IsChatCommand(CGameNetwork *this,CGameNetwork *param_1,CFastStringInt *param_2);
