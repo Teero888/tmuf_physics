@@ -77,9 +77,11 @@ public:
 // =================================================
 class GmSurfPolygon : public GmSurf {
 public:
-    // Padded to match decompiled size (0x48+)
-    unsigned char _padding[64]; // 0x08 - 0x47
-    float m_unknown_0x48;       // 0x48
+    GmVec3 m_vertices[4]; // 0x08 - 0x37
+    unsigned char m_numVertices; // 0x38
+    unsigned char _pad[3];       // 0x39 - 0x3B
+    GmVec3 m_planeNormal;        // 0x3C - 0x47
+    int m_unknown_0x48;          // 0x48
 
     GmSurfPolygon(unsigned char param);
 };
@@ -89,7 +91,8 @@ public:
 // =================================================
 class GmSurfBox : public GmSurf {
 public:
-    GmVec3 m_extents; // 0x08, 0x0C, 0x10
+    GmVec3 m_center;  // 0x08, 0x0C, 0x10
+    GmVec3 m_extents; // 0x14, 0x18, 0x1C
 
     GmSurfBox();
 };

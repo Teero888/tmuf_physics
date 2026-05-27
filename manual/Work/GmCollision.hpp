@@ -18,4 +18,11 @@ public:
     void Neg();
 };
 
+class CGmCollisionBuffer {
+public:
+    virtual GmCollision* AddCollision() = 0;
+    virtual unsigned int GetCount() const = 0;
+    virtual GmCollision* GetCollision(unsigned int index) = 0;
+};
+
 #endif // GMCOLLISION_HPP
