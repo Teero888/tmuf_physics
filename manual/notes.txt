@@ -1,0 +1,30 @@
+things that dont work right yet that i know of:
+GmVec4::PolygonClip
+
+
+
+
+// Common game engine epsilons extracted from the assembly TODO: verify these values from game memory
+const float EPSILON_INTERSECT = 0.00001f; // _DAT_00b785dc
+const float EPSILON_SQUARED   = 0.000001f; // _DAT_00d1a8ac / _DAT_00d07588
+const float EPSILON_DOT       = 0.999f;    // _DAT_00b44a20
+const float EPSILON_DIST      = 0.001f;    // _DAT_00b362c0
+const float EPSILON_LINEAR    = 0.0001f;   // _DAT_00b31460
+
+
+still need stuff
+
+  The Physics Solver (Havok-like Math System):
+   * CHmsDyna / CHmsCorpus: The rigid body state objects. We need the logic that updates their velocity and position over time (Integrate, GetLinearSpeed, ApplyForce).
+   * CHmsZoneDynamic: The world manager. We need its core dispatch loops:
+       * PhysicsStep2() (The main tick)
+       * ComputeCollisionResponse() (Constraint resolution)
+       * SolveImpulse() (The actual math that bounces objects apart)
+       * ComputeCorpusForces() (Gravity and damping)
+
+  The Vehicle Simulation (The Secret Sauce):
+   * CSceneVehicleCar: We need the implementation of the massive unrolled physics methods, specifically:
+       * ComputeForcesModel3 / 4 / 5 / 6 (The different car types: Stadium, Bay, Island, etc.)
+       * IntegrateVehicle() & EngineIntegrate()
+       * ApplyFrictionForces() & ComputeAirControl()
+   * SSimulationWheel: The raycast suspension logic (nested inside CSceneVehicleCar).
