@@ -2,12 +2,6 @@
 #include "GmVec3.hpp" // Assumed to define GmVec3
 #include "CClassicArchive.hpp" // Assumed to define CClassicArchive
 
-// External InvSqrt dependency for normalizations
-namespace GmFunc {
-    float InvSqrt(float value);
-    bool AreNearlyEqual(float a, float b, float epsilon);
-}
-
 // Global lookup table for QuarterY rotations (Cos/Sin of 0, 90, 180, 270)
 static const float DAT_00bbd760[4] = { 1.0f, 0.0f, -1.0f, 0.0f };
 

@@ -6,11 +6,6 @@
 #include "GmIso3.hpp"
 #include "CClassicArchive.hpp"
 
-// External InvSqrt dependency for scale normalization
-namespace GmFunc {
-    float InvSqrt(float value);
-}
-
 // =================================================
 // Function: GmIso4::ArchiveGmIso4
 // =================================================

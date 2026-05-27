@@ -277,51 +277,128 @@ void GmQuat::SetSquad(const GmQuat& q0, const GmQuat& q1, const GmQuat& c0, cons
 // Function: GmQuat::ComputeSquad
 // =================================================
 void GmQuat::ComputeSquad(const GmQuat& q0, const GmQuat& q1, const GmQuat& q2, const GmQuat& q3, float t) {
-    // Calculates intermediate control points and resolves the Squad interpolation
+    // First Control Point (c1)
     GmQuat invQ1;
     invQ1.SetInverse(q1);
+
+    GmQuat m0;
+    m0.SetMult(q0, invQ1);
+
+    GmQuat m2;
+    m2.SetMult(q2, invQ1);
+
+    // Log(m2)
+    float len2Sq = (m2.x * m2.x) + (m2.y * m2.y) + (m2.z * m2.z);
+    float len2 = std::sqrt(len2Sq);
+    float angle2 = std::acos(m2.w);
+    float log2_x = 0.0f, log2_y = 0.0f, log2_z = 0.0f;
     
-    GmQuat mult4, mult3;
-    mult4.SetMult(q2, invQ1);
-    mult3.SetMult(q0, invQ1);
-    
-    // Log mult4
-    float len4 = std::sqrt((mult4.x * mult4.x) + (mult4.y * mult4.y) + (mult4.z * mult4.z));
-    float angle4 = std::acos(mult4.w);
-    float coef4 = (len4 <= 1e-6f) ? 0.0f : angle4 / len4;
-    GmVec3 log4 = { mult4.x * coef4, mult4.y * coef4, mult4.z * coef4 };
-    
-    // Log mult3
-    float len3 = std::sqrt((mult3.x * mult3.x) + (mult3.y * mult3.y) + (mult3.z * mult3.z));
-    float angle3 = std::acos(mult3.w);
-    float coef3 = (len3 <= 1e-6f) ? 0.0f : angle3 / len3;
-    GmVec3 log3 = { mult3.x * coef3, mult3.y * coef3, mult3.z * coef3 };
-    
-    // Avg and Exponentiate
-    GmVec3 avgLog = {
-        (log4.x + log3.x) * -0.25f,
-        (log4.y + log3.y) * -0.25f,
-        (log4.z + log3.z) * -0.25f
-    };
-    
-    float avgLenSq = (avgLog.x * avgLog.x) + (avgLog.y * avgLog.y) + (avgLog.z * avgLog.z);
-    GmQuat expAvg;
-    
-    if (avgLenSq <= 1e-6f) {
-        expAvg.SetIdentity();
-    } else {
-        float avgLen = std::sqrt(avgLenSq);
-        float invAvg = std::sin(avgLen) / avgLen;
-        expAvg.w = std::cos(avgLen);
-        expAvg.x = avgLog.x * invAvg;
-        expAvg.y = avgLog.y * invAvg;
-        expAvg.z = avgLog.z * invAvg;
+    if (len2 > 1e-6f) { // _DAT_00bbd8e4
+        float coef2 = angle2 / len2;
+        log2_x = m2.x * coef2;
+        log2_y = m2.y * coef2;
+        log2_z = m2.z * coef2;
     }
+
+    // Log(m0)
+    float len0Sq = (m0.x * m0.x) + (m0.y * m0.y) + (m0.z * m0.z);
+    float len0 = std::sqrt(len0Sq);
+    float angle0 = std::acos(m0.w);
+    float log0_x = 0.0f, log0_y = 0.0f, log0_z = 0.0f;
     
+    if (len0 > 1e-6f) {
+        float coef0 = angle0 / len0;
+        log0_x = m0.x * coef0;
+        log0_y = m0.y * coef0;
+        log0_z = m0.z * coef0;
+    }
+
+    // Average * -0.25f (_DAT_00bbd900)
+    float fFactor = -0.25f; 
+    float avg1_x = (log0_x + log2_x) * fFactor;
+    float avg1_y = (log0_y + log2_y) * fFactor;
+    float avg1_z = (log0_z + log2_z) * fFactor;
+
+    // Exp(avg)
+    float avgLen1Sq = (avg1_x * avg1_x) + (avg1_y * avg1_y) + (avg1_z * avg1_z);
+    float avgLen1 = std::sqrt(avgLen1Sq);
+
+    GmQuat exp1;
+    if (avgLen1 <= 1e-6f) {
+        exp1.SetIdentity();
+    } else {
+        float sinAvg1 = std::sin(avgLen1);
+        float coefAvg1 = sinAvg1 / avgLen1;
+        exp1.x = avg1_x * coefAvg1;
+        exp1.y = avg1_y * coefAvg1;
+        exp1.z = avg1_z * coefAvg1;
+        exp1.w = std::cos(avgLen1);
+    }
+
     GmQuat c1;
-    c1.SetMult(q1, expAvg); // Control point
+    c1.SetMult(q1, exp1);
+
+
+    // Second Control Point (c2) 
+    GmQuat invQ2;
+    invQ2.SetInverse(q2);
+
+    GmQuat m1;
+    m1.SetMult(q1, invQ2);
+
+    GmQuat m3;
+    m3.SetMult(q3, invQ2);
+
+    // Log(m3)
+    float len3Sq = (m3.x * m3.x) + (m3.y * m3.y) + (m3.z * m3.z);
+    float len3 = std::sqrt(len3Sq);
+    float angle3 = std::acos(m3.w);
+    float log3_x = 0.0f, log3_y = 0.0f, log3_z = 0.0f;
     
-    // Simplified: Directly compute the Squad (the decompilation re-uses this exact math block twice
-    // for both control points before passing them to SetSquad)
-    this->SetSquad(q1, q2, c1, c1, t); // Simplification map
+    if (len3 > 1e-6f) {
+        float coef3 = angle3 / len3;
+        log3_x = m3.x * coef3;
+        log3_y = m3.y * coef3;
+        log3_z = m3.z * coef3;
+    }
+
+    // Log(m1)
+    float len1Sq = (m1.x * m1.x) + (m1.y * m1.y) + (m1.z * m1.z);
+    float len1 = std::sqrt(len1Sq);
+    float angle1 = std::acos(m1.w);
+    float log1_x = 0.0f, log1_y = 0.0f, log1_z = 0.0f;
+    
+    if (len1 > 1e-6f) {
+        float coef1 = angle1 / len1;
+        log1_x = m1.x * coef1;
+        log1_y = m1.y * coef1;
+        log1_z = m1.z * coef1;
+    }
+
+    // Average * -0.25f
+    float avg2_x = (log1_x + log3_x) * fFactor;
+    float avg2_y = (log1_y + log3_y) * fFactor;
+    float avg2_z = (log1_z + log3_z) * fFactor;
+
+    // Exp(avg)
+    float avgLen2Sq = (avg2_x * avg2_x) + (avg2_y * avg2_y) + (avg2_z * avg2_z);
+    float avgLen2 = std::sqrt(avgLen2Sq);
+
+    GmQuat exp2;
+    if (avgLen2 <= 1e-6f) {
+        exp2.SetIdentity();
+    } else {
+        float sinAvg2 = std::sin(avgLen2);
+        float coefAvg2 = sinAvg2 / avgLen2;
+        exp2.x = avg2_x * coefAvg2;
+        exp2.y = avg2_y * coefAvg2;
+        exp2.z = avg2_z * coefAvg2;
+        exp2.w = std::cos(avgLen2);
+    }
+
+    GmQuat c2;
+    c2.SetMult(q2, exp2);
+
+    // Perform the Squad Interpolation using the exact control points
+    this->SetSquad(q1, q2, c1, c2, t);
 }

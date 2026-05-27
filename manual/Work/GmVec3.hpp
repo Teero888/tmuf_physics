@@ -41,6 +41,68 @@ struct GmVec3 {
     void MultTranspose(const GmMat3& mat);
     void SetMultTranspose(const GmVec3& v, const GmMat3& mat);
     void SetInverseTranslation(const GmIso4& mat);
+
+    // =================================================
+    // Operator Overloads
+    // =================================================
+
+    // Unary minus (Negation)
+    inline GmVec3 operator-() const {
+        return { -x, -y, -z };
+    }
+
+    // Vector + Vector
+    inline GmVec3 operator+(const GmVec3& v) const {
+        return { x + v.x, y + v.y, z + v.z };
+    }
+
+    // Vector - Vector
+    inline GmVec3 operator-(const GmVec3& v) const {
+        return { x - v.x, y - v.y, z - v.z };
+    }
+
+    // Vector * Vector (Component-wise multiplication)
+    inline GmVec3 operator*(const GmVec3& v) const {
+        return { x * v.x, y * v.y, z * v.z };
+    }
+
+    // Vector / Vector (Component-wise division)
+    inline GmVec3 operator/(const GmVec3& v) const {
+        return { x / v.x, y / v.y, z / v.z };
+    }
+
+    // Vector * Scalar
+    inline GmVec3 operator*(float scalar) const {
+        return { x * scalar, y * scalar, z * scalar };
+    }
+
+    // Vector / Scalar
+    inline GmVec3 operator/(float scalar) const {
+        float inv = 1.0f / scalar; // Faster to multiply by inverse
+        return { x * inv, y * inv, z * inv };
+    }
+
+    // Compound Assignment Operators
+    inline GmVec3& operator+=(const GmVec3& v) {
+        x += v.x; y += v.y; z += v.z;
+        return *this;
+    }
+
+    inline GmVec3& operator-=(const GmVec3& v) {
+        x -= v.x; y -= v.y; z -= v.z;
+        return *this;
+    }
+
+    inline GmVec3& operator*=(float scalar) {
+        x *= scalar; y *= scalar; z *= scalar;
+        return *this;
+    }
+
+    inline GmVec3& operator/=(float scalar) {
+        float inv = 1.0f / scalar;
+        x *= inv; y *= inv; z *= inv;
+        return *this;
+    }
 };
 
 // External helper definition required by ComputeTriangleTangentUV

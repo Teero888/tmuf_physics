@@ -1,11 +1,6 @@
 #include "GmVec3.hpp"
 #include "GmVec4.hpp" // Assumes GmVec4::SetMult exists from previous implementation
 
-// External math helper
-namespace GmFunc {
-    float InvSqrt(float value); // Assumed fast inverse sqrt
-}
-
 // =================================================
 // Function: GmVec3::ComputeTriangleTangentUV
 // =================================================
