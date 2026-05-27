@@ -1,7 +1,7 @@
 #ifndef GMBOXORIENTED_HPP
 #define GMBOXORIENTED_HPP
 
-#include "typedefs.h"
+
 #include "GmMat3.hpp"
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"

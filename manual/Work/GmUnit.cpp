@@ -1,4 +1,5 @@
 #include "GmUnit.hpp"
+#include "CFastString.hpp"
 
 namespace GmUnit {
 
@@ -55,7 +56,8 @@ float ConvertReal(EConvertMethod method, float value) {
 void ConvertRealString(EConvertMethod method, CFastString& inOutStr) {
     if (method != CONVERT_NONE) {
         // Extract float, convert it, and overwrite the string
-        float val = inOutStr.GetReal();
+        float val;
+        inOutStr.GetReal(&val);
         val = ConvertReal(method, val);
         inOutStr.SetReal(val);
     }

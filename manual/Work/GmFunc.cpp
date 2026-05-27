@@ -1,5 +1,10 @@
-#include "GmFunc.hpp"
+#include <cmath>
+#include <algorithm>
 #include <ctime>
+#include <cstdint>
+#include "GmFunc.hpp"
+#include "GmVec3.hpp"
+#include "CClassicArchive.hpp"
 
 namespace GmFunc {
 
@@ -49,7 +54,7 @@ float RandReal(float min, float max) {
     return min + (max - min) * (static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX));
 }
 
-void SetRandSeed(ulong seed) {
+void SetRandSeed(unsigned int seed) {
     if (seed == 0xFFFFFFFF) {
         std::srand(static_cast<unsigned int>(std::time(nullptr)));
     } else {
@@ -107,22 +112,22 @@ bool SolveLinearSystem2(float* out1, float* out2, float a11, float a12, float b1
 // Serialization Mapping
 // =================================================
 
-uchar RealToNat7(float val, float min, float max) {
+unsigned char RealToNat7(float val, float min, float max) {
     float mapped = ((val - min) / (max - min)) * 127.0f;
     mapped = std::clamp(mapped, 0.0f, 127.0f);
-    return static_cast<uchar>(std::round(mapped));
+    return static_cast<uint8_t>(std::round(mapped));
 }
 
-uchar RealToNat8(float val, float min, float max) {
+unsigned char RealToNat8(float val, float min, float max) {
     float mapped = ((val - min) / (max - min)) * 255.0f;
     mapped = std::clamp(mapped, 0.0f, 255.0f);
-    return static_cast<uchar>(std::round(mapped));
+    return static_cast<uint8_t>(std::round(mapped));
 }
 
-ushort RealToNat16(float val, float min, float max) {
+uint16_t RealToNat16(float val, float min, float max) {
     float mapped = ((val - min) / (max - min)) * 65535.0f;
     mapped = std::clamp(mapped, 0.0f, 65535.0f);
-    return static_cast<ushort>(std::round(mapped));
+    return static_cast<uint16_t>(std::round(mapped));
 }
 
 // =================================================
@@ -130,13 +135,12 @@ ushort RealToNat16(float val, float min, float max) {
 // =================================================
 
 void ReadUnitVec3(CClassicBuffer* buf, GmVec3* out) {
-    uchar pitchByte, yawByte;
-    buf->Read(&pitchByte, 1);
-    buf->Read(&yawByte, 1);
+    uint8_t pitchByte, yawByte;
+    buf->ReadAll(&pitchByte, 1);
+    buf->ReadAll(&yawByte, 1);
 
-    // Map bytes back to Pitch [-PI/2, PI/2] and Yaw [-PI, PI]
-    float pitch = (static_cast<float>(pitchByte) / 255.0f) * 3.14159265f - 1.57079632f;
-    float yaw = (static_cast<float>(yawByte) / 255.0f) * 6.28318530f - 3.14159265f;
+    float yaw = (yawByte * 3.1415927f) / 127.0f;
+    float pitch = (pitchByte * 3.1415927f) / 127.0f;
 
     float cosPitch = std::cos(pitch);
     out->x = cosPitch * std::cos(yaw);
@@ -158,11 +162,11 @@ void WriteUnitVec3(CClassicBuffer* buf, GmVec3* vec) {
     }
 
     // Map Pitch [-PI/2, PI/2] and Yaw [-PI, PI] to bytes [0, 255]
-    uchar pitchByte = RealToNat8(pitch, -1.57079632f, 1.57079632f);
-    uchar yawByte = RealToNat8(yaw, -3.14159265f, 3.14159265f);
+    uint8_t pitchByte = RealToNat8(pitch, -1.57079632f, 1.57079632f);
+    uint8_t yawByte = RealToNat8(yaw, -3.14159265f, 3.14159265f);
 
-    buf->Write(&pitchByte, 1);
-    buf->Write(&yawByte, 1);
+    buf->WriteAll(&pitchByte, 1);
+    buf->WriteAll(&yawByte, 1);
 }
 
 } // namespace GmFunc

@@ -1,7 +1,7 @@
 #ifndef GMUNIT_HPP
 #define GMUNIT_HPP
 
-#include "typedefs.h"
+
 
 class CFastString;
 

@@ -1,3 +1,5 @@
+#include <cmath>
+#include "GmFunc.hpp"
 #include "GmIso4.hpp"
 
 // Assuming standard definitions from your earlier files
@@ -100,7 +102,7 @@ void GmIso4::NUGetIso4AndScale(GmIso4& outMat, GmVec3& outScale) const {
 // Function: GmIso4::Set
 // =================================================
 void GmIso4::Set(const GmIso4& other) {
-    this->rot.Set(other.rot);
+    this->rot = other.rot; // huh technically should work TODO: maybe? was .Set before but that expects a quat
     this->tX = other.tX;
     this->tY = other.tY;
     this->tZ = other.tZ;
@@ -163,7 +165,7 @@ void GmIso4::SetBlend(const GmIso4& a, const GmIso4& b, float t) {
 // =================================================
 void GmIso4::SetLookAt(const GmVec3& pos, const GmVec3& target, const GmVec3& up) {
     GmVec3 dir = { target.x - pos.x, target.y - pos.y, target.z - pos.z };
-    this->rot.SetDOV(dir, up);
+    this->rot.SetDOV(dir, &up);
     this->tX = pos.x;
     this->tY = pos.y;
     this->tZ = pos.z;

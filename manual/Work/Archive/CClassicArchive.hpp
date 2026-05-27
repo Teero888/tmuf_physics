@@ -27,14 +27,14 @@ public:
     virtual ~CClassicBuffer();
 
     // Reconstructed virtual interface based on vftable offsets
-    virtual int Read(void* dest, uint32_t size) = 0;           // Offset: 0x4
-    virtual int Write(const void* src, uint32_t size) = 0;     // Offset: 0x8
-    virtual void Unk_0x0C() = 0;                               // Offset: 0xC
-    virtual void Unk_0x10() = 0;                               // Offset: 0x10
-    virtual uint32_t GetCursor() = 0;                          // Offset: 0x14
-    virtual uint32_t GetSize() = 0;                            // Offset: 0x18
-    virtual bool CanSeek() = 0;                                // Offset: 0x1C
-    virtual void Seek(uint32_t pos) = 0;                       // Offset: 0x20
+    virtual int Read(void* dest, uint32_t size) { return 0; }           // Offset: 0x4
+    virtual int Write(const void* src, uint32_t size) { return 0; }     // Offset: 0x8
+    virtual void Unk_0x0C() {}                               // Offset: 0xC
+    virtual void Unk_0x10() {}                               // Offset: 0x10
+    virtual uint32_t GetCursor() { return 0; }                          // Offset: 0x14
+    virtual uint32_t GetSize() { return 0; }                            // Offset: 0x18
+    virtual bool CanSeek() { return false; }                                // Offset: 0x1C
+    virtual void Seek(uint32_t pos) {}                       // Offset: 0x20
 
     CClassicBufferMemory* CreateUncompressedBlock();
     void AddCompressedBlock(CClassicBufferMemory* mem);
@@ -93,7 +93,7 @@ public:
     virtual ~CClassicArchive();
 
     CClassicBuffer* DetachBuffer();
-    bool DoData(void* data, uint32_t size);
+    void DoData(void* data, uint32_t size);
     bool ReadLine();
     void WriteLine();
 

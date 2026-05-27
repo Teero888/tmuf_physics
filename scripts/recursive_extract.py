@@ -76,6 +76,53 @@ def recurse_functions(start_funcs, function_map, physics_classes, physics_keywor
                         break
     return found_functions, found_types
 
+def generate_pyvis_graph(found_funcs, output_file="physics_call_graph.html"):
+    try:
+        from pyvis.network import Network
+    except ImportError:
+        print("PyVis not installed. Run: pip install pyvis")
+        return
+
+    print("Generating interactive HTML graph...")
+    # directed=True ensures we get arrows showing who calls who
+    net = Network(height="100vh", width="100%", bgcolor="#1e1e1e", font_color="white", directed=True)
+
+    # 1. Add all nodes first
+    for func in found_funcs.keys():
+        # Shorten labels for the bubbles, but keep full name on hover (title)
+        short_name = func.split("::")[-1] 
+        net.add_node(func, label=short_name, title=func, shape="box")
+
+    # 2. Add edges (caller -> callee)
+    for caller, info in found_funcs.items():
+        for callee in info['calls']:
+            # Only connect if the callee is actually part of our extracted physics subset
+            if callee in found_funcs:
+                net.add_edge(caller, callee, color="#00ffcc")
+
+    # Use Barnes Hut physics for layout (good for untangling large networks)
+    net.barnes_hut(gravity=-8000, central_gravity=0.3, spring_length=200)
+    net.write_html(output_file)
+    print(f"Interactive graph saved to {output_file}")
+
+
+def generate_dot_graph(found_funcs, output_file="physics_call_graph.dot"):
+    print("Generating Graphviz .dot file...")
+    with open(output_file, 'w') as f:
+        f.write("digraph CallGraph {\n")
+        f.write("  node [shape=box, style=filled, color=lightblue, fontname=\"Consolas\"];\n")
+        f.write("  rankdir=LR; // Left-to-Right layout\n")
+        
+        for caller, info in found_funcs.items():
+            # Wrap in quotes to prevent Graphviz syntax errors with C++ characters (<, >, :)
+            safe_caller = f'"{caller}"'
+            for callee in info['calls']:
+                if callee in found_funcs:
+                    safe_callee = f'"{callee}"'
+                    f.write(f"  {safe_caller} -> {safe_callee};\n")
+        f.write("}\n")
+    print(f"Graphviz file saved to {output_file}")
+
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python recursive_extract.py <dump_file> <start_function>")
@@ -92,3 +139,10 @@ if __name__ == "__main__":
         for name in sorted(found_funcs.keys()):
             f.write(f"// =================================================\n// Function: {name}\n// =================================================\n{found_funcs[name]['signature']}\n{{\n{found_funcs[name]['body']}\n}}\n\n")
     print(f"Done. Extracted code in {output_code}")
+    
+    # --- ADD THESE LINES ---
+    pyvis_out = os.path.join(SCRIPT_DIR, "physics_call_graph.html")
+    generate_pyvis_graph(found_funcs, pyvis_out)
+
+    dot_out = os.path.join(SCRIPT_DIR, "physics_call_graph.dot")
+    generate_dot_graph(found_funcs, dot_out)

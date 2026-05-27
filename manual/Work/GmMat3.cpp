@@ -1,3 +1,5 @@
+#include <cmath>
+#include "GmFunc.hpp"
 #include "GmMat3.hpp"
 #include "GmVec3.hpp" // Assumed to define GmVec3
 #include "CClassicArchive.hpp" // Assumed to define CClassicArchive
@@ -293,7 +295,7 @@ void GmMat3::SetBlend(const GmMat3& a, const GmMat3& b, float t) {
     qA.Set(a);
     qB.Set(b);
     
-    GmQuat::SetSlerp(qOut, qA, qB, t);
+    qOut.SetSlerp(qA, qB, t);
     
     // Fallback equality check logic
     if (std::abs(qOut.w - qA.w) < 1e-4f && std::abs(qOut.x - qA.x) < 1e-4f && 

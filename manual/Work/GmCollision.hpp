@@ -1,7 +1,7 @@
 #ifndef GMCOLLISION_HPP
 #define GMCOLLISION_HPP
 
-#include "typedefs.h"
+
 #include "GmVec3.hpp"
 
 class GmCollision {

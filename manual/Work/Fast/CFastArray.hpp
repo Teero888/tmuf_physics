@@ -1,7 +1,7 @@
 #ifndef CFASTARRAY_HPP
 #define CFASTARRAY_HPP
 
-#include "typedefs.h"
+
 #include <utility>
 
 // =================================================

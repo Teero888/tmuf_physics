@@ -261,3 +261,41 @@ void GmBoxAligned::ArchiveABoxOld1(CClassicArchive* archive) {
         SetMinMax(min, max);
     }
 }
+
+void GmBoxAligned::InitEmpty() {
+    this->center = GmVec3{0, 0, 0};
+    this->extents = GmVec3{-1e30f, -1e30f, -1e30f}; // Indicates empty
+}
+
+void GmBoxAligned::Union(GmBoxAligned* out, const GmBoxAligned* a, const GmBoxAligned* b) {
+    GmVec3 minA = {a->center.x - a->extents.x, a->center.y - a->extents.y, a->center.z - a->extents.z};
+    GmVec3 maxA = {a->center.x + a->extents.x, a->center.y + a->extents.y, a->center.z + a->extents.z};
+    GmVec3 minB = {b->center.x - b->extents.x, b->center.y - b->extents.y, b->center.z - b->extents.z};
+    GmVec3 maxB = {b->center.x + b->extents.x, b->center.y + b->extents.y, b->center.z + b->extents.z};
+    
+    GmVec3 minOut = {
+        minA.x < minB.x ? minA.x : minB.x,
+        minA.y < minB.y ? minA.y : minB.y,
+        minA.z < minB.z ? minA.z : minB.z
+    };
+    GmVec3 maxOut = {
+        maxA.x > maxB.x ? maxA.x : maxB.x,
+        maxA.y > maxB.y ? maxA.y : maxB.y,
+        maxA.z > maxB.z ? maxA.z : maxB.z
+    };
+    out->SetMinMax(minOut, maxOut);
+}
+
+
+void GmBoxAligned::Subdivide8(GmBoxAligned octants[8]) const {
+    // Dummy stub
+}
+
+void GmBoxAligned::Subdivide2(GmBoxAligned childBoxes[2]) const {
+    // Dummy stub
+}
+
+bool GmBoxAligned::TestInter(class NvFaceInfo* face, void* arg2, const GmBoxAligned* box, const GmIso4* transform) {
+    // Dummy stub
+    return true;
+}

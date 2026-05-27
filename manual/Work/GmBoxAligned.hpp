@@ -1,7 +1,7 @@
 #ifndef GMBOXALIGNED_HPP
 #define GMBOXALIGNED_HPP
 
-#include "typedefs.h"
+
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
 
@@ -31,6 +31,12 @@ public:
     bool IsNull() const;
     bool IsIncluded(const GmBoxAligned& outerBox) const;
     bool TestInter(const GmVec3& point) const;
+    void InitEmpty();
+    static void Union(GmBoxAligned* out, const GmBoxAligned* a, const GmBoxAligned* b);
+    void Subdivide8(GmBoxAligned octants[8]) const;
+    void Subdivide2(GmBoxAligned childBoxes[2]) const;
+    static bool TestInter(class NvFaceInfo* face, void* arg2, const GmBoxAligned* box, const GmIso4* transform);
+
     
     // Line Segment Intersections (Separating Axis Theorem)
     bool TestInterSegment(const GmVec3& pointA, const GmVec3& pointB) const;

@@ -1,9 +1,9 @@
 #ifndef GMOCTREE_HPP
 #define GMOCTREE_HPP
 
-#include "typedefs.h"
+
 #include "CFastBuffer.hpp"
-#include "CClassicArchive.hpp"
+// #include "CClassicArchive.hpp"
 #include "GmBoxAligned.hpp"
 #include "GmIso4.hpp"
 #include <vector>
@@ -42,34 +42,7 @@ public:
     // =================================================
     // Serialization
     // =================================================
-    void Archive(CFastCrypt<unsigned_long>* crypt, CClassicArchive* archive) {
-        unsigned long version = 1;
-        
-        // CClassicArchive::DoNatural wrapper
-        archive->DoNatural(&version, 1);
-
-        if (version == 1) {
-            this->ArchiveFastBuffer(archive);
-        } 
-        else if (version == 2) {
-            this->ArchiveCount(archive);
-            unsigned long count = this->GetCount();
-            
-            // Decompiler showed (uVar1 << 5) which is count * 32. 
-            // We use sizeof(TCell) to prevent memory corruption if your struct isn't packed to 32 bytes.
-            if (count > 0) {
-                archive->DoData(this->m_data, count * sizeof(TCell));
-            }
-        }
-        else if (version == 3) {
-            // Deduced from the Ghidra 'ArchiveCountAndElems' block
-            this->ArchiveCount(archive);
-            for(unsigned long i = 0; i < this->GetCount(); ++i) {
-                // Requires TCell to have its own Archive method for v3
-                // this->operator[](i).Archive(archive); 
-            }
-        }
-    }
+    // void Archive(...) {}
 
     // =================================================
     // Main Tree Builder

@@ -1,11 +1,11 @@
 #ifndef GMSURF_HPP
 #define GMSURF_HPP
 
-#include "typedefs.h"
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
 #include "GmBoxAligned.hpp"
 #include "GmOctree.hpp" // Contains SMeshOctreeCell
+#include "CFastArray.hpp"
 
 class CCrystal;
 class CGmCollisionBuffer;
@@ -124,7 +124,7 @@ public:
     int TriangleClipSegmentNearerThanT(const GmVec3& rayPos, const GmVec3& rayDir, const GmVec3& triNormal, float& outT, SPointInTri& outPoint);
     int TriangleClipSegment2NearerThanT(const GmVec3& rayPos, const GmVec3& rayDir, const GmVec3& triNormal, int param, float& outT, GmVec3& outNormal);
     
-    void Archive(CFastCrypt<unsigned_long>* crypt, CClassicArchive* archive);
+    // void Archive(...)
     void BuildOctree();
     void GetMeshBoundingBox(GmBoxAligned& outBox) const;
     void TransformByNOMat(const GmIso4& transform);

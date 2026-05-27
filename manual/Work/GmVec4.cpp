@@ -1,3 +1,4 @@
+#include "GmFunc.hpp"
 #include "GmVec4.hpp"
 #include "GmVec3.hpp"
 #include "GmLine3.hpp" // Assuming this has a GmVec3 pos and GmVec3 dir
@@ -220,8 +221,8 @@ void GmVec4::GetClipFlag(uint& outFlag) const {
     outFlag = flag;
 }
 
-void GmVec4::GetClipFlags(const GmVec4* vecs, uint* outFlags, ulong count) {
-    for (ulong i = 0; i < count; ++i) {
+void GmVec4::GetClipFlags(const GmVec4* vecs, uint* outFlags, unsigned int count) {
+    for (unsigned int i = 0; i < count; ++i) {
         vecs[i].GetClipFlag(outFlags[i]);
     }
 }

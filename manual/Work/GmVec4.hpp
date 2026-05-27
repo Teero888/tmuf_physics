@@ -1,7 +1,7 @@
 #ifndef GMVEC4_HPP
 #define GMVEC4_HPP
 
-#include "typedefs.h"
+
 #include "GmVec3.hpp"
 
 class GmIso3;
@@ -39,7 +39,7 @@ public:
 
     // Clipping (Frustum)
     void GetClipFlag(uint& outFlag) const;
-    static void GetClipFlags(const GmVec4* vecs, uint* outFlags, ulong count);
+    static void GetClipFlags(const GmVec4* vecs, uint* outFlags, unsigned int count);
     
     // Renderer Clipping (Highly context-dependent, likely belongs to a renderer class)
     static void PolygonClip(void* param_1, void* param_2); 

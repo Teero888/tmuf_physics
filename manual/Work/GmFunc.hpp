@@ -1,7 +1,7 @@
 #ifndef GMFUNC_HPP
 #define GMFUNC_HPP
 
-#include "typedefs.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
@@ -11,6 +11,7 @@ class CClassicBuffer;
 struct GmVec3;
 
 namespace GmFunc {
+    static inline float InvSqrt(float x) { return 1.0f / std::sqrt(x); }
     // Math Utilities
     float AsinSafe(float val);
     float ClampReal(float val, float min, float max);
@@ -20,7 +21,7 @@ namespace GmFunc {
     float Min(float a, float b);
     float Max(float a, float b);
     float RandReal(float min, float max);
-    void SetRandSeed(ulong seed);
+    void SetRandSeed(unsigned int seed);
 
     // Tests & Checks
     bool IsANumber(float val);
@@ -32,12 +33,13 @@ namespace GmFunc {
     bool SolveLinearSystem2(float* out1, float* out2, float a11, float a12, float b1, float a21, float a22, float b2);
 
     // Serialization & Mapping
-    uchar RealToNat7(float val, float min, float max);
-    uchar RealToNat8(float val, float min, float max);
+    unsigned char RealToNat7(float val, float min, float max);
+    unsigned char RealToNat8(float val, float min, float max);
     ushort RealToNat16(float val, float min, float max);
     
     void ReadUnitVec3(CClassicBuffer* buf, GmVec3* out);
     void WriteUnitVec3(CClassicBuffer* buf, GmVec3* vec);
+    float InvSqrt(float val);
 };
 
 #endif // GMFUNC_HPP

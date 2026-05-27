@@ -1,3 +1,5 @@
+#include <cmath>
+#include "GmFunc.hpp"
 #include "GmVec3.hpp"
 #include "GmVec4.hpp" // Assumes GmVec4::SetMult exists from previous implementation
 

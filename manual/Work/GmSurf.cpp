@@ -1,4 +1,5 @@
 #include "GmSurf.hpp"
+#include "GmCollision.hpp"
 #include <cmath>
 
 // Collision Dispatch Matrix (9x9)
@@ -19,7 +20,6 @@ GmSurf::GmSurf() {
 }
 
 // External collision function prototypes
-// TODO: grab these from the dump.cpp and reimplement them.
 extern int GmCollision_Sphere_Sphere(LocatedGmSurf* a, LocatedGmSurf* b, CGmCollisionBuffer* buf);
 extern int GmCollision_Sphere_Ellipsoid(LocatedGmSurf* a, LocatedGmSurf* b, CGmCollisionBuffer* buf);
 extern int GmCollision_Sphere_Box(LocatedGmSurf* a, LocatedGmSurf* b, CGmCollisionBuffer* buf);
@@ -123,13 +123,14 @@ void GmSurf::GetBoundingBox(GmBoxAligned& outBox) const {
 int GmSurf::ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, GmVec3& outNormal) {
     if (m_type == 0) {
         // Pass the translation part of the matrix (tX, tY, tZ) as the sphere center
-        return ((GmSurfSphere*)this)->ClipSegment(rayPos, rayDir, transform.GetTranslation(), outT);
+        return ((GmSurfSphere*)this)->ClipSegment(rayPos, rayDir, GmVec3{transform.tX, transform.tY, transform.tZ}, outT);
     }
     if (m_type == 7) {
         // Transform ray into local space for mesh traversal
-        GmVec3 localPos = rayPos - transform.GetTranslation();
-        localPos = transform.rot.TransposeMult(localPos); 
-        GmVec3 localDir = transform.rot.TransposeMult(rayDir);
+        GmVec3 localPos = rayPos - GmVec3{transform.tX, transform.tY, transform.tZ};
+        localPos.SetMultTranspose(localPos, transform.rot); 
+        GmVec3 localDir = rayDir;
+        localDir.SetMultTranspose(rayDir, transform.rot);
         
         return ((GmSurfMesh*)this)->ClipSegment(localPos, localDir, transform, outT);
     }
@@ -220,7 +221,7 @@ void GmSurfMesh::GetMeshBoundingBox(GmBoxAligned& outBox) const {
 void GmSurfMesh::TransformByNOMat(const GmIso4& transform) {
     // 1. Transform all vertices
     for (unsigned int i = 0; i < m_vertices.GetCount(); ++i) {
-        m_vertices[i] = transform.Mult(m_vertices[i]);
+        m_vertices[i].Mult(transform);
     }
     
     // 2. If it's a full indirect transform (rotation), recalculate plane equations

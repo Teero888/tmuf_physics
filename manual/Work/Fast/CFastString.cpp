@@ -1,4 +1,5 @@
 #include "CFastString.hpp"
+#include <string>
 
 // Engine-level empty string static singletons
 static char g_EmptyCharStr[4] = {0};
@@ -114,6 +115,11 @@ int CFastString::CompareNoCase(CFastStringInt* other, SStringParam* param, uint3
     const char* otherStr = reinterpret_cast<const char*>(other);
     if (!param) return _stricmp(m_data, otherStr);
     return _strnicmp(m_data, otherStr, length);
+}
+
+int CFastString::CompareNoCase(const char* other) const
+{
+    return _strnicmp(m_data, other, m_length);
 }
 
 void CFastString::Concat(CFastStringInt* other, SStringParam* param) {

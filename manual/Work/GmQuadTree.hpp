@@ -1,7 +1,7 @@
 #ifndef GMQUADTREE_HPP
 #define GMQUADTREE_HPP
 
-#include "typedefs.h"
+
 #include "CFastBuffer.hpp"
 #include "GmVec2.hpp"
 #include <vector>

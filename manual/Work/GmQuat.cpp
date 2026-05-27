@@ -2,7 +2,7 @@
 #include "GmVec3.hpp"
 #include "GmMat3.hpp"
 #include "CClassicArchive.hpp"
-#include "CClassicBuffer.hpp"
+// #include "CClassicBuffer.hpp"
 #include "GmFunc.hpp" // Contains ReadUnitVec3, WriteUnitVec3, RealToNat8
 
 // =================================================

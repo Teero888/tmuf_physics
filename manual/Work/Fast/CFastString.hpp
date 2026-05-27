@@ -1,5 +1,28 @@
+#include <cctype>
 #ifndef CFASTSTRING_HPP
 #define CFASTSTRING_HPP
+
+#ifdef __linux__
+#include <strings.h>
+#define _stricmp strcasecmp
+#define _strnicmp strncasecmp
+#define _wcsicmp wcscasecmp
+#define _wcsnicmp wcsncasecmp
+static inline const char* _stristr(const char* haystack, const char* needle) {
+    if (!*needle) return haystack;
+    for (; *haystack; ++haystack) {
+        if (toupper(*haystack) == toupper(*needle)) {
+            const char *h, *n;
+            for (h = haystack, n = needle; *h && *n; ++h, ++n) {
+                if (toupper(*h) != toupper(*n)) break;
+            }
+            if (!*n) return haystack;
+        }
+    }
+    return nullptr;
+}
+#endif
+
 
 #include <cstdint>
 #include <cstring>
@@ -7,7 +30,7 @@
 #include <cstdio>
 #include <cwchar>
 #include <cstdarg>
-#include <cctype>
+
 
 // =================================================
 // Engine Struct Stubs (To ensure 1:1 Compilation)
@@ -71,6 +94,7 @@ public:
     
     int FilterStringForPrintableChars();
     int CompareNoCase(CFastStringInt* other, SStringParam* param, uint32_t length);
+    int CompareNoCase(const char* other) const;
     int GetInteger(int* outVal, uint32_t radix = 10);
     int GetLineAt(uint32_t lineIndex, CFastString* outLine);
     int GetNatural(uint32_t* outVal, int param3, uint32_t radix);
