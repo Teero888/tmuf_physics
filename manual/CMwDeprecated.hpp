@@ -14,8 +14,8 @@ public:
     virtual ~CMwDeprecated(); // 0x00 - vftable
 
     // Member Functions
-    static unsigned long WrapClassId(unsigned long classId);
-    void Chunk(CFuncSegment* segment, CClassicArchive* archive, unsigned long chunkId);
+    static uint32_t WrapClassId(uint32_t classId);
+    void Chunk(CFuncSegment* segment, CClassicArchive* archive, uint32_t chunkId);
 };
 
 #endif // CMWDEPRECATED_HPP

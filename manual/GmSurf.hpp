@@ -31,9 +31,9 @@ class GmSurf {
 public:
     virtual ~GmSurf();              // 0x00 - VTable
 
-    unsigned short m_flags;         // 0x04
-    unsigned char m_type;           // 0x06 - 0=Sphere, 1=Ellipsoid, 5=Polygon, 6=Box, 7=Mesh
-    unsigned char m_pad;            // 0x07
+    uint16_t m_flags;         // 0x04
+    uint8_t m_type;           // 0x06 - 0=Sphere, 1=Ellipsoid, 5=Polygon, 6=Box, 7=Mesh
+    uint8_t m_pad;            // 0x07
 
     GmSurf();
     void CreateDefaultData(CCrystal* crystal);
@@ -42,7 +42,7 @@ public:
     // Core Raycast Dispatchers
     int ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, GmVec3& outNormal);
     int ClipSegment2(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, GmVec3& outNormal);
-    int ClipSegment3(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, unsigned short& outId);
+    int ClipSegment3(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, uint16_t& outId);
 
     static int ComputeCollision(LocatedGmSurf* locA, LocatedGmSurf* locB, CGmCollisionBuffer* buf);
     static void StaticInit();
@@ -78,12 +78,12 @@ public:
 class GmSurfPolygon : public GmSurf {
 public:
     GmVec3 m_vertices[4]; // 0x08 - 0x37
-    unsigned char m_numVertices; // 0x38
-    unsigned char _pad[3];       // 0x39 - 0x3B
+    uint8_t m_numVertices; // 0x38
+    uint8_t _pad[3];       // 0x39 - 0x3B
     GmVec3 m_planeNormal;        // 0x3C - 0x47
     int m_unknown_0x48;          // 0x48
 
-    GmSurfPolygon(unsigned char param);
+    GmSurfPolygon(uint8_t param);
 };
 
 // =================================================
@@ -104,8 +104,8 @@ struct GmSurfTriangle {
     // Deduced from TransformByNOMat plane equation cross-products
     GmVec3 planeNormal; 
     float planeDist;
-    unsigned short indices[3]; 
-    unsigned short materialId;
+    uint16_t indices[3]; 
+    uint16_t materialId;
 };
 
 class GmSurfMesh : public GmSurf {
@@ -119,7 +119,7 @@ public:
     
     int ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT);
     int ClipSegment2(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, GmVec3& outNormal);
-    int ClipSegment3(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, unsigned short& outId);
+    int ClipSegment3(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, uint16_t& outId);
     
     int TriangleClipSegmentNearerThanT(const GmVec3& rayPos, const GmVec3& rayDir, const GmVec3& triNormal, float& outT, SPointInTri& outPoint);
     int TriangleClipSegment2NearerThanT(const GmVec3& rayPos, const GmVec3& rayDir, const GmVec3& triNormal, int param, float& outT, GmVec3& outNormal);

@@ -68,9 +68,9 @@ void CMwEngineManager::AddClass(CMwEngineInfo* enginePtr, CMwClassInfo* classInf
 // =================================================
 // Function: CMwEngineManager::GetClassInfo
 // =================================================
-CMwClassInfo* CMwEngineManager::GetClassInfo(unsigned long classId) {
+CMwClassInfo* CMwEngineManager::GetClassInfo(uint32_t classId) {
     // Legacy support wrapper
-    unsigned long wrappedId = CMwDeprecated::WrapClassId(classId);
+    uint32_t wrappedId = CMwDeprecated::WrapClassId(classId);
 
     // Extract the indices based on bitwise structure
     unsigned int engineIndex = wrappedId >> 24;

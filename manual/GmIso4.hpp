@@ -34,13 +34,13 @@ struct GmIso4 {
     // Getters
     void GetDir(GmVec3& outDir) const;
     void GetUp(GmVec3& outUp) const;
-    void GetPlaneEq(unsigned long axis, GmVec4& outPlane) const;
+    void GetPlaneEq(uint32_t axis, GmVec4& outPlane) const;
     bool IsNearlyEqual(const GmIso4& other) const;
     void NUGetIso4AndScale(GmIso4& outMat, GmVec3& outScale) const;
 
     // Setters
     void Set(const GmIso4& other);
-    void SetRow(unsigned long index, const GmVec4& row); // Decompiler labeled as SetColumn
+    void SetRow(uint32_t index, const GmVec4& row); // Decompiler labeled as SetColumn
     void SetXY(const GmIso3& iso2d);
     void SetIdentity();
     void SetBlend(const GmIso4& a, const GmIso4& b, float t);

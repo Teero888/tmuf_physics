@@ -90,8 +90,8 @@ int GmSurf::ComputeCollision(LocatedGmSurf* locA, LocatedGmSurf* locB, CGmCollis
         colData[5] = -colData[5];
         
         // Swap Material IDs (16-bit values at offset 0x24 and 0x26)
-        unsigned short* matIds = (unsigned short*)((char*)colData + 0x24);
-        unsigned short temp = matIds[0];
+        uint16_t* matIds = (uint16_t*)((char*)colData + 0x24);
+        uint16_t temp = matIds[0];
         matIds[0] = matIds[1];
         matIds[1] = temp;
         

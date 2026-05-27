@@ -55,11 +55,11 @@ void CMwNod::AddClass(CMwEngineInfo* engine, CMwClassInfo* classInfo) {
     CMwEngineManager::AddClass(&DAT_00d73344, engine, classInfo);
 }
 
-CMwClassInfo* CMwNod::StaticGetClassInfo(unsigned long classId) {
+CMwClassInfo* CMwNod::StaticGetClassInfo(uint32_t classId) {
     return CMwEngineManager::GetClassInfo(&DAT_00d73344, classId);
 }
 
-CMwNod* CMwNod::CreateByMwClassId(unsigned long classId) {
+CMwNod* CMwNod::CreateByMwClassId(uint32_t classId) {
     CMwClassInfo* classInfo = StaticGetClassInfo(classId);
     if (classInfo != nullptr) {
         // Offset 0x1C in CMwClassInfo is typically the instantiator function pointer
@@ -70,7 +70,7 @@ CMwNod* CMwNod::CreateByMwClassId(unsigned long classId) {
     return nullptr;
 }
 
-int CMwNod::StaticMwIsKindOf(unsigned long classId, unsigned long parentClassId) {
+int CMwNod::StaticMwIsKindOf(uint32_t classId, uint32_t parentClassId) {
     if (classId != 0xFFFFFFFF && parentClassId != 0xFFFFFFFF) {
         if (classId == parentClassId) {
             return 1;
@@ -97,7 +97,7 @@ int CMwNod::StaticMwIsKindOf(unsigned long classId, unsigned long parentClassId)
 // Serialization
 // =================================================
 
-void CMwNod::Chunk(CFuncSegment* segment, CClassicArchive* archive, unsigned long chunkId) {
+void CMwNod::Chunk(CFuncSegment* segment, CClassicArchive* archive, uint32_t chunkId) {
     // 0x1001000 is the base node chunk used for string identification
     if (chunkId != 0x1001000) {
         // Forward to a deprecated handler if not the standard chunk
@@ -117,7 +117,7 @@ void CMwNod::Chunk(CFuncSegment* segment, CClassicArchive* archive, unsigned lon
     }
 }
 
-unsigned long CMwNod::GetChunkInfo(CFuncSegment* segment, unsigned long chunkId) {
+uint32_t CMwNod::GetChunkInfo(CFuncSegment* segment, uint32_t chunkId) {
     if (chunkId != 0x1001000) {
         CFastString err;
         // CFastString::Format(&err, "Unknown ChunkId: %08X", chunkId);
@@ -140,12 +140,12 @@ int CMwNod::OnCrashDump(CMwNod* node, CFastString* outString) {
 // Reference Counting
 // =================================================
 
-unsigned long CMwNod::MwAddRef(CMwNod* caller) {
+uint32_t CMwNod::MwAddRef(CMwNod* caller) {
     m_refCount++;
     return m_refCount;
 }
 
-unsigned long CMwNod::MwRelease(CMwNod* caller) {
+uint32_t CMwNod::MwRelease(CMwNod* caller) {
     m_refCount--;
     if (m_refCount != 0) {
         return m_refCount;
@@ -164,13 +164,13 @@ unsigned long CMwNod::MwRelease(CMwNod* caller) {
     return 0;
 }
 
-unsigned long CMwNod::MwForceRef(CMwNod* newRef, unsigned long flags) {
-    unsigned long oldRef = m_refCount;
-    m_refCount = (unsigned long)newRef; // Used forcefully as a swap pointer in some contexts
+uint32_t CMwNod::MwForceRef(CMwNod* newRef, uint32_t flags) {
+    uint32_t oldRef = m_refCount;
+    m_refCount = (uint32_t)newRef; // Used forcefully as a swap pointer in some contexts
     return oldRef;
 }
 
-unsigned long CMwNod::MwGetNearestFather(CMwClassInfo* classInfo, unsigned long param2, unsigned long* param3) {
+uint32_t CMwNod::MwGetNearestFather(CMwClassInfo* classInfo, uint32_t param2, uint32_t* param3) {
     CMwClassInfo* thisInfo = GetClassInfo();
     if (thisInfo != nullptr) {
         // return CMwClassInfo::MwGetNearestFather(thisInfo, classInfo, param2, param3);
@@ -255,7 +255,7 @@ void CMwNod::DependantSendMwIsKilled(CMwNod* param_1) {
     }
 }
 
-void CMwNod::MwSendMessage(CMwNod* msgData, unsigned long msgId, unsigned long* outMsg) {
+void CMwNod::MwSendMessage(CMwNod* msgData, uint32_t msgId, uint32_t* outMsg) {
     if (m_receivers != nullptr) {
         for (unsigned int i = 0; i < m_receivers->GetCount(); ++i) {
             CMwNod* receiver = m_receivers->operator[](i);
@@ -269,23 +269,23 @@ void CMwNod::MwSendMessage(CMwNod* msgData, unsigned long msgId, unsigned long* 
 // =================================================
 
 // Note: Recreated from pointer math. paramInfo structure extracted.
-unsigned long CMwNod::Param_Get(CMwNod* stackInfo, CMwStack* stack, CMwValueStd* val) {
+uint32_t CMwNod::Param_Get(CMwNod* stackInfo, CMwStack* stack, CMwValueStd* val) {
     // stackInfo structure maps to an internal struct tracking recursion
-    unsigned long stackIndex = *((unsigned long*)((char*)stackInfo + 0x18));
+    uint32_t stackIndex = *((uint32_t*)((char*)stackInfo + 0x18));
     SMwParamInfo** stackArray = *((SMwParamInfo***)((char*)stackInfo + 0x10));
     
     SMwParamInfo* paramInfo = stackArray[stackIndex];
-    *((unsigned long*)((char*)stackInfo + 0x18)) = stackIndex - 1;
+    *((uint32_t*)((char*)stackInfo + 0x18)) = stackIndex - 1;
 
     // Bit 0x10 checks if it's a virtual parameter
     if ((paramInfo->m_flags & 0x10) != 0) {
-        *((unsigned long*)((char*)stackInfo + 0x18)) = stackIndex;
+        *((uint32_t*)((char*)stackInfo + 0x18)) = stackIndex;
         return VirtualParam_Get(stack, val);
     }
 
     if (HasProperty(paramInfo->m_offset & 0xFFFFF000)) {
         // Calls the specific param type's Get handler (offset 0x94)
-        typedef unsigned long (*ParamGetFunc)(void*, CMwNod*, CMwStack*);
+        typedef uint32_t (*ParamGetFunc)(void*, CMwNod*, CMwStack*);
         ParamGetFunc func = (ParamGetFunc)*((void**)((char*)paramInfo->m_typeObj + 0x94));
         
         void* targetMemory = (char*)this + paramInfo->m_offset;
@@ -294,45 +294,45 @@ unsigned long CMwNod::Param_Get(CMwNod* stackInfo, CMwStack* stack, CMwValueStd*
     return 1;
 }
 
-unsigned long CMwNod::Param_Add(CMwNod* stackInfo, CMwStack* stack, void* val) {
-    unsigned long stackIndex = *((unsigned long*)((char*)stackInfo + 0x18));
+uint32_t CMwNod::Param_Add(CMwNod* stackInfo, CMwStack* stack, void* val) {
+    uint32_t stackIndex = *((uint32_t*)((char*)stackInfo + 0x18));
     SMwParamInfo** stackArray = *((SMwParamInfo***)((char*)stackInfo + 0x10));
     
     SMwParamInfo* paramInfo = stackArray[stackIndex];
-    *((unsigned long*)((char*)stackInfo + 0x18)) = stackIndex - 1;
+    *((uint32_t*)((char*)stackInfo + 0x18)) = stackIndex - 1;
 
     // Bit 0x40 checks if virtual add
     if ((paramInfo->m_flags & 0x40) != 0) {
-        *((unsigned long*)((char*)stackInfo + 0x18)) = stackIndex;
+        *((uint32_t*)((char*)stackInfo + 0x18)) = stackIndex;
         return VirtualParam_Add(stack, val);
     }
 
-    typedef unsigned long (*ParamAddFunc)(void*, CMwNod*, CMwStack*);
+    typedef uint32_t (*ParamAddFunc)(void*, CMwNod*, CMwStack*);
     ParamAddFunc func = (ParamAddFunc)*((void**)((char*)paramInfo->m_typeObj + 0x9C));
     void* targetMemory = (char*)this + paramInfo->m_offset;
     return func(targetMemory, stackInfo, stack);
 }
 
-unsigned long CMwNod::Param_Sub(CMwNod* stackInfo, CMwStack* stack, void* val) {
-    unsigned long stackIndex = *((unsigned long*)((char*)stackInfo + 0x18));
+uint32_t CMwNod::Param_Sub(CMwNod* stackInfo, CMwStack* stack, void* val) {
+    uint32_t stackIndex = *((uint32_t*)((char*)stackInfo + 0x18));
     SMwParamInfo** stackArray = *((SMwParamInfo***)((char*)stackInfo + 0x10));
     
     SMwParamInfo* paramInfo = stackArray[stackIndex];
-    *((unsigned long*)((char*)stackInfo + 0x18)) = stackIndex - 1;
+    *((uint32_t*)((char*)stackInfo + 0x18)) = stackIndex - 1;
 
     // Bit 0x80 checks if virtual sub
     if ((paramInfo->m_flags & 0x80) != 0) {
-        *((unsigned long*)((char*)stackInfo + 0x18)) = stackIndex;
+        *((uint32_t*)((char*)stackInfo + 0x18)) = stackIndex;
         return VirtualParam_Sub(stack, val);
     }
 
-    typedef unsigned long (*ParamSubFunc)(void*, CMwNod*, CMwStack*);
+    typedef uint32_t (*ParamSubFunc)(void*, CMwNod*, CMwStack*);
     ParamSubFunc func = (ParamSubFunc)*((void**)((char*)paramInfo->m_typeObj + 0xA0));
     void* targetMemory = (char*)this + paramInfo->m_offset;
     return func(targetMemory, stackInfo, stack);
 }
 
-unsigned long CMwNod::Param_Check(CMwNod* stackInfo, CMwStack* stack) {
+uint32_t CMwNod::Param_Check(CMwNod* stackInfo, CMwStack* stack) {
     int stackIndex = *((int*)((char*)stackInfo + 0x18));
     if (stackIndex < 0) return 0;
     
@@ -342,7 +342,7 @@ unsigned long CMwNod::Param_Check(CMwNod* stackInfo, CMwStack* stack) {
     return 0;
 }
 
-unsigned long CMwNod::Param_Set(CMwNod* stackInfo, CFastString* str, CFastStringInt* strInt) {
+uint32_t CMwNod::Param_Set(CMwNod* stackInfo, CFastString* str, CFastStringInt* strInt) {
     // Sets string values to engine objects via reflection. Heavily ties into CMwStack state tracking.
     return 0;
 }
@@ -351,22 +351,22 @@ unsigned long CMwNod::Param_Set(CMwNod* stackInfo, CFastString* str, CFastString
 // Virtual Parameter Wrappers
 // =================================================
 
-unsigned long CMwNod::VirtualParam_Get_Wrapper(CMwStack* stack, CMwValueStd* val) {
+uint32_t CMwNod::VirtualParam_Get_Wrapper(CMwStack* stack, CMwValueStd* val) {
     // Offset 0x24 in vftable
     return VirtualParam_Get(stack, val); 
 }
 
-unsigned long CMwNod::VirtualParam_Add_Wrapper(CMwStack* stack, void* val) {
+uint32_t CMwNod::VirtualParam_Add_Wrapper(CMwStack* stack, void* val) {
     return Internal_VirtualParam_AddOrSub(stack, val, 1);
 }
 
-unsigned long CMwNod::VirtualParam_Sub_Wrapper(CMwStack* stack, void* val) {
+uint32_t CMwNod::VirtualParam_Sub_Wrapper(CMwStack* stack, void* val) {
     return Internal_VirtualParam_AddOrSub(stack, val, 0);
 }
 
-unsigned long CMwNod::VirtualParam_Set_Wrapper(CMwStack* stack, void* val) {
+uint32_t CMwNod::VirtualParam_Set_Wrapper(CMwStack* stack, void* val) {
     // Checks chunk ID 0x1001000 and calls SetMwId
-    unsigned long stackIndex = *((unsigned long*)((char*)stack + 0x18));
+    uint32_t stackIndex = *((uint32_t*)((char*)stack + 0x18));
     SMwParamInfo** stackArray = *((SMwParamInfo***)((char*)stack + 0x10));
     SMwParamInfo* paramInfo = stackArray[stackIndex];
     
@@ -376,7 +376,7 @@ unsigned long CMwNod::VirtualParam_Set_Wrapper(CMwStack* stack, void* val) {
     return 0;
 }
 
-unsigned long CMwNod::Internal_VirtualParam_AddOrSub(CMwStack* stack, void* val, int isAdd) {
+uint32_t CMwNod::Internal_VirtualParam_AddOrSub(CMwStack* stack, void* val, int isAdd) {
     // Abstracted internal handler
     return 0;
 }
@@ -384,11 +384,11 @@ unsigned long CMwNod::Internal_VirtualParam_AddOrSub(CMwStack* stack, void* val,
 // Default Virtual Implementations
 CMwNod::~CMwNod() {}
 void CMwNod::DeleteSelf(int param) { if (param & 1) delete this; }
-bool CMwNod::HasProperty(unsigned long chunkId) { return false; }
+bool CMwNod::HasProperty(uint32_t chunkId) { return false; }
 void* CMwNod::GetMwId() { return nullptr; }
 void CMwNod::SetMwId(void* id) {}
 void CMwNod::OnDependantKilled(CMwNod* killedNode) {}
-unsigned long CMwNod::VirtualParam_Get(CMwStack* stack, CMwValueStd* val) { return 1; }
-unsigned long CMwNod::VirtualParam_Add(CMwStack* stack, void* val) { return 0; }
-unsigned long CMwNod::VirtualParam_Sub(CMwStack* stack, void* val) { return 0; }
-void CMwNod::OnMessage(unsigned long* msg, CMwNod* sender) {}
+uint32_t CMwNod::VirtualParam_Get(CMwStack* stack, CMwValueStd* val) { return 1; }
+uint32_t CMwNod::VirtualParam_Add(CMwStack* stack, void* val) { return 0; }
+uint32_t CMwNod::VirtualParam_Sub(CMwStack* stack, void* val) { return 0; }
+void CMwNod::OnMessage(uint32_t* msg, CMwNod* sender) {}

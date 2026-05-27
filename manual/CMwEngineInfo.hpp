@@ -16,7 +16,7 @@ public:
     virtual ~CMwEngineInfo(); // 0x00 - vftable
     
     void* m_rawId;                       // 0x04 - Raw Engine ID / Name Pointer
-    unsigned long m_flags;               // 0x08 - Engine specific flags
+    uint32_t m_flags;               // 0x08 - Engine specific flags
     CFastArray<CMwClassInfo*> m_classes; // 0x0C - Array of registered classes
 
     // Member Functions

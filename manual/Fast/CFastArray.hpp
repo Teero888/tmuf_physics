@@ -13,7 +13,7 @@
 template <typename T>
 class CFastArray {
 public:
-    unsigned long m_count; // 0x00
+    uint32_t m_count; // 0x00
     T* m_data;             // 0x04
 
     CFastArray() : m_count(0), m_data(nullptr) {}
@@ -27,7 +27,7 @@ public:
     // =================================================
     // Function: SetCount
     // =================================================
-    void SetCount(unsigned long newCount) {
+    void SetCount(uint32_t newCount) {
         if (newCount == m_count) {
             return;
         }
@@ -56,10 +56,10 @@ public:
     // Function: AllocateMore / AllocateLess
     // Reallocates the internal buffer and copies existing elements.
     // =================================================
-    void AllocateMore(unsigned long newCount) {
+    void AllocateMore(uint32_t newCount) {
         T* newData = new T[newCount];
         
-        for (unsigned long i = 0; i < m_count; ++i) {
+        for (uint32_t i = 0; i < m_count; ++i) {
             newData[i] = std::move(m_data[i]);
         }
         
@@ -68,10 +68,10 @@ public:
         m_count = newCount;
     }
 
-    void AllocateLess(unsigned long newCount) {
+    void AllocateLess(uint32_t newCount) {
         T* newData = new T[newCount];
         
-        for (unsigned long i = 0; i < newCount; ++i) {
+        for (uint32_t i = 0; i < newCount; ++i) {
             newData[i] = std::move(m_data[i]);
         }
         
@@ -97,11 +97,11 @@ public:
     // Function: InsertNewElemAt
     // Shifts elements right to open a slot, mimicking CFastBuffer.
     // =================================================
-    T* InsertNewElemAt(unsigned long index) {
+    T* InsertNewElemAt(uint32_t index) {
         SetCount(m_count + 1); // Expand array by 1
 
         // Shift elements to the right to make room
-        for (unsigned long i = m_count - 1; i > index; --i) {
+        for (uint32_t i = m_count - 1; i > index; --i) {
             m_data[i] = std::move(m_data[i - 1]);
         }
         
@@ -111,7 +111,7 @@ public:
     // =================================================
     // Function: InsertAt
     // =================================================
-    void InsertAt(unsigned long index, const T& elem) {
+    void InsertAt(uint32_t index, const T& elem) {
         T* newSlot = InsertNewElemAt(index);
         *newSlot = elem;
     }
@@ -119,13 +119,13 @@ public:
     // =================================================
     // Operator Overloads
     // =================================================
-    inline unsigned long GetCount() const { return m_count; }
+    inline uint32_t GetCount() const { return m_count; }
 
-    inline T& operator[](unsigned long index) {
+    inline T& operator[](uint32_t index) {
         return m_data[index];
     }
     
-    inline const T& operator[](unsigned long index) const {
+    inline const T& operator[](uint32_t index) const {
         return m_data[index];
     }
 };

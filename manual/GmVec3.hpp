@@ -32,7 +32,7 @@ struct GmVec3 {
 
     // Member Functions
     bool IsNearlyEqual(const GmVec3& other) const;
-    void SetFromBGRA(const unsigned char* bgraColor);
+    void SetFromBGRA(const uint8_t* bgraColor);
     
     // Matrix Multiplication
     void Mult(const GmIso4& mat);
@@ -106,6 +106,6 @@ struct GmVec3 {
 };
 
 // External helper definition required by ComputeTriangleTangentUV
-extern int ComputeTriangleTangentUV_Rotated(STri_PosTexTgt* param_1, unsigned long rotationIndex);
+extern int ComputeTriangleTangentUV_Rotated(STri_PosTexTgt* param_1, uint32_t rotationIndex);
 
 #endif // GMVEC3_HPP

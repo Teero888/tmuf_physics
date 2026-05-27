@@ -35,7 +35,7 @@ void GmArchive::WriteVec3Pos_12(CClassicBuffer* buf, const GmVec3* vec) {
 }
 
 void GmArchive::ReadReal_3(CClassicBuffer* buf, float* val) {
-    unsigned char bytes[3];
+    uint8_t bytes[3];
     buf->Read(bytes, 3);
     
     // Ghidra artifacts converted to clean bit-packing
@@ -49,10 +49,10 @@ void GmArchive::WriteReal_3(CClassicBuffer* buf, float val) {
     int packed = static_cast<int>(std::round(scaled));
     packed = 0x800000 - packed; // 24-bit signed/offset conversion
     
-    unsigned char bytes[3];
-    bytes[0] = static_cast<unsigned char>(packed & 0xFF);
-    bytes[1] = static_cast<unsigned char>((packed >> 8) & 0xFF);
-    bytes[2] = static_cast<unsigned char>((packed >> 16) & 0xFF);
+    uint8_t bytes[3];
+    bytes[0] = static_cast<uint8_t>(packed & 0xFF);
+    bytes[1] = static_cast<uint8_t>((packed >> 8) & 0xFF);
+    bytes[2] = static_cast<uint8_t>((packed >> 16) & 0xFF);
     buf->Write(bytes, 3);
 }
 
@@ -117,8 +117,8 @@ void GmArchive::WriteVec3Unit_2(CClassicBuffer* buf, const GmVec3* vec) {
     float lenSqr = vec->x * vec->x + vec->y * vec->y + vec->z * vec->z;
     float len = std::sqrt(lenSqr);
     
-    unsigned char yaw = 0;
-    unsigned char pitch = 0;
+    uint8_t yaw = 0;
+    uint8_t pitch = 0;
 
     if (len >= CONST_00bbdbe4) {
         float fCos = vec->x / len;
@@ -128,7 +128,7 @@ void GmArchive::WriteVec3Unit_2(CClassicBuffer* buf, const GmVec3* vec) {
         float angle = std::acos(fCos);
         if (vec->y * len < CONST_00b2c178) angle = -angle;
         
-        yaw = static_cast<unsigned char>(angle); // Scaled for 8-bit
+        yaw = static_cast<uint8_t>(angle); // Scaled for 8-bit
     }
 
     buf->Write(&yaw, 1);

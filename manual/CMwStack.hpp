@@ -23,29 +23,29 @@ class CMwStack {
 public:
     virtual ~CMwStack();                    // 0x00 - vftable
 
-    unsigned long m_count;                  // 0x04 - Number of elements currently in the stack
-    unsigned long m_capacity;               // 0x08 - Max allocated capacity
+    uint32_t m_count;                  // 0x04 - Number of elements currently in the stack
+    uint32_t m_capacity;               // 0x08 - Max allocated capacity
     int m_ownsMemory;                       // 0x0C - Boolean flag (1 = manages its own memory)
     void** m_values;                        // 0x10 - Array of raw pointers/values
-    unsigned long* m_types;                 // 0x14 - Array of EStackType tags
+    uint32_t* m_types;                 // 0x14 - Array of EStackType tags
     int m_currentIndex;                     // 0x18 - The current active frame/top index
 
     // Member Functions
-    CMwStack(unsigned long initialCapacity);
+    CMwStack(uint32_t initialCapacity);
     
-    void SetSize(unsigned long newCapacity);
+    void SetSize(uint32_t newCapacity);
     void CopyFrom(const CMwStack& other);
     
-    unsigned long ChangeBaseVal(void* val);
-    unsigned long InsertBaseVal(void* val);
-    unsigned long InsertBaseIndex(unsigned long val);
-    unsigned long InsertBaseNameIndex(unsigned long val);
+    uint32_t ChangeBaseVal(void* val);
+    uint32_t InsertBaseVal(void* val);
+    uint32_t InsertBaseIndex(uint32_t val);
+    uint32_t InsertBaseNameIndex(uint32_t val);
     
-    unsigned long GetArgument(unsigned long argType, EStackType stackType, unsigned long* outArg);
+    uint32_t GetArgument(uint32_t argType, EStackType stackType, uint32_t* outArg);
     
-    unsigned long MakeInfoFromStack(SMwParamInfo* outInfo, CMwNod* contextNod);
-    unsigned long FillIndexFromText(unsigned long param2, CMwNod* contextNod, CFastString* textStr);
-    unsigned long WatchNextNameIndex(unsigned long* outNameIndex, CMwNod** outNodeArray, unsigned long nodeCount);
+    uint32_t MakeInfoFromStack(SMwParamInfo* outInfo, CMwNod* contextNod);
+    uint32_t FillIndexFromText(uint32_t param2, CMwNod* contextNod, CFastString* textStr);
+    uint32_t WatchNextNameIndex(uint32_t* outNameIndex, CMwNod** outNodeArray, uint32_t nodeCount);
 };
 
 #endif // CMWSTACK_HPP

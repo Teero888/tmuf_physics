@@ -14,8 +14,8 @@ class CCrystalFace;
 // Reverse-engineered 24-byte struct based on the 'puVar11 + 6' copying loop.
 // 6 * 4 bytes = 24 bytes.
 struct SQuadTreeMeshUv {
-    unsigned long childIndex; // 0x00 - Index to first child in CFastBuffer (0xFFFFFFFF if leaf)
-    unsigned long elementCount; // 0x04 - Number of faces/UVs in this node
+    uint32_t childIndex; // 0x00 - Index to first child in CFastBuffer (0xFFFFFFFF if leaf)
+    uint32_t elementCount; // 0x04 - Number of faces/UVs in this node
     GmVec2 minBounds;         // 0x08 - 2D Bounding Box Min (X, Y)
     GmVec2 maxBounds;         // 0x10 - 2D Bounding Box Max (X, Y)
 
@@ -37,9 +37,9 @@ public:
     // =================================================
     // 2-Way Recursive Split (Kd-Tree approach for QuadTree)
     // =================================================
-    unsigned long BuildBintreeRecurse(GmQuadTree<TCell>* sourceTree, 
+    uint32_t BuildBintreeRecurse(GmQuadTree<TCell>* sourceTree, 
                                       std::vector<CCrystalFace*>* currentFaces, 
-                                      unsigned long depth) 
+                                      uint32_t depth) 
     {
         if (!currentFaces || currentFaces->empty()) {
             return 0;
@@ -106,20 +106,20 @@ public:
             rightFaces.assign(currentFaces->begin() + half, currentFaces->end());
         }
 
-        unsigned long childrenAllocated = 0;
-        unsigned long firstChildIndex = this->GetCount();
+        uint32_t childrenAllocated = 0;
+        uint32_t firstChildIndex = this->GetCount();
 
         // 5. Recurse Left
         if (!leftFaces.empty()) {
             // Memory preservation trick: We use an index instead of a pointer 
             // because AddNewElem() might reallocate the CFastBuffer array!
-            unsigned long subChildren = BuildBintreeRecurse(sourceTree, &leftFaces, depth + 1);
+            uint32_t subChildren = BuildBintreeRecurse(sourceTree, &leftFaces, depth + 1);
             childrenAllocated += subChildren;
         }
 
         // 6. Recurse Right
         if (!rightFaces.empty()) {
-            unsigned long subChildren = BuildBintreeRecurse(sourceTree, &rightFaces, depth + 1);
+            uint32_t subChildren = BuildBintreeRecurse(sourceTree, &rightFaces, depth + 1);
             childrenAllocated += subChildren;
         }
 

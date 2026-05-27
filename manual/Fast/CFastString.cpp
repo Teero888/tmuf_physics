@@ -175,7 +175,7 @@ int CFastString::FilterStringForPrintableChars() {
     
     uint32_t newLen = 0;
     for (uint32_t i = 0; i < m_length; ++i) {
-        unsigned char c = m_data[i];
+        uint8_t c = m_data[i];
         if (c >= 0x20 && c != 0x7F) {
             m_data[newLen++] = c;
         } else if (c == '\t' || c == '\n' || c == '\r') {
@@ -644,7 +644,7 @@ void CFastStringInt::SetLatin1OrUtf8(SStringParam* param2) {
     uint32_t len = std::strlen(str);
     AllocAtLeast(len, 0);
     for (uint32_t i = 0; i < len; ++i) {
-        m_data[i] = static_cast<wchar_t>(static_cast<unsigned char>(str[i]));
+        m_data[i] = static_cast<wchar_t>(static_cast<uint8_t>(str[i]));
     }
     m_length = len;
     m_data[m_length] = L'\0';

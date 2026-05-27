@@ -7,7 +7,7 @@
 // Function: GmVec3::ComputeTriangleTangentUV
 // =================================================
 int GmVec3::ComputeTriangleTangentUV(STri_PosTexTgt* param_1) {
-    for (unsigned long i = 0; i < 3; ++i) {
+    for (uint32_t i = 0; i < 3; ++i) {
         if (ComputeTriangleTangentUV_Rotated(param_1, i) != 0) {
             return 1;
         }
@@ -230,7 +230,7 @@ void GmVec3::SetMultTranspose(const GmVec3& v, const GmMat3& mat) {
 // =================================================
 // Function: GmVec3::SetFromBGRA
 // =================================================
-void GmVec3::SetFromBGRA(const unsigned char* bgraColor) {
+void GmVec3::SetFromBGRA(const uint8_t* bgraColor) {
     float scale = 0.00392156862f; // 1.0f / 255.0f (_DAT_00b3d080)
     
     this->x = static_cast<float>(bgraColor[2]) * scale; // R

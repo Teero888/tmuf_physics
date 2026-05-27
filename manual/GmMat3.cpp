@@ -25,7 +25,7 @@ void GmMat3::ArchiveGmMat3(CClassicArchive& archive) {
 // =================================================
 // Function: GmMat3::GetLine
 // =================================================
-void GmMat3::GetLine(unsigned long index, GmVec3& outLine) const {
+void GmMat3::GetLine(uint32_t index, GmVec3& outLine) const {
     const float* m = reinterpret_cast<const float*>(this);
     outLine.x = m[index * 3 + 0];
     outLine.y = m[index * 3 + 1];
@@ -474,7 +474,7 @@ void GmMat3::SetIdentity() {
 // =================================================
 // Function: GmMat3::SetLine
 // =================================================
-void GmMat3::SetLine(unsigned long index, const GmVec3& line) {
+void GmMat3::SetLine(uint32_t index, const GmVec3& line) {
     float* m = reinterpret_cast<float*>(this);
     m[index * 3 + 0] = line.x;
     m[index * 3 + 1] = line.y;
@@ -501,7 +501,7 @@ void GmMat3::SetMult(const GmMat3& a, const GmMat3& b) {
 // =================================================
 // Function: GmMat3::SetRotateQuarterY
 // =================================================
-void GmMat3::SetRotateQuarterY(unsigned long quarterTurns) {
+void GmMat3::SetRotateQuarterY(uint32_t quarterTurns) {
     float cosT = DAT_00bbd760[quarterTurns & 3];
     float sinT = DAT_00bbd760[(quarterTurns - 1) & 3];
     

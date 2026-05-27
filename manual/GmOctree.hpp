@@ -17,9 +17,9 @@ template <typename T> class CFastCrypt;
 // Assumed 32-byte serialized / 88-byte runtime struct 
 // You must define the real fields in your actual SMeshOctreeCell / SColOctreeCell
 struct SMeshOctreeCell {
-    unsigned long childMask;  // Bitmask of active children
-    unsigned long childIndex; // Index into the CFastBuffer for the first child
-    unsigned long faceCount;  // Number of faces in this node
+    uint32_t childMask;  // Bitmask of active children
+    uint32_t childIndex; // Index into the CFastBuffer for the first child
+    uint32_t faceCount;  // Number of faces in this node
     void* faceData;           // Pointer to face list
     GmBoxAligned bounds;      // Bounding box of this node
     // ... padding to 88 bytes as seen in the 0x16 copy loop ...
@@ -70,14 +70,14 @@ public:
         // (Translated from the SRpcSkinInfo / SCasterCat pointer math at the end of Build)
         if (this->GetCount() > 0) {
             TCell* finalRoot = &(this->operator[](0));
-            finalRoot->faceCount = (unsigned long)faces->size();
+            finalRoot->faceCount = (uint32_t)faces->size();
         }
     }
 
     // =================================================
     // 8-Way Recursive Split (Octree)
     // =================================================
-    unsigned long BuildOctreeRecurse(GmOctree<TCell>* sourceTree, unsigned long depth, TCell* parentCell, std::vector<NvFaceInfo*>* currentFaces) {
+    uint32_t BuildOctreeRecurse(GmOctree<TCell>* sourceTree, uint32_t depth, TCell* parentCell, std::vector<NvFaceInfo*>* currentFaces) {
         if (!currentFaces || currentFaces->empty()) return 0;
 
         // 1. Calculate the bounding box for all faces in this node
@@ -111,7 +111,7 @@ public:
         for (NvFaceInfo* face : *currentFaces) {
             // Again, assuming NvFaceInfo yields a projector or bounds for TestInter
             // CPlugVolumeProjector projector = face->GetProjector();
-            unsigned char mask = 0;
+            uint8_t mask = 0;
 
             // Assembly exactly mapped: 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80
             if (GmBoxAligned::TestInter(face, nullptr, &octants[0], &identityMat)) { mask |= 0x01; octantFaces[0].push_back(face); }
@@ -125,8 +125,8 @@ public:
         }
 
         // 4. Recurse for each populated octant
-        unsigned long childrenAllocated = 0;
-        unsigned long firstChildIndex = this->GetCount();
+        uint32_t childrenAllocated = 0;
+        uint32_t firstChildIndex = this->GetCount();
 
         for (int i = 0; i < 8; ++i) {
             if (octantFaces[i].empty()) continue;
@@ -147,7 +147,7 @@ public:
                 childrenAllocated++;
             } else {
                 // Internal Node Recursion
-                unsigned long subChildren = BuildOctreeRecurse(sourceTree, depth + 1, childCell, &octantFaces[i]);
+                uint32_t subChildren = BuildOctreeRecurse(sourceTree, depth + 1, childCell, &octantFaces[i]);
                 childrenAllocated += subChildren;
             }
         }
@@ -163,7 +163,7 @@ public:
     // =================================================
     // 2-Way Recursive Split (KD/Bin-Tree Fallback)
     // =================================================
-    unsigned long BuildBintreeRecurse(GmOctree<TCell>* sourceTree, unsigned long depth, TCell* parentCell, std::vector<NvFaceInfo*>* currentFaces) {
+    uint32_t BuildBintreeRecurse(GmOctree<TCell>* sourceTree, uint32_t depth, TCell* parentCell, std::vector<NvFaceInfo*>* currentFaces) {
         if (!currentFaces || currentFaces->empty()) return 0;
 
         GmBoxAligned parentBounds;
@@ -193,8 +193,8 @@ public:
             if (GmBoxAligned::TestInter(face, nullptr, &childBoxes[1], &identityMat)) binFaces[1].push_back(face);
         }
 
-        unsigned long childrenAllocated = 0;
-        unsigned long firstChildIndex = this->GetCount();
+        uint32_t childrenAllocated = 0;
+        uint32_t firstChildIndex = this->GetCount();
 
         for (int i = 0; i < 2; ++i) {
             if (binFaces[i].empty()) continue;
@@ -207,7 +207,7 @@ public:
                 childCell->faceCount = 1;
                 childrenAllocated++;
             } else {
-                unsigned long subChildren = BuildBintreeRecurse(sourceTree, depth + 1, childCell, &binFaces[i]);
+                uint32_t subChildren = BuildBintreeRecurse(sourceTree, depth + 1, childCell, &binFaces[i]);
                 childrenAllocated += subChildren;
             }
         }
@@ -228,8 +228,8 @@ private:
     }
 
     // Helper to generate the bitmask for the octant
-    unsigned long GetPopulatedMask(const std::vector<NvFaceInfo*> octantFaces[8]) {
-        unsigned long mask = 0;
+    uint32_t GetPopulatedMask(const std::vector<NvFaceInfo*> octantFaces[8]) {
+        uint32_t mask = 0;
         for (int i = 0; i < 8; ++i) {
             if (!octantFaces[i].empty()) {
                 mask |= (1 << i);

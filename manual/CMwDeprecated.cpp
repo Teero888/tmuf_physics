@@ -6,10 +6,10 @@
 // Skips legacy, deprecated chunks in the data stream by 
 // reading (or writing) dummy values to maintain byte alignment.
 // =================================================
-void CMwDeprecated::Chunk(CFuncSegment* segment, CClassicArchive* archive, unsigned long chunkId) 
+void CMwDeprecated::Chunk(CFuncSegment* segment, CClassicArchive* archive, uint32_t chunkId) 
 {
     if (chunkId == 0x09063000) {
-        unsigned char dummy8 = 0;
+        uint8_t dummy8 = 0;
         uint32_t dummy32 = 0;
         
         archive->DoNat8(&dummy8, 1);
@@ -22,7 +22,7 @@ void CMwDeprecated::Chunk(CFuncSegment* segment, CClassicArchive* archive, unsig
         }
     } 
     else if (chunkId == 0x09063001) {
-        unsigned char dummy8 = 0;
+        uint8_t dummy8 = 0;
         uint32_t dummy32 = 0;
         
         archive->DoNat8(&dummy8, 1);
@@ -53,7 +53,7 @@ void CMwDeprecated::Chunk(CFuncSegment* segment, CClassicArchive* archive, unsig
 // Massive routing table converting legacy Class IDs into 
 // their modern Nadeo Engine equivalents.
 // =================================================
-unsigned long CMwDeprecated::WrapClassId(unsigned long classId) 
+uint32_t CMwDeprecated::WrapClassId(uint32_t classId) 
 {
     switch (classId) {
         // Base / Early Engine Conversions

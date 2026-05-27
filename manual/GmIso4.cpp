@@ -39,7 +39,7 @@ void GmIso4::GetUp(GmVec3& outUp) const {
 // =================================================
 // Function: GmIso4::GetPlaneEq
 // =================================================
-void GmIso4::GetPlaneEq(unsigned long axis, GmVec4& outPlane) const {
+void GmIso4::GetPlaneEq(uint32_t axis, GmVec4& outPlane) const {
     GmVec3 line;
     this->rot.GetLine(axis, line);
     outPlane.x = line.x;
@@ -111,7 +111,7 @@ void GmIso4::Set(const GmIso4& other) {
 // =================================================
 // Function: GmIso4::SetRow (Decompiler labeled SetColumn)
 // =================================================
-void GmIso4::SetRow(unsigned long index, const GmVec4& row) {
+void GmIso4::SetRow(uint32_t index, const GmVec4& row) {
     float* m = reinterpret_cast<float*>(this);
     m[index * 3 + 0] = row.x;
     m[index * 3 + 1] = row.y;
@@ -358,7 +358,7 @@ void GmIso4::RotateZ(float angle) {
 void GmIso4::SymmetryPlane(const GmIso4& mat, const GmVec4& plane) {
     // Projects/Reflects the matrix across the given plane
     GmVec3 line;
-    for (unsigned long i = 0; i < 3; ++i) {
+    for (uint32_t i = 0; i < 3; ++i) {
         mat.rot.GetLine(i, line);
         
         float dot2 = (line.x * plane.x) + (line.y * plane.y) + (line.z * plane.z);

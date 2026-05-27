@@ -21,7 +21,7 @@ public:
     CFastArray<CMwEngineInfo*> m_engines; // 0x04
 
     // Member Functions
-    CMwClassInfo* GetClassInfo(unsigned long classId);
+    CMwClassInfo* GetClassInfo(uint32_t classId);
     void AddClass(CMwEngineInfo* engine, CMwClassInfo* classInfo);
 };
 

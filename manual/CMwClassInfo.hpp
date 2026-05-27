@@ -16,7 +16,7 @@ class CMwClassInfo {
 public:
     virtual ~CMwClassInfo();                // 0x00 - vftable
 
-    unsigned long m_classId;                // 0x04 - The 32-bit unique class identifier
+    uint32_t m_classId;                // 0x04 - The 32-bit unique class identifier
     CMwClassInfo* m_parent;                 // 0x08 - Pointer to the base class info
     
     // Deduced padding based on AddChild method calls and standard tree layouts
@@ -37,8 +37,8 @@ public:
     static void BuildTree(CMwClassInfo* root);
     static CMwClassInfo* FindFromClassName(CFastString* className);
     
-    bool IsMwParamIdEqualName(unsigned long paramId, const char* paramName) const;
-    unsigned long MwGetNearestFather(unsigned long count, unsigned long* parentIds) const;
+    bool IsMwParamIdEqualName(uint32_t paramId, const char* paramName) const;
+    uint32_t MwGetNearestFather(uint32_t count, uint32_t* parentIds) const;
     
     // Helper implied by BuildTree assembly
     void AddChild(CMwClassInfo* childClass);

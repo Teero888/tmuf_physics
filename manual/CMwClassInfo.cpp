@@ -52,7 +52,7 @@ CMwClassInfo* CMwClassInfo::FindFromClassName(CFastString* classNameStr)
 // Function: CMwClassInfo::IsMwParamIdEqualName
 // Resolves a parameter ID, extracts its string name, and compares it.
 // =================================================
-bool CMwClassInfo::IsMwParamIdEqualName(unsigned long paramId, const char* paramName) const
+bool CMwClassInfo::IsMwParamIdEqualName(uint32_t paramId, const char* paramName) const
 {
     if (this == nullptr) {
         return false;
@@ -87,13 +87,13 @@ bool CMwClassInfo::IsMwParamIdEqualName(unsigned long paramId, const char* param
 // Function: CMwClassInfo::MwGetNearestFather
 // Climbs the inheritance tree to find the first matching ancestor.
 // =================================================
-unsigned long CMwClassInfo::MwGetNearestFather(unsigned long count, unsigned long* parentIds) const
+uint32_t CMwClassInfo::MwGetNearestFather(uint32_t count, uint32_t* parentIds) const
 {
     const CMwClassInfo* current = this;
 
     do {
         // Check if current class ID is in the requested array
-        for (unsigned long i = 0; i < count; ++i) {
+        for (uint32_t i = 0; i < count; ++i) {
             if (current->m_classId == parentIds[i]) {
                 return i; // Return the index of the matching ancestor ID
             }

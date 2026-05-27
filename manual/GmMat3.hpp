@@ -21,7 +21,7 @@ struct GmMat3 {
     void ArchiveGmMat3(CClassicArchive& archive);
 
     // Getters & Checks
-    void GetLine(unsigned long index, GmVec3& outLine) const;
+    void GetLine(uint32_t index, GmVec3& outLine) const;
     bool IsIndirect() const;
     bool IsNearlyEqual(const GmMat3& other) const;
     bool IsOrthogonal() const;
@@ -31,8 +31,8 @@ struct GmMat3 {
     void Set(const GmQuat& quat);
     void SetBlend(const GmMat3& a, const GmMat3& b, float t);
     void SetIdentity();
-    void SetLine(unsigned long index, const GmVec3& line);
-    void SetRotateQuarterY(unsigned long quarterTurns);
+    void SetLine(uint32_t index, const GmVec3& line);
+    void SetRotateQuarterY(uint32_t quarterTurns);
     void SetTranspose(const GmMat3& other);
     
     // LookAt / DOV (Direction of View) Setters

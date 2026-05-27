@@ -33,8 +33,8 @@ namespace GmFunc {
     bool SolveLinearSystem2(float* out1, float* out2, float a11, float a12, float b1, float a21, float a22, float b2);
 
     // Serialization & Mapping
-    unsigned char RealToNat7(float val, float min, float max);
-    unsigned char RealToNat8(float val, float min, float max);
+    uint8_t RealToNat7(float val, float min, float max);
+    uint8_t RealToNat8(float val, float min, float max);
     ushort RealToNat16(float val, float min, float max);
     
     void ReadUnitVec3(CClassicBuffer* buf, GmVec3* out);

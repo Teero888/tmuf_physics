@@ -112,13 +112,13 @@ bool SolveLinearSystem2(float* out1, float* out2, float a11, float a12, float b1
 // Serialization Mapping
 // =================================================
 
-unsigned char RealToNat7(float val, float min, float max) {
+uint8_t RealToNat7(float val, float min, float max) {
     float mapped = ((val - min) / (max - min)) * 127.0f;
     mapped = std::clamp(mapped, 0.0f, 127.0f);
     return static_cast<uint8_t>(std::round(mapped));
 }
 
-unsigned char RealToNat8(float val, float min, float max) {
+uint8_t RealToNat8(float val, float min, float max) {
     float mapped = ((val - min) / (max - min)) * 255.0f;
     mapped = std::clamp(mapped, 0.0f, 255.0f);
     return static_cast<uint8_t>(std::round(mapped));

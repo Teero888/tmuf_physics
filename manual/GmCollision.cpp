@@ -11,7 +11,7 @@ void GmCollision::Neg()
     m_vec2.y = -m_vec2.y;
     m_vec2.z = -m_vec2.z;
 
-    unsigned short temp = m_id1;
+    uint16_t temp = m_id1;
     m_id1 = m_id2;
     m_id2 = temp;
 
