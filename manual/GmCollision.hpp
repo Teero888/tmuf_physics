@@ -1,8 +1,8 @@
 #ifndef GMCOLLISION_HPP
 #define GMCOLLISION_HPP
 
-
 #include "GmVec3.hpp"
+#include <cstdint>
 
 class GmCollision {
 public:

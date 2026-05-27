@@ -3,6 +3,7 @@
 
 #include "CFastString.hpp"
 #include "CFastBuffer.hpp"
+#include <cstdint>
 
 // Forward Declarations
 class CMwClassInfo;

@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "GmMat3.hpp"
+#include <cstdint>
 
 // Forward declarations
 class CClassicArchive;

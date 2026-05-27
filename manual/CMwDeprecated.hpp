@@ -1,6 +1,8 @@
 #ifndef CMWDEPRECATED_HPP
 #define CMWDEPRECATED_HPP
 
+#include <cstdint>
+
 class CFuncSegment;
 class CClassicArchive;
 

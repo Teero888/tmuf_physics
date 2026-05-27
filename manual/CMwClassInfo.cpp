@@ -35,10 +35,7 @@ CMwClassInfo* CMwClassInfo::FindFromClassName(CFastString* classNameStr)
 
     do {
         if (current->m_className != nullptr) {
-            // CFastString::Compare is used heavily in the engine.
-            // Ghidra showed a manual strlen loop (pcVar2 - local_8), which the 
-            // CFastString implementation handles internally.
-            if (classNameStr->Compare(current->m_className)) {
+            if (classNameStr->Compare(current->m_className) == 0) {
                 return current;
             }
         }

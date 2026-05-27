@@ -2,6 +2,7 @@
 #define CMWCLASSINFO_HPP
 
 #include "CFastString.hpp"
+#include <cstdint>
 
 // Forward Declarations
 class CMwNod;

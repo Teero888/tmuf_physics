@@ -5,6 +5,7 @@
 #include "GmMat3.hpp"
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
+#include <cstdint>
 
 // =================================================
 // GmBoxOriented

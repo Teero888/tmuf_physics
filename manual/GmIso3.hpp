@@ -3,6 +3,7 @@
 
 #include "CClassicArchive.hpp" // Assumed from previous steps
 #include "GmMat2.hpp" // For the embedded rotation matrix
+#include <cstdint>
 
 // =================================================
 // GmIso3 (2D Affine Transformation)

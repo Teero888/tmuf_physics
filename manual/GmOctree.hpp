@@ -7,6 +7,7 @@
 #include "GmBoxAligned.hpp"
 #include "GmIso4.hpp"
 #include <vector>
+#include <cstdint>
 
 // Forward declarations of engine types
 class NvStripInfo;

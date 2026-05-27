@@ -4,6 +4,7 @@
 #include "CFastString.hpp"
 #include <fstream>
 #include <iostream>
+#include <cstdint>
 
 // =================================================
 // CClassicLog

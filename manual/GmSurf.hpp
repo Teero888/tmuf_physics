@@ -6,6 +6,7 @@
 #include "GmBoxAligned.hpp"
 #include "GmOctree.hpp" // Contains SMeshOctreeCell
 #include "CFastArray.hpp"
+#include <cstdint>
 
 class CCrystal;
 class CGmCollisionBuffer;

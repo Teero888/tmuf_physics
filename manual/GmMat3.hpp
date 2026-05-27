@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "GmQuat.hpp"
+#include <cstdint>
 
 // Forward declarations
 class CClassicArchive;

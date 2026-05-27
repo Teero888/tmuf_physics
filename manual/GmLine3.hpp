@@ -2,6 +2,8 @@
 #define GMLINE3_HPP
 
 #include "GmVec3.hpp"
+#include <cstdint>
+
 
 class GmLine3 {
 public:

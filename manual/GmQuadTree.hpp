@@ -1,11 +1,11 @@
 #ifndef GMQUADTREE_HPP
 #define GMQUADTREE_HPP
 
-
 #include "CFastBuffer.hpp"
 #include "GmVec2.hpp"
 #include <vector>
 #include <algorithm>
+#include <cstdint>
 
 // Forward declarations
 class NvFaceInfo;

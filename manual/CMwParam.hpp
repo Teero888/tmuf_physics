@@ -1,6 +1,8 @@
 #ifndef CMWPARAM_HPP
 #define CMWPARAM_HPP
 
+#include <cstdint>
+
 // =================================================
 // CMwParam
 // Base class for reflection parameter metadata.

@@ -1,8 +1,8 @@
 #ifndef CFASTARRAY_HPP
 #define CFASTARRAY_HPP
 
-
 #include <utility>
+#include <cstdint>
 
 // =================================================
 // CFastArray Template Definition

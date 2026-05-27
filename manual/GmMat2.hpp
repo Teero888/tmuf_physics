@@ -2,6 +2,7 @@
 #define GMMAT2_HPP
 
 #include <cmath>
+#include <cstdint>
 
 // =================================================
 // GmMat2 (2x2 Matrix)

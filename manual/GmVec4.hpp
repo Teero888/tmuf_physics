@@ -1,8 +1,8 @@
 #ifndef GMVEC4_HPP
 #define GMVEC4_HPP
 
-
 #include "GmVec3.hpp"
+#include <cstdint>
 
 class GmIso3;
 class GmIso4;

@@ -2,6 +2,7 @@
 #define CMWENGINEMANAGER_HPP
 
 #include "CFastArray.hpp"
+#include <cstdint>
 
 // Forward Declarations
 class CMwEngineInfo;

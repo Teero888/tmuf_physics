@@ -2,6 +2,7 @@
 #define GMQUAT_HPP
 
 #include <cmath>
+#include <cstdint>
 
 // Forward Declarations
 class CClassicArchive;

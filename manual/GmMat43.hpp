@@ -2,6 +2,7 @@
 #define GMMAT43_HPP
 
 #include "GmVec4.hpp"
+#include <cstdint>
 
 class GmIso4;
 

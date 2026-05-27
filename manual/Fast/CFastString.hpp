@@ -23,14 +23,12 @@ static inline const char* _stristr(const char* haystack, const char* needle) {
 }
 #endif
 
-
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
 #include <cwchar>
 #include <cstdarg>
-
 
 // =================================================
 // Engine Struct Stubs (To ensure 1:1 Compilation)
@@ -107,6 +105,7 @@ public:
     uint32_t FindFirstCharInSet(CFastString* set, SStringParam* param, uint32_t startIndex);
     
     void Compare(SParam_Fids* fids, SParam* param, int* out1, int* out2);
+    int Compare(const char* other) const;
     void Concat(CFastStringInt* other, SStringParam* param);
     void ConcatAndNewLine(CFastString* other, const char* param2, const char* suffix);
     void ConcatBefore(CFastStringInt* other, SStringParamInt* param);

@@ -4,6 +4,7 @@
 
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
+#include <cstdint>
 
 class CClassicArchive;
 

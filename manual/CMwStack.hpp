@@ -3,6 +3,7 @@
 
 #include "CFastString.hpp"
 #include "CMwNod.hpp"
+#include <cstdint>
 
 // Forward Declarations
 struct SMwParamInfo;

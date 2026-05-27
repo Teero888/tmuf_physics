@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "CClassicArchive.hpp" // Now using the real definition
+#include <cstdint>
 
 struct GmIso3; // 3x3 or Affine matrix
 

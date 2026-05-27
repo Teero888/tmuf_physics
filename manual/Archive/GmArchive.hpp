@@ -1,7 +1,6 @@
 #ifndef GMARCHIVE_HPP
 #define GMARCHIVE_HPP
 
-
 #include "GmVec3.hpp"
 #include "GmQuat.hpp"
 

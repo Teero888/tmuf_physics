@@ -3,6 +3,7 @@
 #include "CClassicArchive.hpp"
 #include "CMwStack.hpp"
 #include "CMwClassInfo.hpp"
+#include "CMwEngineInfo.hpp"
 
 // External Globals specific to Nadeo Engine memory
 extern CMwEngineInfo* DAT_00d73ba8;

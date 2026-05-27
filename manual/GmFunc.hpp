@@ -1,10 +1,10 @@
 #ifndef GMFUNC_HPP
 #define GMFUNC_HPP
 
-
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
+#include <cstdint>
 
 // Forward declarations
 class CClassicBuffer;

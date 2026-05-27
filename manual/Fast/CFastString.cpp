@@ -101,6 +101,7 @@ CFastString::CFastString(CFastString* other, const char* str) : CFastStringBase<
     m_data[m_length] = '\0';
 }
 
+// this makes no sense lol. fuck ghidra
 void CFastString::Compare(SParam_Fids* fids, SParam* param, int* out1, int* out2) {
     const char* str1 = m_data;
     const char* str2 = reinterpret_cast<const char*>(fids);
@@ -111,6 +112,11 @@ void CFastString::Compare(SParam_Fids* fids, SParam* param, int* out1, int* out2
     }
 }
 
+int CFastString::Compare(const char* other) const
+{
+    return std::strcmp(m_data, other);
+}
+
 int CFastString::CompareNoCase(CFastStringInt* other, SStringParam* param, uint32_t length) {
     const char* otherStr = reinterpret_cast<const char*>(other);
     if (!param) return _stricmp(m_data, otherStr);
@@ -119,7 +125,7 @@ int CFastString::CompareNoCase(CFastStringInt* other, SStringParam* param, uint3
 
 int CFastString::CompareNoCase(const char* other) const
 {
-    return _strnicmp(m_data, other, m_length);
+    return _stricmp(m_data, other);
 }
 
 void CFastString::Concat(CFastStringInt* other, SStringParam* param) {

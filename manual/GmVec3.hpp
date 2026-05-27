@@ -4,6 +4,7 @@
 #include <cmath>
 #include "GmIso4.hpp"
 #include "GmMat3.hpp"
+#include <cstdint>
 
 // Forward declarations & dependencies
 struct STri_PosTexTgt;
