@@ -4,7 +4,7 @@
 cd "$(dirname "$0")" || exit 1
 
 # Required include directories
-INCLUDES="-I. -I./Fast -I./Archive -I../../include"
+INCLUDES="-I. -I./Fast -I./Archive -I./Classic -I./Mw -I./Gm"
 
 SUCCESS=0
 FAIL=0
