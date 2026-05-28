@@ -412,6 +412,13 @@ void CFastString::SetString(CFastStringInt* other, SStringParam* param) {
     m_data[m_length] = '\0';
 }
 
+void CFastString::SetString(const char *str) {
+    uint32_t len = std::strlen(str);
+    AllocAtLeast(len, 0);
+    std::memcpy(m_data, str, len + 1);
+    m_length = len;
+}
+
 void CFastString::TrimLeft(CFastString* trimChars, char* param2) {
     uint32_t offset = std::strspn(m_data, trimChars->m_data);
     TruncBefore(offset);
@@ -672,6 +679,17 @@ void CFastStringInt::SetString(CFastStringInt* other, SStringParam* param) {
     std::memcpy(m_data, other->m_data, other->m_length * sizeof(wchar_t));
     m_length = other->m_length;
     m_data[m_length] = L'\0';
+}
+
+void CFastStringInt::SetString(const char *str) {
+    const char* cstr = str ? str : "";
+    size_t len = std::mbstowcs(nullptr, cstr, 0);
+    if (len != static_cast<size_t>(-1)) {
+        AllocAtLeast(len, 0);
+        std::mbstowcs(m_data, cstr, len);
+        m_length = len;
+        m_data[len] = L'\0';
+    }
 }
 
 void CFastStringInt::SetUtf8(SStringParam* param2) {

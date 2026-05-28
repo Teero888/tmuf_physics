@@ -14,7 +14,7 @@ extern uint32_t DAT_00d357f0;
 
 // External CMwId API mock
 namespace CMwId {
-    extern void CreateFromLocalIndex(uint32_t index);
+    extern void CreateFromLocalIndex(uintptr_t index);
 }
 
 extern void OnAccessViolation_ConcatToCrashFileName(void* data);
@@ -145,7 +145,7 @@ uint32_t CMwStack::InsertBaseNameIndex(uint32_t val) {
     return 0;
 }
 
-uint32_t CMwStack::GetArgument(uint32_t argType, EStackType stackType, uint32_t* outArg) {
+uintptr_t CMwStack::GetArgument(uint32_t argType, EStackType stackType, uint32_t* outArg) {
     int maxIndex = m_count - 1;
     int searchIndex = *outArg;
 
@@ -164,7 +164,7 @@ uint32_t CMwStack::GetArgument(uint32_t argType, EStackType stackType, uint32_t*
     
     // Check if the parameter matches the requested type
     if (searchIndex < maxIndex && m_types[searchIndex] == stackType) {
-        return reinterpret_cast<uint32_t>(m_values[searchIndex]);
+        return reinterpret_cast<uintptr_t>(m_values[searchIndex]);
     }
     
     return 0;
@@ -180,7 +180,7 @@ uint32_t CMwStack::WatchNextNameIndex(uint32_t* outNameIndex, CMwNod** outNodeAr
 
     // Create ID context
     CMwStack* localStack = this;
-    CMwId::CreateFromLocalIndex(reinterpret_cast<uint32_t>(&localStack));
+    CMwId::CreateFromLocalIndex(reinterpret_cast<uintptr_t>(&localStack));
 
     if (outNodeArray != nullptr) {
         for (uint32_t i = 0; i < nodeCount; ++i) {
@@ -219,33 +219,36 @@ uint32_t CMwStack::MakeInfoFromStack(SMwParamInfo* outInfo, CMwNod* contextNod) 
             
             CMwParam* paramObj = reinterpret_cast<CMwParam*>(paramData[2]);
             int isIndexed = paramObj->IsIndexed();
+            bool runFallbackLabel = false; // Replaces the illegal goto
 
             if (isIndexed == 0) {
                 // Call virtual function 0x10 on current node
                 typedef int (*CheckFunc)(int);
                 CheckFunc func = (CheckFunc)*((void**)((char*)this + 0x10));
-                if (func(0x1008000) != 0) goto LAB_00937781;
                 
-                if (elementCount == 1) {
-                    int valIndex = reinterpret_cast<int>(m_values[0]);
-                    unsigned int id = reinterpret_cast<unsigned int*>(paramData[9])[valIndex];
-                    
-                    if (id < 0x1001000) {
-                        outInfo->m_offset = id;
-                        outInfo->m_typeObj = PTR_DAT_00bc6508[id];
-                    } else {
-                        outInfo->m_offset = 5;
-                        outInfo->m_typeObj = PTR_DAT_00bc651c;
+                if (func(0x1008000) != 0) {
+                    runFallbackLabel = true; // Was: goto LAB_00937781;
+                } else {
+                    if (elementCount == 1) {
+                        int valIndex = static_cast<int>(reinterpret_cast<uintptr_t>(m_values[0]) & 0xFFFFFFFF);
+                        unsigned int id = reinterpret_cast<unsigned int*>(paramData[9])[valIndex];
+                        
+                        if (id < 0x1001000) {
+                            outInfo->m_offset = id;
+                            outInfo->m_typeObj = PTR_DAT_00bc6508[id];
+                        } else {
+                            outInfo->m_offset = 5;
+                            outInfo->m_typeObj = PTR_DAT_00bc651c;
+                        }
+                        
+                        outInfo->m_flags = 0xFFFFFFFF;
+                        return 0;
                     }
                     
-                    outInfo->m_flags = 0xFFFFFFFF; // Decompiler offset + 4
-                    // +0xC = 0xFFFFFFFF, +0x10 = paramData[10], etc. (Direct translation of struct packing)
+                    outInfo->m_offset = 0x24;
+                    outInfo->m_typeObj = PTR_DAT_00bc6598;
                     return 0;
                 }
-                
-                outInfo->m_offset = 0x24;
-                outInfo->m_typeObj = PTR_DAT_00bc6598;
-                return 0;
             } else {
                 outInfo->m_offset = paramData[9];
                 outInfo->m_typeObj = PTR_DAT_00bc6508[paramData[9]];
@@ -260,18 +263,21 @@ uint32_t CMwStack::MakeInfoFromStack(SMwParamInfo* outInfo, CMwNod* contextNod) 
                     for (int j = 0; j < 12; ++j) {
                         dest[j] = src[j];
                     }
-                    
-LAB_00937781:
-                    outInfo->m_offset = 0x24;
-                    outInfo->m_typeObj = PTR_DAT_00bc6598;
-                    
-                    // Specific property type checks
-                    switch (dest[0]) {
-                        case 9: case 0x13: case 0x17: case 0x31: case 0x35: case 0x39: case 0x3D:
-                            break;
-                        default:
-                            return 1;
-                    }
+                    runFallbackLabel = true; // Reaches LAB_00937781 naturally
+                }
+            }
+
+            // Replaces LAB_00937781:
+            if (runFallbackLabel) {
+                outInfo->m_offset = 0x24;
+                outInfo->m_typeObj = PTR_DAT_00bc6598;
+                
+                // Specific property type checks
+                switch (DAT_00d357f0) { // DAT_00d357f0 is what dest[0] was assigned to
+                    case 9: case 0x13: case 0x17: case 0x31: case 0x35: case 0x39: case 0x3D:
+                        break;
+                    default:
+                        return 1;
                 }
             }
             return 0;
@@ -289,26 +295,21 @@ LAB_00937781:
 }
 
 uint32_t CMwStack::FillIndexFromText(uint32_t param2, CMwNod* contextNod, CFastString* textStr) {
-    CFastBuffer<void*> gpuBuffer; // Deduced from destruction at end
-    
-    int tokenValue = 2;
-    int nextToken = -1;
+    CFastBuffer<void*> gpuBuffer; 
     
     // CFastStringInt struct required for tokenizing
-    struct SFastTokenInt { int val; };
+    
     SFastTokenInt tokenData;
     
-    int hasToken = textStr->GetNextToken(reinterpret_cast<CFastStringInt*>(&tokenValue), &tokenData);
+    int hasToken = textStr->GetNextToken(&tokenData);
     
     while (hasToken != 0) {
         if (PTR_DAT_00bbf7d8 != nullptr) {
             CFastString* newStr = new CFastString();
-            newStr->SetString("default");
-            
-            // Add to buffer (matches CFastBuffer::Add)
-            gpuBuffer.AddTail(newStr);
+           newStr->SetString("default"); 
+            gpuBuffer.Add(newStr); 
         }
-        hasToken = textStr->GetNextToken(reinterpret_cast<CFastStringInt*>(&tokenValue), &tokenData);
+        hasToken = textStr->GetNextToken(&tokenData);
     }
     
     uint32_t recursiveResult = FillIndexFromText(param2, contextNod, textStr);

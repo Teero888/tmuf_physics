@@ -12,6 +12,13 @@ const float EPSILON_DIST      = 0.001f;    // _DAT_00b362c0
 const float EPSILON_LINEAR    = 0.0001f;   // _DAT_00b31460
 
 
+TODO:
+
+since it was built on/for 32 bit machines, they use void* and 32 bit integers as the same thing and keep converting between them, which is very bad.
+analyze the whole repo and fix em
+
+figure out all the _DAT_ defines from live memory i guess.
+
 still need stuff
 
   The Physics Solver (Havok-like Math System):

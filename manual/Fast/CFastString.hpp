@@ -119,6 +119,7 @@ public:
     void SetReal(float val, uint32_t precision = 0);
     void SetRealWithoutExponent(float val, uint32_t precision = 0);
     void SetString(CFastStringInt* other, SStringParam* param);
+    void SetString(const char *str);
     
     void TrimLeft(CFastString* trimChars, char* param2);
     void TrimRight(CFastString* trimChars, char* param2);
@@ -163,6 +164,7 @@ public:
     void SetLatin1OrUtf8(SStringParam* param2);
     void SetLength(uint32_t newLength, int fillSpace = 0, char fillChar = ' ');
     void SetString(CFastStringInt* other, SStringParam* param);
+    void SetString(const char *str);
     void SetUtf8(SStringParam* param2);
     
     void TruncAfterIndex(uint32_t index);

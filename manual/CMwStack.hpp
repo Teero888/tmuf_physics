@@ -42,7 +42,7 @@ public:
     uint32_t InsertBaseIndex(uint32_t val);
     uint32_t InsertBaseNameIndex(uint32_t val);
     
-    uint32_t GetArgument(uint32_t argType, EStackType stackType, uint32_t* outArg);
+    uintptr_t GetArgument(uint32_t argType, EStackType stackType, uint32_t* outArg);
     
     uint32_t MakeInfoFromStack(SMwParamInfo* outInfo, CMwNod* contextNod);
     uint32_t FillIndexFromText(uint32_t param2, CMwNod* contextNod, CFastString* textStr);
