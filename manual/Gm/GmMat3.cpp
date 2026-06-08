@@ -571,3 +571,4 @@ void GmMat3::Transpose() {
     this->m12 = this->m21;
     this->m21 = temp;
 }
+void GmMat3::Mult(GmMat3* res, void* a) {}

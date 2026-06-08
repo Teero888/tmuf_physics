@@ -1,3 +1,5 @@
+#include "CClassicBuffer.hpp"
+#include "CClassicBufferMemory.hpp"
 #ifndef CCLASSICARCHIVE_HPP
 #define CCLASSICARCHIVE_HPP
 
@@ -16,67 +18,13 @@ struct SParam;
 // =================================================
 // CClassicBuffer (Virtual Base)
 // =================================================
-class CClassicBufferMemory;
-
-class CClassicBuffer {
+class CClassicBufferRef : public CClassicBuffer {
 public:
-    uint32_t m_refCount; // field_0x4
-    uint32_t m_flags;    // field_0x8
-
-    CClassicBuffer();
-    virtual ~CClassicBuffer();
-
-    // Reconstructed virtual interface based on vftable offsets
-    virtual int Read(void* dest, uint32_t size) { return 0; }           // Offset: 0x4
-    virtual int Write(const void* src, uint32_t size) { return 0; }     // Offset: 0x8
-    virtual void Unk_0x0C() {}                               // Offset: 0xC
-    virtual void Unk_0x10() {}                               // Offset: 0x10
-    virtual uint32_t GetCursor() { return 0; }                          // Offset: 0x14
-    virtual uint32_t GetSize() { return 0; }                            // Offset: 0x18
-    virtual bool CanSeek() { return false; }                                // Offset: 0x1C
-    virtual void Seek(uint32_t pos) {}                       // Offset: 0x20
-
-    CClassicBufferMemory* CreateUncompressedBlock();
-    void AddCompressedBlock(CClassicBufferMemory* mem);
-    
-    bool IsEqualBuffer(CClassicBufferMemory* b1, CClassicBufferMemory* b2);
-    bool ReadAll(void* dest, uint32_t size);
-    bool WriteAll(const void* src, uint32_t size);
-    uint32_t Skip(uint32_t size);
-    void CopyFrom(SParam_Set* set, SParam* param);
-};
-
-// =================================================
-// CClassicBufferMemory
-// =================================================
-class CClassicBufferMemory : public CClassicBuffer {
-public:
-    uint8_t* m_data;      // field_0xc
-    uint32_t m_size;      // field_0x10
-    uint32_t m_cursor;    // field_0x14
-    uint32_t m_capacity;  // field_0x18
-    uint32_t m_chunkSize; // field_0x1c
-
-    CClassicBufferMemory();
-    virtual ~CClassicBufferMemory();
-
-    bool IsEqualBuffer(CClassicBufferMemory* other);
-    void* WriteVoid(uint32_t size);
-    void AdvanceOffset(uint32_t size);
-    void Attach(uint8_t* buffer, uint32_t size);
-    void Empty();
-    void PreAlloc(uint32_t size);
-    void Reset();
-};
-
-// =================================================
-// CClassicBufferRef
-// =================================================
-struct CClassicBufferRef {
-    CClassicBufferMemory* m_memory;
-
+    class CClassicBufferMemory* m_memory;
     CClassicBufferRef();
     ~CClassicBufferRef();
+    int Read(void* buf, uint32_t len) override;
+    int Write(const void* buf, uint32_t len) override;
 };
 
 // =================================================
@@ -92,7 +40,11 @@ public:
     CClassicArchive();
     virtual ~CClassicArchive();
 
+    static CClassicArchive* LoadFromGbx(const char* filepath);
+
     CClassicBuffer* DetachBuffer();
+    bool ScanForChunk(uint32_t chunkId);
+
     void DoData(void* data, uint32_t size);
     bool ReadLine();
     void WriteLine();

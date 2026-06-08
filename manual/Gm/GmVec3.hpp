@@ -13,6 +13,7 @@ struct STri_PosTexTgt;
 // GmVec3
 // =================================================
 struct GmVec3 {
+    static float Dot(const GmVec3& a, const GmVec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
     float x; // Offset 0x0
     float y; // Offset 0x4
     float z; // Offset 0x8

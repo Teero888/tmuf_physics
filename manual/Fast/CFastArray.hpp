@@ -18,6 +18,11 @@ public:
 
     CFastArray() : m_count(0), m_data(nullptr) {}
     
+
+    void DeleteAll() { for(uint32_t i=0; i<m_count; ++i) { delete m_data[i]; } m_count = 0; delete[] m_data; m_data = nullptr; }
+    void Add(const T& val) { T* newData = new T[m_count + 1]; if (m_data) { for (uint32_t i=0; i<m_count; ++i) newData[i] = m_data[i]; delete[] m_data; } newData[m_count] = val; m_data = newData; m_count++; }
+    void RemoveAt(uint32_t index) { if (index >= m_count) return; T* newData = m_count > 1 ? new T[m_count - 1] : nullptr; for (uint32_t i=0, j=0; i<m_count; ++i) { if (i != index) newData[j++] = m_data[i]; } delete[] m_data; m_data = newData; m_count--; }
+    
     ~CFastArray() { 
         if (m_data) {
             delete[] m_data; 

@@ -30,6 +30,30 @@ CClassicBufferMemory::CClassicBufferMemory() {
     m_chunkSize = 0x20;
 }
 
+
+int CClassicBufferRef::Read(void* buf, uint32_t len) { return m_memory ? m_memory->Read(buf, len) : 0; }
+int CClassicBufferRef::Write(const void* buf, uint32_t len) { return m_memory ? m_memory->Write(buf, len) : 0; }
+
+int CClassicBufferMemory::Read(void* buf, uint32_t len) {
+    if (m_cursor + len > m_size) len = m_size - m_cursor;
+    if (len > 0) {
+        std::memcpy(buf, m_data + m_cursor, len);
+        m_cursor += len;
+    }
+    return len;
+}
+
+int CClassicBufferMemory::Write(const void* buf, uint32_t len) {
+    if (m_capacity < m_cursor + len) PreAlloc(m_cursor + len);
+    if (m_capacity >= m_cursor + len) {
+        std::memcpy(m_data + m_cursor, buf, len);
+        m_cursor += len;
+        if (m_size < m_cursor) m_size = m_cursor;
+        return len;
+    }
+    return 0;
+}
+
 CClassicBufferMemory::~CClassicBufferMemory() {
     if (m_chunkSize != 0) { // Indicates buffer wasn't 'Attached' statically
         delete[] m_data;
@@ -87,8 +111,8 @@ void CClassicBufferMemory::Empty() {
 // =================================================
 // CClassicBuffer 
 // =================================================
-CClassicBuffer::CClassicBuffer() : m_refCount(0), m_flags(0) {}
-CClassicBuffer::~CClassicBuffer() {}
+
+
 
 bool CClassicBuffer::ReadAll(void* dest, uint32_t size) {
     uint8_t* ptr = static_cast<uint8_t*>(dest);
@@ -140,10 +164,125 @@ CClassicArchive::~CClassicArchive() {
     // Engine callback hook handling stripped for simplicity
 }
 
+CClassicArchive* CClassicArchive::LoadFromGbx(const char* filepath) {
+    FILE* fp = fopen(filepath, "rb");
+    if (!fp) return nullptr;
+
+    fseek(fp, 0, SEEK_END);
+    uint32_t file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    uint8_t* file_buffer = new uint8_t[file_size];
+    if (fread(file_buffer, 1, file_size, fp) != file_size) {
+        delete[] file_buffer;
+        fclose(fp);
+        return nullptr;
+    }
+    fclose(fp);
+
+    uint32_t cursor = 0;
+    if (file_size < 3 || std::memcmp(file_buffer, "GBX", 3) != 0) {
+        delete[] file_buffer;
+        return nullptr;
+    }
+    cursor += 3;
+
+    uint16_t version = *reinterpret_cast<uint16_t*>(file_buffer + cursor);
+    cursor += 2;
+
+    if (version < 3) {
+        delete[] file_buffer;
+        return nullptr;
+    }
+
+    uint8_t format = file_buffer[cursor++];
+    uint8_t compression = file_buffer[cursor++];
+    uint8_t body_compression = file_buffer[cursor++];
+
+    if (version >= 4) cursor += 1;
+
+    uint32_t class_id = *reinterpret_cast<uint32_t*>(file_buffer + cursor);
+    cursor += 4;
+
+    if (version >= 6) {
+        uint32_t user_data_size = *reinterpret_cast<uint32_t*>(file_buffer + cursor);
+        cursor += 4;
+        cursor += user_data_size;
+    }
+
+    uint32_t num_nodes = *reinterpret_cast<uint32_t*>(file_buffer + cursor);
+    cursor += 4;
+
+    uint32_t num_ext_nodes = *reinterpret_cast<uint32_t*>(file_buffer + cursor);
+    cursor += 4;
+
+    uint32_t data_size = 0;
+    uint8_t* decompressed_data = nullptr;
+
+    if (body_compression == 'C') {
+        data_size = *reinterpret_cast<uint32_t*>(file_buffer + cursor);
+        cursor += 4;
+        uint32_t compressed_size = *reinterpret_cast<uint32_t*>(file_buffer + cursor);
+        cursor += 4;
+
+        decompressed_data = new uint8_t[data_size];
+        uint32_t decompressed_len = data_size;
+        int r = lzo1x_decompress_safe(file_buffer + cursor, compressed_size, decompressed_data, &decompressed_len, nullptr);
+
+        if (r != 0 || decompressed_len != data_size) {
+            delete[] decompressed_data;
+            delete[] file_buffer;
+            return nullptr;
+        }
+    } else {
+        data_size = file_size - cursor;
+        decompressed_data = new uint8_t[data_size];
+        std::memcpy(decompressed_data, file_buffer + cursor, data_size);
+    }
+
+    delete[] file_buffer;
+
+    CClassicBufferMemory* memBuf = new CClassicBufferMemory();
+    memBuf->Attach(decompressed_data, data_size);
+    memBuf->m_chunkSize = 0; // Means we take ownership and delete it later? wait, Attach sets chunkSize=0x20 + 0x0... so destructor will delete it
+
+    CClassicBufferRef* bufRef = new CClassicBufferRef();
+    delete bufRef->m_memory;
+    bufRef->m_memory = memBuf;
+
+    CClassicArchive* archive = new CClassicArchive();
+    archive->m_buffer = bufRef;
+    archive->m_isWriting = false;
+    archive->m_isTextMode = (format == 'T');
+    archive->m_ownsBuffer = true;
+
+    return archive;
+}
+
 CClassicBuffer* CClassicArchive::DetachBuffer() {
     CClassicBuffer* buf = m_buffer;
     m_buffer = nullptr;
     return buf;
+}
+
+bool CClassicArchive::ScanForChunk(uint32_t chunkId) {
+    if (!m_buffer) return false;
+    CClassicBufferRef* ref = static_cast<CClassicBufferRef*>(m_buffer);
+    if (!ref->m_memory) return false;
+    
+    uint8_t* data = ref->m_memory->m_data;
+    uint32_t size = ref->m_memory->m_size;
+    uint32_t pos = ref->m_memory->m_cursor;
+    
+    for (uint32_t i = pos; i <= size - 4; ++i) {
+        uint32_t val;
+        std::memcpy(&val, data + i, 4);
+        if (val == chunkId) {
+            ref->m_memory->m_cursor = i + 4; // Set cursor right after chunk ID
+            return true;
+        }
+    }
+    return false;
 }
 
 bool CClassicArchive::ReadLine() {
@@ -282,3 +421,62 @@ void CClassicArchive::SkipData(uint32_t size) {
         }
     }
 }
+void CClassicArchive::DoBool(int* values, uint32_t count) {
+    if (m_isWriting) WriteBool(values, count);
+    else ReadBool(values, count);
+}
+
+void CClassicArchive::DoNat8(uint8_t* values, uint32_t count, bool asHex) {
+    if (m_isWriting) WriteNat8(values, count, asHex);
+    else ReadNat8(values, count, asHex);
+}
+
+void CClassicArchive::DoNat16(uint16_t* values, uint32_t count, bool asHex) {
+    if (m_isWriting) WriteNat16(values, count, asHex);
+    else ReadNat16(values, count, asHex);
+}
+
+void CClassicArchive::DoNatural(uint32_t* values, uint32_t count, bool asHex) {
+    if (m_isWriting) WriteNatural(values, count, asHex);
+    else ReadNatural(values, count, asHex);
+}
+
+void CClassicArchive::DoReal(float* values, uint32_t count) {
+    if (m_isWriting) WriteReal(values, count);
+    else ReadReal(values, count);
+}
+
+void CClassicArchive::ReadNat8(uint8_t* values, uint32_t count, bool asHex) {
+    if (!m_isTextMode) { m_buffer->ReadAll(values, count); return; }
+    for (uint32_t i = 0; i < count; ++i) { ReadLine(); sscanf(g_TextLineBuffer, asHex ? "%hhx" : "%hhu", &values[i]); }
+}
+
+void CClassicArchive::WriteNat8(const uint8_t* values, uint32_t count, bool asHex) {
+    if (!m_isTextMode) { m_buffer->WriteAll(values, count); return; }
+    for (uint32_t i = 0; i < count; ++i) { g_TextLineCursor = sprintf(g_TextLineBuffer, asHex ? "%x" : "%u", values[i]); WriteLine(); }
+}
+
+void CClassicArchive::ReadNat16(uint16_t* values, uint32_t count, bool asHex) {
+    if (!m_isTextMode) { m_buffer->ReadAll(values, count * 2); return; }
+    for (uint32_t i = 0; i < count; ++i) { ReadLine(); sscanf(g_TextLineBuffer, asHex ? "%hx" : "%hu", &values[i]); }
+}
+
+void CClassicArchive::WriteNat16(const uint16_t* values, uint32_t count, bool asHex) {
+    if (!m_isTextMode) { m_buffer->WriteAll(values, count * 2); return; }
+    for (uint32_t i = 0; i < count; ++i) { g_TextLineCursor = sprintf(g_TextLineBuffer, asHex ? "%x" : "%u", values[i]); WriteLine(); }
+}
+
+void CClassicArchive::ReadNatural(uint32_t* values, uint32_t count, bool asHex) {
+    if (!m_isTextMode) { m_buffer->ReadAll(values, count * 4); return; }
+    for (uint32_t i = 0; i < count; ++i) { ReadLine(); sscanf(g_TextLineBuffer, asHex ? "%x" : "%u", &values[i]); }
+}
+
+void CClassicArchive::WriteNatural(const uint32_t* values, uint32_t count, bool asHex) {
+    if (!m_isTextMode) { m_buffer->WriteAll(values, count * 4); return; }
+    for (uint32_t i = 0; i < count; ++i) { g_TextLineCursor = sprintf(g_TextLineBuffer, asHex ? "%x" : "%u", values[i]); WriteLine(); }
+}
+
+void CClassicArchive::ReadString(CFastStringInt* str) {}
+void CClassicArchive::WriteString(CFastStringInt* str) {}
+void CClassicArchive::ReadMask(uint32_t* mask) { ReadNatural(mask, 1); }
+void CClassicArchive::WriteMask(const uint32_t* mask) { WriteNatural(mask, 1); }

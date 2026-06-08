@@ -51,7 +51,7 @@ void CMwId::StaticInit() {
 // =================================================
 // Factories
 // =================================================
-CMwId CMwId::CreateFromLocalIndex(uint32_t index) {
+CMwId CMwId::CreateFromLocalIndex(unsigned long index) {
     return CMwId(index);
 }
 

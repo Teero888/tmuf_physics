@@ -43,6 +43,7 @@ public:
     
     // Renderer Clipping (Highly context-dependent, likely belongs to a renderer class)
     static void PolygonClip(void* param_1, void* param_2); 
+    static void PlaneEqMult(GmVec4* res, GmVec4* a, GmIso4* b);
 };
 
 #endif // GMVEC4_HPP

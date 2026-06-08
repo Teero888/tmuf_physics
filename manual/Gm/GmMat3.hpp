@@ -48,6 +48,7 @@ struct GmMat3 {
     void Transpose();
     void OrthoNormalize();
     void Mult(const GmMat3& other);
+    static void Mult(GmMat3* res, void* a);
     void SetMult(const GmMat3& a, const GmMat3& b);
     void LeftMult(const GmMat3& other);
     void MultTranspose(const GmMat3& a, const GmMat3& b);

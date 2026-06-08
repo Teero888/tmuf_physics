@@ -299,3 +299,21 @@ bool GmBoxAligned::TestInter(class NvFaceInfo* face, void* arg2, const GmBoxAlig
     // Dummy stub
     return true;
 }
+
+void GmBoxAligned::Union(const GmVec3& point) {
+    if (IsNull()) {
+        center = point;
+        extents = GmVec3(0,0,0);
+        return;
+    }
+    GmVec3 minV = center - extents;
+    GmVec3 maxV = center + extents;
+    if (point.x < minV.x) minV.x = point.x;
+    if (point.y < minV.y) minV.y = point.y;
+    if (point.z < minV.z) minV.z = point.z;
+    if (point.x > maxV.x) maxV.x = point.x;
+    if (point.y > maxV.y) maxV.y = point.y;
+    if (point.z > maxV.z) maxV.z = point.z;
+    center = (minV + maxV) * 0.5f;
+    extents = (maxV - minV) * 0.5f;
+}

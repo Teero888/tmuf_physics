@@ -45,6 +45,7 @@ struct GmIso4 {
     void SetXY(const GmIso3& iso2d);
     void SetIdentity();
     void SetBlend(const GmIso4& a, const GmIso4& b, float t);
+    static void SetBlend(GmIso4* res, void* p1, void* p2, void* p3, float t);
     void SetLookAt(const GmVec3& pos, const GmVec3& target, const GmVec3& up);
     void SetTranslation(const GmVec3& trans);
     void SetUScaleTrans(float scale, const GmVec3& trans);
@@ -57,6 +58,9 @@ struct GmIso4 {
     void NUScaleSetInverse(const GmIso4& other);
     
     void Mult(const GmIso4& other);
+    static void Mult(GmIso4* res, void* a);
+    
+    void SetMult(GmIso4* other);
     void SetMult(const GmIso4& a, const GmIso4& b);
     void LeftMult(const GmIso4& other);
     void MultInverse(const GmIso4& other);
@@ -65,6 +69,8 @@ struct GmIso4 {
     void RotateX(float angle);
     void RotateY(float angle);
     void RotateZ(float angle);
+    GmVec3 UnTransform(const GmVec3& v) const;
+    GmVec3 UnTransformVector(const GmVec3& v) const;
     void SymmetryPlane(const GmIso4& mat, const GmVec4& plane);
 };
 

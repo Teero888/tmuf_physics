@@ -20,7 +20,7 @@ public:
 
     // Member Functions
     static void StaticInit();
-    static CMwId CreateFromLocalIndex(uint32_t index);
+    static CMwId CreateFromLocalIndex(unsigned long index);
     static CMwId CreateFromLocalName(const char* name);
     
     void SetLocalName(const char* name);

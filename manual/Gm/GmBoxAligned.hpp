@@ -47,6 +47,7 @@ public:
     void SetMult(const GmBoxAligned& other, const GmIso4& mat);
     void Mult(const GmIso4& mat);
     void Union(const GmBoxAligned& other);
+    void Union(const GmVec3& point);
 
     // Serialization
     void ArchiveABox(CClassicArchive* archive);

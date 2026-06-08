@@ -23,20 +23,20 @@ extern const float CONST_00c418d8;
 // =================================================
 
 void GmArchive::ReadVec3Pos_12(CClassicBuffer* buf, GmVec3* vec) {
-    buf->Read(&vec->x, 4);
-    buf->Read(&vec->y, 4);
-    buf->Read(&vec->z, 4);
+    buf->ReadAll(&vec->x, 4);
+    buf->ReadAll(&vec->y, 4);
+    buf->ReadAll(&vec->z, 4);
 }
 
 void GmArchive::WriteVec3Pos_12(CClassicBuffer* buf, const GmVec3* vec) {
-    buf->Write(&vec->x, 4);
-    buf->Write(&vec->y, 4);
-    buf->Write(&vec->z, 4);
+    buf->WriteAll(&vec->x, 4);
+    buf->WriteAll(&vec->y, 4);
+    buf->WriteAll(&vec->z, 4);
 }
 
 void GmArchive::ReadReal_3(CClassicBuffer* buf, float* val) {
     uint8_t bytes[3];
-    buf->Read(bytes, 3);
+    buf->ReadAll(bytes, 3);
     
     // Ghidra artifacts converted to clean bit-packing
     // Converts 24-bit integer back to a mapped float range
@@ -53,7 +53,7 @@ void GmArchive::WriteReal_3(CClassicBuffer* buf, float val) {
     bytes[0] = static_cast<uint8_t>(packed & 0xFF);
     bytes[1] = static_cast<uint8_t>((packed >> 8) & 0xFF);
     bytes[2] = static_cast<uint8_t>((packed >> 16) & 0xFF);
-    buf->Write(bytes, 3);
+    buf->WriteAll(bytes, 3);
 }
 
 void GmArchive::ReadVec3Pos_9(CClassicBuffer* buf, GmVec3* vec) {
@@ -70,8 +70,8 @@ void GmArchive::WriteVec3Pos_9(CClassicBuffer* buf, const GmVec3* vec) {
 
 void GmArchive::ReadVec3Unit_4(CClassicBuffer* buf, GmVec3* vec) {
     short yaw, pitch;
-    buf->Read(&yaw, 2);
-    buf->Read(&pitch, 2);
+    buf->ReadAll(&yaw, 2);
+    buf->ReadAll(&pitch, 2);
 
     float fYaw = ((float)yaw * CONST_00b36110) / CONST_00b530f8;
     float fPitch = ((float)pitch * CONST_00b36110) / CONST_00b530f8;
@@ -107,8 +107,8 @@ void GmArchive::WriteVec3Unit_4(CClassicBuffer* buf, const GmVec3* vec) {
         // but it mirrors the yaw logic using the Z component).
     }
 
-    buf->Write(&yaw, 2);
-    buf->Write(&pitch, 2);
+    buf->WriteAll(&yaw, 2);
+    buf->WriteAll(&pitch, 2);
 }
 
 void GmArchive::WriteVec3Unit_2(CClassicBuffer* buf, const GmVec3* vec) {
@@ -131,13 +131,13 @@ void GmArchive::WriteVec3Unit_2(CClassicBuffer* buf, const GmVec3* vec) {
         yaw = static_cast<uint8_t>(angle); // Scaled for 8-bit
     }
 
-    buf->Write(&yaw, 1);
-    buf->Write(&pitch, 1);
+    buf->WriteAll(&yaw, 1);
+    buf->WriteAll(&pitch, 1);
 }
 
 void GmArchive::ReadQuat_6(CClassicBuffer* buf, GmQuat* quat) {
     short angleData;
-    buf->Read(&angleData, 2);
+    buf->ReadAll(&angleData, 2);
 
     GmVec3 axis;
     ReadVec3Unit_4(buf, &axis);
@@ -165,13 +165,13 @@ void GmArchive::WriteQuat_6(CClassicBuffer* buf, const GmQuat* quat) {
 
     short packedAngle = static_cast<short>(std::round((angle * CONST_00b52a58) / CONST_00b36110));
     
-    buf->Write(&packedAngle, 2);
+    buf->WriteAll(&packedAngle, 2);
     WriteVec3Unit_4(buf, &axis);
 }
 
 void GmArchive::ReadVec3_4(CClassicBuffer* buf, GmVec3* vec) {
     short packedMag;
-    buf->Read(&packedMag, 2);
+    buf->ReadAll(&packedMag, 2);
     
     float mag = 0.0f;
     if (packedMag != -0x8000) { // 0x8000 is the reserved constant for length 0
@@ -208,6 +208,6 @@ void GmArchive::WriteVec3_4(CClassicBuffer* buf, const GmVec3* vec) {
         packedMag = static_cast<short>(logMag);
     }
     
-    buf->Write(&packedMag, 2);
+    buf->WriteAll(&packedMag, 2);
     WriteVec3Unit_2(buf, &dir);
 }

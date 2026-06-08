@@ -4,7 +4,8 @@
 cd "$(dirname "$0")" || exit 1
 
 # Required include directories
-INCLUDES="-I. -I./Fast -I./Archive -I./Classic -I./Mw -I./Gm"
+INCLUDES="-I. -I./Fast -I./Archive -I./Classic -I./Mw -I./Gm -I./Hms -I./Stubs -I./Plug -I./Scene -I./Game -I../gbx_map/include"
+LIBS="-L../gbx_map/build -lgbx_map -L../gbx_map/build -lminilzo"
 
 SUCCESS=0
 FAIL=0
@@ -12,30 +13,48 @@ FAIL=0
 # Create build directory
 mkdir -p build
 
+# Find all .cpp files except main.cpp
+FILES=$(find . -maxdepth 2 -name "*.cpp" -not -path "./build/*" -not -name "main.cpp")
+
 echo "======================================"
-echo "           compiling garbage          "
+echo "           compiling objects          "
 echo "======================================"
 
-# Use process substitution to keep variables in current shell
-while IFS= read -r file; do
+OBJECTS=""
+for file in $FILES; do
+    obj_name=$(echo "$file" | sed 's|^\./||; s|/|_|g; s|\.cpp$|.o|')
+    obj_path="build/$obj_name"
+    
     echo -n "Compiling $file ... "
-    
-    # Extract filename for object and log, replacing / with _
-    obj_name=$(echo "$file" | sed 's|^\./||' | sed 's|/|_|g' | sed 's|\.cpp$||')
-    
-    # Attempt to compile
-    g++ -c "$file" $INCLUDES -o "build/${obj_name}.o" > "build/${obj_name}.log" 2>&1
-    
-    if [ $? -eq 0 ]; then
-        echo -e "\e[32mSUCCESS\e[0m"
+    if g++ -c "$file" -o "$obj_path" $INCLUDES -fpermissive -w; then
+        echo "SUCCESS"
         SUCCESS=$((SUCCESS + 1))
-        rm "build/${obj_name}.o" 2>/dev/null
-        rm "build/${obj_name}.log"
+        OBJECTS="$OBJECTS $obj_path"
     else
-        echo -e "\e[31mFAILED\e[0m (Errors saved to build/${obj_name}.log)"
+        echo "FAILED (Errors saved to build/${obj_name%.o}.log)"
+        g++ -c "$file" -o "$obj_path" $INCLUDES -fpermissive -w > "build/${obj_name%.o}.log" 2>&1
         FAIL=$((FAIL + 1))
     fi
-done < <(find . -name "*.cpp" -not -path "./build/*")
+done
+
+echo ""
+echo "======================================"
+echo "           linking harness            "
+echo "======================================"
+
+if [ $FAIL -eq 0 ]; then
+    echo -n "Compiling main.cpp and linking ... "
+    if g++ main.cpp $OBJECTS -o physics_harness $INCLUDES $LIBS -fpermissive -w; then
+        echo "SUCCESS"
+        echo ""
+        echo "Run './physics_harness' to validate simulation."
+    else
+        echo "FAILED"
+        exit 1
+    fi
+else
+    echo "Skipping link due to compilation errors."
+fi
 
 echo ""
 echo "======================================"

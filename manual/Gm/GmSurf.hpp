@@ -18,6 +18,7 @@ class GmSurfEllipsoid;
 class GmSurfPolygon;
 class GmSurfBox;
 class GmSurfMesh;
+struct SPointInTri {};
 
 // Wrapper used in the collision dispatch matrix
 struct LocatedGmSurf {
@@ -57,6 +58,7 @@ public:
     float m_radius; // 0x08
 
     GmSurfSphere();
+    virtual ~GmSurfSphere();
     int ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const GmVec3& center, float& outT);
     void GetSphereBoundingBox(GmBoxAligned& outBox) const;
 };
@@ -69,6 +71,7 @@ public:
     GmVec3 m_radii; // 0x08, 0x0C, 0x10
 
     GmSurfEllipsoid();
+    virtual ~GmSurfEllipsoid();
     void CreateEllipsoidDefaultData();
     void GetEllipsoidBoundingBox(GmBoxAligned& outBox) const;
 };
@@ -85,6 +88,7 @@ public:
     int m_unknown_0x48;          // 0x48
 
     GmSurfPolygon(uint8_t param);
+    virtual ~GmSurfPolygon();
 };
 
 // =================================================
@@ -96,6 +100,7 @@ public:
     GmVec3 m_extents; // 0x14, 0x18, 0x1C
 
     GmSurfBox();
+    virtual ~GmSurfBox();
 };
 
 // =================================================
@@ -117,6 +122,7 @@ public:
     GmOctree<SMeshOctreeCell> m_octree;        // 0x20
 
     GmSurfMesh();
+    virtual ~GmSurfMesh();
     
     int ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT);
     int ClipSegment2(const GmVec3& rayPos, const GmVec3& rayDir, const GmIso4& transform, float& outT, GmVec3& outNormal);
