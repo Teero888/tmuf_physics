@@ -17,6 +17,21 @@ struct GmVec3 {
     float x; // Offset 0x0
     float y; // Offset 0x4
     float z; // Offset 0x8
+    
+    void Normalize() {
+        float len = std::sqrt(x*x + y*y + z*z);
+        if (len > 0.0f) {
+            x /= len; y /= len; z /= len;
+        }
+    }
+    
+    static GmVec3 Cross(const GmVec3& a, const GmVec3& b) {
+        return {
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        };
+    }
 
     // Static Geometric Tests
     static float GetAngle(const GmVec3& v1, const GmVec3& v2);

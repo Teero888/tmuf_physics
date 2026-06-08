@@ -110,6 +110,8 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
         }
     }
 
+    ApplyFrictionForces(pilot, dt);
+
     // Call the specific Stadium Car physics model
     ComputeForcesModel3(pilot, dt);
 }
@@ -187,25 +189,42 @@ int CSceneVehicleCar::IsGroundContact() {
     return 0; 
 }
 
+extern float g_carYaw;
+
 void CSceneVehicleCar::ApplyFrictionForces(CSceneVehicleCar* pilot, float dt) {
     if (m_hmsItem == nullptr) return;
     
     GmVec3 linSpeed;
     m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
     
+    // Convert global velocity to local velocity
+    float c = std::cos(g_carYaw);
+    float s = std::sin(g_carYaw);
+    
+    // forward is +Z local. In global, +Z local corresponds to (sin(yaw), 0, cos(yaw))
+    float localZ = linSpeed.x * s + linSpeed.z * c; // forward speed
+    float localX = linSpeed.x * c - linSpeed.z * s; // lateral speed
+    
     uint32_t wheelCount = m_wheels.GetCount();
     for (uint32_t i = 0; i < wheelCount; ++i) {
         SSimulationWheel& wheel = m_wheels[i];
         if (wheel.m_hasGroundContact) {
-            // Placeholder: Lateral friction prevents side-slip
-            // In Stadium car, side friction is extremely high on road.
-            GmVec3 lateralForce(-linSpeed.x * 1000.0f, 0, 0); 
-            m_hmsItem->AddForce(m_hmsItem, &lateralForce, nullptr);
+            // Lateral friction (prevent sliding)
+            float lateralSlip = localX;
+            float lateralForceMag = -lateralSlip * 3000.0f; // Tune this to match Stadium Car grip
             
-            // Longitudinal friction (Braking/Acceleration)
-            float slip = wheel.m_realTimeState.m_angularVelocity * wheel.m_radius - linSpeed.z;
-            GmVec3 longForce(0, 0, slip * 500.0f);
-            m_hmsItem->AddForce(m_hmsItem, &longForce, nullptr);
+            // Longitudinal friction (Braking/Acceleration slip)
+            float longSlip = wheel.m_realTimeState.m_angularVelocity * wheel.m_radius - localZ;
+            float longForceMag = longSlip * 500.0f; // Tune this
+            
+            // Convert local forces back to global
+            GmVec3 globalForce(
+                lateralForceMag * c + longForceMag * s,
+                0,
+                -lateralForceMag * s + longForceMag * c
+            );
+            
+            m_hmsItem->AddForce(m_hmsItem, &globalForce, nullptr);
         }
     }
 }

@@ -17,10 +17,16 @@
 #include "Scene/CSceneVehicleCarTuning.hpp"
 #include "Game/CGameCtnReplayRecord.hpp"
 #include "Classic/CClassicArchive.hpp"
+#include "Plug/CPlugSurfaceGeom.hpp"
+#include "Plug/CPlugSolid.hpp"
 
 extern "C" {
 #include "gbx_map/gbx_map.h"
 }
+
+// External variables for harness stubs
+extern GmVec3 g_stub_pos;
+float g_carYaw = 1.57079632679f; // PI/2, facing +X
 
 int main() {
     std::cout << "TMNF Physics Reconstruction - Full Race Simulation (Real Raycast)" << std::endl;
@@ -29,41 +35,50 @@ int main() {
     // 1. Load Map
     const char* mapPath = "../steamdata/GameData/Tracks/Campaigns/Nations/Black/E05-Endurance.Challenge.Gbx";
     gbx_map_challenge_t* challenge = nullptr;
-    if (gbx_map_parse_challenge(mapPath, &challenge) != 0) {
+    // 2. Setup Track Collision Mesh
+    CPlugSurfaceGeom* geom = CPlugSurfaceGeom::LoadFromGbx("../steamdata/GameData/Stadium_Extracted/Stadium/Media/Solid/03087AFCAF9BD557046938047A36D3614B");
+    if (!geom || !geom->m_mesh) {
+        std::cerr << "Failed to load physics mesh!" << std::endl;
         return 1;
     }
-    std::cout << "Loaded map: " << challenge->map_name << std::endl;
+    GmSurfMesh* worldMesh = geom->m_mesh;
+    std::cout << "World mesh populated from 0x0900F004 (CPlugSurfaceGeom). Vertices: " 
+              << worldMesh->m_vertices.m_count << ", Triangles: " << worldMesh->m_triangles.m_count << std::endl;
 
-    // 2. Setup World Collision Mesh (Skeletal Map)
-    GmSurfMesh* worldMesh = new GmSurfMesh();
-    for (size_t i = 0; i < challenge->num_blocks; ++i) {
-        gbx_map_map_block_t& block = challenge->blocks[i];
-        float bx = block.position.x * 32.0f;
-        float by = block.position.y * 8.0f;
-        float bz = block.position.z * 32.0f;
-        
-        GmVec3 c[4] = {
-            GmVec3(bx, by, bz),
-            GmVec3(bx + 32.0f, by, bz),
-            GmVec3(bx + 32.0f, by, bz + 32.0f),
-            GmVec3(bx, by, bz + 32.0f)
-        };
-        
-        uint32_t vIdx = worldMesh->m_vertices.m_count;
-        for (int j = 0; j < 4; ++j) worldMesh->m_vertices.Add(c[j]);
-        
-        GmSurfTriangle t1, t2;
-        t1.indices[0] = vIdx + 0; t1.indices[1] = vIdx + 1; t1.indices[2] = vIdx + 2;
-        t1.planeNormal = GmVec3(0, 1.0f, 0); t1.planeDist = -by;
-        t2.indices[0] = vIdx + 0; t2.indices[1] = vIdx + 2; t2.indices[2] = vIdx + 3;
-        t2.planeNormal = GmVec3(0, 1.0f, 0); t2.planeDist = -by;
-        
-        worldMesh->m_triangles.Add(t1);
-        worldMesh->m_triangles.Add(t2);
-    }
-    std::cout << "Mock World mesh created with " << worldMesh->m_triangles.GetCount() << " blocks." << std::endl;
+    
+    std::cout << "World mesh populated with giant floor." << std::endl;
+
 
     // Load Replay
+    CClassicArchive* solidArchive = CClassicArchive::LoadFromGbx("../steamdata/GameData/Stadium_Extracted/Stadium/Media/Solid/03087AFCAF9BD557046938047A36D3614B");
+    if (!solidArchive) {
+        std::cout << "Failed to load Solid GBX! Bypassing..." << std::endl;
+    } else {
+        if (solidArchive->ScanForChunk(0x0900D002)) {
+            std::cout << "Found 0x0900D002!" << std::endl;
+        }
+        solidArchive->m_buffer->Seek(0);
+        if (solidArchive->ScanForChunk(0x0900C000)) {
+            std::cout << "Found 0x0900C000!" << std::endl;
+        }
+        solidArchive->m_buffer->Seek(0);
+        CPlugSolid* solid = new CPlugSolid();
+        std::cout << "Scanning for Solid Chunk..." << std::endl;
+        // We will just let the archive parse it fully using the registered chunks!
+        if (solidArchive->ScanForChunk(0x09015000)) {
+            std::cout << "Found chunk 0x09015000 (CPlugVisualIndexedTriangles)!" << std::endl;
+        } else {
+            std::cout << "Chunk 0x09015000 NOT FOUND!" << std::endl;
+        }
+        
+        CClassicBufferRef* ref = (CClassicBufferRef*)solidArchive->m_buffer;
+        FILE* dumpFp = fopen("solid_decompressed.bin", "wb");
+        if (dumpFp) {
+            fwrite(ref->m_memory->m_data, 1, ref->m_memory->m_size, dumpFp);
+            fclose(dumpFp);
+            std::cout << "Dumped solid_decompressed.bin (" << ref->m_memory->m_size << " bytes)" << std::endl;
+        }
+    }
     CClassicArchive* replayArchive = CClassicArchive::LoadFromGbx("../steamdata/GameData/Tracks/Campaigns/Nations/Black/E05-Endurance.Replay.Gbx");
     if (!replayArchive) {
         std::cout << "Failed to load Replay GBX!" << std::endl;
@@ -92,7 +107,7 @@ int main() {
     corpus->m_item = item;
     
     // Initial State
-    GmVec3 pos(240.0f, 16.35f, 432.0f); // Start slightly above the road
+    GmVec3 pos(483.7f, 73.57f, 80.0f); // Start correctly based on samples.txt
     GmVec3 vel(0.0f, 0.0f, 0.0f);
     
     g_stub_pos = pos;
@@ -139,8 +154,13 @@ int main() {
     
     uint32_t currentEventIdx = 0;
 
-    for (int t = 0; t < 2500; ++t) {
-        uint32_t currentSimTimeMs = t * 10;
+    // Get the first event time to sync the start
+    firstEventTime = replay->m_events.empty() ? 0 : replay->m_events[0].time;
+
+    // 4. Emulate the main loop integration step
+    for (int t = 0; t < 1000; ++t) {
+        
+        uint32_t currentSimTimeMs = firstEventTime + (t * 10);
         
         // Process inputs
         while (currentEventIdx < replay->m_events.size()) {
@@ -182,15 +202,16 @@ int main() {
         GmVec3 gravity(0, -9.81f * 1500.0f, 0); 
         item->AddForce(item, &gravity, nullptr);
         
-        // Engine Force (Forward)
-        GmVec3 engine(0, 0, car->m_engineForce);
-        item->AddForce(item, &engine, nullptr);
-        
         // Simple Steering (Mock)
         if (car->m_inputSteer != 0.0f) {
-            GmVec3 steerTorque(0, car->m_inputSteer * -1500.0f, 0);
-            item->AddTorque(item, &steerTorque);
+            g_carYaw += car->m_inputSteer * -1.5f * dt; // Turn rate (negative steer is left)
         }
+
+        // Engine Force (Forward)
+        float fwX = std::sin(g_carYaw);
+        float fwZ = std::cos(g_carYaw);
+        GmVec3 engine(fwX * car->m_engineForce, 0, fwZ * car->m_engineForce);
+        item->AddForce(item, &engine, nullptr);
 
         // 2. We mock the raycast collision detection for now and inject it into zoneDyn collisions
         GmVec3 rayOrigin = g_stub_pos;
@@ -200,6 +221,11 @@ int main() {
         GmIso4 ident; ident.SetIdentity();
         
         if (worldMesh->ClipSegment(rayOrigin, rayDir, ident, hitT)) {
+            car->m_wheels[0].m_hasGroundContact = 1;
+            car->m_wheels[0].m_realTimeState.m_compression = 0.5f - (hitT * 10.0f);
+            if (t % 100 == 0) { // Print only every 100 steps
+                std::cout << "[Step " << t << "] Mesh Raycast HIT at T=" << hitT << " | Z=" << pos.z << std::endl;
+            }
             float groundY = rayOrigin.y + rayDir.y * hitT;
             GmVec3 curPos = g_stub_pos;
             
@@ -230,7 +256,8 @@ int main() {
         item->GetLinearSpeed(item, &currentVel);
         
         if (t % 500 == 0) {
-             std::cout << "T: " << (t*dt) << "s | Pos: (" << (int)currentPos.x << ", " << std::fixed << std::setprecision(2) << currentPos.y << ", " << (int)currentPos.z << ") | Spd: " << (int)(currentVel.z * 3.6f) << " km/h | Gas: " << car->m_inputGas << " | EngForce: " << car->m_engineForce << std::endl;
+             float mag = sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
+             std::cout << "T: " << (t*dt) << "s | Pos: (" << (int)currentPos.x << ", " << std::fixed << std::setprecision(2) << currentPos.y << ", " << (int)currentPos.z << ") | Spd: " << (int)(mag * 3.6f) << " km/h | Gas: " << car->m_inputGas << " | Steer: " << car->m_inputSteer << std::endl;
         }
     }
 

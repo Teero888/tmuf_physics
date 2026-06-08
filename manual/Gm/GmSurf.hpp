@@ -7,6 +7,7 @@
 #include "GmOctree.hpp" // Contains SMeshOctreeCell
 #include "CFastArray.hpp"
 #include <cstdint>
+#include <string>
 
 class CCrystal;
 class CGmCollisionBuffer;
@@ -110,7 +111,7 @@ struct GmSurfTriangle {
     // Deduced from TransformByNOMat plane equation cross-products
     GmVec3 planeNormal; 
     float planeDist;
-    uint16_t indices[3]; 
+    uint32_t indices[3]; 
     uint16_t materialId;
 };
 
@@ -135,6 +136,7 @@ public:
     void BuildOctree();
     void GetMeshBoundingBox(GmBoxAligned& outBox) const;
     void TransformByNOMat(const GmIso4& transform);
+    bool LoadFromObj(const std::string& filename);
 };
 
 #endif // GMSURF_HPP

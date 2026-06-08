@@ -6,6 +6,8 @@ gbx_map/
 old/
 manual/gbx-net-master
 manual/GBX.NET
+manual/GbxDumper/bin
+manual/GbxDumper/obj
 
 # Generated files
 scripts/physics_extracted_code.c

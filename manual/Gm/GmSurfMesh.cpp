@@ -117,3 +117,54 @@ void GmSurfMesh::GetMeshBoundingBox(GmBoxAligned& outBox) const {
 
 void GmSurfMesh::BuildOctree() {}
 void GmSurfMesh::TransformByNOMat(const GmIso4& transform) {}
+
+#include <fstream>
+#include <sstream>
+
+bool GmSurfMesh::LoadFromObj(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) return false;
+    
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty()) continue;
+        std::istringstream iss(line);
+        std::string type;
+        iss >> type;
+        
+        if (type == "v") {
+            float x, y, z;
+            iss >> x >> y >> z;
+            m_vertices.Add(GmVec3(x, y, z));
+        } else if (type == "f") {
+            GmSurfTriangle tri;
+            for (int i = 0; i < 3; ++i) {
+                std::string vertStr;
+                iss >> vertStr;
+                size_t slashPos = vertStr.find('/');
+                if (slashPos != std::string::npos) {
+                    vertStr = vertStr.substr(0, slashPos);
+                }
+                uint32_t idx = std::stoi(vertStr) - 1;
+                if (idx >= m_vertices.m_count) idx = m_vertices.m_count - 1;
+                tri.indices[i] = idx;
+            }
+            
+            // Compute plane normal
+            GmVec3 v0 = m_vertices[tri.indices[0]];
+            GmVec3 v1 = m_vertices[tri.indices[1]];
+            GmVec3 v2 = m_vertices[tri.indices[2]];
+            
+            GmVec3 edge1 = v1 - v0;
+            GmVec3 edge2 = v2 - v0;
+            tri.planeNormal = GmVec3::Cross(edge1, edge2);
+            tri.planeNormal.Normalize();
+            tri.planeDist = -GmVec3::Dot(tri.planeNormal, v0);
+            
+            m_triangles.Add(tri);
+        }
+    }
+    
+    return true;
+}
+

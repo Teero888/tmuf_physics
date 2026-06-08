@@ -90,6 +90,8 @@ void CHmsZoneDynamic::SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysica
     // Dot product with normal
     float velAlongNormal = vel.x * collision->m_normal.x + vel.y * collision->m_normal.y + vel.z * collision->m_normal.z;
     
+extern GmVec3 g_stub_pos;
+
     // If we're falling into the ground, stop the velocity along the normal and apply a tiny bounce
     if (velAlongNormal < 0) {
         float restitution = 0.0f; // No bounce
@@ -101,5 +103,14 @@ void CHmsZoneDynamic::SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysica
         vel.z += j * collision->m_normal.z;
         
         dyna1->SetLocalLinearSpeed(&vel);
+        
+        // Resolve penetration (snap to surface)
+        // m_pos is the hit point on the ground. The car center should be slightly above it.
+        if (collision->m_normal.y > 0.5f) {
+            float desiredY = collision->m_pos.y + 0.35f;
+            if (g_stub_pos.y < desiredY) {
+                g_stub_pos.y = desiredY;
+            }
+        }
     }
 }
