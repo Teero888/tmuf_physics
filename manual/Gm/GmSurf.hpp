@@ -137,6 +137,7 @@ public:
     void GetMeshBoundingBox(GmBoxAligned& outBox) const;
     void TransformByNOMat(const GmIso4& transform);
     bool LoadFromObj(const std::string& filename);
+    bool LoadFromTmnfCollision(const std::string& filename);
 };
 
 #endif // GMSURF_HPP

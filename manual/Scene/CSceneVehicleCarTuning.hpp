@@ -31,6 +31,37 @@ public:
 
     uint8_t m_padding_end[0x3A8 - 0xB0];
 
+    // Standalone semantic view of the Stadium tuning.  These members are not
+    // intended to reproduce the original 32-bit object layout; translated
+    // force code should use them instead of dereferencing guessed offsets.
+    float m_mass;
+    float m_inertiaMass;
+    float m_inertiaHalfDiagX;
+    float m_inertiaHalfDiagY;
+    float m_inertiaHalfDiagZ;
+    float m_gravityCoef;
+    float m_gravityCoefAir;
+    float m_angularFluidFrictionCoef1;
+    float m_steerSpeed;
+    int m_steerModel;
+    float m_steerLowSpeed;
+    float m_steerGroundTorque;
+    float m_steerGroundTorqueSlippingCoef;
+    float m_maxSideFrictionBlendCoef;
+    float m_maxSideFrictionSliding;
+    float m_sideFriction1;
+    float m_maxSideFrictionOverLimitBlend;
+    float m_m5AccelSlipCoefMax;
+    int m_shockModel;
+    float m_absorbingValKi;
+    float m_absorbingValKa;
+    float m_absorbingValRest;
+    float m_absorbTension;
+    float m_lateralSlopeAdherenceMin;
+    float m_lateralSlopeAdherenceMax;
+    float m_axialSlopeAdherenceMin;
+    float m_axialSlopeAdherenceMax;
+
     CSceneVehicleCarTuning();
     virtual ~CSceneVehicleCarTuning();
 
@@ -50,6 +81,13 @@ public:
     float GetRolloverLateralCoefFromAngle(float angle);
     float GetRolloverLateralFromSpeed(float speed);
     float GetSteerSlowDownFromSpeed(float speed);
+    float M5GetAccelFromSpeed(float speed);
+    float M5GetSlippingAccelFromSpeed(float speed);
+    float M5GetSteerSlowDownFromSpeed(float speed);
+    float M6GetRearGearAccelFromSpeed(float speed);
+    float GetModel6SteerSpeedFactor(float speed) const;
+    float GetModel6SideForce(float rawForce, float maxForce) const;
+    float GetYawInertia() const;
 };
 
 #endif // CSCENEVEHICLECARTUNING_HPP

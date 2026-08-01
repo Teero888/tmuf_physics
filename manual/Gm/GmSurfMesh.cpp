@@ -2,12 +2,58 @@
 #include "GmFunc.hpp"
 #include <cmath>
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
+#include <fstream>
+#include <limits>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
+namespace {
+
+struct GmSurfMeshSpatialIndex {
+    static constexpr float kCellSize = 32.0f;
+    float minX = 0.0f;
+    float minZ = 0.0f;
+    uint32_t sizeX = 0;
+    uint32_t sizeZ = 0;
+    std::vector<std::vector<uint32_t>> cells;
+
+    const std::vector<uint32_t>* GetCell(float x, float z) const {
+        if (sizeX == 0 || sizeZ == 0) return nullptr;
+        const int cellX = static_cast<int>(std::floor((x - minX) / kCellSize));
+        const int cellZ = static_cast<int>(std::floor((z - minZ) / kCellSize));
+        if (cellX < 0 || cellZ < 0 || cellX >= static_cast<int>(sizeX) ||
+            cellZ >= static_cast<int>(sizeZ)) {
+            return nullptr;
+        }
+        return &cells[static_cast<uint32_t>(cellZ) * sizeX +
+                      static_cast<uint32_t>(cellX)];
+    }
+};
+
+std::unordered_map<const GmSurfMesh*, std::unique_ptr<GmSurfMeshSpatialIndex>>
+    g_gmSurfMeshSpatialIndices;
+
+const std::vector<uint32_t>* GmSurfMesh_GetVerticalRayCandidates(
+    const GmSurfMesh* mesh, const GmVec3& localPos, const GmVec3& localDir) {
+    if (std::abs(localDir.x) > 1e-6f || std::abs(localDir.z) > 1e-6f)
+        return nullptr;
+    const auto found = g_gmSurfMeshSpatialIndices.find(mesh);
+    if (found == g_gmSurfMeshSpatialIndices.end()) return nullptr;
+    return found->second->GetCell(localPos.x, localPos.z);
+}
+
+} // namespace
 
 GmSurfMesh::GmSurfMesh() {
     m_type = 7;
 }
 
-GmSurfMesh::~GmSurfMesh() {}
+GmSurfMesh::~GmSurfMesh() {
+    g_gmSurfMeshSpatialIndices.erase(this);
+}
 
 int GmSurfMesh::TriangleClipSegmentNearerThanT(const GmVec3& rayPos, const GmVec3& rayDir, const GmVec3& triNormal, float& outT, SPointInTri& outPoint) {
     // 1. Plane Intersection
@@ -91,9 +137,13 @@ int GmSurfMesh::ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const Gm
     bool hit = false;
     float currentT = outT;
     
-    // In our full reconstruction, we use m_octree. 
-    // Here we iterate all triangles for the test harness.
-    for (uint32_t i = 0; i < m_triangles.m_count; ++i) {
+    const std::vector<uint32_t>* candidates =
+        GmSurfMesh_GetVerticalRayCandidates(this, localPos, localDir);
+    const uint32_t candidateCount = candidates == nullptr
+        ? m_triangles.m_count
+        : static_cast<uint32_t>(candidates->size());
+    for (uint32_t candidate = 0; candidate < candidateCount; ++candidate) {
+        const uint32_t i = candidates == nullptr ? candidate : (*candidates)[candidate];
         GmSurfTriangle& tri = m_triangles[i];
         if (GmSurfMesh_TriangleClipSegmentNearerThanT_Real(
             tri.planeNormal, tri.planeDist,
@@ -108,6 +158,103 @@ int GmSurfMesh::ClipSegment(const GmVec3& rayPos, const GmVec3& rayDir, const Gm
     return hit;
 }
 
+int GmSurfMesh::ClipSegment2(
+    const GmVec3& rayPos,
+    const GmVec3& rayDir,
+    const GmIso4& transform,
+    float& outT,
+    GmVec3& outNormal) {
+    GmVec3 localPos = transform.UnTransform(rayPos);
+    GmVec3 localDir = transform.UnTransformVector(rayDir);
+
+    bool hit = false;
+    float currentT = outT;
+    GmVec3 localNormal(0.0f, 0.0f, 0.0f);
+    const std::vector<uint32_t>* candidates =
+        GmSurfMesh_GetVerticalRayCandidates(this, localPos, localDir);
+    const uint32_t candidateCount = candidates == nullptr
+        ? m_triangles.m_count
+        : static_cast<uint32_t>(candidates->size());
+    for (uint32_t candidate = 0; candidate < candidateCount; ++candidate) {
+        const uint32_t i = candidates == nullptr ? candidate : (*candidates)[candidate];
+        GmSurfTriangle& triangle = m_triangles[i];
+        if (triangle.indices[0] >= m_vertices.m_count ||
+            triangle.indices[1] >= m_vertices.m_count ||
+            triangle.indices[2] >= m_vertices.m_count) {
+            continue;
+        }
+        if (GmSurfMesh_TriangleClipSegmentNearerThanT_Real(
+                triangle.planeNormal,
+                triangle.planeDist,
+                m_vertices[triangle.indices[0]],
+                m_vertices[triangle.indices[1]],
+                m_vertices[triangle.indices[2]],
+                localPos,
+                localDir,
+                currentT)) {
+            hit = true;
+            localNormal = triangle.planeNormal;
+        }
+    }
+
+    if (!hit) return 0;
+    outT = currentT;
+    outNormal = GmVec3(
+        transform.m00 * localNormal.x + transform.m01 * localNormal.y +
+            transform.m02 * localNormal.z,
+        transform.m10 * localNormal.x + transform.m11 * localNormal.y +
+            transform.m12 * localNormal.z,
+        transform.m20 * localNormal.x + transform.m21 * localNormal.y +
+            transform.m22 * localNormal.z);
+    outNormal.Normalize();
+    return 1;
+}
+
+int GmSurfMesh::ClipSegment3(
+    const GmVec3& rayPos,
+    const GmVec3& rayDir,
+    const GmIso4& transform,
+    float& outT,
+    uint16_t& outId) {
+    GmVec3 localPos = transform.UnTransform(rayPos);
+    GmVec3 localDir = transform.UnTransformVector(rayDir);
+
+    bool hit = false;
+    float currentT = outT;
+    uint16_t currentId = 0xffff;
+    const std::vector<uint32_t>* candidates =
+        GmSurfMesh_GetVerticalRayCandidates(this, localPos, localDir);
+    const uint32_t candidateCount = candidates == nullptr
+        ? m_triangles.m_count
+        : static_cast<uint32_t>(candidates->size());
+    for (uint32_t candidate = 0; candidate < candidateCount; ++candidate) {
+        const uint32_t i = candidates == nullptr ? candidate : (*candidates)[candidate];
+        GmSurfTriangle& triangle = m_triangles[i];
+        if (triangle.indices[0] >= m_vertices.m_count ||
+            triangle.indices[1] >= m_vertices.m_count ||
+            triangle.indices[2] >= m_vertices.m_count) {
+            continue;
+        }
+        if (GmSurfMesh_TriangleClipSegmentNearerThanT_Real(
+                triangle.planeNormal,
+                triangle.planeDist,
+                m_vertices[triangle.indices[0]],
+                m_vertices[triangle.indices[1]],
+                m_vertices[triangle.indices[2]],
+                localPos,
+                localDir,
+                currentT)) {
+            hit = true;
+            currentId = triangle.materialId;
+        }
+    }
+
+    if (!hit) return 0;
+    outT = currentT;
+    outId = currentId;
+    return 1;
+}
+
 void GmSurfMesh::GetMeshBoundingBox(GmBoxAligned& outBox) const {
     outBox.InitEmpty();
     for (uint32_t i = 0; i < m_vertices.m_count; ++i) {
@@ -115,10 +262,73 @@ void GmSurfMesh::GetMeshBoundingBox(GmBoxAligned& outBox) const {
     }
 }
 
-void GmSurfMesh::BuildOctree() {}
+void GmSurfMesh::BuildOctree() {
+    g_gmSurfMeshSpatialIndices.erase(this);
+    if (m_vertices.m_count == 0 || m_triangles.m_count == 0) return;
+
+    float minX = std::numeric_limits<float>::infinity();
+    float minZ = std::numeric_limits<float>::infinity();
+    float maxX = -std::numeric_limits<float>::infinity();
+    float maxZ = -std::numeric_limits<float>::infinity();
+    for (uint32_t i = 0; i < m_vertices.m_count; ++i) {
+        minX = std::min(minX, m_vertices[i].x);
+        minZ = std::min(minZ, m_vertices[i].z);
+        maxX = std::max(maxX, m_vertices[i].x);
+        maxZ = std::max(maxZ, m_vertices[i].z);
+    }
+
+    auto index = std::make_unique<GmSurfMeshSpatialIndex>();
+    index->minX = std::floor(minX / GmSurfMeshSpatialIndex::kCellSize) *
+                  GmSurfMeshSpatialIndex::kCellSize;
+    index->minZ = std::floor(minZ / GmSurfMeshSpatialIndex::kCellSize) *
+                  GmSurfMeshSpatialIndex::kCellSize;
+    index->sizeX = static_cast<uint32_t>(
+        std::floor((maxX - index->minX) / GmSurfMeshSpatialIndex::kCellSize)) + 1u;
+    index->sizeZ = static_cast<uint32_t>(
+        std::floor((maxZ - index->minZ) / GmSurfMeshSpatialIndex::kCellSize)) + 1u;
+    if (index->sizeX > 4096u || index->sizeZ > 4096u ||
+        static_cast<uint64_t>(index->sizeX) * index->sizeZ > 1000000u) {
+        return;
+    }
+    index->cells.resize(static_cast<size_t>(index->sizeX) * index->sizeZ);
+
+    for (uint32_t triangleIndex = 0; triangleIndex < m_triangles.m_count;
+         ++triangleIndex) {
+        const GmSurfTriangle& triangle = m_triangles[triangleIndex];
+        if (triangle.indices[0] >= m_vertices.m_count ||
+            triangle.indices[1] >= m_vertices.m_count ||
+            triangle.indices[2] >= m_vertices.m_count) {
+            continue;
+        }
+        const GmVec3& a = m_vertices[triangle.indices[0]];
+        const GmVec3& b = m_vertices[triangle.indices[1]];
+        const GmVec3& c = m_vertices[triangle.indices[2]];
+        const float triangleMinX = std::min(a.x, std::min(b.x, c.x));
+        const float triangleMaxX = std::max(a.x, std::max(b.x, c.x));
+        const float triangleMinZ = std::min(a.z, std::min(b.z, c.z));
+        const float triangleMaxZ = std::max(a.z, std::max(b.z, c.z));
+        const int firstX = std::max(0, static_cast<int>(std::floor(
+            (triangleMinX - index->minX) / GmSurfMeshSpatialIndex::kCellSize)));
+        const int lastX = std::min(static_cast<int>(index->sizeX) - 1,
+            static_cast<int>(std::floor(
+                (triangleMaxX - index->minX) / GmSurfMeshSpatialIndex::kCellSize)));
+        const int firstZ = std::max(0, static_cast<int>(std::floor(
+            (triangleMinZ - index->minZ) / GmSurfMeshSpatialIndex::kCellSize)));
+        const int lastZ = std::min(static_cast<int>(index->sizeZ) - 1,
+            static_cast<int>(std::floor(
+                (triangleMaxZ - index->minZ) / GmSurfMeshSpatialIndex::kCellSize)));
+        for (int z = firstZ; z <= lastZ; ++z) {
+            for (int x = firstX; x <= lastX; ++x) {
+                index->cells[static_cast<uint32_t>(z) * index->sizeX +
+                             static_cast<uint32_t>(x)].push_back(triangleIndex);
+            }
+        }
+    }
+
+    g_gmSurfMeshSpatialIndices.emplace(this, std::move(index));
+}
 void GmSurfMesh::TransformByNOMat(const GmIso4& transform) {}
 
-#include <fstream>
 #include <sstream>
 
 bool GmSurfMesh::LoadFromObj(const std::string& filename) {
@@ -165,6 +375,73 @@ bool GmSurfMesh::LoadFromObj(const std::string& filename) {
         }
     }
     
+    BuildOctree();
     return true;
 }
 
+bool GmSurfMesh::LoadFromTmnfCollision(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) return false;
+
+    char magic[8];
+    uint32_t vertexCount = 0;
+    uint32_t triangleCount = 0;
+    uint32_t blockCount = 0;
+    uint32_t reserved = 0;
+    file.read(magic, sizeof(magic));
+    file.read(reinterpret_cast<char*>(&vertexCount), sizeof(vertexCount));
+    file.read(reinterpret_cast<char*>(&triangleCount), sizeof(triangleCount));
+    file.read(reinterpret_cast<char*>(&blockCount), sizeof(blockCount));
+    file.read(reinterpret_cast<char*>(&reserved), sizeof(reserved));
+    (void)blockCount;
+    (void)reserved;
+    if (!file || std::memcmp(magic, "TMNFCOL1", sizeof(magic)) != 0 ||
+        vertexCount > 100000000u || triangleCount > 100000000u) {
+        return false;
+    }
+
+    std::vector<GmVec3> vertices(vertexCount);
+    std::vector<GmSurfTriangle> triangles(triangleCount);
+    for (uint32_t i = 0; i < vertexCount; ++i) {
+        file.read(reinterpret_cast<char*>(&vertices[i].x), sizeof(float));
+        file.read(reinterpret_cast<char*>(&vertices[i].y), sizeof(float));
+        file.read(reinterpret_cast<char*>(&vertices[i].z), sizeof(float));
+        if (!file || !std::isfinite(vertices[i].x) ||
+            !std::isfinite(vertices[i].y) || !std::isfinite(vertices[i].z)) {
+            return false;
+        }
+    }
+
+    for (uint32_t i = 0; i < triangleCount; ++i) {
+        GmSurfTriangle& triangle = triangles[i];
+        uint16_t padding = 0;
+        file.read(reinterpret_cast<char*>(&triangle.indices[0]), sizeof(uint32_t));
+        file.read(reinterpret_cast<char*>(&triangle.indices[1]), sizeof(uint32_t));
+        file.read(reinterpret_cast<char*>(&triangle.indices[2]), sizeof(uint32_t));
+        file.read(reinterpret_cast<char*>(&triangle.planeNormal.x), sizeof(float));
+        file.read(reinterpret_cast<char*>(&triangle.planeNormal.y), sizeof(float));
+        file.read(reinterpret_cast<char*>(&triangle.planeNormal.z), sizeof(float));
+        file.read(reinterpret_cast<char*>(&triangle.planeDist), sizeof(float));
+        file.read(reinterpret_cast<char*>(&triangle.materialId), sizeof(uint16_t));
+        file.read(reinterpret_cast<char*>(&padding), sizeof(uint16_t));
+        if (!file || triangle.indices[0] >= vertexCount ||
+            triangle.indices[1] >= vertexCount || triangle.indices[2] >= vertexCount ||
+            !std::isfinite(triangle.planeNormal.x) ||
+            !std::isfinite(triangle.planeNormal.y) ||
+            !std::isfinite(triangle.planeNormal.z) ||
+            !std::isfinite(triangle.planeDist)) {
+            return false;
+        }
+    }
+
+    // Reject appended/truncated variants of the format.  A valid file ends at
+    // the last triangle record.
+    if (file.peek() != std::ifstream::traits_type::eof()) return false;
+
+    m_vertices.SetCount(vertexCount);
+    m_triangles.SetCount(triangleCount);
+    for (uint32_t i = 0; i < vertexCount; ++i) m_vertices[i] = vertices[i];
+    for (uint32_t i = 0; i < triangleCount; ++i) m_triangles[i] = triangles[i];
+    BuildOctree();
+    return true;
+}

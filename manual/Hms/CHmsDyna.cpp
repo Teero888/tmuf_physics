@@ -1,6 +1,9 @@
 #include <cmath>
 #include "CHmsDyna.hpp"
+#include "CSceneVehicleCarTuning.hpp"
 #include <cstdio>
+
+extern CSceneVehicleCarTuning* g_tuning;
 
 CHmsDyna::CHmsDyna() {
     *(float*)&m_field_0x3a4 = 0.0f;
@@ -40,6 +43,8 @@ GmVec3 g_stub_forces(0,0,0);
 GmVec3 g_stub_torques(0,0,0);
 GmVec3 g_stub_pos(0,0,0);
 GmVec3 g_stub_angVel(0,0,0);
+static GmVec3 g_stub_preStepLinearSpeed(0,0,0);
+static GmVec3 g_stub_preStepAngularSpeed(0,0,0);
 extern float g_carYaw;
 
 void CHmsDyna::AddLocalImpulse(GmVec3* param_2) {}
@@ -66,19 +71,30 @@ void CHmsDyna::SetDynamicType(CHmsItem* param_1, int param_2) {}
 void CHmsDyna::SetLocation(CPlugTree* param_1, GmIso4* param_2) {}
 
 void CHmsDyna::Integrate(float dt) {
-    float mass = 1.0f; // Trackmania uses mass=1
-    float inertia = 2000.0f; // Approx moment of inertia
+    const float mass = g_tuning != nullptr ? g_tuning->m_mass : 1.0f;
+    const float yawInertia = g_tuning != nullptr ? g_tuning->GetYawInertia() : (25.0f / 12.0f);
+
+    // CHmsDyna::IntegrateStep at 0x533510 advances translation/orientation
+    // from the old speeds before it integrates force and torque. Preserve
+    // those pre-step values for Move instead of using symplectic Euler.
+    g_stub_preStepLinearSpeed = GmVec3(
+        *(float*)&m_field_0x3ac,
+        *(float*)&m_field_0x3a8,
+        *(float*)&m_field_0x3a4);
+    g_stub_preStepAngularSpeed = g_stub_angVel;
 
     GmVec3 acc = g_stub_forces / mass;
     *(float*)&m_field_0x3ac += acc.x * dt;
     *(float*)&m_field_0x3a8 += acc.y * dt;
     *(float*)&m_field_0x3a4 += acc.z * dt;
     
-    GmVec3 angAcc = g_stub_torques / inertia;
-    g_stub_angVel += angAcc * dt;
+    // The harness currently exposes yaw only. Use the exact Stadium box-tensor
+    // component instead of treating InertiaMass as a scalar moment of inertia.
+    g_stub_angVel.y += (g_stub_torques.y / yawInertia) * dt;
 
-    // Apply angular drag so it doesn't spin forever
-    g_stub_angVel = g_stub_angVel * 0.95f; 
+    const float angularFluidFriction =
+        g_tuning != nullptr ? g_tuning->m_angularFluidFrictionCoef1 : 0.4f;
+    g_stub_angVel = g_stub_angVel * std::exp(-angularFluidFriction * dt);
 
     // No gravity to stop infinite falling
     // g_stub_forces.y += -9.81f * mass;
@@ -88,12 +104,9 @@ void CHmsDyna::Integrate(float dt) {
 }
 
 void CHmsDyna::Move(float dt) {
-    // Update position (p = p0 + v*dt)
-    // Velocity is stored in world space
-    GmVec3 vel(*(float*)&m_field_0x3ac, *(float*)&m_field_0x3a8, *(float*)&m_field_0x3a4);
-    printf("DYNA MOVE: vel=(%f, %f, %f) pos=(%f, %f, %f)\n", vel.x, vel.y, vel.z, g_stub_pos.x, g_stub_pos.y, g_stub_pos.z);
-    g_stub_pos += vel * dt;
-    g_carYaw += g_stub_angVel.y * dt;
+    // IntegrateStep computes these transforms before the new velocities.
+    g_stub_pos += g_stub_preStepLinearSpeed * dt;
+    g_carYaw += g_stub_preStepAngularSpeed.y * dt;
 }
 
 // In CHmsItem, we need to map to these globals for the simple manual test:

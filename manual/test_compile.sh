@@ -46,12 +46,73 @@ if [ $FAIL -eq 0 ]; then
     echo -n "Compiling main.cpp and linking ... "
     if g++ main.cpp $OBJECTS -o physics_harness $INCLUDES $LIBS -fpermissive -w -g; then
         echo "SUCCESS"
-        echo ""
-        echo "Run './physics_harness' to validate simulation."
     else
         echo "FAILED"
         exit 1
     fi
+
+    echo -n "Compiling tuning curve regression ... "
+    if g++ tests/unit/tuning_curve_test.cpp $OBJECTS -o build/tuning_curve_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/tuning_curve_test; then
+        exit 1
+    fi
+
+    echo -n "Compiling original executable constants regression ... "
+    if g++ tests/unit/original_constants_test.cpp -o build/original_constants_test $INCLUDES -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/original_constants_test; then
+        exit 1
+    fi
+
+    echo -n "Compiling original Model6 dispatch/layout regression ... "
+    if g++ tests/unit/original_model6_dispatch_test.cpp -o build/original_model6_dispatch_test $INCLUDES -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/original_model6_dispatch_test; then
+        exit 1
+    fi
+
+    echo -n "Compiling vehicle state regression ... "
+    if g++ tests/unit/vehicle_state_test.cpp $OBJECTS -o build/vehicle_state_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/vehicle_state_test; then
+        exit 1
+    fi
+
+    echo -n "Compiling track collision loader/raycast regression ... "
+    if g++ tests/unit/track_collision_test.cpp $OBJECTS -o build/track_collision_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/track_collision_test; then
+        exit 1
+    fi
+
+    echo ""
+    echo "Run './physics_harness' to validate simulation."
 else
     echo "Skipping link due to compilation errors."
 fi

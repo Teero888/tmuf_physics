@@ -116,7 +116,35 @@ inline float VisualSteerAngleFromSpeed_times[] = { 0.0f, 100.0f };
 inline float VisualSteerAngleFromSpeed_values[] = { 30.0f, 10.0f };
 inline CFuncKeysReal VisualSteerAngleFromSpeed;
 
-inline float MaxSideFrictionSliding = 0.6f;
+// Stadium tuning 29 ("20juin2006") scalar values, read from the original
+// StadiumCar.VehicleTunings.Gbx. Keep these in the file's native units.
+inline constexpr float StadiumMass = 1.0f;
+inline constexpr float StadiumInertiaMass = 5.0f;
+inline constexpr float StadiumInertiaHalfDiagX = 0.5f;
+inline constexpr float StadiumInertiaHalfDiagY = 0.5f;
+inline constexpr float StadiumInertiaHalfDiagZ = 1.0f;
+inline constexpr float StadiumGravityCoef = 3.0f;
+inline constexpr float StadiumGravityCoefAir = 2.5f;
+inline constexpr float StadiumAngularFluidFrictionCoef1 = 0.4f;
+inline constexpr float StadiumSteerSpeed = 20.0f;
+inline constexpr int StadiumSteerModel = 5; // Steer06
+inline constexpr float StadiumSteerLowSpeed = 30.0f;
+inline constexpr float StadiumSteerGroundTorque = 0.08f;
+inline constexpr float StadiumSteerGroundTorqueSlippingCoef = 1.0f;
+inline constexpr float StadiumMaxSideFrictionBlendCoef = 0.018f;
+inline constexpr float MaxSideFrictionSliding = 0.35f;
+inline constexpr float StadiumSideFriction1 = 40.0f;
+inline constexpr float StadiumMaxSideFrictionOverLimitBlend = 1.0f;
+inline constexpr float StadiumM5AccelSlipCoefMax = 1.0f;
+inline constexpr int StadiumShockModel = 2; // Demo03
+inline constexpr float StadiumAbsorbingValKi = 40.0f;
+inline constexpr float StadiumAbsorbingValKa = 1.0f;
+inline constexpr float StadiumAbsorbingValRest = 0.2f;
+inline constexpr float StadiumAbsorbTension = 5.0f;
+inline constexpr float StadiumLateralSlopeAdherenceMin = 0.3f;
+inline constexpr float StadiumLateralSlopeAdherenceMax = 0.7f;
+inline constexpr float StadiumAxialSlopeAdherenceMin = 0.4f;
+inline constexpr float StadiumAxialSlopeAdherenceMax = 0.7f;
 
 static float g_dummy_wheel_tuning[256];
 
@@ -152,6 +180,34 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_steerDriveTorque = &SteerDriveTorque;
     tuning->m_steerSlowDown = &SteerSlowDown;
     tuning->m_lateralContactSlowDown = &LateralContactSlowDown;
+
+    tuning->m_mass = StadiumMass;
+    tuning->m_inertiaMass = StadiumInertiaMass;
+    tuning->m_inertiaHalfDiagX = StadiumInertiaHalfDiagX;
+    tuning->m_inertiaHalfDiagY = StadiumInertiaHalfDiagY;
+    tuning->m_inertiaHalfDiagZ = StadiumInertiaHalfDiagZ;
+    tuning->m_gravityCoef = StadiumGravityCoef;
+    tuning->m_gravityCoefAir = StadiumGravityCoefAir;
+    tuning->m_angularFluidFrictionCoef1 = StadiumAngularFluidFrictionCoef1;
+    tuning->m_steerSpeed = StadiumSteerSpeed;
+    tuning->m_steerModel = StadiumSteerModel;
+    tuning->m_steerLowSpeed = StadiumSteerLowSpeed;
+    tuning->m_steerGroundTorque = StadiumSteerGroundTorque;
+    tuning->m_steerGroundTorqueSlippingCoef = StadiumSteerGroundTorqueSlippingCoef;
+    tuning->m_maxSideFrictionBlendCoef = StadiumMaxSideFrictionBlendCoef;
+    tuning->m_maxSideFrictionSliding = MaxSideFrictionSliding;
+    tuning->m_sideFriction1 = StadiumSideFriction1;
+    tuning->m_maxSideFrictionOverLimitBlend = StadiumMaxSideFrictionOverLimitBlend;
+    tuning->m_m5AccelSlipCoefMax = StadiumM5AccelSlipCoefMax;
+    tuning->m_shockModel = StadiumShockModel;
+    tuning->m_absorbingValKi = StadiumAbsorbingValKi;
+    tuning->m_absorbingValKa = StadiumAbsorbingValKa;
+    tuning->m_absorbingValRest = StadiumAbsorbingValRest;
+    tuning->m_absorbTension = StadiumAbsorbTension;
+    tuning->m_lateralSlopeAdherenceMin = StadiumLateralSlopeAdherenceMin;
+    tuning->m_lateralSlopeAdherenceMax = StadiumLateralSlopeAdherenceMax;
+    tuning->m_axialSlopeAdherenceMin = StadiumAxialSlopeAdherenceMin;
+    tuning->m_axialSlopeAdherenceMax = StadiumAxialSlopeAdherenceMax;
 
     // Fill dummy wheel tuning with 100.0f
     for (int i = 0; i < 256; ++i) g_dummy_wheel_tuning[i] = 100.0f;

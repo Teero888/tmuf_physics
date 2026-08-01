@@ -6,6 +6,7 @@
 #include "GmIso4.hpp"
 #include "GmMat3.hpp"
 #include "CFastBuffer.hpp"
+#include "StadiumVehicleMaterials.hpp"
 #include <cstdint>
 
 class CHmsItem;
@@ -40,8 +41,6 @@ enum EVehicleEvent {
 
 class CSceneVehicleCar : public CSceneVehicle {
 public:
-
-    void WheelAddForceToVehicle(CSceneVehicleCar *param_1, void *param_2, void *param_3, void *param_4);
     void AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3);
     void AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3);
     void AddVehicleForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3, GmVec3 *param_4);
@@ -77,7 +76,8 @@ public:
             virtual ~SRealTimeState();
             float m_compression;         // 0x00 (Wheel + 0xB4)
             float m_velocity;            // 0x04 (Wheel + 0xB8)
-            uint8_t m_padding[104];
+            float m_absorbDelta;          // 0x08 (Wheel + 0xBC)
+            uint8_t m_padding[100];
             float m_angularVelocity;     // 0x6C (Wheel + 0x120)
             uint8_t m_padding2[36];
             float m_axisX;               // 0x94
@@ -113,22 +113,33 @@ public:
         };
 
         uint32_t m_field_0x00;        // 0x00
-        uint32_t m_field_0x04;        // 0x04
+        union {
+            uint32_t m_field_0x04;    // Original field name retained for translated code.
+            uint32_t m_isSteerable;   // 0x04: non-zero for the front axle.
+        };
         float m_radius;               // 0x08
         SSurfaceHandler m_surfaceHandler; // 0x0C
         
         uint8_t m_padding_mid[0x124 - 0x10]; 
         int m_hasGroundContact;      // 0x124
         uint16_t m_groundMaterial;   // 0x128
-        uint8_t m_padding_end[0x158 - 0x12A];
+        uint8_t m_padding_after_material[0x12C - 0x12A];
+        int m_isSlipping;             // 0x12C; reset independently of +0x00.
+        uint8_t m_padding_end[0x158 - 0x130];
         
         SRealTimeState m_realTimeState; 
         
         float m_suspensionForce;        // 0x158
         float m_field_0x15c;
 
+        SSimulationWheel();
         virtual ~SSimulationWheel();
     };
+
+    // Native 0x7C1810 helper. The executable has two stack arguments: the
+    // simulation wheel and the local point where its suspension force acts.
+    void WheelAddForceToVehicle(
+        SSimulationWheel* wheel, const GmVec3* localContactPosition);
 
     struct SVehicleCarState {
         virtual ~SVehicleCarState();
@@ -155,7 +166,10 @@ public:
     uint8_t m_padding_engine[0x59C - 0x2F8];
     SEngine m_engine;                      // 0x59C
     
-    float m_engineForce;                   // 0x5E8
+    union {
+        float m_engineForce;               // Legacy translated-code name.
+        float m_smoothedSteer;             // 0x5E8 in the original executable.
+    };
     float m_field_0x5ec;
     float m_field_0x5f0;
     float m_field_0x5f4;
@@ -166,7 +180,16 @@ public:
     uint8_t m_padding_final[0x840 - 0x604];
     float m_field_0x840;
     
-    CSceneVehicleCar* m_pilotCar;          // 0x60C
+    // VehicleFreeWheelingSet writes the original 32-bit field at +0x60C.
+    // Keep it typed because the standalone build has a different 64-bit
+    // object layout and must never address it through a raw byte offset.
+    int m_freeWheeling;
+
+    // Semantic orientation state for the standalone dynamics adapter. The
+    // native CHmsDyna::GetLocalForce rotates world force into the car frame;
+    // the harness currently represents yaw separately, so it supplies the
+    // chassis up axis from its wheel contacts here.
+    GmVec3 m_chassisUp;
 
     CSceneVehicleCar();
     virtual ~CSceneVehicleCar();
@@ -186,8 +209,19 @@ public:
     void WheelUpdateSpeedFromVehicleSpeed(SSimulationWheel* wheel, CSceneVehicleCar* pilot, float dt, float param_3);
     void WheelIntegrate(SSimulationWheel* wheel, float dt);
     void EngineIntegrate(CSceneVehicleCar* pilot, float dt, float param_2);
+    void VehicleFreeWheelingSet(int enabled);
     void ComputeForcesModel3(CSceneVehicleCar* pilot, float dt);
-    void ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, void *param_10,int *param_11,float *param_12);
+    void ComputeForcesModel6(CSceneVehicleCar* pilot, float dt);
+    // The fixed executable's implementation at 0x7FA770 ends in `ret 0x2c`,
+    // proving that there are eleven 32-bit stack arguments. Ghidra had added a
+    // spurious leading CSceneVehicleCar* parameter to this signature.
+    void ComputeForcesModel3_Exact(float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, void *param_10,int *param_11,float *param_12);
+    void ComputeVehicleGroundMaterialVals(
+        StadiumVehicleMaterials::GroundValues* values,
+        int* hasGroundContact) const;
+    void GetSlopeAdherence(
+        const GmVec3& force, float* lateralAdherence,
+        float* axialAdherence) const;
     int IsGroundContact();
 };
 

@@ -9,7 +9,11 @@
 #include <algorithm>
 #include <algorithm>
 
-CHmsZoneDynamic::CHmsZoneDynamic() : CMwNod() {}
+CHmsZoneDynamic::CHmsZoneDynamic() : CMwNod() {
+    // Exact constructor writes at 0x54A350..0x54A35F.
+    m_field_0x11c = 1.0f;
+    m_field_0x120 = 1.0f;
+}
 CHmsZoneDynamic::~CHmsZoneDynamic() {}
 
 CMwNod* CHmsZoneDynamic::MwNewCHmsZoneDynamic() { return new CHmsZoneDynamic(); }
@@ -29,9 +33,8 @@ void CHmsZoneDynamic::PhysicsStep2() {
         if (item->m_corpuses.GetCount() > 0) {
             CHmsCorpus* corpus = item->m_corpuses[0];
             if (corpus && corpus->m_dyna) {
-                // Pre-collision (Add forces, update tentative velocity & position)
-                // We'll let the user/harness inject the CSceneVehicleCar::IntegrateVehicle first,
-                // which adds forces to the item.
+                // One velocity integration per physics frame. Vehicle and
+                // environment callbacks have accumulated their forces first.
                 corpus->m_dyna->Integrate(dt); // Updates pos/vel based on forces
             }
         }

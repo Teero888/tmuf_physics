@@ -1,11 +1,36 @@
 #include <cstddef>
 #include "CSceneVehicleCar.hpp"
+#include "CSceneVehicleCarTuning.hpp"
+#include "TmForeverPhysicsConstants.hpp"
+#include "VehicleGroundSupport.hpp"
 #include "CHmsItem.hpp"
 #include "GmMat3.hpp"
 #include <cmath>
 #include <algorithm>
 
 extern float g_carYaw;
+extern CSceneVehicleCarTuning* g_tuning;
+
+namespace {
+
+VehicleChassisBasis GetChassisBasis(const CSceneVehicleCar& car) {
+    return BuildVehicleChassisBasis(car.m_chassisUp, g_carYaw);
+}
+
+GmVec3 LocalToWorld(const VehicleChassisBasis& basis, const GmVec3& local) {
+    return basis.right * local.x +
+           basis.up * local.y +
+           basis.forward * local.z;
+}
+
+GmVec3 WorldToLocal(const VehicleChassisBasis& basis, const GmVec3& world) {
+    return GmVec3(
+        GmVec3::Dot(world, basis.right),
+        GmVec3::Dot(world, basis.up),
+        GmVec3::Dot(world, basis.forward));
+}
+
+} // namespace
 
 // SDynaPart
 CSceneVehicleCar::SDynaPart::~SDynaPart() {}
@@ -13,11 +38,14 @@ CSceneVehicleCar::SDynaPart::~SDynaPart() {}
 // SEngine
 CSceneVehicleCar::SEngine::~SEngine() {}
 void CSceneVehicleCar::SEngine::Reset() {
-    m_throttle = 0.0f;
-    m_engineRpm = 1000.0f;
-    m_clutchRpm = 1000.0f;
+    // Exact writes performed by SEngine::Reset in TmForeverFixed.exe.
+    // Constructor-owned throttle/scalar defaults deliberately survive Reset.
+    m_field_0x10 = 0.0f;
+    m_engineRpm = 0.0f;
+    m_clutchRpm = 0.0f;
     m_clutchRatio = 1.0f;
     m_gearShiftTimer = 0.0f;
+    m_field_0x28 = 0;
     m_currentGear = 1;
 }
 
@@ -32,28 +60,77 @@ CSceneVehicleCar::SSimulationWheel::SState::~SState() {}
 void CSceneVehicleCar::SSimulationWheel::SState::Reset() {}
 
 // SSimulationWheel
+CSceneVehicleCar::SSimulationWheel::SSimulationWheel()
+    : m_field_0x00(0),
+      m_field_0x04(0),
+      m_radius(1.0f),
+      m_hasGroundContact(0),
+      m_groundMaterial(0),
+      m_isSlipping(0),
+      m_suspensionForce(0.0f),
+      m_field_0x15c(0.0f) {
+    m_realTimeState.m_compression = 0.0f;
+    m_realTimeState.m_velocity = 0.0f;
+    m_realTimeState.m_absorbDelta = 0.0f;
+    m_realTimeState.m_angularVelocity = 0.0f;
+    m_realTimeState.m_axisX = 0.0f;
+    m_realTimeState.m_axisY = 0.0f;
+    m_realTimeState.m_rotationAngle = 0.0f;
+    m_realTimeState.m_field_0xa0 = 0.0f;
+    m_realTimeState.m_field_0xa4 = 0.0f;
+}
+
 CSceneVehicleCar::SSimulationWheel::~SSimulationWheel() {}
 
 // SVehicleCarState
 CSceneVehicleCar::SVehicleCarState::~SVehicleCarState() {}
 
 // CSceneVehicleCar
-CSceneVehicleCar::CSceneVehicleCar() : CSceneVehicle(), m_pilotCar(this) {
+CSceneVehicleCar::CSceneVehicleCar()
+    : CSceneVehicle(), m_freeWheeling(0), m_chassisUp(0.0f, 1.0f, 0.0f) {
     m_simulationFlags = 0;
-    m_engineForce = 0.0f;
+    m_smoothedSteer = 0.0f;
+    m_field_0x5ec = 0.0f;
+    m_field_0x5f0 = 0.0f;
+    m_field_0x5f4 = 0.0f;
+    m_field_0x5f8 = 0.0f;
+    m_field_0x5fc = 0.0f;
+    m_field_0x600 = 0;
+    // Exact constructor default; UpdateParamsFromTuning later replaces this
+    // with twice the longitudinal wheel extent when vehicle geometry exists.
+    m_field_0x840 = 1.0f;
+
+    // Exact SEngine constructor defaults before Reset.
+    m_engine.m_throttle = 1.0f;
+    m_engine.m_field_0x04 = 1.0f;
+    m_engine.m_field_0x08 = 1.0f;
+    m_engine.m_field_0x0c = 0.0f;
+    m_engine.m_field_0x10 = 0.0f;
+    m_engine.m_field_0x30 = 0.0f;
     m_engine.Reset();
     
     // Initialize 4 wheels for the Stadium car
     for (int i = 0; i < 4; ++i) {
         SSimulationWheel wheel;
-        wheel.m_radius = 0.35f;
+        // Stadium's first two wheels are the steerable/front axle.  The
+        // original force loops read this flag at wheel +0x04.
+        // VehicleInitFromSolid copies U01/U02 from StadiumCar.VehicleStruct.
+        // U01 is enabled on all wheels; U02 is enabled on the front pair.
+        wheel.m_field_0x00 = 1u;
+        wheel.m_isSteerable = i < 2 ? 1u : 0u;
+        wheel.m_radius = TmForeverPhysicsConstants::kStadiumWheelRadius;
         wheel.m_hasGroundContact = 0;
         wheel.m_realTimeState.m_angularVelocity = 0.0f;
         wheel.m_realTimeState.m_rotationAngle = 0.0f;
         wheel.m_realTimeState.m_velocity = 0.0f;
         wheel.m_realTimeState.m_compression = 0.0f;
+        wheel.m_realTimeState.m_absorbDelta = 0.0f;
         m_wheels.Add(wheel);
     }
+
+    // The original constructor value above survives only until the loaded
+    // wheel surfaces are scanned. Mirror the resulting Stadium runtime state.
+    m_field_0x840 = TmForeverPhysicsConstants::kStadiumWheelbase;
 }
 
 CSceneVehicleCar::~CSceneVehicleCar() {}
@@ -72,30 +149,18 @@ void* CSceneVehicleCar::_vector_deleting_destructor_(CRpcCallInternal* param_1, 
 void CSceneVehicleCar::Chunk(CFuncSegment* param_1, CClassicArchive* param_2, uint32_t param_3) {}
 
 void CSceneVehicleCar::ComputeForces(CCallbackSceneToyBroomStickComputeForces* param_1, CHmsItem* param_2, float dt) {
-    IntegrateVehicle(m_pilotCar, dt);
+    IntegrateVehicle(this, dt);
 }
 
 void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
     if (m_hmsItem == nullptr) return;
 
-    GmVec3 linSpeed(0,0,0);
-    m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
-
-    // 1. Aerodynamics (Downforce & Drag)
-    float speedSq = linSpeed.x*linSpeed.x + linSpeed.y*linSpeed.y + linSpeed.z*linSpeed.z;
-    float speed = std::sqrt(speedSq);
-    
-    // Downforce = coeff * speed^2
-    float downforceCoeff = 0.005f; // Placeholder Stadium value
-    GmVec3 downforce(0, -downforceCoeff * speedSq, 0);
-    m_hmsItem->AddForce(m_hmsItem, &downforce, nullptr);
-
-    // 2. Engine & Transmission update
+    // 1. Engine & Transmission update
     if ((m_simulationFlags & 4) != 0) {
         EngineIntegrate(pilot ? pilot : this, dt, 0.0f);
     }
 
-    // 3. Wheel speed & rotation updates
+    // 2. Wheel speed & rotation updates
     if ((m_simulationFlags & 1) != 0) {
         uint32_t wheelCount = m_wheels.GetCount();
         for (uint32_t i = 0; i < wheelCount; ++i) {
@@ -105,7 +170,7 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
         }
     }
     
-    // 4. Physical integration (Forces)
+    // 3. Physical integration (Forces)
     if ((m_simulationFlags & 2) != 0) {
         uint32_t wheelCount = m_wheels.GetCount();
         for (uint32_t i = 0; i < wheelCount; ++i) {
@@ -115,8 +180,20 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
 
     // ApplyFrictionForces(pilot, dt);
 
-    // Call the specific Stadium Car physics model
-    ComputeForcesModel3(pilot, dt);
+    // IntegrateVehicle in the fixed executable moves +0x5E8 toward the raw
+    // steer input at Tuning::SteerSpeed units per second before force dispatch.
+    const float steerSpeed = g_tuning != nullptr ? g_tuning->m_steerSpeed : 0.0f;
+    const float steerDelta = m_inputSteer - m_smoothedSteer;
+    const float maxSteerStep = steerSpeed * dt;
+    if (std::abs(steerDelta) <= maxSteerStep || maxSteerStep <= 0.0f) {
+        m_smoothedSteer = m_inputSteer;
+    } else {
+        m_smoothedSteer += std::copysign(maxSteerStep, steerDelta);
+    }
+
+    // Stadium tuning 29 is Steer06 (enum value 5), which the fixed executable
+    // dispatches to ComputeForcesModel6 at 0x7C3E80.
+    ComputeForcesModel6(pilot, dt);
 }
 
 void CSceneVehicleCar::WheelUpdateSpeedFromVehicleSpeed(SSimulationWheel* wheel, CSceneVehicleCar* pilot, float dt, float param_3) {
@@ -134,17 +211,30 @@ void CSceneVehicleCar::WheelUpdateSpeedFromVehicleSpeed(SSimulationWheel* wheel,
 }
 
 void CSceneVehicleCar::WheelIntegrate(SSimulationWheel* wheel, float dt) {
-    float targetCompression = 0.0f; 
-    float stiffness = 50000.0f;     
-    float damping = 2000.0f;        
-    
-    float force = (targetCompression - wheel->m_realTimeState.m_compression) * stiffness 
-                - wheel->m_realTimeState.m_velocity * damping;
-    
-    wheel->m_realTimeState.m_velocity += force * dt;
-    wheel->m_realTimeState.m_compression += wheel->m_realTimeState.m_velocity * dt;
-    
-    wheel->m_suspensionForce = -wheel->m_realTimeState.m_compression * stiffness;
+    if (wheel == nullptr || g_tuning == nullptr || dt <= 0.0f) return;
+
+    if (g_tuning->m_shockModel == 2) {
+        // Exact Demo03 branch at 0x7BD42E..0x7BD505. Contact absorption is
+        // accumulated in wheel +0xBC, subtracted once, then cleared. The
+        // resulting compression moves toward AbsorbingValRest at
+        // AbsorbTension units per second.
+        const float previousCompression = wheel->m_realTimeState.m_compression;
+        const float absorbedCompression =
+            previousCompression - wheel->m_realTimeState.m_absorbDelta;
+        const float compression =
+            absorbedCompression +
+            (g_tuning->m_absorbingValRest - absorbedCompression) *
+                dt * g_tuning->m_absorbTension;
+
+        wheel->m_realTimeState.m_velocity =
+            (compression - previousCompression) / dt;
+        wheel->m_realTimeState.m_compression = compression;
+        wheel->m_realTimeState.m_absorbDelta = 0.0f;
+        return;
+    }
+
+    // Other shock models have separate native branches and remain inert until
+    // their tuning fields and contact-state transforms are represented.
 }
 
 void CSceneVehicleCar::EngineIntegrate(CSceneVehicleCar* pilot, float dt, float param_2) {
@@ -186,15 +276,99 @@ void CSceneVehicleCar::EngineIntegrate(CSceneVehicleCar* pilot, float dt, float 
     // Sync engine RPM
     m_engine.m_engineRpm += (idealRPM - m_engine.m_engineRpm) * rpmResponse * dt;
 
-    // Torque curve
-    float torque = 1000.0f;
-    if (m_engine.m_engineRpm > 10000.0f) torque *= 0.5f;
-    
-    m_engineForce = torque * gearRatios[m_engine.m_currentGear] * m_engine.m_throttle;
+    // Original +0x5E8 is smoothed steering, not engine torque.  Propulsion for
+    // this physics generation comes from the tuning acceleration curves.
 }
 
-int CSceneVehicleCar::IsGroundContact() { 
-    return 0; 
+void CSceneVehicleCar::VehicleFreeWheelingSet(int enabled) {
+    m_freeWheeling = enabled;
+}
+
+int CSceneVehicleCar::IsGroundContact() {
+    // Exact control flow of TmForeverFixed.exe: return on the first wheel whose
+    // +0x124 contact flag is non-zero.
+    const uint32_t wheelCount = m_wheels.GetCount();
+    for (uint32_t i = 0; i < wheelCount; ++i) {
+        if (m_wheels[i].m_hasGroundContact != 0) return 1;
+    }
+    return 0;
+}
+
+void CSceneVehicleCar::ComputeVehicleGroundMaterialVals(
+    StadiumVehicleMaterials::GroundValues* values,
+    int* hasGroundContact) const {
+    if (values == nullptr || hasGroundContact == nullptr) return;
+
+    *values = {};
+    *hasGroundContact = 0;
+
+    const uint32_t wheelCount = m_wheels.GetCount();
+    if (wheelCount == 0) return;
+
+    uint32_t contactedWheelCount = 0;
+    for (uint32_t i = 0; i < wheelCount; ++i) {
+        if (m_wheels[i].m_hasGroundContact == 0) continue;
+
+        // Exact 0x7C2800 behavior: every contacted wheel contributes the
+        // material selected by wheel zero, rather than its own material.
+        const StadiumVehicleMaterials::Material* material =
+            StadiumVehicleMaterials::Find(m_wheels[0].m_groundMaterial);
+        if (material != nullptr) {
+            const StadiumVehicleMaterials::GroundValues contribution =
+                StadiumVehicleMaterials::ToGroundValues(*material);
+            values->speed += contribution.speed;
+            values->accelerationCoef += contribution.accelerationCoef;
+            values->brakeCoef += contribution.brakeCoef;
+            values->grip += contribution.grip;
+        }
+
+        ++contactedWheelCount;
+        *hasGroundContact = 1;
+    }
+
+    if (contactedWheelCount == 0) return;
+    const float inverseCount = 1.0f / static_cast<float>(contactedWheelCount);
+    values->speed *= inverseCount;
+    values->accelerationCoef *= inverseCount;
+    values->brakeCoef *= inverseCount;
+    values->grip *= inverseCount;
+}
+
+void CSceneVehicleCar::GetSlopeAdherence(
+    const GmVec3& force, float* lateralAdherence,
+    float* axialAdherence) const {
+    if (lateralAdherence == nullptr || axialAdherence == nullptr ||
+        g_tuning == nullptr) {
+        return;
+    }
+
+    const float squaredLength =
+        force.x * force.x + force.y * force.y + force.z * force.z;
+    // Exact 0x7BEB68 comparison: a degenerate force leaves both caller-owned
+    // defaults untouched. ComputeForces initializes those defaults to one.
+    if (squaredLength <= TmForeverPhysicsConstants::kNormalizeSquaredEpsilon) {
+        return;
+    }
+
+    const float forceLength = std::sqrt(squaredLength);
+    const float verticalRatio = std::abs(force.y / forceLength);
+    const auto mapAdherence = [verticalRatio](float minimum, float maximum) {
+        if (verticalRatio < minimum) return 0.0f;
+        if (verticalRatio > maximum) return 1.0f;
+
+        const float ratio =
+            (verticalRatio - minimum) / (maximum - minimum);
+        return 1.0f - std::cos(
+            ratio * static_cast<float>(TmForeverPhysicsConstants::kPi) *
+            0.5f);
+    };
+
+    *lateralAdherence = mapAdherence(
+        g_tuning->m_lateralSlopeAdherenceMin,
+        g_tuning->m_lateralSlopeAdherenceMax);
+    *axialAdherence = mapAdherence(
+        g_tuning->m_axialSlopeAdherenceMin,
+        g_tuning->m_axialSlopeAdherenceMax);
 }
 
 void CSceneVehicleCar::ApplyFrictionForces(CSceneVehicleCar* pilot, float dt) {
@@ -286,18 +460,12 @@ void CSceneVehicleCar::ComputeForcesModel3(CSceneVehicleCar* pilot, float dt) {
     int p11[4] = {1, 1, 1, 1};
     float p12[16] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
     
-    // 0x60c is likely has_ground_contact. Set to 1 for now.
-    *(int*)((char*)this + 0x60c) = 1;
-    this->m_field_0x600 = 0;
-    this->m_field_0x5f4 = 1.0f;
     float p11_temp[4] = {1.0f, 1.0f, 1.0f, 1.0f}; // temp
     void* p10_temp = p11_temp; // temp
     float p12_temp[4] = {1.0f, 1.0f, 1.0f, 1.0f}; // temp
     
-    printf("CALLING ComputeForcesModel3_Exact with m_inputGas=%f\n", this->m_inputGas); printf("sizeof(CSceneMobil)=%lu\n", sizeof(CSceneMobil)); printf("OFFSET m_inputGas=%lu\n", offsetof(CSceneVehicleCar, m_inputGas));
-    ComputeForcesModel3_Exact(pilot, dt, &p3, this->m_inputGas, this->m_inputBrake, &p6, &p7, this->m_inputSteer, 1, p10_temp, (int*)p11_temp, p12_temp);
+    ComputeForcesModel3_Exact(dt, &p3, this->m_inputGas, this->m_inputBrake, &p6, &p7, this->m_inputSteer, 1, p10_temp, (int*)p11_temp, p12_temp);
     
-    printf("WRAPPER: p3=(%f, %f, %f)\n", p3.x, p3.y, p3.z);
     // Apply the returned force!
     if (p3.x != 0 || p3.y != 0 || p3.z != 0) {
         GmVec3 globalForce(
@@ -309,72 +477,172 @@ void CSceneVehicleCar::ComputeForcesModel3(CSceneVehicleCar* pilot, float dt) {
     }
 }
 
-
-// Function: CSceneVehicleCar::WheelAddForceToVehicle
-// =================================================
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-void CSceneVehicleCar::WheelAddForceToVehicle(CSceneVehicleCar *param_1, void *param_2_void, void *param_3_void, void *param_4) {
-    // Forward the precisely calculated forces from ComputeForcesModel3_Exact
-    if (param_3_void && param_4) {
-        GmVec3* f = (GmVec3*)param_3_void;
-        if (f->x != 0 || f->y != 0 || f->z != 0) {
-            // printf("WheelForce: %f, %f, %f\n", f->x, f->y, f->z);
-        }
-        AddVehicleForce(this, (CSceneVehicleCar*)param_3_void, (GmVec3*)param_4, nullptr);
+void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
+    if (m_hmsItem == nullptr || g_tuning == nullptr ||
+        g_tuning->m_steerModel != 5 || !IsGroundContact()) {
+        // Airborne, water, and non-Stadium paths have not yet been separated
+        // from the old translation. Keep the prior behavior for those states
+        // while the native Model6 port advances branch by branch.
+        ComputeForcesModel3(pilot, dt);
+        return;
     }
+
+    GmVec3 linearSpeed(0.0f, 0.0f, 0.0f);
+    m_hmsItem->GetLinearSpeed(m_hmsItem, &linearSpeed);
+
+    const float c = std::cos(g_carYaw);
+    const float s = std::sin(g_carYaw);
+    const float localLateralSpeed = linearSpeed.x * c - linearSpeed.z * s;
+    const float localForwardSpeed = linearSpeed.x * s + linearSpeed.z * c;
+
+    bool hasSlippingWheel = false;
+    for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
+        hasSlippingWheel |= m_wheels[i].m_isSlipping != 0;
+    }
+
+    StadiumVehicleMaterials::GroundValues groundMaterial{};
+    int hasGroundMaterial = 0;
+    ComputeVehicleGroundMaterialVals(&groundMaterial, &hasGroundMaterial);
+
+    float lateralSlopeAdherence = 1.0f;
+    float axialSlopeAdherence = 1.0f;
+    GmVec3 worldForce(0.0f, 0.0f, 0.0f);
+    m_hmsItem->GetForce(m_hmsItem, &worldForce);
+
+    // CHmsItem::GetForce reaches CHmsDyna::GetLocalForce in the executable,
+    // which rotates the raw dynamics force by the inverse chassis transform.
+    // Reconstruct that direction basis from the harness's yaw and contact-up
+    // state before passing the vector to the exact slope function.
+    const VehicleChassisBasis chassisBasis = GetChassisBasis(*this);
+    const GmVec3 localForce = WorldToLocal(chassisBasis, worldForce);
+    GetSlopeAdherence(
+        localForce, &lateralSlopeAdherence, &axialSlopeAdherence);
+
+    // This is the currently ported ordinary-drive subset of the Model6 tail.
+    // Its curve, material coefficient, gas multiplier, and axial slope input
+    // now match the fixed executable; the other drive states remain below.
+    const bool isOrdinaryForwardDrive =
+        m_engine.m_field_0x28 == 0 &&
+        m_inputBrake == 0.0f &&
+        m_freeWheeling == 0 &&
+        m_field_0x600 == 0 &&
+        !hasSlippingWheel &&
+        localForwardSpeed >= 0.0f;
+
+    if (isOrdinaryForwardDrive) {
+        const float longitudinalForce =
+            g_tuning->M5GetAccelFromSpeed(localForwardSpeed) *
+            m_inputGas * groundMaterial.accelerationCoef *
+            axialSlopeAdherence;
+        GmVec3 localDriveForce(0.0f, 0.0f, longitudinalForce);
+        AddVehicleCentralForce(
+            this, reinterpret_cast<CSceneVehicleCar*>(&localDriveForce), nullptr);
+    } else {
+        // Reverse selection, braking, freewheeling, wheel-slip blending, and
+        // special burnout states still use the translated fallback.
+        ComputeForcesModel3(pilot, dt);
+    }
+
+    GmVec3 angularSpeed(0.0f, 0.0f, 0.0f);
+    m_hmsItem->GetAngularSpeed(m_hmsItem, &angularSpeed);
+
+    // Exact normal-ground subset at 0x7C5BE5..0x7C5EF0. Model6 evaluates the
+    // lateral velocity at each axle, including yaw velocity, and applies half
+    // of SideFriction1 per wheel. The over-limit force blend is exact; its
+    // aggregate state bookkeeping after the wheel loop remains to be ported.
+    const float halfWheelbase = 0.5f * m_field_0x840;
+    const float maxSideForce = g_tuning->GetMaxSideFrictionFromSpeed(localForwardSpeed);
+    const float steerSpeedFactor = g_tuning->GetModel6SteerSpeedFactor(localForwardSpeed);
+    const float driveTorque = g_tuning->GetSteerDriveTorqueFromSpeed(localForwardSpeed);
+    const float reverseSign = m_engine.m_field_0x28 != 0 ? -1.0f : 1.0f;
+    float lateralForceSum = 0.0f;
+    float yawTorque = 0.0f;
+
+    for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
+        const SSimulationWheel& wheel = m_wheels[i];
+        const float axleOffset = wheel.m_isSteerable != 0 ? halfWheelbase : -halfWheelbase;
+        const float axleLateralSpeed = localLateralSpeed + angularSpeed.y * axleOffset;
+        const float rawLateralForce =
+            -g_tuning->m_sideFriction1 * 0.5f * axleLateralSpeed;
+        const float lateralForce =
+            g_tuning->GetModel6SideForce(rawLateralForce, maxSideForce);
+        lateralForceSum += lateralForce;
+
+        float axleTorqueForce = g_tuning->m_steerGroundTorque * lateralForce;
+        if (wheel.m_isSteerable != 0) {
+            const float slippingCoef = wheel.m_isSlipping != 0
+                ? g_tuning->m_steerGroundTorqueSlippingCoef
+                : 1.0f;
+            // Crucially, SteerGroundTorque does not multiply the commanded
+            // steer term in the original instruction stream.
+            axleTorqueForce -= steerSpeedFactor * m_smoothedSteer *
+                               driveTorque * reverseSign * slippingCoef;
+        }
+        yawTorque += axleOffset * axleTorqueForce;
+    }
+
+    // The original obtains the translational side reaction through its wheel
+    // contact path. Apply the equivalent aggregate force while that contact
+    // projection is still represented semantically in the standalone build.
+    GmVec3 localSideForce(lateralForceSum, 0.0f, 0.0f);
+    AddVehicleCentralForce(this, reinterpret_cast<CSceneVehicleCar*>(&localSideForce), nullptr);
+    GmVec3 localTorque(0.0f, yawTorque, 0.0f);
+    AddVehicleTorque(this, reinterpret_cast<CSceneVehicleCar*>(&localTorque), nullptr);
+}
+
+
+void CSceneVehicleCar::WheelAddForceToVehicle(
+    SSimulationWheel* wheel, const GmVec3* localContactPosition) {
+    if (wheel == nullptr || localContactPosition == nullptr ||
+        g_tuning == nullptr || wheel->m_hasGroundContact == 0) {
+        return;
+    }
+
+    // Stadium uses ShockModel::Demo03 (2). At 0x7C184B..0x7C18D9 the fixed
+    // executable evaluates the spring-damper scalar in this exact order and
+    // applies it on local +Y at wheel +0xA8. The other shock-model branches
+    // remain separate because model zero has an additional tuning factor.
+    if (g_tuning->m_shockModel != 2) return;
+
+    const float suspensionForce =
+        (g_tuning->m_absorbingValRest -
+         wheel->m_realTimeState.m_compression) *
+            g_tuning->m_absorbingValKi -
+        g_tuning->m_absorbingValKa *
+            wheel->m_realTimeState.m_velocity;
+    wheel->m_suspensionForce = suspensionForce;
+
+    GmVec3 localForce(0.0f, suspensionForce, 0.0f);
+    AddVehicleForce(
+        this, reinterpret_cast<CSceneVehicleCar*>(&localForce),
+        const_cast<GmVec3*>(localContactPosition), nullptr);
 }
 
 void CSceneVehicleCar::AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3) {
     if (this->m_hmsItem) {
-        GmVec3* local_t = (GmVec3*)param_2;
-        if (local_t->x != 0 || local_t->y != 0 || local_t->z != 0) { printf("Torque: %f, %f, %f\n", local_t->x, local_t->y, local_t->z); }
-        
-        float c = std::cos(g_carYaw);
-        float s = std::sin(g_carYaw);
-        
-        GmVec3 global_t(
-            local_t->x * c + local_t->z * s,
-            local_t->y,
-            -local_t->x * s + local_t->z * c
-        );
+        const GmVec3* local_t = reinterpret_cast<const GmVec3*>(param_2);
+        const GmVec3 global_t = LocalToWorld(GetChassisBasis(*this), *local_t);
         this->m_hmsItem->AddTorque(this->m_hmsItem, &global_t);
     }
 }
 extern float g_carYaw;
 void CSceneVehicleCar::AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3) {
     if (this->m_hmsItem) {
-        GmVec3* f = (GmVec3*)param_2;
-        if (f->x != 0 || f->y != 0 || f->z != 0) { printf("CentralForce: %f, %f, %f\n", f->x, f->y, f->z); }
-        float c = std::cos(g_carYaw);
-        float s = std::sin(g_carYaw);
-        GmVec3 globalForce(
-            f->x * c + f->z * s,
-            f->y,
-            -f->x * s + f->z * c
-        );
+        const GmVec3* localForce = reinterpret_cast<const GmVec3*>(param_2);
+        const GmVec3 globalForce =
+            LocalToWorld(GetChassisBasis(*this), *localForce);
         this->m_hmsItem->AddForce(this->m_hmsItem, &globalForce, nullptr);
     }
 }
 void CSceneVehicleCar::AddVehicleForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3, GmVec3 *param_4) {
     if (this->m_hmsItem) {
-        GmVec3* local_f = (GmVec3*)param_2;
-        float c = std::cos(g_carYaw);
-        float s = std::sin(g_carYaw);
-        
-        GmVec3 global_f(
-            local_f->x * c + local_f->z * s,
-            local_f->y,
-            -local_f->x * s + local_f->z * c
-        );
+        const GmVec3* local_f = reinterpret_cast<const GmVec3*>(param_2);
+        const VehicleChassisBasis chassisBasis = GetChassisBasis(*this);
+        const GmVec3 global_f = LocalToWorld(chassisBasis, *local_f);
         
         GmVec3* p = param_3;
         if (p) {
-            GmVec3 global_p(
-                p->x * c + p->z * s,
-                p->y,
-                -p->x * s + p->z * c
-            );
+            const GmVec3 global_p = LocalToWorld(chassisBasis, *p);
             this->m_hmsItem->AddForce(this->m_hmsItem, &global_f, &global_p);
             
             GmVec3 local_torque;
@@ -382,11 +650,8 @@ void CSceneVehicleCar::AddVehicleForce(CSceneVehicleCar *param_1, CSceneVehicleC
             local_torque.y = p->z * local_f->x - p->x * local_f->z;
             local_torque.z = p->x * local_f->y - p->y * local_f->x;
             
-            GmVec3 global_torque(
-                local_torque.x * c + local_torque.z * s,
-                local_torque.y,
-                -local_torque.x * s + local_torque.z * c
-            );
+            const GmVec3 global_torque =
+                LocalToWorld(chassisBasis, local_torque);
             this->m_hmsItem->AddTorque(this->m_hmsItem, &global_torque);
         } else {
             this->m_hmsItem->AddForce(this->m_hmsItem, &global_f, nullptr);

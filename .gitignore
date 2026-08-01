@@ -33,4 +33,7 @@ Thumbs.db
 lib
 scripts/venv
 manual/build
+manual/*.tmnfcol
+manual/TrackCollisionExtractor/bin
+manual/TrackCollisionExtractor/obj
 .cache

@@ -1,6 +1,7 @@
 #include "CSceneVehicleCar.hpp"
 #include "CSceneVehicleCarTuning.hpp"
 #include "CHmsItem.hpp"
+#include "Scene/TmForeverPhysicsConstants.hpp"
 #include <cmath>
 #include <cstdint>
 extern class CSceneVehicleCarTuning* g_tuning;
@@ -48,11 +49,8 @@ inline DummyCast DUMMY_CFAST_CALL(void* ptr, DummyType, uint32_t index) {
     return DummyCast((void*)&g_ones_ptr);
 }
 
-void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, void *param_10,int *param_11,float *param_12)
+void CSceneVehicleCar::ComputeForcesModel3_Exact(float param_2,GmVec3 *param_3, float param_4,float param_5,GmVec3 *param_6,GmVec3 *param_7,float param_8,int param_9, void *param_10,int *param_11,float *param_12)
 {
-  printf("ARGS: p1=%p, p2=%f, p3=%p, p4=%f, p5=%f, p6=%p, p7=%p, p8=%f, p9=%d, p10=%p, p11=%p, p12=%p\n",
-         param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8, param_9, param_10, param_11, param_12);
-
     float fVar13=0, fVar14=0, fVar15=0, fVar19=0, fVar20=0, fStack_4=0;
     float extraout_ST0=0, extraout_ST0_00=0, extraout_ST0_01=0;
     double dVar24=0;
@@ -117,7 +115,7 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float
       uVar23 = 0;
       fVar15 = 1.1723283e-38;
       pSVar10 = pSVar7;
-      this->WheelAddForceToVehicle(this, (CSceneVehicleCar*)pSVar7, (SSimulationWheel*)(size_t)param_4, &unaff_EBP);
+      this->WheelAddForceToVehicle(pSVar7, &unaff_EBP);
       unaff_ESI = 1.1723305e-38;
       pSVar8 = DUMMY_CFAST_CALL
                          (&this->m_manoeuvres,
@@ -172,14 +170,14 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float
               fVar19 = *(float*)((char*)(size_t)pSVar7 + 0x14c) * 0.0 - *(float*)((char*)(size_t)pSVar7 + 0x144);
               fVar20 = *(float*)((char*)(size_t)pSVar7 + 0x144) * 0.0 - *(float*)((char*)(size_t)pSVar7 + 0x148) * 0.0;
               fStack_4 = fVar20 * fVar20 + fVar14 * fVar14 + fVar19 * fVar19;
-              if (fStack_4 <= 0.0001f) {
+              if (fStack_4 <= TmForeverPhysicsConstants::kNormalizeSquaredEpsilon) {
                 unaff_EBP = GmVec3(0,0,0);
                 in_stack_ffffff94 = GmVec3(0,0,0);
                 unaff_EBX = GmVec3(0,0,0);
               }
               else {
-                fVar19 = (float)(size_t)1.0f;
-                fStack_4 = 1.0 / (float)(size_t)fVar19;
+                fVar19 = std::sqrt(fStack_4);
+                fStack_4 = 1.0f / fVar19;
                 unaff_EBP = GmVec3(0,0,0);
                 unaff_EBX = GmVec3(0,0,0);
                 in_stack_ffffff94 =
@@ -209,7 +207,8 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float
                                   *(void**)((char*)(size_t)iVar9 + 0x24)
                                   ,in_stack_ffffff6c);
               pCVar3 = (CSceneVehicleCar *)(size_t)
-                       (-*(float *)(*(size_t*)(size_t)pSVar8 + 0xa4) * (float)(size_t)1.0f *
+                       (-*(float *)(*(size_t*)(size_t)pSVar8 + 0xa4) *
+                       static_cast<float>(TmForeverPhysicsConstants::kHalf) *
                        (in_stack_ffffffd0 * (float)(size_t)in_stack_ffffff98 +
                        (float)(*(size_t*)&in_stack_ffffffcc) * (float)(*(size_t*)&in_stack_ffffff94) +
                        in_stack_ffffffc8 * (float)(*(size_t*)&unaff_EBX)));
@@ -231,7 +230,6 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float
                 pCVar3 = (CSceneVehicleCar *)(size_t)
                          ((1.0 - (float)(*(size_t*)&unaff_EBP)) * (float)(size_t)0 +
                          (float)(*(size_t*)&unaff_EBP) * (float)(size_t)0);
-                param_1 = pCVar3;
               }
               if (*(int*)((char*)(size_t)pSVar7 + 300) != 0) {
                 param_11[0] = 1;
@@ -275,9 +273,9 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float
       pCVar21 = pCVar21 + 1;
     } while (pCVar21 < pCVar6);
   }
-//  if (param_9 == 0) {
-//    return;
-//  }
+  if (param_9 == 0) {
+    return;
+  }
   pCVar17 = *(void**)((char*)(size_t)g_tuning + 0x24);
   uVar16 = 0x7fac51;
   pSVar10 = DUMMY_CFAST_CALL
@@ -285,16 +283,14 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(CSceneVehicleCar *param_1,float
 //  if (*(int *)(*(size_t*)(size_t)pSVar10 + 0x354) != 1) {
 //    return;
 //  }
-  param_9 = (int)(*(float*)((char*)(size_t)param_6 + 8) * *(float*)((char*)(size_t)param_6 + 8) +
-                 *(float*)(size_t)param_6 * *(float*)(size_t)param_6 +
-                 *(float*)((char*)(size_t)param_6 + 4) * *(float*)((char*)(size_t)param_6 + 4));
-  fVar19 = (float)(size_t)1.0f;
-  param_9 = (int)(float)(size_t)fVar19;
-  if ((this->m_pilotCar != nullptr ? 1 : 0) == 0) {
-    if (this->m_engine.m_field_0x30 <= (float)(size_t)param_9) {
-      if ((float)(size_t)1.0f < this->m_inputGas) goto LAB_007facea;
+  fVar19 = std::sqrt(param_6->x * param_6->x +
+                     param_6->y * param_6->y +
+                     param_6->z * param_6->z);
+  if (this->m_freeWheeling == 0) {
+    if (this->m_engine.m_field_0x30 <= fVar19) {
+      if (static_cast<float>(TmForeverPhysicsConstants::kInputThreshold) < this->m_inputGas) goto LAB_007facea;
     }
-    else if (this->m_inputBrake <= (float)(size_t)1.0f) {
+    else if (this->m_inputBrake <= static_cast<float>(TmForeverPhysicsConstants::kInputThreshold)) {
 LAB_007facea:
       this->m_engine.m_field_0x28 = 0;
     }
@@ -318,7 +314,7 @@ LAB_007facea:
       else {
         fVar13 = this->m_field_0x840;
       }
-      fVar13 = fVar13 * (float)(size_t)1.0f;
+      fVar13 = fVar13 * static_cast<float>(TmForeverPhysicsConstants::kHalf);
       iVar1 = (size_t)g_tuning;
       in_stack_ffffffc8 = fVar13 * *(float*)((char*)(size_t)param_10 + 4) + *(float*)(size_t)pGVar5;
       in_stack_ffffffcc = GmVec3(0,0,0);
@@ -330,9 +326,11 @@ LAB_007facea:
                            (uint32_t)(*(size_t*)&in_stack_ffffff94));
       param_12 = (float*)(size_t)*(float*)(*(size_t*)(size_t)pSVar10 + 0x74);
       if ((float)(size_t)00 <= (float)(size_t)02) {
-        *(float*)&param_12 = (((float)(size_t)00 / (float)(size_t)02) * (float)(size_t)1.0f *
-                            (float)(size_t)1.0f);
-        extraout_ST0_00 = std::sin(0.0f); extraout_ST0_01 = std::sin(0.0f);
+        *(float*)&param_12 = (((float)(size_t)00 / (float)(size_t)02) *
+                             static_cast<float>(TmForeverPhysicsConstants::kPi) *
+                             static_cast<float>(TmForeverPhysicsConstants::kHalf));
+        extraout_ST0_00 = std::sin(*(float*)&param_12);
+        extraout_ST0_01 = extraout_ST0_00;
         pfVar22 = (float *)(size_t)(float)(size_t)extraout_ST0_01;
         param_12 = pfVar22;
       }
@@ -353,7 +351,8 @@ LAB_007facea:
       pSVar10 = DUMMY_CFAST_CALL
                           ((void *)(iVar1 + 0x14),pCVar21,(uint32_t)(size_t)in_stack_ffffffa0);
       in_stack_0000003c =
-           (int *)(size_t)(-*(float *)(*(size_t*)(size_t)pSVar10 + 0xa4) * (float)(size_t)1.0f *
+           (int *)(size_t)(-*(float *)(*(size_t*)(size_t)pSVar10 + 0xa4) *
+                  static_cast<float>(TmForeverPhysicsConstants::kHalf) *
                   ((float)(*(size_t*)&in_stack_ffffffe0) * 0.0 + in_stack_ffffffd8 + in_stack_ffffffdc * 0.0));
       in_stack_ffffffb8 = std::abs(*(float*)&in_stack_0000003c);
       if (in_stack_00000040 < in_stack_ffffffb8) {
@@ -411,7 +410,7 @@ LAB_007facea:
       pCVar17 = (void*)0;
       param_9 = (int)fStack_18;
       fStack_14 = fStack_18;
-      printf("STEER TORQUE: %f\n", fStack_c); GmVec3 torque2(fStack_10, fStack_c, fStack_8);
+      GmVec3 torque2(fStack_10, fStack_c, fStack_8);
       this->AddVehicleTorque(this, (CSceneVehicleCar*)&torque2, nullptr);
       in_stack_ffffffa8 = (float)(size_t)(dVar24,0);
       dVar24 = (double)(size_t)(uint64_t)(size_t)(iVar9,(int)((uint64_t)(size_t)dVar24 >> 0x20));
@@ -435,7 +434,9 @@ LAB_007facea:
                        *(void**)((char*)(size_t)iVar9 + 0x24),
                        (uint32_t)(size_t)in_stack_ffffffa0);
   in_stack_0000003c =
-       (int *)(size_t)std::abs(*(float *)(*(size_t*)(size_t)pSVar10 + 0xa4) * (float)(size_t)1.0f * *(float*)(size_t)pGVar5);
+       (int *)(size_t)std::abs(*(float *)(*(size_t*)(size_t)pSVar10 + 0xa4) *
+                              static_cast<float>(TmForeverPhysicsConstants::kHalf) *
+                              *(float*)(size_t)pGVar5);
   if ((float)(size_t)01 < *(float*)&in_stack_0000003c) {
     in_stack_0000003c = param_11;
   }
@@ -457,7 +458,7 @@ LAB_007facea:
     in_stack_00000048 = 0.0;
   }
   else {
-    in_stack_00000048 = 1.0f;
+    in_stack_00000048 = TmForeverPhysicsConstants::kNegativeOne;
   }
   if (this->m_field_0x600 == 0) {
     in_stack_00000038 = 0.0;
@@ -469,16 +470,15 @@ LAB_007facea:
            (this->m_inputGas * *(float *)((char*)(size_t)param_7 + 4) +
             in_stack_00000048 * *(float *)((char*)(size_t)param_7 + 4) * this->m_inputBrake +
            in_stack_00000038);
-  if ((this->m_pilotCar != nullptr ? 1 : 0) != 0) {
+  if (this->m_freeWheeling != 0) {
     if (this->m_field_0x600 == 0) {
-      // fVar15 = 0; // STUBBED! Let Gas work!
+      fVar15 = 0.0f;
     }
     else {
-      // fVar15 = in_stack_00000040 * this->m_field_0x5f4; // STUBBED!
+      fVar15 = in_stack_00000040 * this->m_field_0x5f4;
     }
   }
   in_stack_00000040 = fVar15;
-  printf("DEBUG GAS: gas=%f, fVar15=%f, m_engineForce=%f\n", *(float*)((char*)(size_t)this + 0x50), fVar15, this->m_engineForce);
   in_stack_00000048 = 0.0;
   if (0.0 < *(float*)((char*)(size_t)pGVar5 + 8)) {
     iVar9 = (size_t)g_tuning;
@@ -523,8 +523,7 @@ LAB_007facea:
     }
   }
   if (*(float*)((char*)(size_t)pGVar5 + 8) < 0.0) {
-    printf("PILOT_CAR=%p\n", this->m_pilotCar);
-    if ((this->m_pilotCar != nullptr ? 1 : 0) == 0) goto LAB_007fb44c;
+    if (this->m_freeWheeling == 0) goto LAB_007fb44c;
     iVar9 = (size_t)g_tuning;
     pSVar10 = DUMMY_CFAST_CALL
                         ((void *)(iVar9 + 0x14),
@@ -535,11 +534,9 @@ LAB_007facea:
                      ((void *)(iVar9 + 0x14),
                       *(void**)((char*)(size_t)iVar9 + 0x24),
                       (uint32_t)(*(size_t*)&in_stack_ffffffc4));
-  printf("DEBUG: Before 60: pSVar10+0x40=%f, pSVar7+0x44=%f, pGVar5+8=%f, this+0x50=%f\n", *(float *)(*(size_t*)(size_t)pSVar10 + 0x40), *(float *)(*(size_t*)(size_t)pSVar7 + 0x44), *(float*)((char*)(size_t)pGVar5 + 8), this->m_inputGas);
   in_stack_00000060 =
        (*(float *)(*(size_t*)(size_t)pSVar10 + 0x40) -
        *(float *)(*(size_t*)(size_t)pSVar7 + 0x44) * *(float*)((char*)(size_t)pGVar5 + 8)) * this->m_inputGas;
-  printf("DEBUG: After 60: in_stack_00000060=%f\n", in_stack_00000060);
   if (param_11[0] == 0) {
       in_stack_ffffffc4 = *(void**)((char*)(size_t)iVar9 + 0x24);
       in_stack_ffffffc0 = 1.17275e-38;
@@ -554,7 +551,6 @@ LAB_007facea:
                           ((void *)(iVar9 + 0x14),in_stack_ffffffc4,(uint32_t)(*(size_t*)&in_stack_ffffffc8));
       in_stack_00000070 = *(float *)(*(size_t*)(size_t)pSVar10 + 0x48);
     }
-    printf("DEBUG: Before mult: in_stack_00000070=%f, param_11[2]=%f\n", in_stack_00000070, ((float*)param_11)[2]);
     in_stack_00000070 = ((float*)param_11)[2] * in_stack_00000070;
     if (in_stack_00000070 < in_stack_00000064[0]) {
       in_stack_00000064[0] = in_stack_00000070;
@@ -571,8 +567,8 @@ LAB_007facea:
     }
     in_stack_00000058 = -in_stack_00000058;
   }
-  if (((this->m_pilotCar != nullptr ? 1 : 0) != 0) && (std::abs(*(float*)((char*)(size_t)pGVar5 + 8)) < 1.0)) {
-    // in_stack_00000058 = std::abs(*(float*)((char*)(size_t)pGVar5 + 8)) * in_stack_00000058;
+  if ((this->m_freeWheeling != 0) && (std::abs(*(float*)((char*)(size_t)pGVar5 + 8)) < 1.0)) {
+    in_stack_00000058 = std::abs(*(float*)((char*)(size_t)pGVar5 + 8)) * in_stack_00000058;
   }
 LAB_007fb44c:
   in_stack_00000068 = in_stack_00000058;
@@ -588,7 +584,6 @@ LAB_007fb44c:
                        (uint32_t)(*(size_t*)&in_stack_ffffffc0));
   pfVar22 = &in_stack_00000064[0];
   float final_force_z = in_stack_00000064[0];
-  printf("DEBUG: final_force_z=%f, m_engineForce=%f, in_stack_00000064[0]=%f\n", final_force_z, this->m_engineForce, in_stack_00000064[0]);
   pSVar10 = DUMMY_CFAST_CALL
                       ((void *)(iVar9 + 0x14),
                        *(void**)((char*)(size_t)iVar9 + 0x24),
@@ -602,7 +597,6 @@ LAB_007fb44c:
     final_force_z = 0.0;
   }
   in_stack_00000064[1] = in_stack_00000070 * in_stack_00000058;
-  printf("DEBUG FORCES: m_engineForce=%f, param_6->z=%.10f, in_stack_00000058=%f, in_stack_00000070=%f, final_force_z=%f\n", this->m_engineForce, *(float*)((char*)(size_t)pGVar5 + 8), in_stack_00000058, in_stack_00000070, final_force_z);
   param_12 = (float *)0x0;
   in_stack_00000070 = in_stack_00000064[1];
   if (param_8 != 0.0) {
@@ -629,7 +623,6 @@ LAB_007fb44c:
                       ((void *)(iVar9 + 0x14),
                        *(void**)((char*)(size_t)iVar9 + 0x24),
                        (uint32_t)(size_t)in_stack_ffffffdc);
-  printf("DEBUG FORCES 2: in_stack_00000050=%f, in_stack_00000058=%f, in_stack_00000064[0]=%f, final_force_z=%f\n", in_stack_00000050, in_stack_00000058, in_stack_00000064[0], final_force_z);
   pSVar7 = DUMMY_CFAST_CALL
                      ((void *)(iVar9 + 0x14),
                       *(void**)((char*)(size_t)iVar9 + 0x24),

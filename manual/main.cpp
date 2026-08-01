@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <limits>
 #include "Scene/CSceneVehicleCar.hpp"
 
 #include "CHmsCorpus.hpp"
@@ -19,9 +20,10 @@
 #include "Gm/GmIso4.hpp"
 #include "Gm/GmSurf.hpp"
 #include "Scene/CSceneVehicleCarTuning.hpp"
+#include "Scene/TmForeverPhysicsConstants.hpp"
+#include "Scene/VehicleGroundSupport.hpp"
 #include "Game/CGameCtnReplayRecord.hpp"
 #include "Classic/CClassicArchive.hpp"
-#include "Plug/CPlugSurfaceGeom.hpp"
 #include "Plug/CPlugSolid.hpp"
 
 class CSceneVehicleCarTuning;
@@ -79,6 +81,19 @@ struct DesyncResult {
 };
 
 int main(int argc, char* argv[]) {
+    bool traceInputs = false;
+    bool traceForces = false;
+    std::string collisionPath = "a01_collision.tmnfcol";
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--trace-inputs") == 0) {
+            traceInputs = true;
+        } else if (std::strcmp(argv[i], "--trace-forces") == 0) {
+            traceForces = true;
+        } else if (std::strncmp(argv[i], "--collision=", 12) == 0) {
+            collisionPath = argv[i] + 12;
+        }
+    }
+
     std::cout << "============================================================" << std::endl;
     std::cout << " TMNF Physics 1:1 Desync Test - A01-Race" << std::endl;
     std::cout << "============================================================" << std::endl;
@@ -93,14 +108,17 @@ int main(int argc, char* argv[]) {
     std::cout << "Ghost start: (" << ghostSamples[0].x << ", " << ghostSamples[0].y << ", " << ghostSamples[0].z << ")" << std::endl;
     std::cout << "Ghost end:   (" << ghostSamples.back().x << ", " << ghostSamples.back().y << ", " << ghostSamples.back().z << ")" << std::endl;
 
-    // 2. Load Track Collision Mesh
-    CPlugSurfaceGeom* geom = CPlugSurfaceGeom::LoadFromGbx("../steamdata/GameData/Stadium_Extracted/Stadium/Media/Solid/03087AFCAF9BD557046938047A36D3614B");
-    if (!geom || !geom->m_mesh) {
-        std::cerr << "Failed to load physics mesh!" << std::endl;
+    // 2. Load the exact collision surfaces selected by the A01 challenge's
+    // block variants. Generate this standalone cache with
+    // ./export_a01_collision.sh after installing/restoring the extractor.
+    GmSurfMesh worldMesh;
+    if (!worldMesh.LoadFromTmnfCollision(collisionPath)) {
+        std::cerr << "Failed to load A01 collision cache: " << collisionPath << '\n'
+                  << "Run ./export_a01_collision.sh first." << std::endl;
         return 1;
     }
-    std::cout << "Track mesh: " << geom->m_mesh->m_vertices.m_count << " verts, "
-              << geom->m_mesh->m_triangles.m_count << " tris" << std::endl;
+    std::cout << "Track mesh: " << worldMesh.m_vertices.m_count << " verts, "
+              << worldMesh.m_triangles.m_count << " tris" << std::endl;
 
     // 3. Load Replay Inputs
     CClassicArchive* replayArchive = CClassicArchive::LoadFromGbx(
@@ -116,7 +134,10 @@ int main(int argc, char* argv[]) {
     }
     replay->Chunk(nullptr, replayArchive, 0x03092019);
     std::cout << "Loaded " << replay->m_events.size() << " input events" << std::endl;
-    for (int i=0; i<std::min(5, (int)replay->m_events.size()); i++) {
+    const int eventPreviewCount = traceInputs
+        ? static_cast<int>(replay->m_events.size())
+        : std::min(5, static_cast<int>(replay->m_events.size()));
+    for (int i = 0; i < eventPreviewCount; ++i) {
         printf("Ev[%d] t=%u ctrl=%u val=%u\n", i, replay->m_events[i].time, replay->m_events[i].controlIdx, replay->m_events[i].value);
     }
 
@@ -196,6 +217,8 @@ int main(int argc, char* argv[]) {
     float maxError = 0.0f;
     float firstDesyncTime = -1.0f;
     const float DESYNC_THRESHOLD = 1.0f; // 1 meter = definite desync
+    GmIso4 worldMeshTransform;
+    worldMeshTransform.SetIdentity();
 
     std::cout << "\n============================================================" << std::endl;
     std::cout << " Starting Desync Test (threshold=" << DESYNC_THRESHOLD << "m)" << std::endl;
@@ -205,9 +228,68 @@ int main(int argc, char* argv[]) {
     std::ofstream logFile("desync_log.csv");
     logFile << "time_ms,ghost_x,ghost_y,ghost_z,ghost_spd,sim_x,sim_y,sim_z,sim_spd,err_x,err_y,err_z,err_total" << std::endl;
 
+    auto compareWithGhost = [&](uint32_t raceTimeMs) {
+        if (raceTimeMs % 100 != 0 || ghostSampleIdx >= (int)ghostSamples.size()) return;
+
+        while (ghostSampleIdx < (int)ghostSamples.size() - 1 &&
+               ghostSamples[ghostSampleIdx].time_ms < raceTimeMs) {
+            ghostSampleIdx++;
+        }
+        if (ghostSamples[ghostSampleIdx].time_ms != raceTimeMs) return;
+
+        const GhostSample& gs = ghostSamples[ghostSampleIdx];
+        const float errX = g_stub_pos.x - gs.x;
+        const float errY = g_stub_pos.y - gs.y;
+        const float errZ = g_stub_pos.z - gs.z;
+        const float errTotal = std::sqrt(errX * errX + errY * errY + errZ * errZ);
+
+        GmVec3 simVel;
+        item->GetLinearSpeed(item, &simVel);
+        const float simSpeed = std::sqrt(
+            simVel.x * simVel.x + simVel.y * simVel.y + simVel.z * simVel.z) * 3.6f;
+
+        logFile << raceTimeMs << ","
+                << gs.x << "," << gs.y << "," << gs.z << "," << gs.speed_kmh << ","
+                << g_stub_pos.x << "," << g_stub_pos.y << "," << g_stub_pos.z << "," << simSpeed << ","
+                << errX << "," << errY << "," << errZ << "," << errTotal << std::endl;
+
+        if (errTotal > maxError) maxError = errTotal;
+
+        const bool shouldPrint = (raceTimeMs <= 2000 && raceTimeMs % 100 == 0) ||
+                                 (raceTimeMs % 1000 == 0) ||
+                                 (errTotal > DESYNC_THRESHOLD && firstDesyncTime < 0);
+        if (shouldPrint) {
+            std::cout << std::fixed << std::setprecision(3)
+                      << "T=" << std::setw(6) << raceTimeMs << "ms"
+                      << " | Ghost=(" << std::setw(8) << gs.x << "," << std::setw(8) << gs.y << "," << std::setw(8) << gs.z << ")"
+                      << " | Sim=(" << std::setw(8) << g_stub_pos.x << "," << std::setw(8) << g_stub_pos.y << "," << std::setw(8) << g_stub_pos.z << ")"
+                      << " | Err=" << std::setw(8) << errTotal << "m"
+                      << " | Spd G=" << std::setw(6) << gs.speed_kmh << " S=" << std::setw(6) << simSpeed;
+
+            if (errTotal > DESYNC_THRESHOLD) {
+                std::cout << " *** DESYNC ***";
+                if (firstDesyncTime < 0) firstDesyncTime = raceTimeMs / 1000.0f;
+            }
+            std::cout << std::endl;
+        }
+
+        DesyncResult dr;
+        dr.time_ms = raceTimeMs;
+        dr.error_x = errX; dr.error_y = errY; dr.error_z = errZ;
+        dr.error_total = errTotal;
+        dr.ghost_x = gs.x; dr.ghost_y = gs.y; dr.ghost_z = gs.z;
+        dr.sim_x = g_stub_pos.x; dr.sim_y = g_stub_pos.y; dr.sim_z = g_stub_pos.z;
+        dr.ghost_speed = gs.speed_kmh; dr.sim_speed = simSpeed;
+        desyncLog.push_back(dr);
+    };
+
     for (int t = 0; t < maxSteps; ++t) {
         uint32_t currentSimTimeMs = raceStartMs + (t * 10);
         uint32_t raceTimeMs = t * 10;
+
+        // The state at loop entry is the state at raceTimeMs. Compare before
+        // integrating the frame from raceTimeMs to raceTimeMs + 10.
+        compareWithGhost(raceTimeMs);
 
         // CLEAR FORCES from previous frame!
         g_stub_forces = GmVec3(0, 0, 0);
@@ -238,140 +320,166 @@ int main(int argc, char* argv[]) {
         // Physics step
         GmVec3 zero(0, 0, 0);
         item->SetForce(item, &zero);
-        // Add proper gravity (9.81 * Mass * GravityCoef) where Mass=1500, GravityCoef=3
-        // GmVec3 gravity(0, -9.81f * 1500.0f * 3.0f, 0);
-        // item->AddForce(item, &gravity, nullptr);
+        // Query each exact Stadium wheel surface independently. The original
+        // contact system works at these solid-node transforms; a center ray
+        // incorrectly gave all four wheels the same contact and material.
+        const VehicleChassisBasis queryBasis =
+            BuildVehicleChassisBasis(car->m_chassisUp, g_carYaw);
+        GmVec3 groundNormal(0.0f, 0.0f, 0.0f);
+        float supportedRootY = -std::numeric_limits<float>::infinity();
+        int groundedWheelCount = 0;
+        bool wheelGroundFound[TmForeverPhysicsConstants::kStadiumWheelCount] = {};
+        float wheelGroundY[TmForeverPhysicsConstants::kStadiumWheelCount] = {};
+        float wheelTireGap[TmForeverPhysicsConstants::kStadiumWheelCount] = {};
+        GmVec3 wheelGroundNormals[TmForeverPhysicsConstants::kStadiumWheelCount] = {};
+        VehicleWheelGroundSample supportSamples[
+            TmForeverPhysicsConstants::kStadiumWheelCount] = {};
+        const int wheelCount = std::min(
+            static_cast<int>(car->m_wheels.GetCount()),
+            TmForeverPhysicsConstants::kStadiumWheelCount);
 
-        car->IntegrateVehicle(nullptr, dt);
-        dyna->Integrate(dt);
-        // dyna->Move(dt);
+        for (int w = 0; w < wheelCount; ++w) {
+            CSceneVehicleCar::SSimulationWheel& wheel = car->m_wheels[w];
+            const float localX = TmForeverPhysicsConstants::kStadiumWheelLocalX[w];
+            const float localY = TmForeverPhysicsConstants::kStadiumWheelLocalY[w];
+            const float localZ = TmForeverPhysicsConstants::kStadiumWheelLocalZ[w];
+            const GmVec3 localWheelCenter(localX, localY, localZ);
+            const GmVec3 wheelOffset =
+                queryBasis.right * localX + queryBasis.up * localY +
+                queryBasis.forward * localZ;
+            const GmVec3 wheelCenter = g_stub_pos + wheelOffset;
 
-        // Physics step handled by IntegrateVehicle -> ComputeForcesModel3
+            const GmVec3 rayPosition = wheelCenter + GmVec3(0.0f, 0.25f, 0.0f);
+            const GmVec3 rayDirection(
+                0.0f, -(wheel.m_radius + 0.75f), 0.0f);
+            float groundHitT = 1.0f;
+            GmVec3 wheelGroundNormal(0.0f, 1.0f, 0.0f);
+            const bool foundGround = worldMesh.ClipSegment2(
+                rayPosition, rayDirection, worldMeshTransform,
+                groundHitT, wheelGroundNormal) != 0;
+            const float groundY = foundGround
+                ? rayPosition.y + rayDirection.y * groundHitT
+                : -std::numeric_limits<float>::infinity();
+            const float tireGap = wheelCenter.y - wheel.m_radius - groundY;
+            const bool wheelOnGround =
+                foundGround && tireGap <= 0.02f && tireGap >= -0.5f;
+            wheelGroundFound[w] = foundGround;
+            wheelGroundY[w] = groundY;
+            wheelTireGap[w] = tireGap;
+            wheelGroundNormals[w] = wheelGroundNormal;
+            supportSamples[w].usable =
+                foundGround && tireGap <= tuning->m_absorbingValRest &&
+                tireGap >= -0.5f;
+            supportSamples[w].groundPoint =
+                GmVec3(wheelCenter.x, groundY, wheelCenter.z);
+            supportSamples[w].localWheelCenter = localWheelCenter;
+            supportSamples[w].radius = wheel.m_radius;
 
-        // Ground collision (use closest ghost sample Y)
-        float groundY = 89.71f;
-        float minDistSq = 1e9f;
-        GmVec3 ghostDir(1, 0, 0); // default
-        int closestIdx = 0;
-        for (int i = 0; i < ghostSamples.size(); ++i) {
-            const auto& gs = ghostSamples[i];
-            float dx = g_stub_pos.x - gs.x;
-            float dz = g_stub_pos.z - gs.z;
-            float distSq = dx*dx + dz*dz;
-            if (distSq < minDistSq) {
-                minDistSq = distSq;
-                groundY = gs.y - 0.5f; // Ghost Y is car center, so ground is ~0.5m below
-                closestIdx = i;
+            uint16_t groundMaterial = 0xffff;
+            if (foundGround) {
+                float materialHitT = 1.0f;
+                worldMesh.ClipSegment3(
+                    rayPosition, rayDirection, worldMeshTransform,
+                    materialHitT, groundMaterial);
+            }
+            wheel.m_hasGroundContact = wheelOnGround ? 1 : 0;
+            wheel.m_groundMaterial = groundMaterial;
+
+            if (wheelOnGround) {
+                ++groundedWheelCount;
+                groundNormal += wheelGroundNormal;
+                supportedRootY = std::max(
+                    supportedRootY, groundY + wheel.m_radius - localY);
             }
         }
-        
-        // Calculate slope from ghost trajectory
-        // Use a window of +-3 samples to smooth it out and ignore the spawn fall
-        if (closestIdx >= 3 && closestIdx < ghostSamples.size() - 3) {
-            GmVec3 pPrev(ghostSamples[closestIdx-3].x, ghostSamples[closestIdx-3].y, ghostSamples[closestIdx-3].z);
-            GmVec3 pNext(ghostSamples[closestIdx+3].x, ghostSamples[closestIdx+3].y, ghostSamples[closestIdx+3].z);
-            ghostDir.x = pNext.x - pPrev.x;
-            ghostDir.y = pNext.y - pPrev.y;
-            ghostDir.z = pNext.z - pPrev.z;
-            float mag = std::sqrt(ghostDir.x*ghostDir.x + ghostDir.y*ghostDir.y + ghostDir.z*ghostDir.z);
-            if (mag > 0.001f) {
-                ghostDir.x /= mag; ghostDir.y /= mag; ghostDir.z /= mag;
-            }
-        } else {
-            ghostDir = GmVec3(1, 0, 0); // Flat at the very beginning and very end
-        }
 
-        // Only apply gravity if we are actually moving and past the drop-in phase (t > 0.3s)
-        GmVec3 slopeForce(0, 0, 0);
-        if (raceTimeMs > 300) {
-            GmVec3 gravity(0, -29.43f, 0); // 9.81 * Mass(1) * GravityCoef(3)
-            float forceForward = gravity.x * ghostDir.x + gravity.y * ghostDir.y + gravity.z * ghostDir.z;
-            slopeForce = GmVec3(ghostDir.x * forceForward, ghostDir.y * forceForward, ghostDir.z * forceForward);
+        const bool onGround = groundedWheelCount != 0;
+        if (onGround) groundNormal.Normalize();
+        else groundNormal = GmVec3(0.0f, 1.0f, 0.0f);
+        const VehicleGroundSupportResult support = ComputeVehicleGroundSupport(
+            supportSamples, wheelCount, g_carYaw);
+        if (onGround && support.valid) {
+            // This semantic support reconstruction lets the chassis pitch and
+            // roll across axle transitions while the native ellipsoid-contact
+            // impulse path is still being ported. Strict wheel contact flags
+            // above continue to drive the original Model6 branches.
+            groundNormal = support.basis.up;
+            supportedRootY = support.rootY;
         }
-        
-        // Add it to the item's force
-        item->AddForce(item, &slopeForce, nullptr);
+        car->m_chassisUp = groundNormal;
 
-        float carCenterHeight = 0.5f;
-        bool onGround = (g_stub_pos.y <= groundY + carCenterHeight + 0.5f);
-        
-        for (int w = 0; w < 4 && w < (int)car->m_wheels.GetCount(); ++w) {
-            car->m_wheels[w].m_hasGroundContact = onGround ? 1 : 0;
-            if (onGround) car->m_wheels[w].m_realTimeState.m_compression = 0.5f;
-        }
-
+        const float mass = tuning->m_mass;
+        GmVec3 gravityForce(
+            0.0f,
+            TmForeverPhysicsConstants::kDefaultUniformGravity *
+                tuning->m_gravityCoef * mass,
+            0.0f);
+        GmVec3 groundReaction(0.0f, 0.0f, 0.0f);
         if (onGround) {
             GmVec3 currentVelTmp;
             item->GetLinearSpeed(item, &currentVelTmp);
-            if (g_stub_pos.y < groundY + carCenterHeight) {
-                g_stub_pos.y = groundY + carCenterHeight;
-                if (currentVelTmp.y < 0) {
-                    currentVelTmp.y = 0;
-                    item->SetLinearSpeed(item, &currentVelTmp);
-                }
+            g_stub_pos.y = supportedRootY;
+            const GmVec3 resolvedVelocity =
+                RemoveInwardSupportVelocity(currentVelTmp, groundNormal);
+            if (resolvedVelocity.x != currentVelTmp.x ||
+                resolvedVelocity.y != currentVelTmp.y ||
+                resolvedVelocity.z != currentVelTmp.z) {
+                currentVelTmp = resolvedVelocity;
+                item->SetLinearSpeed(item, &currentVelTmp);
             }
+
+            // Keep full gravity visible to the vehicle callback. Native
+            // CHmsDyna rotates this force into chassis space before
+            // GetSlopeAdherence; the collision reaction is accumulated after
+            // the callback so the final net force remains road-tangential.
+            const float normalGravity = GmVec3::Dot(gravityForce, groundNormal);
+            groundReaction = groundNormal * -normalGravity;
+        }
+        item->AddForce(item, &gravityForce, nullptr);
+
+        // Contact state and the frame's pre-existing environment force must
+        // be available when the vehicle callback runs. ComputeForces in the
+        // fixed executable consumes both to select Model6 ground branches and
+        // to derive slope adherence; dispatching before this query left every
+        // wheel one frame stale in the standalone harness.
+        car->IntegrateVehicle(nullptr, dt);
+        // PhysicsStep2 performs the frame's single velocity integration and
+        // move after all vehicle and environment forces are accumulated.
+        // Calling Integrate here used to apply angular fluid damping twice.
+        item->AddForce(item, &groundReaction, nullptr);
+
+        if (traceForces && raceTimeMs % 100 == 0) {
+            GmVec3 traceVelocity;
+            item->GetLinearSpeed(item, &traceVelocity);
+            std::cout << "ForceTrace t=" << raceTimeMs
+                      << " pos=(" << g_stub_pos.x << ',' << g_stub_pos.y << ',' << g_stub_pos.z << ')'
+                      << " vel=(" << traceVelocity.x << ',' << traceVelocity.y << ',' << traceVelocity.z << ')'
+                      << " force=(" << g_stub_forces.x << ',' << g_stub_forces.y << ',' << g_stub_forces.z << ')'
+                      << " normal=(" << groundNormal.x << ',' << groundNormal.y << ',' << groundNormal.z << ')'
+                      << " groundedWheels=" << groundedWheelCount
+                      << " materials=[";
+            for (int w = 0; w < wheelCount; ++w) {
+                if (w != 0) std::cout << ',';
+                std::cout << car->m_wheels[w].m_groundMaterial;
+            }
+            std::cout << "] wheels=[";
+            for (int w = 0; w < wheelCount; ++w) {
+                if (w != 0) std::cout << ';';
+                std::cout << w << ':';
+                if (!wheelGroundFound[w]) {
+                    std::cout << "miss";
+                    continue;
+                }
+                std::cout << "y=" << wheelGroundY[w]
+                          << ",gap=" << wheelTireGap[w]
+                          << ",n=(" << wheelGroundNormals[w].x << ','
+                          << wheelGroundNormals[w].y << ','
+                          << wheelGroundNormals[w].z << ')';
+            }
+            std::cout << "]\n";
         }
 
         zoneDyn->PhysicsStep2();
-
-        // Compare with ghost at 100ms intervals
-        if (raceTimeMs % 100 == 0 && ghostSampleIdx < (int)ghostSamples.size()) {
-            // Find matching ghost sample
-            while (ghostSampleIdx < (int)ghostSamples.size() - 1 &&
-                   ghostSamples[ghostSampleIdx].time_ms < raceTimeMs) {
-                ghostSampleIdx++;
-            }
-
-            if (ghostSamples[ghostSampleIdx].time_ms == raceTimeMs) {
-                const GhostSample& gs = ghostSamples[ghostSampleIdx];
-
-                float errX = g_stub_pos.x - gs.x;
-                float errY = g_stub_pos.y - gs.y;
-                float errZ = g_stub_pos.z - gs.z;
-                float errTotal = std::sqrt(errX * errX + errY * errY + errZ * errZ);
-
-                GmVec3 simVel;
-                item->GetLinearSpeed(item, &simVel);
-                float simSpeed = std::sqrt(simVel.x*simVel.x + simVel.y*simVel.y + simVel.z*simVel.z) * 3.6f;
-
-                // Log to CSV
-                logFile << raceTimeMs << ","
-                        << gs.x << "," << gs.y << "," << gs.z << "," << gs.speed_kmh << ","
-                        << g_stub_pos.x << "," << g_stub_pos.y << "," << g_stub_pos.z << "," << simSpeed << ","
-                        << errX << "," << errY << "," << errZ << "," << errTotal << std::endl;
-
-                if (errTotal > maxError) maxError = errTotal;
-
-                // Print at key intervals
-                bool shouldPrint = (raceTimeMs <= 2000 && raceTimeMs % 100 == 0) ||
-                                   (raceTimeMs % 1000 == 0) ||
-                                   (errTotal > DESYNC_THRESHOLD && firstDesyncTime < 0);
-
-                if (shouldPrint) {
-                    std::cout << std::fixed << std::setprecision(3)
-                              << "T=" << std::setw(6) << raceTimeMs << "ms"
-                              << " | Ghost=(" << std::setw(8) << gs.x << "," << std::setw(8) << gs.y << "," << std::setw(8) << gs.z << ")"
-                              << " | Sim=(" << std::setw(8) << g_stub_pos.x << "," << std::setw(8) << g_stub_pos.y << "," << std::setw(8) << g_stub_pos.z << ")"
-                              << " | Err=" << std::setw(8) << errTotal << "m"
-                              << " | Spd G=" << std::setw(6) << gs.speed_kmh << " S=" << std::setw(6) << simSpeed;
-
-                    if (errTotal > DESYNC_THRESHOLD) {
-                        std::cout << " *** DESYNC ***";
-                        if (firstDesyncTime < 0) firstDesyncTime = raceTimeMs / 1000.0f;
-                    }
-                    std::cout << std::endl;
-                }
-
-                DesyncResult dr;
-                dr.time_ms = raceTimeMs;
-                dr.error_x = errX; dr.error_y = errY; dr.error_z = errZ;
-                dr.error_total = errTotal;
-                dr.ghost_x = gs.x; dr.ghost_y = gs.y; dr.ghost_z = gs.z;
-                dr.sim_x = g_stub_pos.x; dr.sim_y = g_stub_pos.y; dr.sim_z = g_stub_pos.z;
-                dr.ghost_speed = gs.speed_kmh; dr.sim_speed = simSpeed;
-                desyncLog.push_back(dr);
-            }
-        }
     }
 
     logFile.close();
