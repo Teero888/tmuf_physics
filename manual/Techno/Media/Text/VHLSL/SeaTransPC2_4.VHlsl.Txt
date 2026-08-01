@@ -1,0 +1,39 @@
+#include <Common.Vhlsl.txt>
+struct VS_INPUT		{
+	float4 Position	: POSITION;
+	float4 Color0	: COLOR0;
+};
+struct VS_OUTPUT		{
+	float4 HPosition: POSITION;
+	float4 Color0	: COLOR0;
+	float2 TcDuDv0	: TEXCOORD0;
+	float2 TcDuDv1	: TEXCOORD1;
+	float4 TcRefrac	: TEXCOORD2;
+	float4 TcReflec	: TEXCOORD3;
+	float2 TcFresnel: TEXCOORD4;
+};
+const float4x4	GbxVisualPrCamera;
+const float4x3	GbxVPositionToTexCrd3d2;
+const float4x3	GbxVPositionToTexCrd3d3;
+const float4x2	GbxVPositionToTexCoord4;
+const float4x3	GbxVisualToWorld;
+const float4	GbxTime;
+const float4	GbxPs1xMaxDivByMaxZInCamera;
+const float		BumpScaleUV = 0.05f;
+const float		BumpSpeedUV = 0.01;
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+	float2		TcDuDv = mul(v.Position, GbxVisualToWorld).xz*BumpScaleUV;
+	Output.HPosition	= mul(v.Position, GbxVisualPrCamera);
+	Output.Color0.rgb	= v.Color0;
+	Output.Color0.a		= 0;	// dst alpha store gloss
+	Output.TcDuDv0		= TcDuDv + frac(GbxTime.x*BumpSpeedUV);
+	Output.TcDuDv1		= TcDuDv - frac(GbxTime.x*BumpSpeedUV);
+	Output.TcRefrac		= mul(v.Position, GbxVPositionToTexCrd3d2).xyzz;
+	Output.TcRefrac		*= GbxPs1xMaxDivByMaxZInCamera;
+	Output.TcReflec		= mul(v.Position, GbxVPositionToTexCrd3d3).xyzz;
+	Output.TcReflec		*= GbxPs1xMaxDivByMaxZInCamera;
+	Output.TcFresnel	= mul(v.Position, GbxVPositionToTexCoord4);
+	return Output;
+}

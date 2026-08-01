@@ -1,0 +1,37 @@
+#include <Common.VHlsl.txt>
+struct VS_INPUT {
+	float4 Position : POSITION0;
+	float3 Normal : NORMAL0;
+	float4 Color0 : COLOR0;
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
+};
+struct VS_OUTPUT {
+	float4 Position		: POSITION0;
+	float1 Fog			: FOG;
+	float2 TcAdvert		: TEXCOORD0;
+	float2 TcMask		: TEXCOORD1;
+	float2 TcClouds		: TEXCOORD2;
+#ifdef DGbxVDefinedPC3_Shadow
+	float4 TcShadow		: TEXCOORD3;
+#endif
+};
+#define TcShadowBuffer TcShadow
+
+const float4x4 GbxVisualPrCamera;
+const float4x2 GbxVPositionToTexCoord2;
+
+DGbxVGenLoadPC3_Shadow
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT Output = (VS_OUTPUT)0;
+
+	DGbxVGenCodePC3_Shadow
+	Output.Position	= mul(v.Position, GbxVisualPrCamera);
+	Output.Fog		= dot(v.Position, GbxVisualToFogTnL);
+	Output.TcAdvert	= v.TexCoord0;
+	Output.TcMask	= v.TexCoord1;
+	Output.TcClouds	= mul(v.Position, GbxVPositionToTexCoord2);
+	return Output;
+};

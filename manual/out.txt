@@ -1,0 +1,161 @@
+TMNF Physics Reconstruction - Full Race Simulation (Real Raycast)
+===================================================================
+World mesh populated from 0x0900F004 (CPlugSurfaceGeom). Vertices: 1536, Triangles: 1606
+World mesh populated with giant floor.
+Scanning for Solid Chunk...
+Found chunk 0x09015000 (CPlugVisualIndexedTriangles)!
+Dumped solid_decompressed.bin (524263 bytes)
+Found chunk 0x03092019 via scan!
+DEBUG: eventsDuration=3605940, numNames=7, numEvents=6517
+First Event Time: 97695
+Loaded 6517 input events from replay.
+Starting simulation with 1:1 Physics Loop...
+Control Mappings: Accel=3, Brake=4, SteerR=2, SteerL=1
+Ev[0] t=97695 ctrl=3 val=1
+Ev[1] t=97700 ctrl=3 val=0
+Ev[2] t=100000 ctrl=6 val=1
+Ev[3] t=100010 ctrl=3 val=1
+Ev[4] t=106787 ctrl=2 val=1
+Ev[5] t=106993 ctrl=2 val=0
+Ev[6] t=107086 ctrl=2 val=1
+Ev[7] t=108506 ctrl=2 val=0
+Ev[8] t=108724 ctrl=2 val=1
+Ev[9] t=108802 ctrl=2 val=0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 Gas changed to 1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1

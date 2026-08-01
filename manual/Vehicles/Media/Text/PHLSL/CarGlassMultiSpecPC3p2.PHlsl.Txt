@@ -1,0 +1,119 @@
+#include <Common.PHlsl.txt>
+
+struct PS_INPUT		{
+	fpart3 NormalInW		: TEXCOORD0;
+	float3 PosInW			: TEXCOORD1;
+	float2 TcLightFromMap	: TEXCOORD2;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+
+sampler2D	MapHemiSpec;
+samplerCUBE	MapCubeInvHemi;
+samplerCUBE MapEnvCubic;
+sampler2D	MapFresnel;
+sampler2D	MapLightFromMap;
+
+const fpart4	AlphaFakeHdr = 0.3;
+const fpart4	AlphaFakeTrans = 1;
+
+const fpart4	GbxHemiTexToSub_Sxy_Tyx_MapHemiSpec;
+const fpart4x3	GbxHemiWorldToEye_MapHemiSpec;
+const fpart4	GbxGameUnder_BlendIn_Fade_FOut_FIn;
+
+const fpart2	GbxLightFromMap_ScaleRGB_TransRGB;
+const fpart4	GbxLightFromMap_ScaleAD_TransDA;
+
+//const float3	GbxLightAmbient;
+//const float3		GbxLightDirDirInWorld0;
+//const float3		GbxLightDirRgb0;
+
+// Renaming
+#define	DHemiTexToSub_Sxy_Tyx GbxHemiTexToSub_Sxy_Tyx_MapHemiSpec
+#define DHemiWorldToEye GbxHemiWorldToEye_MapHemiSpec
+
+PS_OUTPUT Main(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	fpart3		NormalInW 	= v.NormalInW;//normalize(v.NormalInW);
+	float3		PosInW	= v.PosInW;//normalize(v.PosInW);
+
+	fpart3		ReflecInW = normalize(PosInW - 2*dot(NormalInW,PosInW)*NormalInW);
+
+	///////////////////////
+	// Complex mapping : compute pixel's reflection vector
+	fpart3		ReflecInE = mul(ReflecInW, DHemiWorldToEye);
+/*	fpart4		VecHemiSpec = texCUBE(MapCubeInvHemi, ReflecInE);
+	fpart2		TcHemiSpec = mul(VecHemiSpec, WholeToSubTex);*/
+	fpart2		TcHemiSpec = texCUBE(MapCubeInvHemi, ReflecInE);
+	// Warning 4d->2d split imply source register swizzling, and ps_2_0 supports:
+	// .yzwx .zxyw .wzyx only the last use z & w for the first 2 component (but in reverse order...)
+	// !! TcHemiSpec*TexToSubScale_Trans.xy + TexToSubScale_Trans.zw; leads to 1 instruction loss !!
+	TcHemiSpec = TcHemiSpec*DHemiTexToSub_Sxy_Tyx.xy + DHemiTexToSub_Sxy_Tyx.wz;
+
+	fpart2		TcFresnel = ReflecInE.z;
+	fpart		Fresnel = tex2D(MapFresnel, TcFresnel).r;
+
+	fpart4		HemiSpec = tex2D(MapHemiSpec, TcHemiSpec);
+	fpart3		SpecSparkles = HemiSpec.rgb;
+	fpart3		SpecVarnish = HemiSpec.rgb*HemiSpec.a;
+
+	fpart		Gloss = 1;
+
+	Fresnel = Fresnel*Gloss;
+
+	fpart3		ReflecSum = 0;//+SpecSparkles*0.7;
+
+//#define DFakeHdr does not work well...
+
+	fpart3		RgbToGray = normalize(fpart3(1,1,1))*sqrt(3)/3;
+//	fpart		ReflecIntens = ReflecSum.b;
+#ifdef DFakeHdr
+	ReflecSum += texCUBE(MapEnvCubic, ReflecInW)*GbxGameUnder_BlendIn_Fade_FOut_FIn.y;
+	fpart		ReflecIntens = dot(ReflecSum,RgbToGray);
+//	fpart		ReflecIntensF = pow(ReflecIntens, 1+1.01*(1-Fresnel));
+	fpart		ReflecIntensF = saturate(Fresnel+ReflecIntens*AlphaFakeHdr.a);
+	ReflecSum *= ReflecIntensF;
+#else
+	ReflecSum += Fresnel*texCUBE(MapEnvCubic, ReflecInW)*GbxGameUnder_BlendIn_Fade_FOut_FIn.y;
+	fpart		ReflecIntens = dot(ReflecSum,RgbToGray);
+	fpart		ReflecIntensF = ReflecIntens;
+#endif
+	ReflecSum += Gloss*SpecVarnish;
+
+#ifndef DTwkPSkipMap_LightFromMap
+	fpart4		LightFromMap = tex2D(MapLightFromMap, v.TcLightFromMap);
+#ifndef DGbxPDefinedPC3_IsNight
+	LightFromMap.rg*= GbxLightFromMap_ScaleAD_TransDA.xy;
+	LightFromMap.rg+= GbxLightFromMap_ScaleAD_TransDA.wz;	
+	ReflecSum *= LightFromMap.r;
+#else
+	LightFromMap*= GbxLightFromMap_ScaleRGB_TransRGB.x;
+	LightFromMap+= GbxLightFromMap_ScaleRGB_TransRGB.y;
+	Output.Color.a +=LightFromMap.r; // NOP...
+#endif
+#endif
+
+	Output.Color.rgb   = ReflecSum;
+
+///////// DEBUG //////////////////
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + SpecSparkles;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + SpecVarnish;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + texCUBE(MapEnvCubic, ReflecInW);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + texCUBE(MapEnvCubic, ReflecInW)*Gloss;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflecInW;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflecInE;
+//	Output.Color.rg		= Output.Color.rgb*0.001 + TcFresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Fresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Gloss;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflecIntens;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflecIntensF;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflecSum;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + pow(ReflecIntens, 10);
+//	Output.Color.a		= 1;
+	return Output;
+}
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_a PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}

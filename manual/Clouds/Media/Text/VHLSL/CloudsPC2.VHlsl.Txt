@@ -1,0 +1,103 @@
+#include <Common.Vhlsl.txt>
+
+const float4		GbxVisualMadBBox01[2];
+const float4		GbxEyeInVisual;
+const float4		GbxCloudsRgbMin;
+const float4		GbxCloudsRgbMax;
+const float4		GbxCloudsVisualToOpacity;
+
+const float			In01Opacity = 1;
+const float			In01LightPassingIntens = 1;
+static const float	LightPassingExp = 100;
+
+static const int	cLayer = 5;
+
+const float			In01LayerIntenss[cLayer] = {
+	0.2, 0.3, 0.4, 0.7, 1.0
+};
+const float			In01LayerHeights[cLayer] = {
+	0, 0.136, 0.232, 0.384, 1
+};
+
+struct CloudsOut {
+	float	LayerIntens;
+	float	LightIntens;
+	float	Opacity;
+	float3	PosToEyeN;
+};
+
+void CloudsGetOut(in float4 _Position, out CloudsOut _Out)
+{
+	float3		PosInBBox01 = _Position*GbxVisualMadBBox01[0] + GbxVisualMadBBox01[1];
+	int 		iLayer, iLayerF=0;
+	for (iLayer=1; iLayer+1<cLayer; iLayer++) {
+		if (PosInBBox01.y>=In01LayerHeights[iLayer]) {
+			iLayerF = iLayer;
+		}
+	}
+	float		LayerIntens0 = In01LayerIntenss[iLayerF];			
+	float		LayerIntens1 = In01LayerIntenss[iLayerF+1];			
+	float		LayerHeight0= In01LayerHeights[iLayerF];
+	float		LayerHeight1= In01LayerHeights[iLayerF+1];
+	float		LayerWeight1= saturate((PosInBBox01.y-LayerHeight0)/(LayerHeight1-LayerHeight0));
+	_Out.LayerIntens = lerp(LayerIntens0, LayerIntens1, LayerWeight1);
+
+	float3		PosInBBoxm11 = PosInBBox01*2-1;
+	float		PosDotLight = dot(PosInBBoxm11,-GbxLightDirDir0);
+	_Out.LightIntens = 0.5 + 0.5*PosDotLight;
+
+	float		DistToCenter = length(PosInBBoxm11);
+	_Out.Opacity = In01Opacity;
+	_Out.Opacity *= saturate(mul(_Position, GbxCloudsVisualToOpacity));
+	_Out.Opacity = saturate(1+(_Out.Opacity-1)*(1+DistToCenter));
+
+	float3		PosToEye = GbxEyeInVisual-_Position;
+	_Out.PosToEyeN = normalize(PosToEye);
+}
+
+
+struct VS_INPUT		{
+	float4 Position	: POSITION;
+	float2 TcClouds : TEXCOORD0;
+};
+struct VS_OUTPUT		{
+	float4 Position		: POSITION;
+	float4 Color0		: COLOR0;
+	float2 TcClouds		: TEXCOORD0;
+#if defined(DGbxVDefinedPC2_LightOcc) && !defined(DGbxVDefinedPC2_RenderPath_Opacity)
+	float4 TcOcclusion	: TEXCOORD1;
+	float3 IsEyePosZ	: COLOR1;
+#endif
+};
+const float4x4		GbxVisualPrCamera;
+const float4x3		GbxVisualToLightDir0;
+const float4x3		GbxVisualPz01LightOcc1;
+
+VS_OUTPUT Main(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+
+	CloudsOut 	Clouds;
+	CloudsGetOut(v.Position, Clouds);
+
+	Output.Position		= mul(v.Position, GbxVisualPrCamera);
+	Output.TcClouds 	= v.TcClouds;
+	Output.Color0.a		= Clouds.Opacity;
+	float	LerpInput = saturate(Clouds.LightIntens*Clouds.LayerIntens);
+	Output.Color0.rgb 	= lerp(GbxCloudsRgbMin, GbxCloudsRgbMax, LerpInput);
+#ifdef DGbxVDefinedPC2_RenderPath_Opacity
+	Output.Color0.rgb 	= 0;
+#elif defined(DGbxVDefinedPC2_LightOcc)
+	Output.TcOcclusion	= mul(v.Position, GbxVisualPz01LightOcc1).xyzz;
+	Output.IsEyePosZ	= mul(v.Position, GbxVisualPz01LightOcc1).z>0;
+#endif
+///////////////////////////
+//  Debug
+//	Output.Color0.rgb = Output.Color0.rgb*0.001 + LightIntens;
+//	Output.Color0.rgb = Output.Color0.rgb*0.001 + LightColor;
+//	Output.Color0.rgb = Output.Color0.rgb*0.001 + lerp(GbxCloudsRgbMin, GbxCloudsRgbMax, LightIntens*LayerColor);
+//	Output.Color0.rgb = Output.Color0.rgb*0.001 + LightPassing;
+	return Output;
+}
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v) {return Main(v);}
+vs_2_0 VS_OUTPUT vsMain(const VS_INPUT v) {return Main(v);}

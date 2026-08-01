@@ -1,0 +1,38 @@
+struct VS_INPUT		{
+	float4 Position		: POSITION;
+	float3 Normal		: NORMAL;
+};
+struct VS_OUTPUT		{
+	float4 Position			: POSITION;
+	float1 Fog				: FOG;
+	float3 NormalInW		: TEXCOORD0;
+	float3 PosInW			: TEXCOORD1;
+#ifndef DTwkVSkipMap_LightFromMap
+	float2 TcLightFromMap	: TEXCOORD2;
+#endif
+};
+
+#include <Common.VHlsl.txt>
+
+const float4x4	GbxVisualPrCamera;
+const float4x3	GbxVisualToWorld;
+const float4	GbxEyeInVisual;
+const float4x2	GbxVPositionTo01LightFromMap;
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+	
+	float4	LDiffus = 0;
+
+	LDiffus += GbxLightDirRgb0*saturate(dot(v.Normal,-GbxLightDirDir0));
+
+	Output.Position		= mul(v.Position, GbxVisualPrCamera);
+	Output.Fog			= dot(v.Position, GbxVisualToFogTnL);
+	Output.NormalInW	= mul(v.Normal, GbxVisualToWorld);
+	Output.PosInW		= mul(v.Position-GbxEyeInVisual, GbxVisualToWorld);
+#ifndef DTwkVSkipMap_LightFromMap
+	Output.TcLightFromMap = mul(v.Position, GbxVPositionTo01LightFromMap);
+#endif
+	return Output;
+}

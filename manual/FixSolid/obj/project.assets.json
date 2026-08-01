@@ -1,0 +1,620 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0": {
+      "GBX.NET/2.2.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+          "TmEssentials": "2.5.0"
+        },
+        "compile": {
+          "lib/net8.0/GBX.NET.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "GBX.NET.Crypto/1.0.2": {
+        "type": "package",
+        "dependencies": {
+          "GBX.NET": "2.1.2",
+          "GBX.NET.Hashing": "1.0.2"
+        },
+        "compile": {
+          "lib/net8.0/GBX.NET.Crypto.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.Crypto.dll": {}
+        }
+      },
+      "GBX.NET.Hashing/1.0.2": {
+        "type": "package",
+        "dependencies": {
+          "GBX.NET": "2.1.2",
+          "System.IO.Hashing": "9.0.0"
+        },
+        "compile": {
+          "lib/net8.0/GBX.NET.Hashing.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.Hashing.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "GBX.NET.PAK/2.2.0": {
+        "type": "package",
+        "dependencies": {
+          "GBX.NET": "2.2.0",
+          "GBX.NET.Crypto": "1.0.2",
+          "NativeSharpLz4": "0.1.0",
+          "NativeSharpZlib": "0.2.8"
+        },
+        "compile": {
+          "lib/net8.0/GBX.NET.PAK.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.PAK.dll": {}
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "System.Diagnostics.DiagnosticSource": "9.0.0"
+        },
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/Microsoft.Extensions.Logging.Abstractions.targets": {}
+        }
+      },
+      "NativeSharpLz4/0.1.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/NativeSharpLz4.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/NativeSharpLz4.dll": {}
+        },
+        "build": {
+          "build/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/browser-wasm/native/liblz4.a": {
+            "assetType": "native",
+            "rid": "browser-wasm"
+          },
+          "runtimes/linux-arm/native/liblz4.so": {
+            "assetType": "native",
+            "rid": "linux-arm"
+          },
+          "runtimes/linux-arm64/native/liblz4.so": {
+            "assetType": "native",
+            "rid": "linux-arm64"
+          },
+          "runtimes/linux-x64/native/liblz4.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/win-x64/native/liblz4.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/liblz4.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "NativeSharpZlib/0.2.8": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/NativeSharpZlib.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/NativeSharpZlib.dll": {}
+        },
+        "build": {
+          "build/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/browser-wasm/native/zlib.a": {
+            "assetType": "native",
+            "rid": "browser-wasm"
+          },
+          "runtimes/linux-arm/native/zlib.so": {
+            "assetType": "native",
+            "rid": "linux-arm"
+          },
+          "runtimes/linux-arm64/native/zlib.so": {
+            "assetType": "native",
+            "rid": "linux-arm64"
+          },
+          "runtimes/linux-x64/native/zlib.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/win-x64/native/zlib.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/zlib.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
+        }
+      },
+      "System.Diagnostics.DiagnosticSource/9.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/System.Diagnostics.DiagnosticSource.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/System.Diagnostics.DiagnosticSource.dll": {
+            "related": ".xml"
+          }
+        },
+        "contentFiles": {
+          "contentFiles/any/any/_._": {
+            "buildAction": "None",
+            "codeLanguage": "any",
+            "copyToOutput": false
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "System.IO.Hashing/9.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/System.IO.Hashing.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/System.IO.Hashing.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "TmEssentials/2.5.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/TmEssentials.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/TmEssentials.dll": {
+            "related": ".xml"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "GBX.NET/2.2.0": {
+      "sha512": "2sOnbeJYqqLwo852UN9ZvJGhkRdydDnYlNJoRrITGNjg+X1xlcc1lzvAXQcu+3dgfIFg8b8KIFzK6re1czlEZQ==",
+      "type": "package",
+      "path": "gbx.net/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "gbx.net.2.2.0.nupkg.sha512",
+        "gbx.net.nuspec",
+        "lib/net6.0/GBX.NET.dll",
+        "lib/net6.0/GBX.NET.xml",
+        "lib/net8.0/GBX.NET.dll",
+        "lib/net8.0/GBX.NET.xml",
+        "lib/net9.0/GBX.NET.dll",
+        "lib/net9.0/GBX.NET.xml",
+        "lib/netstandard2.0/GBX.NET.dll",
+        "lib/netstandard2.0/GBX.NET.xml",
+        "logo_icon_outline.png"
+      ]
+    },
+    "GBX.NET.Crypto/1.0.2": {
+      "sha512": "nXnMZSEZ1P+JovGc9drhOWHtO0f/y6ozGzphRRH7QrdyXYwlCJMUuHKXIjJh5aBJcHKJHZAvEgDdH25AIant4Q==",
+      "type": "package",
+      "path": "gbx.net.crypto/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "gbx.net.crypto.1.0.2.nupkg.sha512",
+        "gbx.net.crypto.nuspec",
+        "lib/net6.0/GBX.NET.Crypto.dll",
+        "lib/net8.0/GBX.NET.Crypto.dll",
+        "lib/net9.0/GBX.NET.Crypto.dll",
+        "lib/netstandard2.0/GBX.NET.Crypto.dll",
+        "logo_icon_outline.png"
+      ]
+    },
+    "GBX.NET.Hashing/1.0.2": {
+      "sha512": "r7ls4ukIPtsQ64Jy2sVUHI/P5O+g7cycXcQLjDfdMZW7wvpevv4SSGE6Lo3r4NJAHCHCF8ZOf02lPkE9epRg9A==",
+      "type": "package",
+      "path": "gbx.net.hashing/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "gbx.net.hashing.1.0.2.nupkg.sha512",
+        "gbx.net.hashing.nuspec",
+        "lib/net6.0/GBX.NET.Hashing.dll",
+        "lib/net6.0/GBX.NET.Hashing.xml",
+        "lib/net8.0/GBX.NET.Hashing.dll",
+        "lib/net8.0/GBX.NET.Hashing.xml",
+        "lib/net9.0/GBX.NET.Hashing.dll",
+        "lib/net9.0/GBX.NET.Hashing.xml",
+        "lib/netstandard2.0/GBX.NET.Hashing.dll",
+        "lib/netstandard2.0/GBX.NET.Hashing.xml",
+        "logo_icon_outline.png"
+      ]
+    },
+    "GBX.NET.PAK/2.2.0": {
+      "sha512": "A/hdFzCkgdU0WFovhzuCBhmjQw9+gVLAQYVSxkJc8cYtqENRbBir7gwJwKNXL20XZrSx59zVP0QoOWbvfg8zSQ==",
+      "type": "package",
+      "path": "gbx.net.pak/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "gbx.net.pak.2.2.0.nupkg.sha512",
+        "gbx.net.pak.nuspec",
+        "lib/net6.0/GBX.NET.PAK.dll",
+        "lib/net8.0/GBX.NET.PAK.dll",
+        "lib/net9.0/GBX.NET.PAK.dll",
+        "logo_icon_outline.png"
+      ]
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.0": {
+      "sha512": "+6f2qv2a3dLwd5w6JanPIPs47CxRbnk+ZocMJUhv9NxP88VlOcJYZs9jY+MYSjxvady08bUZn6qgiNh7DadGgg==",
+      "type": "package",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.DependencyInjection.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.DependencyInjection.Abstractions.xml",
+        "microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.dependencyinjection.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Logging.Abstractions/9.0.0": {
+      "sha512": "g0UfujELzlLbHoVG8kPKVBaW470Ewi+jnptGS9KUi6jcb+k2StujtK3m26DFSGGwQ/+bVgZfsWqNzlP6YOejvw==",
+      "type": "package",
+      "path": "microsoft.extensions.logging.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "analyzers/dotnet/roslyn3.11/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn3.11/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn3.11/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn4.0/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.0/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll",
+        "analyzers/dotnet/roslyn4.4/cs/cs/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/de/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/es/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/fr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/it/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ja/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ko/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pl/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/pt-BR/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/ru/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/tr/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hans/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "analyzers/dotnet/roslyn4.4/cs/zh-Hant/Microsoft.Extensions.Logging.Generators.resources.dll",
+        "buildTransitive/net461/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/net462/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/net8.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "buildTransitive/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.xml",
+        "microsoft.extensions.logging.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.logging.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "NativeSharpLz4/0.1.0": {
+      "sha512": "4BTRstSURTrTVqOMURR6cZJcBgcwlu1/zMJLbi3FZd/cbpLeRiqETcKqzEBKN0g7nG7AXkhxVyabdI5ZQjOuxw==",
+      "type": "package",
+      "path": "nativesharplz4/0.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "build/NativeSharpLz4.targets",
+        "lib/net6.0/NativeSharpLz4.dll",
+        "lib/net8.0/NativeSharpLz4.dll",
+        "lib/net9.0/NativeSharpLz4.dll",
+        "lib/netstandard2.0/NativeSharpLz4.dll",
+        "nativesharplz4.0.1.0.nupkg.sha512",
+        "nativesharplz4.nuspec",
+        "runtimes/browser-wasm/native/liblz4.a",
+        "runtimes/linux-arm/native/liblz4.so",
+        "runtimes/linux-arm64/native/liblz4.so",
+        "runtimes/linux-x64/native/liblz4.so",
+        "runtimes/win-x64/native/liblz4.dll",
+        "runtimes/win-x86/native/liblz4.dll"
+      ]
+    },
+    "NativeSharpZlib/0.2.8": {
+      "sha512": "59ci9pwPje/t6yPwewXOV3Yo9pcL7ctvyiqmz/7mGmdANUWGkB7H0F6iLeV368yJujDh4JdFjyZfLGSbj4/ZWQ==",
+      "type": "package",
+      "path": "nativesharpzlib/0.2.8",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "build/NativeSharpZlib.targets",
+        "lib/net462/NativeSharpZlib.dll",
+        "lib/net6.0/NativeSharpZlib.dll",
+        "lib/net8.0/NativeSharpZlib.dll",
+        "lib/net9.0/NativeSharpZlib.dll",
+        "nativesharpzlib.0.2.8.nupkg.sha512",
+        "nativesharpzlib.nuspec",
+        "runtimes/browser-wasm/native/zlib.a",
+        "runtimes/linux-arm/native/zlib.so",
+        "runtimes/linux-arm64/native/zlib.so",
+        "runtimes/linux-x64/native/zlib.so",
+        "runtimes/win-x64/native/zlib.dll",
+        "runtimes/win-x86/native/zlib.dll"
+      ]
+    },
+    "System.Diagnostics.DiagnosticSource/9.0.0": {
+      "sha512": "ddppcFpnbohLWdYKr/ZeLZHmmI+DXFgZ3Snq+/E7SwcdW4UnvxmaugkwGywvGVWkHPGCSZjCP+MLzu23AL5SDw==",
+      "type": "package",
+      "path": "system.diagnostics.diagnosticsource/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Diagnostics.DiagnosticSource.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Diagnostics.DiagnosticSource.targets",
+        "content/ILLink/ILLink.Descriptors.LibraryBuild.xml",
+        "contentFiles/any/net462/ILLink/ILLink.Descriptors.LibraryBuild.xml",
+        "contentFiles/any/net8.0/ILLink/ILLink.Descriptors.LibraryBuild.xml",
+        "contentFiles/any/net9.0/ILLink/ILLink.Descriptors.LibraryBuild.xml",
+        "contentFiles/any/netstandard2.0/ILLink/ILLink.Descriptors.LibraryBuild.xml",
+        "lib/net462/System.Diagnostics.DiagnosticSource.dll",
+        "lib/net462/System.Diagnostics.DiagnosticSource.xml",
+        "lib/net8.0/System.Diagnostics.DiagnosticSource.dll",
+        "lib/net8.0/System.Diagnostics.DiagnosticSource.xml",
+        "lib/net9.0/System.Diagnostics.DiagnosticSource.dll",
+        "lib/net9.0/System.Diagnostics.DiagnosticSource.xml",
+        "lib/netstandard2.0/System.Diagnostics.DiagnosticSource.dll",
+        "lib/netstandard2.0/System.Diagnostics.DiagnosticSource.xml",
+        "system.diagnostics.diagnosticsource.9.0.0.nupkg.sha512",
+        "system.diagnostics.diagnosticsource.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "System.IO.Hashing/9.0.0": {
+      "sha512": "seeO8icDfED/Qwl9PDFUx2Gf/7xv7dPsMnw5PnRwNZuz4EWMpy0wIVohC4MfCcTIoJgp+KUrWG4WH3NPSusQOA==",
+      "type": "package",
+      "path": "system.io.hashing/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.IO.Hashing.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/System.IO.Hashing.targets",
+        "lib/net462/System.IO.Hashing.dll",
+        "lib/net462/System.IO.Hashing.xml",
+        "lib/net8.0/System.IO.Hashing.dll",
+        "lib/net8.0/System.IO.Hashing.xml",
+        "lib/net9.0/System.IO.Hashing.dll",
+        "lib/net9.0/System.IO.Hashing.xml",
+        "lib/netstandard2.0/System.IO.Hashing.dll",
+        "lib/netstandard2.0/System.IO.Hashing.xml",
+        "system.io.hashing.9.0.0.nupkg.sha512",
+        "system.io.hashing.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "TmEssentials/2.5.0": {
+      "sha512": "uNuwNSqcw7a0eQ2lgkkNtZAe+4JgaCJ/qeLHE8Pynq9TpRnr3O9j4QolcOK3wnRLcQBV4nxfChuzMA75X2Tt0w==",
+      "type": "package",
+      "path": "tmessentials/2.5.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/TmEssentials.dll",
+        "lib/net462/TmEssentials.xml",
+        "lib/net6.0/TmEssentials.dll",
+        "lib/net6.0/TmEssentials.xml",
+        "lib/net7.0/TmEssentials.dll",
+        "lib/net7.0/TmEssentials.xml",
+        "lib/net8.0/TmEssentials.dll",
+        "lib/net8.0/TmEssentials.xml",
+        "lib/netstandard2.0/TmEssentials.dll",
+        "lib/netstandard2.0/TmEssentials.xml",
+        "lib/netstandard2.1/TmEssentials.dll",
+        "lib/netstandard2.1/TmEssentials.xml",
+        "logo_icon_outline.png",
+        "tmessentials.2.5.0.nupkg.sha512",
+        "tmessentials.nuspec"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "GBX.NET >= 2.2.0",
+      "GBX.NET.PAK >= 2.2.0"
+    ]
+  },
+  "packageFolders": {
+    "/home/teero/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/home/teero/software/tmnf_physics/manual/FixSolid/ExtractRaw.csproj",
+      "projectName": "ExtractRaw",
+      "projectPath": "/home/teero/software/tmnf_physics/manual/FixSolid/ExtractRaw.csproj",
+      "packagesPath": "/home/teero/.nuget/packages/",
+      "outputPath": "/home/teero/software/tmnf_physics/manual/FixSolid/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/home/teero/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      }
+    },
+    "frameworks": {
+      "net8.0": {
+        "targetAlias": "net8.0",
+        "dependencies": {
+          "GBX.NET": {
+            "target": "Package",
+            "version": "[2.2.0, )"
+          },
+          "GBX.NET.PAK": {
+            "target": "Package",
+            "version": "[2.2.0, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/home/teero/software/tmnf_physics/manual/dotnet/sdk/8.0.421/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

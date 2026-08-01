@@ -1,0 +1,18 @@
+ps.1.1
+// Decl(t0, GrassPC2)
+// Decl(t1, Clouds)
+// Decl(t2, FresnelCubePC2)
+// Decl(t3, Occlusion)
+tex	t0
+tex	t1
+tex	t2
+tex t3
+mul_x2	r0, t0, t1
+mul_x2	r0, r0, t2
+mul		r0, r0, v0
+mul		r0, r0, t3
+
+;mov r0, t0
+;mov r0, t1
+;mov r0, t2
+;mov r0, t3

@@ -1,0 +1,28 @@
+#include <Common.VHlsl.txt>
+
+#ifndef DTwkVInputUsageTc_PreLightGen
+#define DTwkVInputUsageTc_PreLightGen TEXCOORD0
+#endif
+
+struct VS_INPUT		{
+	float4 Position		: POSITION;
+	float4 TcPreLightGen: DTwkVInputUsageTc_PreLightGen; // Expand as (u,v,0,1) to mul(float4x2)
+};
+struct VS_OUTPUT		{
+	float4 HPosition	: POSITION;
+	float2 TcPreLightGen: TEXCOORD0;
+	float  TcFadeToWhite: TEXCOORD1;
+};
+
+const float4x4	GbxVisualPrCamera;
+const float4x2	GbxVTexCoordToLightGenP;
+const float4	GbxLightFromMap_VisualToWhite;
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+	Output.HPosition	= mul(v.Position, GbxVisualPrCamera);
+	Output.TcPreLightGen= mul(v.TcPreLightGen, GbxVTexCoordToLightGenP);
+	Output.TcFadeToWhite= mul(v.Position, GbxLightFromMap_VisualToWhite);
+	return Output;
+}

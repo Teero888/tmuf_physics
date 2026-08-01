@@ -1,0 +1,101 @@
+#include <Common.Phlsl.txt>
+struct PS_INPUT		{
+	float4 Color0		: COLOR0;
+	float4 Color1		: COLOR1;
+	float2 TcSoil		: TEXCOORD0;
+	float2 TcClouds		: TEXCOORD1;
+	float2 TcOcclusion	: TEXCOORD2;
+	float2 TcPreLightGen	: TEXCOORD3;
+	float4 TcShadowBuffer: TEXCOORD4;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+
+sampler2D	MapSoil;
+sampler2D	MapClouds;
+sampler2D	MapOcclusion;
+sampler2D	MapPreLightGen;
+samplerCUBE	MapSpecularCube;
+
+const float4	GbxLightGenP_ScaleAD_TransDA;
+
+DGbxPGenLoadPC3_Shadow
+
+// DTwkPSkipMap_PreLightGen	(not parsed in includes)
+// DTwkPSkipMap_Clouds 		(not parsed in includes)
+// DGbxPGenCodePC3_Shadow 	(not parsed in includes)
+// DGbxPDefinedPC3_IsNight 	(not parsed in includes)
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	Output.Color	= fpart4(1,0,0,1);
+	fpart4		Soil = tex2D(MapSoil, v.TcSoil);
+	fpart4		Clouds = tex2D(MapClouds, v.TcClouds);
+	fpart		Occlusion = tex2D(MapOcclusion, v.TcOcclusion).x;
+
+	DGbxPGenCodePC3_Shadow
+#ifdef DTwkPSkipMap_PreLightGen
+	fpart3		Light = lerp(v.Color0,v.Color1,ShadowDiffus);
+#else
+	fpart4		PreLightGen = tex2D(MapPreLightGen, v.TcPreLightGen);
+	fpart3		Light = PreLightGen;
+#ifndef DGbxPDefinedPC3_IsNight
+	float3		CubeAmbientY = float3(0.52,0.6,0.7);
+	Light.rg = Light.rg*GbxLightGenP_ScaleAD_TransDA.xy+GbxLightGenP_ScaleAD_TransDA.wz;
+	fpart3		LDirIntens;
+#ifdef DGbxPDefinedPC3_Shadow
+	LDirIntens = ShadowDiffus;
+#else
+	LDirIntens = Light.g;
+#endif	// combination don't work well, especially because of cars
+	Light = saturate(Light.r*CubeAmbientY + LDirIntens*v.Color0);
+#endif
+#endif
+	Output.Color.rgb = (Light*Soil).rgb;
+#ifndef DTwkPSkipMap_Occlusion
+	Output.Color.rgb*= Occlusion;
+#endif
+#ifndef DTwkPSkipMap_Clouds
+	Output.Color.rgb*= Clouds.rgb*2;
+#endif
+	Output.Color.a	= 1;
+
+/////////////////
+// Debug
+#ifdef DGbxEditor
+#define MDebug(__Value) Output.Color.rgb = Output.Color.rgb*0.001 + (__Value);
+#ifndef DTwkPSkipMap_Clouds
+	MDbg_Clouds(			Clouds);
+#endif
+	MDbg_Diffuse(			Light*Soil);
+	MDbg_Specular(			0);
+	MDbg_Fresnel(			0);
+	MDbg_NormalInW(			0.5+0.5*float3(0,1,0));
+	MDbg_MapDiffuse(		Soil);
+	MDbg_MapSpecular(		0);
+	MDbg_MapOcclusion(		1);
+	MDbg_LightDiffuse(		Light);
+#ifdef DTwkPSkipMap_Occlusion
+	Occlusion = 1;
+#endif
+#if !defined(DTwkPSkipMap_PreLightGen) && !defined(DGbxPDefinedPC3_IsNight)
+	MDbg_LightDiffuseAmb(	PreLightGen.r*CubeAmbientY);
+	MDbg_LightDiffuseDir0(	PreLightGen.g*v.Color0);
+	MDbg_Occlusion(			PreLightGen.r*Occlusion);
+#else
+	MDbg_Occlusion(			Occlusion);
+#endif
+#endif
+
+/////////////////////////
+//  Debug
+//	Output.Color	=  Output.Color*0.001 + Soil;
+//	Output.Color	=  Output.Color*0.001 + Clouds;
+//	Output.Color	=  Output.Color*0.001 + Occlusion;
+//	Output.Color	=  Output.Color*0.001 + Light;
+//	Output.Color	=  Output.Color*0.001 + tex2D(MapPreLightGen, v.TcPreLightGen);
+//	Output.Color	=  Output.Color*0.001 + CubeAmbientY;
+	return Output;
+}

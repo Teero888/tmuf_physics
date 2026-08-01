@@ -1,11 +1,16 @@
-min_v = [float('inf')]*3
-max_v = [float('-inf')]*3
-with open("vehicle_mesh.obj", "r") as f:
-    for line in f:
-        if line.startswith("v "):
-            parts = line.split()
-            v = [float(parts[1]), float(parts[2]), float(parts[3])]
-            for i in range(3):
-                min_v[i] = min(min_v[i], v[i])
-                max_v[i] = max(max_v[i], v[i])
-print(f"Bounds: min {min_v}, max {max_v}")
+import struct
+import sys
+
+with open(sys.argv[1], 'rb') as f:
+    data = f.read()
+
+idx = data.find(struct.pack('<I', 0x0900F004))
+if idx == -1:
+    print("Chunk not found!")
+    sys.exit(1)
+
+# skip chunk ID (4) + meshId (4)
+bbox_data = data[idx+8:idx+32]
+minx, miny, minz, maxx, maxy, maxz = struct.unpack('<6f', bbox_data)
+print(f"Min: {minx:.2f}, {miny:.2f}, {minz:.2f}")
+print(f"Max: {maxx:.2f}, {maxy:.2f}, {maxz:.2f}")

@@ -1,0 +1,113 @@
+#include <Common.PHlsl.txt>
+struct PS_INPUT		{
+	float4 Color0		: COLOR0;
+	float4 Color1		: COLOR1;
+	float2 TcBlend1		: TEXCOORD0;
+	float2 TcBlend2		: TEXCOORD1;
+	float2 TcBlendI		: TEXCOORD2;
+	float2 TcStripe		: TEXCOORD3;
+	float3 PosToEyeV	: TEXCOORD4;
+	float2 TcClouds		: TEXCOORD5;
+	float4 TcOcc_PreLightGen: TEXCOORD6;
+	float4 TcShadow		: TEXCOORD7;
+};
+#define TcShadowBuffer TcShadow
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+sampler2D	MapBlend1;
+sampler2D	MapBlend2;
+sampler2D	MapBlendI;
+sampler2D	MapStripe;
+sampler2D	MapFresnel;
+sampler2D	MapClouds;
+sampler2D	MapOcclusion;
+sampler2D	MapPreLightGen;
+
+const fpart4		GbxLightGenP_ScaleAD_TransDA;
+
+DGbxPGenLoadPC3_Shadow
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	fpart4		Blend1 = tex2D(MapBlend1, v.TcBlend1);
+	fpart4		Blend2 = tex2D(MapBlend2, v.TcBlend2);
+	fpart		BlendI = tex2D(MapBlendI, v.TcBlendI).x;
+	fpart4		Blend  = lerp(Blend1, Blend2, BlendI);
+	fpart4		Clouds = tex2D(MapClouds, v.TcClouds);
+	fpart3		Stripe = tex2D(MapStripe, v.TcStripe);
+	fpart		Occlusion = tex2D(MapOcclusion, v.TcOcc_PreLightGen).x;
+	fpart3		PosToEye = normalize(v.PosToEyeV);
+	fpart		TcFresnel = PosToEye.y;
+	fpart3		Fresnel = tex2D(MapFresnel, TcFresnel);
+
+	float4		CubeAmbientY = float4(0.52,0.6,0.7,1);
+
+	DGbxPGenCodePC3_Shadow
+#ifdef DTwkPSkipMap_PreLightGen
+	fpart4		Light = lerp(v.Color0,v.Color1,ShadowDiffus);
+#else
+	fpart4		PreLightGen = tex2D(MapPreLightGen, v.TcOcc_PreLightGen.wz);
+	fpart3		Light = PreLightGen;
+#ifndef DGbxPDefinedPC3_IsNight
+	Light.rg = Light.rg*GbxLightGenP_ScaleAD_TransDA.xy+GbxLightGenP_ScaleAD_TransDA.wz;
+	float	DirMin = 0.2f;
+	Light.g = DirMin + (1-DirMin)*Light.g;
+#ifdef DGbxPDefinedPC3_Shadow
+	fpart3	DirIntens = ShadowDiffus;
+#else
+	fpart3	DirIntens = Light.g;
+#endif
+	Light = saturate(Light.r*CubeAmbientY + DirIntens*v.Color0);
+//	Light = saturate(GbxLightAmbient + DirIntens*v.Color0);
+#endif
+#endif
+	Output.Color.rgb = Light*Blend;
+#ifndef DTwkPSkipMap_Occlusion
+	Output.Color.rgb*= Occlusion;
+#endif
+#ifndef DTwkPSkipMap_Clouds
+	Output.Color.rgb*= Clouds*2;
+#endif
+	Output.Color.rgb*= Stripe*2;
+	Output.Color.rgb*= Fresnel*2;
+	Output.Color.a	= 1;
+
+/////////////////////////
+//  Debug
+//	Output.Color	=  Output.Color*0.001 + Blend1;
+//	Output.Color	=  Output.Color*0.001 + Blend2;
+//	Output.Color	=  Output.Color*0.001 + BlendI;
+//	Output.Color	=  Output.Color*0.001 + Blend;
+//	Output.Color	=  Output.Color*0.001 + Clouds;
+//	Output.Color	=  Output.Color*0.001 + TcFresnel;
+//	Output.Color	=  Output.Color*0.001 + Fresnel;
+//	Output.Color.rgb=  Output.Color*0.001 + Stripe;
+//	Output.Color.rgb=  Output.Color*0.001 + Light;
+//	Output.Color.rgb=  Output.Color*0.001 + tex2D(MapPreLightGen, v.TcOcc_PreLightGen.wz).r*GbxLightAmbient;
+
+#ifdef DGbxEditor
+#define MDebug(__Value) Output.Color.rgb = Output.Color.rgb*0.001 + (__Value);
+#ifndef DTwkPSkipMap_Clouds
+	MDbg_Clouds(			Clouds);
+#endif
+	MDbg_Diffuse(			Light*Blend);
+	MDbg_Specular(			0);
+	MDbg_Fresnel(			Fresnel);
+	MDbg_NormalInW(			0.5+0.5*float3(0,1,0));
+	MDbg_MapDiffuse(		Blend);
+	MDbg_MapSpecular(		0);
+	MDbg_MapOcclusion(		Occlusion);
+	MDbg_LightDiffuse(		Light);
+#if !defined(DTwkPSkipMap_PreLightGen) && !defined(DGbxPDefinedPC3_IsNight)
+	MDbg_LightDiffuseAmb(	PreLightGen.r*CubeAmbientY);
+	MDbg_LightDiffuseDir0(	PreLightGen.g*v.Color0);
+	MDbg_Occlusion(			PreLightGen.r*Occlusion);
+#else
+	MDbg_Occlusion(			Occlusion);
+#endif
+#endif
+
+	return Output;
+}

@@ -1,0 +1,27 @@
+#include <Common.Phlsl.txt>
+#include <Effects\\Media\\Text\\PHlsl\\Lights.Phlsl.Inc.txt>
+struct PS_INPUT		{
+	float3 PosInWorld	: TEXCOORD0;
+	float3 NormalInW	: TEXCOORD1;
+	float2 TcAccum		: TEXCOORD2;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+sampler2D		MapAccum;
+sampler2D		MapShadow;
+
+const float2		Scale_Accum_Curr = float2(0,1);
+const float4x4 	WorldPw01Shadow = float4x4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	fpart4 Accum = tex2D(MapAccum, v.TcAccum);
+	float4 PosInWorld = float4(v.PosInWorld,1);
+	float4 TcShadow = mul(PosInWorld, WorldPw01Shadow);
+	Output.Color.x	= IsLighted(MapShadow, TcShadow);
+	Output.Color.y	= 1;
+	Output.Color 	= Accum*Scale_Accum_Curr.x + Output.Color*Scale_Accum_Curr.y;
+	return Output;
+}

@@ -1,0 +1,388 @@
+#include <Common.PHlsl.txt>
+struct PS_INPUT		{
+	float4 NormalLow_IsLight	: COLOR0;
+	float3 PreLight		: COLOR1;
+	float4 Tc0_Tc1		: TEXCOORD0;	// .xywz (ps_2_0 optim)
+	float3 TgtToWorldX 	: TEXCOORD1;
+	float3 TgtToWorldY	: TEXCOORD2;
+	float3 TgtToWorldZ	: TEXCOORD3;
+	float3 EyeToPos		: TEXCOORD4;
+	float2 TcClouds		: TEXCOORD5;
+	float2 TcPreLightGen: TEXCOORD6;
+};
+
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+
+// DTwkPSkipMap_Clouds (not parsed in includes)
+// DTwkPSkipMap_PreLightGen
+// DTwkPSkipMap_Normal
+// DTwkPQualityLess_High
+
+#define DIncUniform
+#if		defined(DIncUniform) && !defined(DIncCode)
+
+sampler2D	MapDiffuse;
+sampler2D	MapSpecular;
+sampler2D	MapNormal;
+sampler2D	MapLighting;
+samplerCUBE MapCubeAmbient;
+samplerCUBE MapReflectSoft;
+sampler2D	MapFresnel;
+sampler2D	MapClouds;
+sampler2D	MapPreLightGen;
+
+const fpart4	GbxLightDirDirInWorld0;
+
+const fpart 	SpecularPower = 20;
+const fpart4	In01Comp1PreMod_ReflectSoft = fpart4(0.5,0,0,1); 
+const fpart4	In01Comp1PreMod_DirSpecular = fpart4(0.3,0,0,1);
+
+void PreMod(in out fpart3 _Dst, in fpart4 _PreMod, in fpart _Intens)
+{
+	_Dst *= (_PreMod.w - _Intens*_PreMod.x);
+}
+
+#elif	defined(DIncCode)
+
+#ifdef DTwkPQualityLess_High
+#define DTwkPSkipMap_Normal 1
+#endif
+
+#ifdef DTcDiffuse	// Mapper tweak
+	fpart4	Diffuse 		= tex2D(MapDiffuse, 	DTcDiffuse);
+	fpart4	Specular 		= tex2D(MapSpecular, 	DTcSpecular);
+	fpart3	NormalInTgt01 	= tex2D(MapNormal, 		DTcNormal).agb;
+	fpart3	Clouds 			= tex2D(MapClouds, 		v.TcClouds);
+	fpart4	Lighting_Occ	= tex2D(MapLighting, 	DTcLighting);
+	fpart3	Lighting 		= Lighting_Occ.rgb;
+	fpart	Occlusion		= Lighting_Occ.a;
+#else
+	fpart3	Clouds 			= tex2D(MapClouds, 		DTcClouds);
+	fpart4	Diffuse, Specular;
+	fpart3	NormalInTgt01, Lighting;
+	fpart	Occlusion;
+	MSample_Diff_Spec_NrmInTgt01_Light_Occ(Diffuse, Specular, NormalInTgt01, Lighting, Occlusion);
+#endif
+	fpart3	NormalInTgt 	= NormalInTgt01*2 - (254.0/255);
+#ifndef DTwkPSkipMap_PreLightGen
+	fpart3	PreLightGen		= tex2D(MapPreLightGen, v.TcPreLightGen);
+#endif
+
+#if defined(DTwkPSkipMap_Lighting) || defined(DTwkPSkipMap_Occlusion)
+	Lighting = 0;
+	Occlusion = 1;
+#endif
+
+	fpart3	NormalLow = v.NormalLow_IsLight.xyz*2-1;
+	fpart	IsLighted = v.NormalLow_IsLight.a;
+
+#ifdef DTwkPSkipMap_Normal
+	fpart3	nNormal = normalize(NormalLow);
+#else
+	fpart3	TgtToWorldX = v.TgtToWorldX;
+	fpart3	TgtToWorldY = v.TgtToWorldY;
+	fpart3	TgtToWorldZ = v.TgtToWorldZ;
+
+//NormalInTgt = NormalInTgt*0.01 + float3(0,0,1);
+
+	fpart3	nNormal = float3(
+		dot(NormalInTgt, TgtToWorldX),
+		dot(NormalInTgt, TgtToWorldY),
+		dot(NormalInTgt, TgtToWorldZ)
+	);
+	nNormal = normalize(nNormal);
+//nNormal = nNormal*0.01 + float3(0,0,1);
+
+#endif
+
+	fpart4	Ambient = texCUBE(MapCubeAmbient, nNormal);
+
+	fpart3	LDiffus;
+	LDiffus = DLighting;
+//	LDiffus = saturate(LDiffus);
+
+	fpart3	EyeToPos = normalize(v.EyeToPos);
+	fpart3	Reflect = reflect(EyeToPos, nNormal);
+
+	fpart4	ReflectSoft_Spec = texCUBE(MapReflectSoft, Reflect);
+	fpart3	ReflectSoft = ReflectSoft_Spec.rgb;
+
+	fpart2	TcFresnel;
+	TcFresnel.x = dot(-EyeToPos, nNormal);
+	TcFresnel.y = Specular.a;
+	fpart3	Fresnel = tex2D(MapFresnel, TcFresnel);
+
+// Remove fresnel where normal map is back reflecting (compared to low normal)
+//	fpart	FresnelOnlyFrontReflect = dot(Reflect, NormalLow)>0;
+	fpart	FresnelOnlyFrontReflect = saturate((dot(Reflect, NormalLow)+0.3)*4);
+
+	Fresnel *= FresnelOnlyFrontReflect;
+
+	fpart3	LSpecularSoft = Fresnel*ReflectSoft*Specular.rgb;
+
+//	fpart	SpecIntens = pow(max(0,dot(Reflect, -GbxLightDirDirInWorld0)), SpecularPower);
+	fpart	SpecIntens = ReflectSoft_Spec.a;
+	SpecIntens *= IsLighted;
+	SpecIntens *= Specular.a;
+
+	fpart3	LSpecular = SpecIntens*GbxLightDirRgb0*Specular.rgb;
+
+	Output.Color.rgb = Diffuse;
+	Output.Color.rgb*= LDiffus;
+//	WARNING: Clouds brings more problems in night
+#ifndef DTwkPSkipMap_Clouds
+	Output.Color.rgb*= Clouds*2;
+#endif
+
+// PreModulate don't work well with lightmapX2 saturation (gray instead of white)
+
+#ifdef DScaleSpecularSoft
+	LSpecularSoft	*= DScaleSpecularSoft;
+#endif
+#ifdef DScaleSpecular
+	LSpecular 		*= DScaleSpecular;
+#endif
+
+	// Add ReflectSoft after pre-modulating with reverse intens
+	fpart	RelfectSoftI = dot(LSpecularSoft, fpart3(1,1,1)*rsqrt(3));
+//	PreMod(Output.Color.rgb, In01Comp1PreMod_ReflectSoft, RelfectSoftI);
+	Output.Color.rgb += LSpecularSoft;
+
+	// Add Specular after pre-modulating with reverse intens
+//	PreMod(Output.Color.rgb, In01Comp1PreMod_DirSpecular, SpecIntens);
+	Output.Color.rgb += LSpecular;
+//	Output.Color.a		= 1;
+	Output.Color.a = Diffuse.a;
+
+//	Output.Color.rgb = (1-saturate(Output.Color.rgb))*50;
+
+#ifdef DGbxEditor
+#define MDebug(__Value) Output.Color.rgb = Output.Color.rgb*0.001 + (__Value);
+	MDbg_Diffuse(			LDiffus*Diffuse);
+	MDbg_Specular(			LSpecular);
+	MDbg_Fresnel(			LSpecularSoft);
+	MDbg_NormalInW(			nNormal*0.5+0.5);
+	MDbg_MapDiffuse(		Diffuse);
+	MDbg_MapSpecular(		Specular);
+	MDbg_MapOcclusion(		Occlusion);
+	MDbg_LightDiffuse(		LDiffus);
+	MDbg_Occlusion(			Occlusion);
+#if DGbxPDefinedPC3_Shadow
+	MDbg_MapperShadow0(		DGbxPGenCodePC3_ShadowDbgMapper0);
+#endif
+#endif
+
+#else
+float2 f = ERROR_MISSING_DEFINE;
+#endif
+
+PS_OUTPUT Main(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	
+#define DTcDiffuse		v.Tc0_Tc1
+#define DTcSpecular		v.Tc0_Tc1
+#define DTcNormal		v.Tc0_Tc1
+#define DTcLighting		v.Tc0_Tc1.wz
+#define DLighting		(2*Lighting)
+#define DIncCode
+#if		defined(DIncUniform) && !defined(DIncCode)
+
+sampler2D	MapDiffuse;
+sampler2D	MapSpecular;
+sampler2D	MapNormal;
+sampler2D	MapLighting;
+samplerCUBE MapCubeAmbient;
+samplerCUBE MapReflectSoft;
+sampler2D	MapFresnel;
+sampler2D	MapClouds;
+sampler2D	MapPreLightGen;
+
+const fpart4	GbxLightDirDirInWorld0;
+
+const fpart 	SpecularPower = 20;
+const fpart4	In01Comp1PreMod_ReflectSoft = fpart4(0.5,0,0,1); 
+const fpart4	In01Comp1PreMod_DirSpecular = fpart4(0.3,0,0,1);
+
+void PreMod(in out fpart3 _Dst, in fpart4 _PreMod, in fpart _Intens)
+{
+	_Dst *= (_PreMod.w - _Intens*_PreMod.x);
+}
+
+#elif	defined(DIncCode)
+
+#ifdef DTwkPQualityLess_High
+#define DTwkPSkipMap_Normal 1
+#endif
+
+#ifdef DTcDiffuse	// Mapper tweak
+	fpart4	Diffuse 		= tex2D(MapDiffuse, 	DTcDiffuse);
+	fpart4	Specular 		= tex2D(MapSpecular, 	DTcSpecular);
+	fpart3	NormalInTgt01 	= tex2D(MapNormal, 		DTcNormal).agb;
+	fpart3	Clouds 			= tex2D(MapClouds, 		v.TcClouds);
+	fpart4	Lighting_Occ	= tex2D(MapLighting, 	DTcLighting);
+	fpart3	Lighting 		= Lighting_Occ.rgb;
+	fpart	Occlusion		= Lighting_Occ.a;
+#else
+	fpart3	Clouds 			= tex2D(MapClouds, 		DTcClouds);
+	fpart4	Diffuse, Specular;
+	fpart3	NormalInTgt01, Lighting;
+	fpart	Occlusion;
+	MSample_Diff_Spec_NrmInTgt01_Light_Occ(Diffuse, Specular, NormalInTgt01, Lighting, Occlusion);
+#endif
+	fpart3	NormalInTgt 	= NormalInTgt01*2 - (254.0/255);
+#ifndef DTwkPSkipMap_PreLightGen
+	fpart3	PreLightGen		= tex2D(MapPreLightGen, v.TcPreLightGen);
+#endif
+
+#if defined(DTwkPSkipMap_Lighting) || defined(DTwkPSkipMap_Occlusion)
+	Lighting = 0;
+	Occlusion = 1;
+#endif
+
+	fpart3	NormalLow = v.NormalLow_IsLight.xyz*2-1;
+	fpart	IsLighted = v.NormalLow_IsLight.a;
+
+#ifdef DTwkPSkipMap_Normal
+	fpart3	nNormal = normalize(NormalLow);
+#else
+	fpart3	TgtToWorldX = v.TgtToWorldX;
+	fpart3	TgtToWorldY = v.TgtToWorldY;
+	fpart3	TgtToWorldZ = v.TgtToWorldZ;
+
+//NormalInTgt = NormalInTgt*0.01 + float3(0,0,1);
+
+	fpart3	nNormal = float3(
+		dot(NormalInTgt, TgtToWorldX),
+		dot(NormalInTgt, TgtToWorldY),
+		dot(NormalInTgt, TgtToWorldZ)
+	);
+	nNormal = normalize(nNormal);
+//nNormal = nNormal*0.01 + float3(0,0,1);
+
+#endif
+
+	fpart4	Ambient = texCUBE(MapCubeAmbient, nNormal);
+
+	fpart3	LDiffus;
+	LDiffus = DLighting;
+//	LDiffus = saturate(LDiffus);
+
+	fpart3	EyeToPos = normalize(v.EyeToPos);
+	fpart3	Reflect = reflect(EyeToPos, nNormal);
+
+	fpart4	ReflectSoft_Spec = texCUBE(MapReflectSoft, Reflect);
+	fpart3	ReflectSoft = ReflectSoft_Spec.rgb;
+
+	fpart2	TcFresnel;
+	TcFresnel.x = dot(-EyeToPos, nNormal);
+	TcFresnel.y = Specular.a;
+	fpart3	Fresnel = tex2D(MapFresnel, TcFresnel);
+
+// Remove fresnel where normal map is back reflecting (compared to low normal)
+//	fpart	FresnelOnlyFrontReflect = dot(Reflect, NormalLow)>0;
+	fpart	FresnelOnlyFrontReflect = saturate((dot(Reflect, NormalLow)+0.3)*4);
+
+	Fresnel *= FresnelOnlyFrontReflect;
+
+	fpart3	LSpecularSoft = Fresnel*ReflectSoft*Specular.rgb;
+
+//	fpart	SpecIntens = pow(max(0,dot(Reflect, -GbxLightDirDirInWorld0)), SpecularPower);
+	fpart	SpecIntens = ReflectSoft_Spec.a;
+	SpecIntens *= IsLighted;
+	SpecIntens *= Specular.a;
+
+	fpart3	LSpecular = SpecIntens*GbxLightDirRgb0*Specular.rgb;
+
+	Output.Color.rgb = Diffuse;
+	Output.Color.rgb*= LDiffus;
+//	WARNING: Clouds brings more problems in night
+#ifndef DTwkPSkipMap_Clouds
+	Output.Color.rgb*= Clouds*2;
+#endif
+
+// PreModulate don't work well with lightmapX2 saturation (gray instead of white)
+
+#ifdef DScaleSpecularSoft
+	LSpecularSoft	*= DScaleSpecularSoft;
+#endif
+#ifdef DScaleSpecular
+	LSpecular 		*= DScaleSpecular;
+#endif
+
+	// Add ReflectSoft after pre-modulating with reverse intens
+	fpart	RelfectSoftI = dot(LSpecularSoft, fpart3(1,1,1)*rsqrt(3));
+//	PreMod(Output.Color.rgb, In01Comp1PreMod_ReflectSoft, RelfectSoftI);
+	Output.Color.rgb += LSpecularSoft;
+
+	// Add Specular after pre-modulating with reverse intens
+//	PreMod(Output.Color.rgb, In01Comp1PreMod_DirSpecular, SpecIntens);
+	Output.Color.rgb += LSpecular;
+//	Output.Color.a		= 1;
+	Output.Color.a = Diffuse.a;
+
+//	Output.Color.rgb = (1-saturate(Output.Color.rgb))*50;
+
+#ifdef DGbxEditor
+#define MDebug(__Value) Output.Color.rgb = Output.Color.rgb*0.001 + (__Value);
+	MDbg_Diffuse(			LDiffus*Diffuse);
+	MDbg_Specular(			LSpecular);
+	MDbg_Fresnel(			LSpecularSoft);
+	MDbg_NormalInW(			nNormal*0.5+0.5);
+	MDbg_MapDiffuse(		Diffuse);
+	MDbg_MapSpecular(		Specular);
+	MDbg_MapOcclusion(		Occlusion);
+	MDbg_LightDiffuse(		LDiffus);
+	MDbg_Occlusion(			Occlusion);
+#if DGbxPDefinedPC3_Shadow
+	MDbg_MapperShadow0(		DGbxPGenCodePC3_ShadowDbgMapper0);
+#endif
+#endif
+
+#else
+float2 f = ERROR_MISSING_DEFINE;
+#endif
+//////////////////////////////////////////
+// Debug
+//
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + v.TgtToWorldX;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + v.TgtToWorldY;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(v.TcDiffG_TcOcc.xy,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(v.TcDiffG_TcOcc.zw,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(v.TcNorm,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Diffuse;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Ambient;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Specular;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Specular.a;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Specular*Specular.a;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + v.PreLight;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Lighting;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Occlusion;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + v.PreLight+Lighting;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + -NormalInTgt.x*10;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + NormalInTgt*0.5+0.5;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Normal*0.5+0.5;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Ambient;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffus;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Reflect;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflectSoft;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + RelfectSoftI;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(TcFresnel,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Fresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Fresnel*ReflectSoft*Specular.rgb;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + NormalLow*0.5+0.5;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + IsLighted;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffusDir;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + SpecIntens;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LSpecular;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + -dot(Reflect, NormalLow);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + 1-FresnelOnlyFrontReflect;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + NormalLow;
+	return Output;
+}
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_a PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_b PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}

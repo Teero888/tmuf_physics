@@ -1,0 +1,57 @@
+#include <Common.PHlsl.txt>
+struct PS_INPUT		{
+	float4 Color0		: COLOR0;
+	float4 Color1		: COLOR1;
+	float2 TcBlend1		: TEXCOORD0;
+	float2 TcBlend2		: TEXCOORD1;
+	float2 TcBlendI		: TEXCOORD2;
+	float2 TcClouds		: TEXCOORD3;
+	float2 TcStripe		: TEXCOORD4;
+	float3 PosToEyeV	: TEXCOORD5;
+	float2 TcLight		: TEXCOORD6;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+sampler2D	MapBlend1;
+sampler2D	MapBlend2;
+sampler2D	MapBlendI;
+sampler2D	MapClouds;
+sampler2D	MapStripe;
+sampler2D	MapFresnel;
+sampler2D	MapLighting;
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	fpart4		Blend1 = tex2D(MapBlend1, v.TcBlend1);
+	fpart4		Blend2 = tex2D(MapBlend2, v.TcBlend2);
+	fpart		BlendI = tex2D(MapBlendI, v.TcBlendI).x;
+	fpart4		Blend  = lerp(Blend1, Blend2, BlendI);
+	fpart4		Clouds = tex2D(MapClouds, v.TcClouds);
+	fpart3		Stripe = tex2D(MapStripe, v.TcStripe);
+	fpart3		Lighting = tex2D(MapLighting, v.TcLight);
+	fpart3		PosToEye = normalize(v.PosToEyeV);
+	fpart		TcFresnel = PosToEye.y;
+	fpart3		Fresnel = tex2D(MapFresnel, TcFresnel);
+	Output.Color.rgb = Blend*Lighting*2;
+	Output.Color.rgb*= Clouds*2;
+	Output.Color.rgb*= Stripe*2;
+	Output.Color.rgb*= Fresnel*2;
+	Output.Color.a	= 1;
+
+/////////////////////////
+//  Debug
+//	Output.Color	=  Output.Color*0.001 + Blend1;
+//	Output.Color	=  Output.Color*0.001 + Blend2;
+//	Output.Color	=  Output.Color*0.001 + BlendI;
+//	Output.Color	=  Output.Color*0.001 + Blend;
+//	Output.Color	=  Output.Color*0.001 + Clouds;
+//	Output.Color	=  Output.Color*0.001 + TcFresnel;
+//	Output.Color.rgb=  Output.Color*0.001 + Fresnel;
+//	Output.Color.rgb=  Output.Color*0.001 + Stripe;
+//	Output.Color.rgb=  Output.Color*0.001 + Lighting;
+//	Output.Color.rgb=  Output.Color*0.001 + float3(v.TcLight,0);
+
+	return Output;
+}

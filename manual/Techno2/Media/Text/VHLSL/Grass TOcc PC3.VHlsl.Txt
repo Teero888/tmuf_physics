@@ -1,0 +1,75 @@
+#include <Common.VHlsl.txt>
+
+struct VS_INPUT		{
+	float4 Position		: POSITION;
+	float3 Normal		: NORMAL;
+	float4 PreLight		: COLOR0;
+#ifdef DTwkVSkipMap_Occlusion
+	float4 TcPreLightGen: TEXCOORD0; // Expand to (u,v,0,1) to transform with float4x2...
+#else
+	float2 TcOcclusion	: TEXCOORD0;
+	float4 TcPreLightGen: TEXCOORD1; // Expand to (u,v,0,1) to transform with float4x2...
+#endif
+};
+struct VS_OUTPUT		{
+	float4 HPosition	: POSITION;
+	float  Fog			: FOG;
+	float4 Color0		: COLOR0;
+	float4 Color1		: COLOR1;
+	float2 TcBlend1		: TEXCOORD0;
+	float2 TcBlend2		: TEXCOORD1;
+	float2 TcBlendI		: TEXCOORD2;
+	float2 TcStripe		: TEXCOORD3;
+	float4 PosToEyeV_D	: TEXCOORD4;
+#ifndef DTwkVSkipMap_Clouds
+	float2 TcClouds		: TEXCOORD5;
+#endif
+#if !defined(DTwkVSkipMap_Occlusion) || !defined(DTwkVSkipMap_PreLightGen)
+	float4 TcOcc_PreLightGen: TEXCOORD6;
+#endif
+#ifdef DGbxVDefinedPC3_Shadow
+	float4 TcShadow		: TEXCOORD7;
+#endif
+};
+#define TcShadowBuffer TcShadow
+
+const float4x4	GbxVisualPrCamera;
+const float4x2	GbxVPositionToTexCoord_MapBlend1;
+const float4x2	GbxVPositionToTexCoord_MapBlend2;
+const float4x2	GbxVPositionToTexCoord_MapBlendI;
+const float4x2	GbxVPositionToTexCoord_MapClouds;
+const float4x2	GbxVPositionToTexCoord_MapStripe;
+const float4	GbxEyeInVisual;
+const float4x2	GbxVTexCoordToLightGenP;
+
+DGbxVGenLoadPC3_Shadow
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+	Output.HPosition	= mul(v.Position, GbxVisualPrCamera);
+	Output.Fog 			= mul(v.Position, GbxVisualToFogTnL);
+	Output.TcBlend1.xy	= mul(v.Position, GbxVPositionToTexCoord_MapBlend1);
+	Output.TcBlend2		= mul(v.Position, GbxVPositionToTexCoord_MapBlend2);
+	Output.TcBlendI		= mul(v.Position, GbxVPositionToTexCoord_MapBlendI);
+	Output.TcStripe		= mul(v.Position, GbxVPositionToTexCoord_MapStripe);
+	Output.PosToEyeV_D.xyz= GbxEyeInVisual-v.Position;
+	Output.PosToEyeV_D.w= dot(v.Normal, GbxEyeInVisual); // only to use v.Normal
+#ifndef DTwkVSkipMap_Occlusion
+	Output.TcOcc_PreLightGen.xy	= v.TcOcclusion;
+#endif
+#ifndef DTwkVSkipMap_Clouds
+	Output.TcClouds		= mul(v.Position, GbxVPositionToTexCoord_MapClouds);
+#endif
+#ifdef DTwkVSkipMap_PreLightGen
+	DGbxVGenCodePC3_Prelight_NoVertexColor
+	DGbxVGenCodePC3_Shadow
+	Output.Color0.a		= 1;
+	Output.Color1.a		= 1;
+#else
+	Output.TcOcc_PreLightGen.wz= mul(v.TcPreLightGen, GbxVTexCoordToLightGenP);
+	Output.Color0.rgb	= GbxLightDirRgb0*max(0, dot(v.Normal, -GbxLightDirDir0));
+#endif
+	DGbxVGenCodePC3_Shadow
+	return Output;
+}

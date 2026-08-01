@@ -1,0 +1,41 @@
+#include <Common.VHlsl.txt>
+struct VS_INPUT {
+	float4 Position : POSITION0;
+	float3 Normal 	: NORMAL0;
+	float4 Color0	: COLOR0;
+	float2 TexCoord0: TEXCOORD0;
+	float2 TexCoord1: TEXCOORD1;
+};
+struct VS_OUTPUT {
+	float4 Position : POSITION0;
+	float4 Color0		: COLOR0;
+	float2 TcDiffuse	: TEXCOORD0;
+	float2 TcOcclusion	: TEXCOORD1;
+	float3 NormalInW	: TEXCOORD2;
+	float3 EyeToPos		: TEXCOORD3;
+	float2 TcClouds		: TEXCOORD4;
+};
+const float4x4 	GbxVisualPrCamera;
+const float4x3	GbxVisualToWorld;
+const float4	GbxEyeInVisual;
+const float4x2 	GbxVPositionToTexCoord1;
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT Output = (VS_OUTPUT)0;
+
+	float3		EyeToPosInVisual = v.Position-GbxEyeInVisual;
+
+#ifdef DGbxVDefinedPC3_Prelight
+	DGbxVGenCodePC2_Prelight
+#else
+	Output.Color0.rgb 	= LightAD_Dir1(v.Normal);
+#endif
+	Output.Color0.a		= 1;
+	Output.Position 	= mul(v.Position, GbxVisualPrCamera);
+	Output.TcDiffuse	= v.TexCoord0;
+	Output.TcOcclusion	= v.TexCoord1;
+	Output.NormalInW	= mul(v.Normal, GbxVisualToWorld);
+	Output.TcClouds 	= mul(v.Position, GbxVPositionToTexCoord1);
+	Output.EyeToPos		= mul(EyeToPosInVisual, GbxVisualToWorld);
+	return Output;
+};

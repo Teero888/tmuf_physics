@@ -1,0 +1,13 @@
+ps.1.1
+// Decl(t0, FresnelRefrac)
+// Decl(t1, Translucent)
+// Decl(t2, Clouds)
+// Load(c0, GameUnder_FadeRGB_BlendIn)
+tex	t0
+tex t1
+tex t2
+mul		r0, t1, 1-t0
+mul_x2	r0, r0, t2
+
+;mov r0,1-t0
+;mov r0,t1

@@ -1,0 +1,80 @@
+#include <Common.VHlsl.txt>
+
+#ifdef DTwkVQualityLess_High
+#define DTwkVSkipMap_Normal 1
+#endif
+
+struct VS_INPUT		{
+	float4 Position		: POSITION0;
+	float4 PreLight		: COLOR0;
+	float3 Normal		: NORMAL0;
+	float3 TangentU		: TANGENT0;
+	float3 TangentV		: BINORMAL0;
+	float2 TexCoord0	: TEXCOORD0;
+	float2 TexCoord1	: TEXCOORD1;
+	float4 TcLightGenP	: TEXCOORD2; // Expand to (u,v,0,1) to mul with float4x2...
+};
+struct VS_OUTPUT		{
+	float4 Position		: POSITION;
+	float1 Fog			: FOG;
+	float4 NormalLow_IsLight : COLOR0;
+	float4 PreLight		: COLOR1;
+	float4 Tc0_Tc1		: TEXCOORD0;	// .xywz (ps_2_0 optim)
+#ifndef DTwkVSkipMap_Normal
+	float3 TgtToWorldX 	: TEXCOORD1;
+	float3 TgtToWorldY	: TEXCOORD2;
+	float3 TgtToWorldZ	: TEXCOORD3;
+#endif
+	float3 EyeToPos		: TEXCOORD4;
+#ifndef DTwkVSkipMap_Clouds
+	float2 TcClouds		: TEXCOORD5;
+#endif
+#ifndef DTwkVSkipMap_PreLightGen
+	float2 TcLightGenP	: TEXCOORD6;
+#endif
+#ifdef DGbxVDefinedPC3_Shadow
+	float4 TcShadow		: TEXCOORD7;
+#endif
+};
+#define TcShadowBuffer TcShadow
+
+const float2	GbxSubVisualWeight2 = float2(1,0);
+
+const float4x4	GbxVisualPrCamera;
+const float4x3	GbxVisualToWorld;
+const float3	GbxEyeInVisual;
+const float4x2	GbxVPositionToTexCoord_MapClouds;
+const float4x2	GbxVTexCoordToLightGenP;
+
+DGbxVGenLoadPC3_Shadow
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+
+	DGbxVGenCodePC3_Prelight_NoAmbient
+	DGbxVGenCodePC3_Shadow
+	float3x3	TangentToVisual = TangentToVisual_FromTBN(v.TangentU, v.TangentV, v.Normal);
+	float3x3	TangentToWorld = mul(TangentToVisual, (float3x3)GbxVisualToWorld);
+	float3		EyeToPosInVisual = v.Position-GbxEyeInVisual;
+
+	Output.Position		= mul(v.Position, GbxVisualPrCamera);
+	Output.Fog			= dot(v.Position, GbxVisualToFogTnL);
+	Output.Tc0_Tc1.xy	= v.TexCoord0;
+	Output.Tc0_Tc1.wz	= v.TexCoord1;
+#ifndef DTwkVSkipMap_Normal
+	Output.TgtToWorldX	= Matrix_GetColumnX(TangentToWorld);
+	Output.TgtToWorldY	= Matrix_GetColumnY(TangentToWorld);
+	Output.TgtToWorldZ	= Matrix_GetColumnZ(TangentToWorld);
+#endif
+	Output.EyeToPos		= mul(EyeToPosInVisual, GbxVisualToWorld);
+	Output.NormalLow_IsLight.rgb= 0.5 + 0.5*mul(v.Normal, GbxVisualToWorld);
+	Output.NormalLow_IsLight.a	= dot(v.Normal, -GbxLightDirDir0)>0; 
+#ifndef DTwkVSkipMap_Clouds
+	Output.TcClouds		= mul(v.Position,	GbxVPositionToTexCoord_MapClouds); 
+#endif
+#ifndef DTwkVSkipMap_PreLightGen
+	Output.TcLightGenP	= mul(v.TcLightGenP, GbxVTexCoordToLightGenP);
+#endif
+	return Output;
+}

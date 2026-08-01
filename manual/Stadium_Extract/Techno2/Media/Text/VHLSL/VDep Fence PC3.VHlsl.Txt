@@ -1,0 +1,93 @@
+#include <Common.VHlsl.txt>
+
+struct VS_INPUT		{
+	float4 Position		: POSITION;
+	float2 TexCoord0	: TEXCOORD0;
+};
+struct VS_OUTPUT		{
+	float4 HPosition	: POSITION;
+	float4 TcDiffuse	: TEXCOORD0;
+	float2 TcFence		: TEXCOORD1;
+	float4 EyeToPosXW	: TEXCOORD2;
+};
+
+const float4x4	GbxVisualPrCamera;
+const float4x3	GbxVisualToWorld;
+const float4x3	GbxVisualToCamera;
+const float4x3	GbxVPositionToTexCrd3d0;
+const float4	GbxEyeInVisual;
+const float4	GbxTreeMip_MinMaxZ;
+const float4	GbxCameraMinMaxZ;
+
+const float			TexScaleU = 0.2f;
+
+const float			SlideStartZ_Y1 = 2.f;
+const float			SlideIntens = 0.4f;
+static const float	SlidePower = 1;
+
+VS_OUTPUT Main(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+
+	float4	Position = v.Position;
+	float3	EyeToPos = Position-GbxEyeInVisual;
+
+	// Clamp to limit fillrate
+#if 1
+	float3	cEyeToPos = EyeToPos;
+	float	EyeToPosAbsZ = abs(EyeToPos.z);
+	float	ClampAbsX = 0.5*EyeToPosAbsZ;
+	float	DistAfterMaxZ = EyeToPosAbsZ-GbxTreeMip_MinMaxZ.y;
+	if (DistAfterMaxZ>0) {
+		ClampAbsX = 0;
+	}
+	cEyeToPos.x = clamp(EyeToPos.x, -ClampAbsX, ClampAbsX);
+	Position.x = (cEyeToPos + GbxEyeInVisual).x;
+#else
+	float	EyeToPosAbsZ = abs(EyeToPos.z);
+	float	DistAfterMaxZ = EyeToPosAbsZ-GbxTreeMip_MinMaxZ.y;
+	if (DistAfterMaxZ>0) {
+		Position.z = sign(EyeToPos.z)*GbxCameraMinMaxZ.y*2 + GbxEyeInVisual;
+	}
+	else 
+	{
+		float	ClampAbsX = 0.5*EyeToPosAbsZ;
+		float	ClampEyeToPosX = clamp(EyeToPos.x, -ClampAbsX, ClampAbsX);
+		Position.x = ClampEyeToPosX + GbxEyeInVisual;
+	}
+#endif
+	// Generate TexCoord: U is world-planar along fence axis
+	float3	PosInW = mul(Position, GbxVisualToWorld);
+	float3	TgtUInW = mul(float3(1,0,0), GbxVisualToWorld);
+
+	Output.TcFence.x = TexScaleU*dot(PosInW, TgtUInW);
+	// v.TexCoord.x Encodes random offsets for each quad (each quad vertices have same .x)
+	Output.TcFence.x+= v.TexCoord0.x;	
+	Output.TcFence.y = v.TexCoord0.y;	
+
+	{	// Project on plane to sample ground render map:
+		float4	PositionOnXZ = Position;
+//		PositionOnXZ.y = 0;
+//		do not project the further vertices
+		PositionOnXZ.y*= saturate(EyeToPosAbsZ-GbxTreeMip_MinMaxZ.y*0.5);
+		Output.TcDiffuse	= mul(PositionOnXZ, GbxVPositionToTexCrd3d0).xyzz;
+	}
+
+	// SlideZ
+	float	StartZ = SlideStartZ_Y1*abs(EyeToPos.y);
+	float	SlideZ = SlideIntens*pow(saturate(1-abs(EyeToPos.z)/StartZ), SlidePower);
+	if (Position.y<0.01) {
+		Position.z += -SlideZ*sign(EyeToPos.z);
+	}
+
+	// Update EyeToPos to take slides into account:
+	EyeToPos = Position-GbxEyeInVisual;
+	Output.EyeToPosXW.w = EyeToPos.z;
+	Output.EyeToPosXW.x = 0.5*(Output.EyeToPosXW.w+EyeToPos.x*2);
+	Output.EyeToPosXW.yz = 0;
+
+	Output.HPosition	= mul(Position, GbxVisualPrCamera);
+	return Output;
+}
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v) {return Main(v);}

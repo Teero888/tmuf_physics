@@ -1,0 +1,32 @@
+ps_1_1
+// Decl(t0, Diffuse_Gloss)
+// Decl(t1, Clouds)
+// Decl(t2, FresnelPC2)
+// Decl(t3, CubeReflectHardSpecA)
+// Load(c0, LightDirRgb)
+tex	t0
+tex	t1
+tex	t2
+tex	t3
+
+// Specular highlight is precomputed in EnvCubeReflect's alpha
+
+// PC3 model is using scaled Diffuse_Gloss.a for gloss/metal
+// can be done here, but has currently a saturation side effect => disable
+
+// Specular: combine with diffuse : fake (metal) specular color
+// avoid saturation issues
+mad_sat		r0,			c0,		t3.a,	v0
+
+// Diffuse lighting + gloss scale
+mul			r0.rgb,		r0,		t0
+;+add_sat		r0.a,		t0.a,	t0.a	// wrong because fresnel was already prescaled...
++mov			r0.a,		t0.a
+
+// Fresnel : mod rgba
+mul			r0,			r0,		t2
+
+mad			r0,			r0.a,	t3,		r0
+
+// Clouds *=2
+mul_x2		r0,			r0,		t1

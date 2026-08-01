@@ -1,0 +1,18 @@
+#include <Common.PHlsl.txt>
+struct PS_INPUT		{
+	float2 TcPreLightGen: TEXCOORD0;
+	float  TcFadeToWhite: TEXCOORD1;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+sampler2D	MapPreLightGen;
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	float3		LightFromMap = tex2D(MapPreLightGen, v.TcPreLightGen);
+	Output.Color.rgb = lerp(LightFromMap, 1, saturate(v.TcFadeToWhite));
+	Output.Color.a	= 1;
+	return Output;
+}

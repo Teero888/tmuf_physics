@@ -1,0 +1,13 @@
+ps_1_1
+// Decl(t0, GradientV)
+// Decl(t1, HorizonClouds)
+// Load(c0, CloudsRgbMin)
+// Load(c1, CloudsRgbMax)
+tex t0
+tex t1
+
+lrp t1.xyz, t1.w, c1, c0  // Horizon<0,1,2>
+lrp r0.rgb,	t1.w, t1, t0  // Blend<0,1,2,3>
++mov r0.a, t0
+
+;mov r0, t0

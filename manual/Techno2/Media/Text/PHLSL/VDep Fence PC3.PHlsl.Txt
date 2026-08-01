@@ -1,0 +1,48 @@
+#include <Common.PHlsl.txt>
+struct PS_INPUT		{
+	float4 TcDiffuse	: TEXCOORD0;
+	float2 TcFence		: TEXCOORD1;
+	float4 EyeToPosXW	: TEXCOORD2;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+sampler2D	MapDiffuse;
+sampler2D	MapFenceA;
+sampler1D	MapFadeXZ;
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	fpart4		Diffuse = tex2Dproj(MapDiffuse, v.TcDiffuse);
+	fpart4		Fence = tex2D(MapFenceA, v.TcFence);
+	Output.Color	= saturate(Diffuse*Fence*2);
+	Output.Color.a	= Fence.a;
+//	Output.Color.a	= Fence.a*(1-BlendI);
+
+	fpart	TgtFadeXZ = tex1Dproj(MapFadeXZ, v.EyeToPosXW).x;
+
+	fpart	TgtFade = TgtFadeXZ;
+	Output.Color.a	= saturate(Output.Color.a-TgtFade);
+//	Output.Color.a	*= 1-TgtFade;
+//	Output.Color.a	= min(Output.Color.a,TgtFade);
+
+	fpart	IsVisible = saturate(Diffuse.a*2-1);
+	Output.Color.a	*= IsVisible;
+
+//	Output.Color.a	+= 0.95; 
+
+/////////////////////////
+//  Debug
+//	Output.Color	=  Output.Color*0.001 + float4(v.TcDiffuse.xy/v.TcDiffuse.w,0,1);
+//	Output.Color	=  Output.Color*0.001 + Diffuse;
+//	Output.Color	=  Output.Color*0.001 + Diffuse.a;
+//	Output.Color	=  Output.Color*0.001 + IsVisible;
+//	Output.Color	=  Output.Color*0.001 + Light;
+//	Output.Color	=  Output.Color*0.001 + v.TcFence.y;
+//	Output.Color	=  Output.Color*0.001 + pow(v.TcFence.y,0.5);
+//	Output.Color	=  Output.Color*0.001 + Fence;
+//	Output.Color	=  Output.Color*0.001 + TgtFade;
+
+	return Output;
+}

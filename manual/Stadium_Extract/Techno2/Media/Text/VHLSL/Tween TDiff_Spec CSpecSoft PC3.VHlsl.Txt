@@ -1,0 +1,71 @@
+#include <Common.VHlsl.txt>
+struct VS_INPUT		{
+	float4 Position		: POSITION0;
+	float4 Position1	: POSITION1;
+	float3 Normal		: NORMAL0;
+	float3 Normal1		: NORMAL1;
+	float2 TcDiffuse	: TEXCOORD0;
+};
+struct VS_OUTPUT		{
+	float4 Position		: POSITION;
+	float1 Fog			: FOG;
+	float4 Rgb0_IsLight	: COLOR0;
+	float3 NormalLow	: COLOR1;
+	float2 TcDiffuse	: TEXCOORD0;
+	float3 NormalInW	: TEXCOORD1;
+	float3 EyeToPos		: TEXCOORD2;
+	float2 TcClouds		: TEXCOORD3;
+#ifdef DGbxVDefinedPC3_Shadow
+	float4 TcShadow		: TEXCOORD4;
+#endif
+};
+#define TcShadowBuffer TcShadow
+
+const float2	GbxSubVisualWeight2 = float2(1,0);
+
+const float4x4	GbxVisualPrCamera;
+const float4x3	GbxVisualToWorld;
+const float3	GbxEyeInVisual;
+const float4x2	GbxVPositionToTexCoord5;
+
+DGbxVGenLoadPC3_Shadow
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+
+	DGbxVGenCodePC3_Shadow
+//#if 0
+#ifdef DDevice_StreamOffset	
+	float2	SubWeight01 = GbxSubVisualWeight2;
+	float4	Position 	= v.Position*SubWeight01.x	+ v.Position1*SubWeight01.y;
+	float3	Normal 		= v.Normal*SubWeight01.x	+ v.Normal1*SubWeight01.y;
+//	float3	TangentU	= v.TangentU*SubWeight01.x	+ v.TangentU1*SubWeight01.y;
+	Normal = normalize(Normal);
+//	TangentU = normalize(TangentU);
+#else
+	float4	Position	= v.Position;
+	float3	Normal		= v.Normal;
+//	float3	TangentU	= v.TangentU;
+#endif
+	float3	EyeToPosInVisual = Position-GbxEyeInVisual;
+
+	Output.Position		= mul(Position, GbxVisualPrCamera);
+	Output.Fog			= dot(Position, GbxVisualToFogTnL);
+	Output.TcDiffuse	= v.TcDiffuse;
+	Output.NormalInW	= mul(Normal, GbxVisualToWorld);
+	Output.EyeToPos		= mul(EyeToPosInVisual, GbxVisualToWorld);
+	Output.TcClouds		= mul(Position,	GbxVPositionToTexCoord5); 
+	Output.Rgb0_IsLight.rgb = 1;
+//	Output.Rgb0_IsLight.a	= 0.5+0.5*dot(Normal, -GbxLightDirDir0); 
+	Output.Rgb0_IsLight.a	= dot(Normal, -GbxLightDirDir0)>0; 
+	Output.NormalLow	= 0.5 + 0.5*mul(Normal, GbxVisualToWorld);
+
+//	Output.Color = float4(Normal,1);
+//	Output.Color = float4(TangentU,1);
+//	Output.Color = float4(v.Normal,1);
+//	Output.Color = float4(v.Normal1,1);
+//	Output.Color = float4(v.TangentU,1);
+//	Output.Color = float4(v.TangentU1,1);
+	return Output;
+}

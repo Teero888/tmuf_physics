@@ -1,0 +1,43 @@
+#include <Common.VHlsl.txt>
+struct VS_INPUT		{
+	float4 Position	: POSITION;
+	float3 Normal	: NORMAL;
+	float4 Color0	: COLOR0;
+	float4 Color1	: COLOR1;
+	float2 TcDiffuse: TEXCOORD0;
+};
+struct VS_OUTPUT		{
+	float4 HPosition	: POSITION;
+	float4 Color0		: COLOR0;
+	float4 Color1		: COLOR1;
+	float3 TcSpecular 	: TEXCOORD0;
+	float2 TcClouds		: TEXCOORD1;
+#ifdef DGbxVDefinedPC3_Shadow
+	float4 TcShadow		: TEXCOORD2;
+#endif
+};
+#define TcShadowBuffer TcShadow
+
+const float4x4	GbxVisualPrCamera;
+const float4	GbxEyeInVisual;
+const float4x3	GbxVisualToLightDir0;
+const float4x2	GbxVPositionToTexCoord1;
+
+DGbxVGenLoadPC3_Shadow
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;
+	DGbxVGenCodePC3_Prelight
+	DGbxVGenCodePC3_Shadow
+	float3		Eye = normalize(v.Position-GbxEyeInVisual);
+	float3		Reflect = reflect(Eye, v.Normal);
+// Hack no shadows => ColorVertex always lighted
+//	Output.Color0 = 	Output.Color1;
+	Output.Color0.a		= 1;
+	Output.Color1.a		= 1;
+	Output.HPosition	= mul(v.Position, GbxVisualPrCamera);
+	Output.TcSpecular	=-mul(Reflect, GbxVisualToLightDir0);
+	Output.TcClouds		= mul(v.Position, GbxVPositionToTexCoord1);
+	return Output;
+}

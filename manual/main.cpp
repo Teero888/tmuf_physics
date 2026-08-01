@@ -154,11 +154,16 @@ int main() {
     
     uint32_t currentEventIdx = 0;
 
-    // Get the first event time to sync the start
+    // Get the first and last event time
     firstEventTime = replay->m_events.empty() ? 0 : replay->m_events[0].time;
+    uint32_t lastEventTime = replay->m_events.empty() ? 0 : replay->m_events.back().time;
+    uint32_t totalDurationMs = lastEventTime > firstEventTime ? (lastEventTime - firstEventTime) : 0;
+    int maxSteps = (totalDurationMs / 10) + 100; // Run slightly past the last input
+
+    std::cout << "Simulating for " << maxSteps << " steps (" << (maxSteps * 0.01f) << "s)..." << std::endl;
 
     // 4. Emulate the main loop integration step
-    for (int t = 0; t < 1000; ++t) {
+    for (int t = 0; t < maxSteps; ++t) {
         
         uint32_t currentSimTimeMs = firstEventTime + (t * 10);
         

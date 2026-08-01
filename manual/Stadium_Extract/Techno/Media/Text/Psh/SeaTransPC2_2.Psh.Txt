@@ -1,0 +1,14 @@
+ps.1.2
+// Decl(t0, Bump)
+// Decl(t1, Refrac)
+// Decl(t2, Reflec)
+// Decl(t3, Fresnel)
+tex	t0
+texbem	t1,t0
+texbem	t2,t0
+tex	t3
+mov_sat	r1.a, t3.b
+lrp_sat	r0, r1.a, t2, t1
+mul		r0, r0, v0
+;mov r0,r1.a
+;mov r0,t1

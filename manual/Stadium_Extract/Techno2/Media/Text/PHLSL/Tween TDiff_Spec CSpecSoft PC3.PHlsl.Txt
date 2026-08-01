@@ -1,0 +1,142 @@
+#include <Common.PHlsl.txt>
+struct PS_INPUT		{
+	float4 Rgb0_IsLight	: COLOR0;
+	float3 NormalLow	: COLOR1;
+	float2 TcDiffuse	: TEXCOORD0;
+	fpart3 NormalInW	: TEXCOORD1;
+	float3 EyeToPos		: TEXCOORD2;
+	float2 TcClouds		: TEXCOORD3;
+	float4 TcShadow		: TEXCOORD4;
+};
+#define TcShadowBuffer TcShadow
+
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+
+sampler2D	MapDiffuse;
+sampler2D	MapSpecular;
+samplerCUBE MapCubeAmbient;
+samplerCUBE MapReflectSoft;
+sampler2D	MapFresnel;
+sampler2D	MapClouds;
+
+const fpart4	GbxLightDirDirInWorld0;
+
+const fpart 	SpecularPower = 20;
+const fpart4	In01Comp1PreMod_ReflectSoft = fpart4(0.5,0,0,1); 
+const fpart4	In01Comp1PreMod_DirSpecular = fpart4(0.3,0,0,1);
+
+DGbxPGenLoadPC3_Shadow
+
+void PreMod(in out fpart3 _Dst, in fpart4 _PreMod, in fpart _Intens)
+{
+	_Dst *= (_PreMod.w - _Intens*_PreMod.x);
+}
+
+PS_OUTPUT Main(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	DGbxPGenCodePC3_Shadow
+
+	fpart4	Diffuse = tex2D(MapDiffuse, v.TcDiffuse);
+	fpart4	Specular = tex2D(MapSpecular, v.TcDiffuse);
+	fpart3	Clouds = tex2D(MapClouds, v.TcClouds);
+
+	fpart3	nNormal = normalize(v.NormalInW);
+//nNormal = nNormal*0.01 + float3(0,0,1);
+
+	fpart3	NormalLow = v.NormalLow*2-1;
+/*	fpart3	NormalLow = float3(TgtToWorldX.z, TgtToWorldY.z, TgtToWorldZ.z);
+	fpart	IsLighted = dot(NormalLow, -GbxLightDirDirInWorld0)>0;*/
+	fpart	IsLighted = v.Rgb0_IsLight.a;
+
+	fpart4	Ambient = texCUBE(MapCubeAmbient, nNormal);
+
+	fpart3	LDiffus = Ambient;
+
+	// AmbientCube stores directionnal light intens in alpha:
+	Ambient.a = max(0,dot(nNormal, -GbxLightDirDirInWorld0));
+
+	fpart3	LDiffusDir = Ambient.a*ShadowDiffus*GbxLightDirRgb0*IsLighted;
+
+	LDiffus += LDiffusDir;
+	LDiffus = saturate(LDiffus);
+
+	fpart3	EyeToPos = normalize(v.EyeToPos);
+	fpart3	Reflect = reflect(EyeToPos, nNormal);
+
+	fpart3	ReflectSoft = texCUBE(MapReflectSoft, Reflect);
+
+	fpart2	TcFresnel;
+	TcFresnel.x = dot(-EyeToPos, nNormal);
+	TcFresnel.y = Specular.a;
+	fpart3	Fresnel = tex2D(MapFresnel, TcFresnel);
+
+// Remove fresnel where normal map is back reflecting (compared to low normal)
+//	fpart	FresnelOnlyFrontReflect = dot(Reflect, NormalLow)>0;
+	fpart	FresnelOnlyFrontReflect = saturate((dot(Reflect, NormalLow)+0.3)*4);
+
+	Fresnel *= FresnelOnlyFrontReflect;
+
+	fpart3	LSpecularSoft = Fresnel*ReflectSoft*Specular.rgb;
+
+	fpart	SpecIntens = pow(max(0,dot(Reflect, -GbxLightDirDirInWorld0)), SpecularPower);
+	SpecIntens *= IsLighted;
+	SpecIntens *= ShadowSpecular;
+	SpecIntens *= Specular.a;
+
+	fpart3	LSpecular = SpecIntens*GbxLightDirRgb0*Specular.rgb;
+
+	Output.Color.rgb = LDiffus*Diffuse;
+	Output.Color.rgb*= Clouds*2;
+
+	// Add ReflectSoft after pre-modulating with reverse intens
+	fpart	RelfectSoftI = dot(LSpecularSoft, fpart3(1,1,1)*rsqrt(3));
+	PreMod(Output.Color.rgb, In01Comp1PreMod_ReflectSoft, RelfectSoftI);
+	Output.Color.rgb += LSpecularSoft;
+
+	// Add Specular after pre-modulating with reverse intens
+	PreMod(Output.Color.rgb, In01Comp1PreMod_DirSpecular, SpecIntens);
+	Output.Color.rgb += LSpecular;
+//	Output.Color.a		= 1;
+	Output.Color.a = Diffuse.a;
+
+//////////////////////////////////////////
+// Debug
+//
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + v.TgtToWorldX;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + v.TgtToWorldY;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(v.TcDiffG_TcOcc.xy,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(v.TcDiffG_TcOcc.zw,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(v.TcNorm,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Diffuse;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Specular;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Specular.a;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Specular*Specular.a;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Occlusion;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + -NormalInTgt.x*10;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + NormalInTgt*0.5+0.5;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Normal*0.5+0.5;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Ambient;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffus;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Reflect;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + ReflectSoft;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + RelfectSoftI;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + float3(TcFresnel,0);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Fresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Fresnel*ReflectSoft*Specular.rgb;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + NormalLow*0.5+0.5;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + IsLighted;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffusDir;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + SpecIntens;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LSpecular;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + -dot(Reflect, NormalLow);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + 1-FresnelOnlyFrontReflect;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + NormalLow;
+	return Output;
+}
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_a PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_b PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}

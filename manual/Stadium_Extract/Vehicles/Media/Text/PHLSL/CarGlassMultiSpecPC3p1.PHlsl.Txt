@@ -1,0 +1,58 @@
+
+#include <Common.PHlsl.txt>
+
+struct PS_INPUT		{
+	fpart4 RgbDiffuse	: COLOR0;
+	float2 TcTranslucent: TEXCOORD0;
+	float2 TcClouds		: TEXCOORD1;
+	fpart3 NormalInV	: TEXCOORD2;
+	float3 EyeVInV		: TEXCOORD3;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+
+sampler2D   MapClouds;
+sampler2D	MapFresnel;
+sampler2D	MapTranslucent;
+
+//const float3	GbxLightAmbient;
+//const float3		GbxLightDirDirInWorld0;
+//const float3		GbxLightDirRgb0;
+
+PS_OUTPUT Main(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	fpart3		NormalInV 	= v.NormalInV;//normalize(v.NormalInW);
+	float3		EyeVInV	= normalize(v.EyeVInV);
+
+	fpart3		LDiffus = v.RgbDiffuse;
+
+	fpart2		TcFresnel = dot(NormalInV, -EyeVInV);
+	fpart		Fresnel = tex2D(MapFresnel, TcFresnel).r;
+
+	fpart		Gloss = 1;
+
+	Fresnel = Fresnel*Gloss;
+
+	fpart4		Translucent = tex2D(MapTranslucent, v.TcTranslucent);
+
+// ((fpart3)GbxLightAmbient+LDiffus);
+
+	Output.Color		= Translucent*Fresnel;
+	Output.Color.rgb   *= 2*(fpart3)tex2D(MapClouds, v.TcClouds);
+
+///////// DEBUG //////////////////
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Translucent;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Translucent*Fresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + 0.5+0.5*NormalInV;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + 0.5+0.5*EyeVInV;
+//	Output.Color.rg		= Output.Color.rgb*0.001 + TcFresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Fresnel;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Gloss;
+//	Output.Color.a		= 1;
+	return Output;
+}
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_a PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}

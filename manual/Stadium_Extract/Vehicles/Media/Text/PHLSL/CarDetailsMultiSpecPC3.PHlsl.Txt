@@ -1,0 +1,168 @@
+
+#include <Common.PHlsl.txt>
+
+struct PS_INPUT		{
+	float2 TcDiffuse	: TEXCOORD0;
+	float2 TcClouds		: TEXCOORD1;
+	fpart3 NormalInW	: TEXCOORD2;
+	float3 PosInW		: TEXCOORD3;
+	float4 TcShadow		: TEXCOORD4;
+	float2 TcLightFromMap: TEXCOORD5;
+	fpart4 Color0		: COLOR0;
+	fpart4 Color1		: COLOR1;
+};
+#define TcShadowBuffer TcShadow
+
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+
+sampler2D   MapClouds;
+sampler2D   MapDiffuse_Gloss;
+sampler2D	MapHemiSpec;
+samplerCUBE	MapCubeInvHemi;
+sampler2D	MapLightFromMap;
+sampler2D	MapDirtMarks;
+
+DGbxPGenLoadPC3_Shadow
+
+const fpart4	GbxHemiTexToSub_Sxy_Tyx_MapHemiSpec;
+const fpart4x3	GbxHemiWorldToEye_MapHemiSpec;
+
+const fpart4	GbxGameUnder_BlendIn_Fade_FOut_FIn;
+
+const fpart2	GbxLightFromMap_ScaleRGB_TransRGB;
+const fpart4	GbxLightFromMap_ScaleAD_TransDA;
+
+// ascending comp: to remove
+#define GbxVehicle_DirtIntens_Gloss GbxVehicle_DirtIntens
+const fpart4	GbxVehicle_DirtIntens_Gloss;
+
+//const float3		GbxLightAmbient;
+//const float3		GbxLightDirDirInWorld0;
+//const float3		GbxLightDirRgb0;
+
+// Renaming
+#define	DHemiTexToSub_Sxy_Tyx GbxHemiTexToSub_Sxy_Tyx_MapHemiSpec
+#define DHemiWorldToEye GbxHemiWorldToEye_MapHemiSpec
+
+PS_OUTPUT Main(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	DGbxPGenCodePC3_Shadow
+
+	fpart4		DiffuseGloss = tex2D(MapDiffuse_Gloss, v.TcDiffuse);
+	fpart3		NormalInW 	= v.NormalInW;//normalize(v.NormalInW);
+	float3		PosInW	= v.PosInW;//normalize(v.PosInW);
+	fpart3		LDiffus = lerp(v.Color0,v.Color1,ShadowDiffus);
+	fpart3		ReflecInW = normalize(PosInW - 2*dot(NormalInW,PosInW)*NormalInW);
+	fpart4		LightFromMap = tex2D(MapLightFromMap, v.TcLightFromMap);
+	fpart3		Clouds   = tex2D(MapClouds, v.TcClouds);
+
+#ifndef DTwkPSkipMap_DirtMarks
+	fpart4		DirtMarks = tex2D(MapDirtMarks, v.TcDiffuse);
+	fpart		DirtIntens = DirtMarks.a*GbxVehicle_DirtIntens_Gloss.x;
+	DiffuseGloss.rgb = lerp(DiffuseGloss, DirtMarks, DirtIntens);
+	DiffuseGloss.a	 = lerp(DiffuseGloss, GbxVehicle_DirtIntens_Gloss.y, DirtIntens).a;
+#endif
+
+	///////////////////////
+	// Complex mapping : compute pixel's reflection vector
+	fpart3		ReflecInE = mul(ReflecInW, DHemiWorldToEye);
+	fpart2		TcHemiSpec = texCUBE(MapCubeInvHemi, ReflecInE);
+
+	TcHemiSpec = TcHemiSpec*DHemiTexToSub_Sxy_Tyx.xy + DHemiTexToSub_Sxy_Tyx.wz;
+
+	fpart4		HemiSpec = tex2D(MapHemiSpec, TcHemiSpec);
+	fpart3		SpecSparkles = HemiSpec.rgb;
+	fpart3		LAmbient = GbxLightAmbient.rgb*VDepAmbOcc;
+
+#ifndef DTwkPSkipMap_LightFromMap
+#ifndef DGbxPDefinedPC3_IsNight
+	LightFromMap.rg*= GbxLightFromMap_ScaleAD_TransDA.xy;
+	LightFromMap.rg+= GbxLightFromMap_ScaleAD_TransDA.wz;	
+	LAmbient *= LightFromMap.r;
+#ifdef DGbxPDefinedPC3_Shadow
+	fpart3	DirIntens = ShadowDiffus;
+#else
+	fpart3	DirIntens = LightFromMap.g;
+#endif
+	LDiffus = v.Color1*DirIntens;
+	SpecSparkles *= DirIntens;
+#else
+	LightFromMap*= GbxLightFromMap_ScaleRGB_TransRGB.x;
+	LightFromMap+= GbxLightFromMap_ScaleRGB_TransRGB.y;
+	LDiffus *= LightFromMap;
+#endif
+#endif
+
+//	DiffuseGloss.a 		= 1; 
+//	DiffuseGloss.rgb 	= DiffuseGloss*0.0001 +1 ;
+
+	float3	LHdr = LAmbient+LDiffus;
+
+	Output.Color.a		= 0;
+	Output.Color.rgb	= DiffuseGloss*LHdr;
+	Output.Color.rgb   += DiffuseGloss.a*SpecSparkles;
+	Output.Color.rgb   *= 2*Clouds;
+
+#ifdef DGbxEditor
+#define MDebug(__Value) Output.Color.rgb = Output.Color.rgb*0.001 + (__Value);
+	MDbg_Above1(			Output.Color.rgb-1);
+	MDbg_Clouds(			Clouds);
+	MDbg_Diffuse(			LDiffus*DiffuseGloss);
+	MDbg_Specular(			0);
+	MDbg_Occlusion(			VDepAmbOcc);
+	MDbg_MapDiffuse(		DiffuseGloss);
+	MDbg_MapSpecular(		DiffuseGloss.a*SpecSparkles);
+	MDbg_MapShadow0(		ShadowSpecular);
+#if DGbxPDefinedPC3_Shadow
+	MDbg_MapperShadow0(		DGbxPGenCodePC3_ShadowDbgMapper0);
+#endif
+	MDbg_LightDiffuse(		LAmbient+LDiffus);
+	MDbg_LightDiffuseAmb(	LAmbient);
+	MDbg_LightDiffuseDir0(	LDiffus);
+	MDbg_LightSpecular(		0);
+#endif
+///////// DEBUG //////////////////
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + IHdr ;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LHdr ;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffus;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffus*(1-Metal);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + (fpart3)GbxLightAmbient;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + (fpart3)GbxLightAmbient+LDiffus;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + (fpart3)GbxLightAmbient+LDiffus*(1-Metal);
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LDiffus*DiffuseGloss;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + DiffuseGloss;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + DiffuseGloss.a;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + SpecSparkles;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + SpecVarnish;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + DiffuseGloss*Metal*SpecSparkles;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Gloss;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + Metal;
+//	Output.Color.rgb	= Output.Color.rgb*0.001 + LightFromMap;
+	return Output;
+}
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+ps_2_a PS_OUTPUT psMain(const PS_INPUT v) {return Main(v);}
+
+/*
+
+#if 0
+	/////////////////////////
+	// Fast mapping : use [normalized] normal
+	// - EyeVect is assumed to be constant
+//	NormalInE = normalize(NormalInE);
+	TcHemiSpec = 0.5*(1+NormalInE);
+#else
+	///////////////////////
+	// Complex mapping : compute pixel's reflection vector
+	// Renormalizing Normal (by including the dot(N,N) does not really matters here (cost 2 instr.)
+//	float3		ReflecInE = PosInE - 2*dot(NormalInE,PosInE)*NormalInE;
+//	float3		ReflecInE = dot(NormalInE,NormalInE)*PosInE - 2*dot(NormalInE,PosInE)*NormalInE;
+	fpart3		ReflecInE = mul(ReflecInW, GbxWorldToEye);
+	TcHemiSpec = texCUBE(MapCubeInvHemi, ReflecInE);
+#endif
+
+*/

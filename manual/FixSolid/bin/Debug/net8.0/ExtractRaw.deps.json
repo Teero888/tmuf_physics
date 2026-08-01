@@ -1,0 +1,278 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "ExtractRaw/1.0.0": {
+        "dependencies": {
+          "GBX.NET": "2.2.0",
+          "GBX.NET.PAK": "2.2.0"
+        },
+        "runtime": {
+          "ExtractRaw.dll": {}
+        }
+      },
+      "GBX.NET/2.2.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+          "TmEssentials": "2.5.0"
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
+      "GBX.NET.Crypto/1.0.2": {
+        "dependencies": {
+          "GBX.NET": "2.2.0",
+          "GBX.NET.Hashing": "1.0.2"
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.Crypto.dll": {
+            "assemblyVersion": "1.0.2.0",
+            "fileVersion": "1.0.2.0"
+          }
+        }
+      },
+      "GBX.NET.Hashing/1.0.2": {
+        "dependencies": {
+          "GBX.NET": "2.2.0",
+          "System.IO.Hashing": "9.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.Hashing.dll": {
+            "assemblyVersion": "1.0.2.0",
+            "fileVersion": "1.0.2.0"
+          }
+        }
+      },
+      "GBX.NET.PAK/2.2.0": {
+        "dependencies": {
+          "GBX.NET": "2.2.0",
+          "GBX.NET.Crypto": "1.0.2",
+          "NativeSharpLz4": "0.1.0",
+          "NativeSharpZlib": "0.2.8"
+        },
+        "runtime": {
+          "lib/net8.0/GBX.NET.PAK.dll": {
+            "assemblyVersion": "2.2.0.0",
+            "fileVersion": "2.2.0.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.0": {
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/9.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "System.Diagnostics.DiagnosticSource": "9.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
+          }
+        }
+      },
+      "NativeSharpLz4/0.1.0": {
+        "runtime": {
+          "lib/net8.0/NativeSharpLz4.dll": {
+            "assemblyVersion": "0.1.0.0",
+            "fileVersion": "0.1.0.0"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/browser-wasm/native/liblz4.a": {
+            "rid": "browser-wasm",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm/native/liblz4.so": {
+            "rid": "linux-arm",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm64/native/liblz4.so": {
+            "rid": "linux-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/liblz4.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/liblz4.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/liblz4.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "NativeSharpZlib/0.2.8": {
+        "runtime": {
+          "lib/net8.0/NativeSharpZlib.dll": {
+            "assemblyVersion": "0.2.8.0",
+            "fileVersion": "0.2.8.0"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/browser-wasm/native/zlib.a": {
+            "rid": "browser-wasm",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm/native/zlib.so": {
+            "rid": "linux-arm",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-arm64/native/zlib.so": {
+            "rid": "linux-arm64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/linux-x64/native/zlib.so": {
+            "rid": "linux-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/zlib.dll": {
+            "rid": "win-x64",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x86/native/zlib.dll": {
+            "rid": "win-x86",
+            "assetType": "native",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "System.Diagnostics.DiagnosticSource/9.0.0": {
+        "runtime": {
+          "lib/net8.0/System.Diagnostics.DiagnosticSource.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
+          }
+        }
+      },
+      "System.IO.Hashing/9.0.0": {
+        "runtime": {
+          "lib/net8.0/System.IO.Hashing.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.24.52809"
+          }
+        }
+      },
+      "TmEssentials/2.5.0": {
+        "runtime": {
+          "lib/net8.0/TmEssentials.dll": {
+            "assemblyVersion": "2.5.0.0",
+            "fileVersion": "2.5.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ExtractRaw/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "GBX.NET/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2sOnbeJYqqLwo852UN9ZvJGhkRdydDnYlNJoRrITGNjg+X1xlcc1lzvAXQcu+3dgfIFg8b8KIFzK6re1czlEZQ==",
+      "path": "gbx.net/2.2.0",
+      "hashPath": "gbx.net.2.2.0.nupkg.sha512"
+    },
+    "GBX.NET.Crypto/1.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nXnMZSEZ1P+JovGc9drhOWHtO0f/y6ozGzphRRH7QrdyXYwlCJMUuHKXIjJh5aBJcHKJHZAvEgDdH25AIant4Q==",
+      "path": "gbx.net.crypto/1.0.2",
+      "hashPath": "gbx.net.crypto.1.0.2.nupkg.sha512"
+    },
+    "GBX.NET.Hashing/1.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-r7ls4ukIPtsQ64Jy2sVUHI/P5O+g7cycXcQLjDfdMZW7wvpevv4SSGE6Lo3r4NJAHCHCF8ZOf02lPkE9epRg9A==",
+      "path": "gbx.net.hashing/1.0.2",
+      "hashPath": "gbx.net.hashing.1.0.2.nupkg.sha512"
+    },
+    "GBX.NET.PAK/2.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-A/hdFzCkgdU0WFovhzuCBhmjQw9+gVLAQYVSxkJc8cYtqENRbBir7gwJwKNXL20XZrSx59zVP0QoOWbvfg8zSQ==",
+      "path": "gbx.net.pak/2.2.0",
+      "hashPath": "gbx.net.pak.2.2.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+6f2qv2a3dLwd5w6JanPIPs47CxRbnk+ZocMJUhv9NxP88VlOcJYZs9jY+MYSjxvady08bUZn6qgiNh7DadGgg==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/9.0.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.9.0.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging.Abstractions/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-g0UfujELzlLbHoVG8kPKVBaW470Ewi+jnptGS9KUi6jcb+k2StujtK3m26DFSGGwQ/+bVgZfsWqNzlP6YOejvw==",
+      "path": "microsoft.extensions.logging.abstractions/9.0.0",
+      "hashPath": "microsoft.extensions.logging.abstractions.9.0.0.nupkg.sha512"
+    },
+    "NativeSharpLz4/0.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4BTRstSURTrTVqOMURR6cZJcBgcwlu1/zMJLbi3FZd/cbpLeRiqETcKqzEBKN0g7nG7AXkhxVyabdI5ZQjOuxw==",
+      "path": "nativesharplz4/0.1.0",
+      "hashPath": "nativesharplz4.0.1.0.nupkg.sha512"
+    },
+    "NativeSharpZlib/0.2.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-59ci9pwPje/t6yPwewXOV3Yo9pcL7ctvyiqmz/7mGmdANUWGkB7H0F6iLeV368yJujDh4JdFjyZfLGSbj4/ZWQ==",
+      "path": "nativesharpzlib/0.2.8",
+      "hashPath": "nativesharpzlib.0.2.8.nupkg.sha512"
+    },
+    "System.Diagnostics.DiagnosticSource/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ddppcFpnbohLWdYKr/ZeLZHmmI+DXFgZ3Snq+/E7SwcdW4UnvxmaugkwGywvGVWkHPGCSZjCP+MLzu23AL5SDw==",
+      "path": "system.diagnostics.diagnosticsource/9.0.0",
+      "hashPath": "system.diagnostics.diagnosticsource.9.0.0.nupkg.sha512"
+    },
+    "System.IO.Hashing/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-seeO8icDfED/Qwl9PDFUx2Gf/7xv7dPsMnw5PnRwNZuz4EWMpy0wIVohC4MfCcTIoJgp+KUrWG4WH3NPSusQOA==",
+      "path": "system.io.hashing/9.0.0",
+      "hashPath": "system.io.hashing.9.0.0.nupkg.sha512"
+    },
+    "TmEssentials/2.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uNuwNSqcw7a0eQ2lgkkNtZAe+4JgaCJ/qeLHE8Pynq9TpRnr3O9j4QolcOK3wnRLcQBV4nxfChuzMA75X2Tt0w==",
+      "path": "tmessentials/2.5.0",
+      "hashPath": "tmessentials.2.5.0.nupkg.sha512"
+    }
+  }
+}

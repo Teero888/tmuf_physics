@@ -1,0 +1,41 @@
+ps.1.4
+// Decl(t0, DuDv0)
+// Decl(t1, DuDv1)
+// Decl(t2, Refrac)
+// Decl(t3, Reflec)
+// Decl(t4, Fresnel)
+// LoadFx(In01BumpRefractPC2_4, c0.r, 0.452)
+// LoadFx(In01BumpReflectPC2_4, c1.r, 0.792)
+// Load(c2, Ps1xMaxDivByMaxZInCamera)
+
+texld	r0,		t0	// r0=DuDv0
+texld	r1,		t1	// r1=DuDv1
+texcrd	r2.xyz,	t2	// r2=TcRefrac
+texcrd	r3.xyz,	t3	// r3=TcReflec
+texld	r4,		t4	// r4=Fresnel
+
+add_d2	r0, r0, r1				// r0 = (DuDv0+DuDv1)/2
+mul		r0, r0, c2
+mad 	r2.xy, r0, c0.x, r2
+mad 	r3.xy, r0, c1.x, r3
+
+phase
+
+texld	r2,		r2_dz			// lookup Refrac
+texld	r3,		r3_dz			// lookup Reflec
+
+lrp		r0, r4.b, r3, r2		// Blend Reflec/Refrac % Fresnel
+mul		r0, r0, v0
+
+// Debug
+;mov 	r0, r4.b	// Fresnel
+;mov 	r0, r2		// Refrac
+;mov 	r0, r3		// Reflec
+
+
+/* To Get more than [-1,1] range
+add_x2	r5.x, c0.a, c0.a
+add_x2	r5.y, c1.a, c1.a
+mad 	r2.xy, r0, r5.x, r2
+mad 	r3.xy, r0, r5.y, r3
+*/

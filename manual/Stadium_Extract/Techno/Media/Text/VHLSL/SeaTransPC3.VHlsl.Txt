@@ -1,0 +1,44 @@
+#include <Common.VHlsl.txt>
+
+struct VS_INPUT		{
+	float4 Position     : POSITION;
+	float4 Color0		: COLOR0;
+};
+struct VS_OUTPUT	{
+	float4 Position 	: POSITION;
+	float1 Fog			: FOG;
+	float4 Color0		: COLOR0;
+	float2 TcBump0  	: TEXCOORD0;
+	float2 TcBump1  	: TEXCOORD1;
+	float3 PosToEyeInW	: TEXCOORD2;
+//	float2 TcHeightScale: TEXCOORD3;
+	float4 TcShadowBuffer: TEXCOORD3;
+};
+const float4x4	GbxVisualPrCamera;
+const float4	GbxEyeInVisual;
+const float4x3	GbxVisualToWorld;
+const float4x2	GbxVPositionToTexCoord5;
+const float		GbxTime;
+
+// TweakFxs
+const float		BumpScaleUV = 0.05f;
+const float		BumpSpeedUV = 0.01f;
+
+DGbxGenLoadPC3_VS_Shadow
+
+vs_1_1 VS_OUTPUT vsMain(const VS_INPUT v)
+{
+	VS_OUTPUT	Output = (VS_OUTPUT) 0;	
+	float2		TcBump = mul(v.Position, GbxVisualToWorld).xz*BumpScaleUV;
+	// Get eye-vector in tangent space (not normalized)
+	float3		PosToEyeInVisual = GbxEyeInVisual-v.Position;
+	Output.Position		= mul(v.Position, GbxVisualPrCamera);
+	Output.Fog			= dot(v.Position, GbxVisualToFogTnL);
+	Output.Color0		= v.Color0;
+	Output.TcBump0  	= TcBump-BumpSpeedUV*GbxTime.x*float2(1.27389,-0.8975)*0.5;
+	Output.TcBump1  	= TcBump+BumpSpeedUV*GbxTime.x;
+	Output.PosToEyeInW	= mul(PosToEyeInVisual, GbxVisualToWorld);
+//	Output.TcHeightScale= mul(v.Position, GbxVPositionToTexCoord5);
+	DGbxGenCodePC3_VS_Shadow
+	return Output;
+}

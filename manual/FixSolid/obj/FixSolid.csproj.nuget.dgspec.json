@@ -1,0 +1,80 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/teero/software/tmnf_physics/manual/FixSolid/FixSolid.csproj": {}
+  },
+  "projects": {
+    "/home/teero/software/tmnf_physics/manual/FixSolid/FixSolid.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/teero/software/tmnf_physics/manual/FixSolid/FixSolid.csproj",
+        "projectName": "FixSolid",
+        "projectPath": "/home/teero/software/tmnf_physics/manual/FixSolid/FixSolid.csproj",
+        "packagesPath": "/home/teero/.nuget/packages/",
+        "outputPath": "/home/teero/software/tmnf_physics/manual/FixSolid/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/teero/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "GBX.NET": {
+              "target": "Package",
+              "version": "[2.4.2, )"
+            },
+            "GBX.NET.LZO": {
+              "target": "Package",
+              "version": "[2.1.5, )"
+            },
+            "GBX.NET.PAK": {
+              "target": "Package",
+              "version": "[2.4.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/home/teero/software/tmnf_physics/manual/dotnet/sdk/8.0.421/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+#include <Common.Phlsl.txt>
+#include <Effects\\Media\\Text\\PHlsl\\Lights.Phlsl.Inc.txt>
+struct PS_INPUT		{
+	float3 PosInWorld	: TEXCOORD0;
+	float3 NormalInW	: TEXCOORD1;
+};
+struct PS_OUTPUT		{
+	fpart4 Color	: COLOR0;
+};
+sampler2D		MapShadow;
+
+SLightDir		Dir;
+const float4		SxSyTyTx = float4(1,1, 0,0);
+const float4x4 	WorldPw01Shadow = float4x4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
+
+ps_2_0 PS_OUTPUT psMain(const PS_INPUT v)
+{
+	PS_OUTPUT	Output = (PS_OUTPUT) 0;
+	float4 PosInWorld = float4(v.PosInWorld,1);
+	float4 TcShadow = mul(PosInWorld, WorldPw01Shadow);
+	Output.Color.rgb	= DoLightDir(Dir, v.NormalInW)*IsLighted(MapShadow, TcShadow);
+	Output.Color.a		= 1;
+	Output.Color.rg		= Output.Color*SxSyTyTx + SxSyTyTx.wz;
+	return Output;
+}
