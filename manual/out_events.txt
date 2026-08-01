@@ -1,0 +1,2708 @@
+TMNF Physics Reconstruction - Full Race Simulation (Real Raycast)
+===================================================================
+World mesh populated from 0x0900F004 (CPlugSurfaceGeom). Vertices: 1536, Triangles: 1606
+World mesh populated with giant floor.
+Scanning for Solid Chunk...
+Found chunk 0x09015000 (CPlugVisualIndexedTriangles)!
+Dumped solid_decompressed.bin (524263 bytes)
+Found chunk 0x03092019 via scan!
+DEBUG: eventsDuration=3605940, numNames=7, numEvents=6517
+First Event Time: 97695
+Loaded 6517 input events from replay.
+Starting simulation with 1:1 Physics Loop...
+Control Mappings: Accel=3, Brake=4, SteerR=2, SteerL=1
+Ev[0] t=97695 ctrl=3 val=1
+Ev[1] t=97700 ctrl=3 val=0
+Ev[2] t=100000 ctrl=6 val=1
+Ev[3] t=100010 ctrl=3 val=1
+Ev[4] t=106787 ctrl=2 val=1
+Ev[5] t=106993 ctrl=2 val=0
+Ev[6] t=107086 ctrl=2 val=1
+Ev[7] t=108506 ctrl=2 val=0
+Ev[8] t=108724 ctrl=2 val=1
+Ev[9] t=108802 ctrl=2 val=0
+LastEv[6507] t=3697170 ctrl=3 val=0
+LastEv[6508] t=3697774 ctrl=3 val=1
+LastEv[6509] t=3699868 ctrl=2 val=0
+LastEv[6510] t=3700101 ctrl=2 val=1
+LastEv[6511] t=3700290 ctrl=2 val=0
+LastEv[6512] t=3700352 ctrl=2 val=1
+LastEv[6513] t=3700789 ctrl=2 val=0
+LastEv[6514] t=3705141 ctrl=1 val=1
+LastEv[6515] t=3705219 ctrl=1 val=0
+LastEv[6516] t=3705940 ctrl=0 val=1
+Simulating for 360924 steps (3609.24s)...
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 Gas changed to 1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 Gas changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 1
+t=97695 SteerR changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerL changed to -1
+t=97695 SteerL changed to 0
+t=97695 SteerR changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+t=97695 Gas changed to 0
+t=97695 Gas changed to 1
+T: 0s | Pos: (483, 73.57, 79) | Spd: 0 km/h | Yaw: 1.57 | Steer: 1.00
+t=98975 SteerR changed to 0.00
+t=99045 SteerR changed to 1.00
+t=100565 SteerR changed to 0.00
+t=101145 SteerL changed to -1.00
+t=101455 SteerL changed to 0.00
+t=101535 SteerL changed to -1.00
+t=101655 SteerL changed to 0.00
+t=101735 SteerL changed to -1.00
+t=101995 SteerL changed to 0.00
+t=102335 SteerR changed to 1.00
+T: 5.00s | Pos: (483, -3.81, -45) | Spd: 180 km/h | Yaw: 1.57 | Steer: 1.00
+t=102945 SteerR changed to 0.00
+t=106825 SteerR changed to 1.00
+t=107025 Gas changed to 0.00
+t=107195 Gas changed to 1.00
+t=107305 Gas changed to 0.00
+t=107525 Gas changed to 1.00
+T: 10.00s | Pos: (483, -176.97, -419) | Spd: 346 km/h | Yaw: 1.57 | Steer: 1.00
+t=108665 SteerR changed to 0.00
+t=112035 SteerR changed to 1.00
+t=112345 SteerR changed to 0.00
+T: 15.00s | Pos: (483, -596.53, -1026) | Spd: 526 km/h | Yaw: 1.57 | Steer: 0.00
+t=112845 SteerL changed to -1.00
+t=113095 SteerL changed to 0.00
+t=113915 SteerR changed to 1.00
+t=114715 SteerR changed to 0.00
+t=115935 SteerR changed to 1.00
+t=117195 SteerR changed to 0.00
+t=117305 SteerR changed to 1.00
+t=117695 SteerR changed to 0.00
+T: 20.00s | Pos: (483, -1264.18, -1882) | Spd: 706 km/h | Yaw: 1.57 | Steer: 0.00
+t=117825 SteerR changed to 1.00
+t=117945 SteerR changed to 0.00
+t=121115 SteerL changed to -1.00
+t=121295 SteerL changed to 0.00
+t=121605 SteerL changed to -1.00
+t=121715 SteerL changed to 0.00
+t=121825 SteerL changed to -1.00
+t=121915 SteerL changed to 0.00
+T: 25.00s | Pos: (483, -2182.45, -2988) | Spd: 886 km/h | Yaw: 1.57 | Steer: 0.00
+t=122915 SteerR changed to 1.00
+t=123015 SteerR changed to 0.00
+t=124265 SteerL changed to -1.00
+t=124345 SteerL changed to 0.00
+t=124905 SteerR changed to 1.00
+t=124995 SteerR changed to 0.00
+t=126095 SteerR changed to 1.00
+t=126635 SteerR changed to 0.00
+t=126755 SteerR changed to 1.00
+T: 30.00s | Pos: (483, -3354.73, -4344) | Spd: 1066 km/h | Yaw: 1.57 | Steer: 1.00
+t=128055 SteerR changed to 0.00
+t=128975 SteerR changed to 1.00
+t=129785 Gas changed to 0.00
+t=130305 Gas changed to 1.00
+t=130945 SteerR changed to 0.00
+t=131375 SteerR changed to 1.00
+t=131445 SteerR changed to 0.00
+T: 35.00s | Pos: (483, -4785.25, -5937) | Spd: 1227 km/h | Yaw: 1.57 | Steer: 0.00
+t=132715 SteerR changed to 1.00
+t=132735 SteerR changed to 0.00
+t=135915 Gas changed to 0.00
+t=136275 SteerR changed to 1.00
+t=136565 SteerR changed to 0.00
+t=136605 SteerR changed to 1.00
+t=136935 SteerR changed to 0.00
+t=136975 SteerR changed to 1.00
+t=137025 SteerR changed to 0.00
+t=137245 SteerR changed to 1.00
+T: 40.00s | Pos: (483, -6478.90, -7751) | Spd: 1343 km/h | Yaw: 1.57 | Steer: 1.00
+t=138945 Gas changed to 1.00
+t=138955 SteerR changed to 0.00
+t=141595 SteerR changed to 1.00
+T: 45.00s | Pos: (483, -6857.89, -9687) | Spd: 1478 km/h | Yaw: 1.57 | Steer: 1.00
+t=142795 SteerR changed to 0.00
+t=143155 SteerL changed to -1.00
+t=143275 SteerL changed to 0.00
+t=143595 SteerR changed to 1.00
+t=143625 Gas changed to 0.00
+t=143875 SteerR changed to 0.00
+t=143935 Gas changed to 1.00
+t=143975 Gas changed to 0.00
+t=144015 Gas changed to 1.00
+t=144085 SteerR changed to 1.00
+t=144635 SteerR changed to 0.00
+t=144725 SteerL changed to -1.00
+t=145275 SteerL changed to 0.00
+t=145375 SteerL changed to -1.00
+t=146615 SteerL changed to 0.00
+t=147055 SteerL changed to -1.00
+t=147175 SteerL changed to 0.00
+T: 50.00s | Pos: (483, -7205.69, -11853) | Spd: 1645 km/h | Yaw: 1.57 | Steer: 0.00
+t=149305 SteerL changed to -1.00
+t=149565 SteerL changed to 0.00
+t=149715 Gas changed to 0.00
+t=149855 SteerR changed to 1.00
+t=151025 Gas changed to 1.00
+t=152205 SteerR changed to 0.00
+T: 55.00s | Pos: (483, -7816.89, -14233) | Spd: 1778 km/h | Yaw: 1.57 | Steer: 0.00
+t=153015 SteerL changed to -1.00
+t=153345 SteerL changed to 0.00
+t=154835 SteerL changed to -1.00
+t=155595 SteerL changed to 0.00
+t=155695 SteerL changed to -1.00
+t=155855 SteerL changed to 0.00
+t=156055 SteerR changed to 1.00
+t=156225 SteerR changed to 0.00
+t=156335 SteerR changed to 1.00
+t=156775 Gas changed to 0.00
+t=157465 Gas changed to 1.00
+T: 60.00s | Pos: (483, -8695.75, -16825) | Spd: 1933 km/h | Yaw: 1.57 | Steer: 1.00
+t=157845 SteerR changed to 0.00
+t=157975 SteerR changed to 1.00
+t=159065 SteerR changed to 0.00
+t=159315 SteerR changed to 1.00
+t=159375 SteerR changed to 0.00
+t=160425 SteerR changed to 1.00
+t=160455 SteerR changed to 0.00
+t=160595 SteerL changed to -1.00
+t=161115 SteerL changed to 0.00
+t=161505 SteerR changed to 1.00
+t=161975 SteerR changed to 0.00
+t=162145 SteerR changed to 1.00
+t=162265 SteerR changed to 0.00
+T: 65.00s | Pos: (483, -9847.65, -19636) | Spd: 2113 km/h | Yaw: 1.57 | Steer: 0.00
+t=165145 SteerL changed to -1.00
+t=165405 SteerL changed to 0.00
+t=165775 SteerR changed to 1.00
+t=167255 Gas changed to 0.00
+t=167545 Gas changed to 1.00
+T: 70.00s | Pos: (483, -11279.17, -22697) | Spd: 2283 km/h | Yaw: 1.57 | Steer: 1.00
+t=167955 SteerR changed to 0.00
+t=168295 SteerL changed to -1.00
+t=168345 SteerL changed to 0.00
+t=168925 SteerR changed to 1.00
+t=170075 SteerR changed to 0.00
+t=171205 SteerR changed to 1.00
+t=171605 SteerR changed to 0.00
+t=171855 SteerL changed to -1.00
+t=172245 SteerL changed to 0.00
+T: 75.00s | Pos: (483, -12997.94, -25993) | Spd: 2463 km/h | Yaw: 1.57 | Steer: 0.00
+t=175015 SteerR changed to 1.00
+t=175335 Gas changed to 0.00
+t=175405 Gas changed to 1.00
+t=175475 Gas changed to 0.00
+t=175675 Gas changed to 1.00
+t=176565 SteerR changed to 0.00
+t=176675 SteerR changed to 1.00
+t=176975 SteerR changed to 0.00
+T: 80.00s | Pos: (483, -15012.63, -29534) | Spd: 2633 km/h | Yaw: 1.57 | Steer: 0.00
+t=181435 SteerR changed to 1.00
+t=181485 SteerR changed to 0.00
+T: 85.00s | Pos: (483, -17332.95, -33317) | Spd: 2813 km/h | Yaw: 1.57 | Steer: 0.00
+t=183355 SteerL changed to -1.00
+t=183415 SteerL changed to 0.00
+t=184225 SteerL changed to -1.00
+t=184325 SteerL changed to 0.00
+t=185105 SteerR changed to 1.00
+t=185195 SteerR changed to 0.00
+t=185475 SteerR changed to 1.00
+t=185555 SteerR changed to 0.00
+t=185625 SteerR changed to 1.00
+t=185725 SteerR changed to 0.00
+t=185825 SteerR changed to 1.00
+t=185915 SteerR changed to 0.00
+t=186005 SteerR changed to 1.00
+t=186325 SteerR changed to 0.00
+t=186395 SteerR changed to 1.00
+t=186755 SteerR changed to 0.00
+t=186835 SteerR changed to 1.00
+T: 90.00s | Pos: (483, -19969.96, -37350) | Spd: 2993 km/h | Yaw: 1.57 | Steer: 1.00
+t=187785 SteerR changed to 0.00
+t=188145 SteerL changed to -1.00
+t=188275 SteerL changed to 0.00
+t=188505 SteerR changed to 1.00
+t=189015 Gas changed to 0.00
+t=189275 Gas changed to 1.00
+t=190625 SteerR changed to 0.00
+t=191015 SteerR changed to 1.00
+t=191065 SteerR changed to 0.00
+T: 95.00s | Pos: (483, -22935.99, -41624) | Spd: 3164 km/h | Yaw: 1.57 | Steer: 0.00
+t=194715 Gas changed to 0.00
+t=194995 SteerR changed to 1.00
+t=196985 Gas changed to 1.00
+T: 100.00s | Pos: (483, -26244.27, -46102) | Spd: 3262 km/h | Yaw: 1.57 | Steer: 1.00
+t=197755 SteerR changed to 0.00
+t=198105 SteerL changed to -1.00
+t=198195 SteerL changed to 0.00
+t=200595 SteerR changed to 1.00
+t=200785 SteerR changed to 0.00
+t=200875 SteerR changed to 1.00
+t=200955 SteerR changed to 0.00
+t=201145 SteerR changed to 1.00
+t=202255 SteerR changed to 0.00
+t=202575 SteerL changed to -1.00
+T: 105.00s | Pos: (483, -29907.51, -50758) | Spd: 3442 km/h | Yaw: 1.57 | Steer: -1.00
+t=202715 SteerL changed to 0.00
+t=203075 SteerR changed to 1.00
+t=203465 SteerR changed to 0.00
+t=203555 SteerR changed to 1.00
+t=203955 SteerR changed to 0.00
+t=203975 Gas changed to 0.00
+t=204105 SteerL changed to -1.00
+t=205135 Gas changed to 1.00
+t=206725 SteerL changed to 0.00
+t=207005 SteerL changed to -1.00
+t=207065 SteerL changed to 0.00
+t=207315 SteerR changed to 1.00
+t=207425 SteerR changed to 0.00
+t=207555 SteerR changed to 1.00
+T: 110.00s | Pos: (483, -33941.24, -55628) | Spd: 3580 km/h | Yaw: 1.57 | Steer: 1.00
+t=207775 SteerR changed to 0.00
+t=208845 SteerL changed to -1.00
+t=209075 SteerL changed to 0.00
+t=209095 Gas changed to 0.00
+t=209205 SteerR changed to 1.00
+t=210555 Gas changed to 1.00
+t=211705 SteerR changed to 0.00
+t=212205 SteerL changed to -1.00
+t=212555 SteerL changed to 0.00
+T: 115.00s | Pos: (483, -38362.03, -60684) | Spd: 3707 km/h | Yaw: 1.57 | Steer: 0.00
+t=213715 SteerL changed to -1.00
+t=213905 SteerL changed to 0.00
+t=214055 SteerL changed to -1.00
+t=214155 SteerL changed to 0.00
+t=214405 SteerL changed to -1.00
+t=215125 SteerL changed to 0.00
+t=215555 SteerR changed to 1.00
+t=215585 Gas changed to 0.00
+t=215975 Gas changed to 1.00
+t=216025 SteerR changed to 0.00
+t=216165 SteerR changed to 1.00
+t=216305 SteerR changed to 0.00
+t=216385 SteerR changed to 1.00
+t=217445 Gas changed to 0.00
+T: 120.00s | Pos: (483, -43187.95, -65951) | Spd: 3864 km/h | Yaw: 1.57 | Steer: 1.00
+t=217735 Gas changed to 1.00
+t=218735 SteerR changed to 0.00
+t=219675 SteerL changed to -1.00
+t=219825 SteerL changed to 0.00
+t=220015 SteerL changed to -1.00
+t=220145 SteerL changed to 0.00
+t=220205 SteerL changed to -1.00
+t=220575 SteerL changed to 0.00
+t=220985 SteerR changed to 1.00
+t=221125 SteerR changed to 0.00
+t=221245 SteerR changed to 1.00
+t=221735 SteerR changed to 0.00
+T: 125.00s | Pos: (483, -46118.35, -71442) | Spd: 4043 km/h | Yaw: 1.57 | Steer: 0.00
+t=225415 SteerR changed to 1.00
+t=225595 SteerR changed to 0.00
+t=225695 SteerR changed to 1.00
+t=226895 Gas changed to 0.00
+t=227145 Gas changed to 1.00
+t=227345 SteerR changed to 0.00
+t=227695 SteerR changed to 1.00
+T: 130.00s | Pos: (483, -46447.47, -77182) | Spd: 4214 km/h | Yaw: 1.57 | Steer: 1.00
+t=227765 SteerR changed to 0.00
+t=228375 SteerL changed to -1.00
+t=228515 SteerL changed to 0.00
+t=230605 SteerR changed to 1.00
+t=230825 SteerR changed to 0.00
+t=231425 SteerL changed to -1.00
+t=231665 SteerL changed to 0.00
+t=232275 SteerR changed to 1.00
+T: 135.00s | Pos: (483, -47137.19, -83160) | Spd: 4394 km/h | Yaw: 1.57 | Steer: 1.00
+t=232995 SteerR changed to 0.00
+t=234375 SteerR changed to 1.00
+t=234605 Gas changed to 0.00
+t=234835 Gas changed to 1.00
+t=236205 SteerR changed to 0.00
+T: 140.00s | Pos: (483, -48198.91, -89382) | Spd: 4566 km/h | Yaw: 1.57 | Steer: 0.00
+t=240645 SteerR changed to 1.00
+t=240705 SteerR changed to 0.00
+T: 145.00s | Pos: (483, -49645.30, -95849) | Spd: 4745 km/h | Yaw: 1.57 | Steer: 0.00
+t=243245 SteerL changed to -1.00
+t=243325 SteerL changed to 0.00
+t=244645 SteerR changed to 1.00
+t=244785 SteerR changed to 0.00
+t=244935 SteerR changed to 1.00
+t=245615 SteerR changed to 0.00
+t=245705 SteerR changed to 1.00
+t=246775 SteerR changed to 0.00
+t=247595 SteerR changed to 1.00
+T: 150.00s | Pos: (483, -51490.93, -102566) | Spd: 4925 km/h | Yaw: 1.57 | Steer: 1.00
+t=248135 SteerR changed to 0.00
+t=248235 SteerR changed to 1.00
+t=248605 Gas changed to 0.00
+t=248935 Gas changed to 1.00
+t=249815 SteerR changed to 0.00
+T: 155.00s | Pos: (483, -53751.74, -109519) | Spd: 5094 km/h | Yaw: 1.57 | Steer: 0.00
+t=253775 Gas changed to 0.00
+t=254415 SteerR changed to 1.00
+t=254785 SteerR changed to 0.00
+t=254845 SteerR changed to 1.00
+t=255855 Gas changed to 1.00
+t=256175 Gas changed to 0.00
+t=256615 Gas changed to 1.00
+t=256945 SteerR changed to 0.00
+t=257565 SteerL changed to -1.00
+T: 160.00s | Pos: (483, -56444.34, -116654) | Spd: 5183 km/h | Yaw: 1.57 | Steer: -1.00
+t=258425 SteerL changed to 0.00
+t=259515 SteerR changed to 1.00
+t=260285 SteerR changed to 0.00
+t=260415 SteerR changed to 1.00
+t=260555 SteerR changed to 0.00
+t=260655 SteerR changed to 1.00
+t=260955 SteerR changed to 0.00
+t=261185 SteerL changed to -1.00
+t=261295 SteerL changed to 0.00
+t=261775 SteerR changed to 1.00
+t=262265 Gas changed to 0.00
+t=262615 SteerR changed to 0.00
+T: 165.00s | Pos: (483, -59584.14, -123977) | Spd: 5347 km/h | Yaw: 1.57 | Steer: 0.00
+t=262715 SteerL changed to -1.00
+t=263855 Gas changed to 1.00
+t=265305 SteerL changed to 0.00
+t=266115 SteerR changed to 1.00
+t=266315 SteerR changed to 0.00
+t=267595 SteerL changed to -1.00
+T: 170.00s | Pos: (483, -63190.50, -131478) | Spd: 5485 km/h | Yaw: 1.57 | Steer: -1.00
+t=267735 Gas changed to 0.00
+t=267795 SteerL changed to 0.00
+t=267985 SteerR changed to 1.00
+t=269175 Gas changed to 1.00
+t=270135 SteerR changed to 0.00
+t=271165 SteerL changed to -1.00
+t=271385 SteerL changed to 0.00
+t=272635 SteerL changed to -1.00
+T: 175.00s | Pos: (483, -67283.84, -139160) | Spd: 5614 km/h | Yaw: 1.57 | Steer: -1.00
+t=272805 SteerL changed to 0.00
+t=273095 SteerL changed to -1.00
+t=273385 SteerL changed to 0.00
+t=273495 SteerL changed to -1.00
+t=274145 SteerL changed to 0.00
+t=274385 SteerR changed to 1.00
+t=274515 Gas changed to 0.00
+t=275025 Gas changed to 1.00
+t=275225 SteerR changed to 0.00
+t=275355 SteerR changed to 1.00
+t=275975 SteerR changed to 0.00
+t=276035 SteerR changed to 1.00
+t=277595 SteerR changed to 0.00
+T: 180.00s | Pos: (483, -71887.96, -147068) | Spd: 5775 km/h | Yaw: 1.57 | Steer: 0.00
+t=278815 SteerL changed to -1.00
+t=279315 SteerL changed to 0.00
+t=279885 SteerR changed to 1.00
+t=280485 SteerR changed to 0.00
+T: 185.00s | Pos: (483, -77031.23, -155215) | Spd: 5955 km/h | Yaw: 1.57 | Steer: 0.00
+t=283685 SteerL changed to -1.00
+t=283885 SteerL changed to 0.00
+t=284175 SteerR changed to 1.00
+t=284475 Gas changed to 0.00
+t=284955 Gas changed to 1.00
+t=286125 SteerR changed to 0.00
+T: 190.00s | Pos: (483, -82745.93, -163598) | Spd: 6118 km/h | Yaw: 1.57 | Steer: 0.00
+t=289425 SteerR changed to 1.00
+t=289735 SteerR changed to 0.00
+t=289765 SteerR changed to 1.00
+t=289805 SteerR changed to 0.00
+t=290345 SteerL changed to -1.00
+t=290605 SteerL changed to 0.00
+T: 195.00s | Pos: (483, -89067.52, -172220) | Spd: 6298 km/h | Yaw: 1.57 | Steer: 0.00
+t=293615 SteerR changed to 1.00
+t=293785 SteerR changed to 0.00
+t=293885 SteerR changed to 1.00
+t=295385 SteerR changed to 0.00
+T: 200.00s | Pos: (483, -96036.77, -181093) | Spd: 6478 km/h | Yaw: 1.57 | Steer: 0.00
+t=299535 SteerL changed to -1.00
+t=299615 SteerL changed to 0.00
+t=301215 SteerL changed to -1.00
+t=301305 SteerL changed to 0.00
+T: 205.00s | Pos: (483, -103699.55, -190216) | Spd: 6658 km/h | Yaw: 1.57 | Steer: 0.00
+t=302965 SteerR changed to 1.00
+t=303055 SteerR changed to 0.00
+t=303835 SteerR changed to 1.00
+t=305135 SteerR changed to 0.00
+t=305255 SteerR changed to 1.00
+t=305835 SteerR changed to 0.00
+t=306635 SteerR changed to 1.00
+t=307555 Gas changed to 0.00
+T: 210.00s | Pos: (483, -112107.91, -199589) | Spd: 6832 km/h | Yaw: 1.57 | Steer: 1.00
+t=307805 Gas changed to 1.00
+t=308655 SteerR changed to 0.00
+t=309425 SteerR changed to 1.00
+t=309465 SteerR changed to 0.00
+t=310025 SteerL changed to -1.00
+t=310095 SteerL changed to 0.00
+t=310435 SteerR changed to 1.00
+t=311085 SteerR changed to 0.00
+t=312405 Gas changed to 0.00
+T: 215.00s | Pos: (483, -121320.60, -209198) | Spd: 6998 km/h | Yaw: 1.57 | Steer: 0.00
+t=313545 SteerR changed to 1.00
+t=315035 Gas changed to 1.00
+t=315955 SteerR changed to 0.00
+t=316145 SteerR changed to 1.00
+t=316235 SteerR changed to 0.00
+T: 220.00s | Pos: (483, -131401.88, -218953) | Spd: 7094 km/h | Yaw: 1.57 | Steer: 0.00
+t=318045 SteerL changed to -1.00
+t=318185 SteerL changed to 0.00
+t=318825 SteerR changed to 1.00
+t=319455 SteerR changed to 0.00
+t=319545 SteerR changed to 1.00
+t=320135 SteerR changed to 0.00
+t=321185 SteerR changed to 1.00
+t=321195 Gas changed to 0.00
+t=321825 Gas changed to 1.00
+t=321885 Gas changed to 0.00
+t=321945 Gas changed to 1.00
+t=321985 SteerR changed to 0.00
+t=322135 SteerL changed to -1.00
+t=322155 Gas changed to 0.00
+T: 225.00s | Pos: (483, -142423.23, -228923) | Spd: 7229 km/h | Yaw: 1.57 | Steer: -1.00
+t=323115 Gas changed to 1.00
+t=324735 SteerL changed to 0.00
+t=325335 SteerR changed to 1.00
+t=325535 SteerR changed to 0.00
+t=326175 SteerR changed to 1.00
+t=326235 SteerR changed to 0.00
+t=326985 SteerL changed to -1.00
+t=327185 Gas changed to 0.00
+t=327185 SteerL changed to 0.00
+t=327315 SteerR changed to 1.00
+T: 230.00s | Pos: (483, -154470.33, -239068) | Spd: 7376 km/h | Yaw: 1.57 | Steer: 1.00
+t=328255 Gas changed to 1.00
+t=329545 SteerR changed to 0.00
+t=330235 SteerL changed to -1.00
+t=330495 SteerL changed to 0.00
+t=331415 SteerL changed to -1.00
+t=331555 SteerL changed to 0.00
+t=332215 SteerL changed to -1.00
+T: 235.00s | Pos: (483, -157573.58, -249411) | Spd: 7536 km/h | Yaw: 1.57 | Steer: -1.00
+t=332865 SteerL changed to 0.00
+t=332995 SteerL changed to -1.00
+t=333255 SteerL changed to 0.00
+t=333555 SteerR changed to 1.00
+t=333975 Gas changed to 0.00
+t=334305 Gas changed to 1.00
+t=336785 SteerR changed to 0.00
+t=337545 SteerL changed to -1.00
+T: 240.00s | Pos: (483, -158346.75, -259992) | Spd: 7704 km/h | Yaw: 1.57 | Steer: -1.00
+t=338075 SteerL changed to 0.00
+t=338845 SteerR changed to 1.00
+t=339325 SteerR changed to 0.00
+T: 245.00s | Pos: (483, -159751.22, -270819) | Spd: 7885 km/h | Yaw: 1.57 | Steer: 0.00
+t=343115 Gas changed to 0.00
+t=343135 SteerR changed to 1.00
+t=343735 Gas changed to 1.00
+t=344905 SteerR changed to 0.00
+T: 250.00s | Pos: (483, -161810.00, -281869) | Spd: 8042 km/h | Yaw: 1.57 | Steer: 0.00
+t=348455 SteerR changed to 1.00
+t=348745 SteerR changed to 0.00
+t=349715 SteerL changed to -1.00
+t=349915 SteerL changed to 0.00
+T: 255.00s | Pos: (483, -164549.45, -293165) | Spd: 8223 km/h | Yaw: 1.57 | Steer: 0.00
+t=352865 SteerR changed to 1.00
+t=354615 SteerR changed to 0.00
+T: 260.00s | Pos: (483, -168001.14, -304711) | Spd: 8403 km/h | Yaw: 1.57 | Steer: 0.00
+t=358075 SteerL changed to -1.00
+t=358195 SteerL changed to 0.00
+t=362635 SteerR changed to 1.00
+t=362695 SteerR changed to 0.00
+T: 265.00s | Pos: (483, -172201.08, -316508) | Spd: 8583 km/h | Yaw: 1.57 | Steer: 0.00
+t=363055 SteerR changed to 1.00
+t=363675 SteerR changed to 0.00
+t=363775 SteerR changed to 1.00
+t=364925 SteerR changed to 0.00
+t=365595 SteerR changed to 1.00
+t=365695 SteerR changed to 0.00
+t=365875 SteerR changed to 1.00
+t=367065 Gas changed to 0.00
+t=367105 Gas changed to 1.00
+T: 270.00s | Pos: (483, -177190.67, -328554) | Spd: 8762 km/h | Yaw: 1.57 | Steer: 1.00
+t=367955 SteerR changed to 0.00
+t=368425 SteerL changed to -1.00
+t=368435 SteerL changed to 0.00
+t=369105 SteerL changed to -1.00
+t=369145 SteerL changed to 0.00
+t=370995 Gas changed to 0.00
+t=372615 SteerR changed to 1.00
+T: 275.00s | Pos: (483, -183016.80, -340832) | Spd: 8880 km/h | Yaw: 1.57 | Steer: 1.00
+t=375235 Gas changed to 1.00
+t=375345 SteerR changed to 0.00
+t=376645 SteerL changed to -1.00
+t=376785 SteerL changed to 0.00
+T: 280.00s | Pos: (483, -189725.97, -353194) | Spd: 8969 km/h | Yaw: 1.57 | Steer: 0.00
+t=378325 SteerR changed to 1.00
+t=378715 SteerR changed to 0.00
+t=378805 SteerR changed to 1.00
+t=379545 SteerR changed to 0.00
+t=380355 SteerR changed to 1.00
+t=381005 SteerR changed to 0.00
+t=381185 Gas changed to 0.00
+t=381335 SteerL changed to -1.00
+t=382625 Gas changed to 1.00
+T: 285.00s | Pos: (483, -197369.92, -365764) | Spd: 9097 km/h | Yaw: 1.57 | Steer: -1.00
+t=383645 SteerL changed to 0.00
+t=385145 SteerR changed to 1.00
+t=385285 SteerR changed to 0.00
+t=386155 SteerL changed to -1.00
+t=386485 SteerL changed to 0.00
+t=386565 Gas changed to 0.00
+t=386625 SteerR changed to 1.00
+t=387605 Gas changed to 1.00
+T: 290.00s | Pos: (483, -206014.84, -378518) | Spd: 9240 km/h | Yaw: 1.57 | Steer: 1.00
+t=388805 SteerR changed to 0.00
+t=389655 SteerL changed to -1.00
+t=389855 SteerL changed to 0.00
+t=391295 SteerL changed to -1.00
+t=391535 SteerL changed to 0.00
+t=391695 SteerL changed to -1.00
+t=391825 SteerL changed to 0.00
+t=391995 SteerL changed to -1.00
+t=392695 SteerL changed to 0.00
+T: 295.00s | Pos: (483, -215737.14, -391478) | Spd: 9420 km/h | Yaw: 1.57 | Steer: 0.00
+t=392815 SteerR changed to 1.00
+t=393005 Gas changed to 0.00
+t=393165 Gas changed to 1.00
+t=393855 SteerR changed to 0.00
+t=393955 SteerR changed to 1.00
+t=394455 Gas changed to 0.00
+t=394925 Gas changed to 1.00
+t=396015 SteerR changed to 0.00
+t=397315 SteerL changed to -1.00
+T: 300.00s | Pos: (483, -226628.91, -404667) | Spd: 9578 km/h | Yaw: 1.57 | Steer: -1.00
+t=397855 SteerL changed to 0.00
+t=398425 SteerR changed to 1.00
+t=398935 SteerR changed to 0.00
+t=399275 SteerR changed to 1.00
+t=399325 SteerR changed to 0.00
+t=402385 SteerR changed to 1.00
+t=402445 SteerR changed to 0.00
+T: 305.00s | Pos: (483, -238799.33, -418095) | Spd: 9758 km/h | Yaw: 1.57 | Steer: 0.00
+t=402865 SteerR changed to 1.00
+t=403715 Gas changed to 0.00
+t=403815 Gas changed to 1.00
+t=403835 Gas changed to 0.00
+t=403895 Gas changed to 1.00
+t=404635 SteerR changed to 0.00
+t=404795 Gas changed to 0.00
+t=405045 Gas changed to 1.00
+t=405065 Gas changed to 0.00
+t=405145 Gas changed to 1.00
+t=407185 SteerR changed to 1.00
+t=407325 SteerR changed to 0.00
+T: 310.00s | Pos: (483, -252379.42, -431760) | Spd: 9921 km/h | Yaw: 1.57 | Steer: 0.00
+t=407795 SteerR changed to 1.00
+t=408045 SteerR changed to 0.00
+t=408475 SteerL changed to -1.00
+t=408805 SteerL changed to 0.00
+t=411365 Gas changed to 0.00
+t=411445 SteerR changed to 1.00
+t=411605 Gas changed to 1.00
+t=411815 Gas changed to 0.00
+t=411855 Gas changed to 1.00
+t=412565 Gas changed to 0.00
+T: 315.00s | Pos: (483, -267525.19, -445661) | Spd: 10086 km/h | Yaw: 1.57 | Steer: 1.00
+t=412775 Gas changed to 1.00
+t=413645 SteerR changed to 0.00
+t=414125 SteerL changed to -1.00
+t=414235 SteerL changed to 0.00
+t=417275 SteerL changed to -1.00
+t=417415 SteerL changed to 0.00
+T: 320.00s | Pos: (483, -284426.53, -459792) | Spd: 10263 km/h | Yaw: 1.57 | Steer: 0.00
+t=420435 SteerL changed to -1.00
+t=420505 SteerL changed to 0.00
+t=422115 SteerR changed to 1.00
+t=422205 SteerR changed to 0.00
+t=422505 SteerR changed to 1.00
+T: 325.00s | Pos: (483, -303317.41, -474172) | Spd: 10443 km/h | Yaw: 1.57 | Steer: 1.00
+t=422785 SteerR changed to 0.00
+t=422875 SteerR changed to 1.00
+t=424355 SteerR changed to 0.00
+t=425225 SteerR changed to 1.00
+t=426095 SteerR changed to 0.00
+t=426105 Gas changed to 0.00
+t=426175 Gas changed to 1.00
+t=426205 SteerR changed to 1.00
+t=426295 Gas changed to 0.00
+t=426785 Gas changed to 1.00
+t=427485 SteerR changed to 0.00
+T: 330.00s | Pos: (483, -324491.44, -488797) | Spd: 10603 km/h | Yaw: 1.57 | Steer: 0.00
+t=432025 Gas changed to 0.00
+t=432475 SteerR changed to 1.00
+T: 335.00s | Pos: (483, -348320.50, -503646) | Spd: 10759 km/h | Yaw: 1.57 | Steer: 1.00
+t=432875 SteerR changed to 0.00
+t=433105 SteerR changed to 1.00
+t=434565 Gas changed to 1.00
+t=434955 SteerR changed to 0.00
+t=437685 SteerR changed to 1.00
+T: 340.00s | Pos: (483, -375284.88, -518637) | Spd: 10872 km/h | Yaw: 1.57 | Steer: 1.00
+t=438075 SteerR changed to 0.00
+t=438165 SteerR changed to 1.00
+t=438335 SteerR changed to 0.00
+t=438475 SteerR changed to 1.00
+t=438885 SteerR changed to 0.00
+t=438965 SteerR changed to 1.00
+t=439245 SteerR changed to 0.00
+t=439405 SteerL changed to -1.00
+t=439615 SteerL changed to 0.00
+t=439855 SteerR changed to 1.00
+t=439935 SteerR changed to 0.00
+t=440035 SteerR changed to 1.00
+t=440445 Gas changed to 0.00
+t=440895 SteerR changed to 0.00
+t=441025 SteerL changed to -1.00
+t=442135 Gas changed to 1.00
+T: 345.00s | Pos: (483, -406024.41, -533843) | Spd: 10991 km/h | Yaw: 1.57 | Steer: -1.00
+t=443375 SteerL changed to 0.00
+t=445045 SteerR changed to 1.00
+t=445155 SteerR changed to 0.00
+t=445825 SteerL changed to -1.00
+t=445965 SteerL changed to 0.00
+t=446105 SteerL changed to -1.00
+t=446185 SteerL changed to 0.00
+t=446245 Gas changed to 0.00
+t=446325 SteerR changed to 1.00
+t=447405 Gas changed to 1.00
+T: 350.00s | Pos: (483, -441425.72, -549224) | Spd: 11130 km/h | Yaw: 1.57 | Steer: 1.00
+t=448305 SteerR changed to 0.00
+t=449275 SteerL changed to -1.00
+t=449585 SteerL changed to 0.00
+t=450505 SteerR changed to 1.00
+t=450605 SteerR changed to 0.00
+t=451245 SteerL changed to -1.00
+t=451325 SteerL changed to 0.00
+t=451475 SteerL changed to -1.00
+t=451925 SteerL changed to 0.00
+t=452115 SteerL changed to -1.00
+t=452485 SteerL changed to 0.00
+T: 355.00s | Pos: (483, -482763.91, -564808) | Spd: 11310 km/h | Yaw: 1.57 | Steer: 0.00
+t=452815 SteerR changed to 1.00
+t=453425 Gas changed to 0.00
+t=453635 Gas changed to 1.00
+t=454095 Gas changed to 0.00
+t=454455 Gas changed to 1.00
+t=455715 SteerR changed to 0.00
+t=457105 SteerL changed to -1.00
+t=457385 SteerL changed to 0.00
+t=457525 SteerL changed to -1.00
+T: 360.00s | Pos: (483, -531973.81, -580623) | Spd: 11470 km/h | Yaw: 1.57 | Steer: -1.00
+t=457745 SteerL changed to 0.00
+t=458155 SteerR changed to 1.00
+t=458725 SteerR changed to 0.00
+T: 365.00s | Pos: (483, -592194.88, -596679) | Spd: 11650 km/h | Yaw: 1.57 | Steer: 0.00
+t=462705 SteerR changed to 1.00
+t=462825 Gas changed to 0.00
+t=463275 Gas changed to 1.00
+t=464495 SteerR changed to 0.00
+t=465145 SteerR changed to 1.00
+t=465185 SteerR changed to 0.00
+T: 370.00s | Pos: (483, -669048.62, -612964) | Spd: 11814 km/h | Yaw: 1.57 | Steer: 0.00
+t=467965 SteerR changed to 1.00
+t=468275 SteerR changed to 0.00
+t=468755 SteerL changed to -1.00
+t=469045 SteerL changed to 0.00
+t=471615 SteerR changed to 1.00
+t=471695 Gas changed to 0.00
+t=471915 Gas changed to 1.00
+t=472375 SteerR changed to 0.00
+t=472455 SteerR changed to 1.00
+T: 375.00s | Pos: (483, -774227.12, -629496) | Spd: 11986 km/h | Yaw: 1.57 | Steer: 1.00
+t=472705 SteerR changed to 0.00
+t=472895 SteerR changed to 1.00
+t=473025 SteerR changed to 0.00
+t=473225 SteerR changed to 1.00
+t=474065 SteerR changed to 0.00
+t=477525 SteerL changed to -1.00
+t=477635 SteerL changed to 0.00
+T: 380.00s | Pos: (483, -939531.44, -646269) | Spd: 12166 km/h | Yaw: 1.57 | Steer: 0.00
+t=480215 SteerL changed to -1.00
+t=480305 SteerL changed to 0.00
+t=481385 SteerR changed to 1.00
+t=481545 SteerR changed to 0.00
+T: 385.00s | Pos: (483, -1341159.12, -663293) | Spd: 12346 km/h | Yaw: 1.57 | Steer: 0.00
+t=482735 SteerR changed to 1.00
+t=484275 SteerR changed to 0.00
+t=484385 SteerR changed to 1.00
+t=484505 SteerR changed to 0.00
+t=484795 SteerR changed to 1.00
+t=484935 SteerR changed to 0.00
+t=485425 SteerR changed to 1.00
+t=485565 SteerR changed to 0.00
+t=485625 SteerR changed to 1.00
+t=486485 Gas changed to 0.00
+t=486715 Gas changed to 1.00
+t=487585 SteerR changed to 0.00
+T: 390.00s | Pos: (483, -inf, -680564) | Spd: 12518 km/h | Yaw: 1.57 | Steer: 0.00
+t=491595 Gas changed to 0.00
+t=492395 SteerR changed to 1.00
+T: 395.00s | Pos: (483, -inf, -698073) | Spd: 12658 km/h | Yaw: 1.57 | Steer: 1.00
+t=493965 Gas changed to 1.00
+t=495015 SteerR changed to 0.00
+T: 400.00s | Pos: (483, -inf, -715728) | Spd: 12793 km/h | Yaw: 1.57 | Steer: 0.00
+t=497935 SteerR changed to 1.00
+t=499165 SteerR changed to 0.00
+t=499505 SteerL changed to -1.00
+t=499575 Gas changed to 0.00
+t=499835 SteerL changed to 0.00
+t=500065 SteerR changed to 1.00
+t=500395 Gas changed to 1.00
+t=500895 SteerR changed to 0.00
+t=501175 SteerL changed to -1.00
+t=501355 Gas changed to 0.00
+t=501575 Gas changed to 1.00
+t=502055 Gas changed to 0.00
+t=502375 Gas changed to 1.00
+T: 405.00s | Pos: (483, -inf, -733598) | Spd: 12924 km/h | Yaw: 1.57 | Steer: -1.00
+t=504115 SteerL changed to 0.00
+t=504265 SteerR changed to 1.00
+t=504745 SteerR changed to 0.00
+t=505695 SteerL changed to -1.00
+t=505855 Gas changed to 0.00
+t=505925 SteerL changed to 0.00
+t=506155 SteerR changed to 1.00
+t=507265 Gas changed to 1.00
+T: 410.00s | Pos: (483, -inf, -751654) | Spd: 13054 km/h | Yaw: 1.57 | Steer: 1.00
+t=508435 SteerR changed to 0.00
+t=509335 SteerL changed to -1.00
+t=509605 SteerL changed to 0.00
+t=511005 SteerL changed to -1.00
+t=511335 SteerL changed to 0.00
+t=511385 SteerL changed to -1.00
+t=511545 SteerL changed to 0.00
+t=511615 SteerL changed to -1.00
+t=511705 SteerL changed to 0.00
+t=511795 SteerL changed to -1.00
+t=512235 SteerL changed to 0.00
+t=512455 SteerR changed to 1.00
+T: 415.00s | Pos: (483, -inf, -769911) | Spd: 13234 km/h | Yaw: 1.57 | Steer: 1.00
+t=513205 Gas changed to 0.00
+t=513715 Gas changed to 1.00
+t=515555 SteerR changed to 0.00
+t=516135 SteerL changed to -1.00
+t=516275 SteerL changed to 0.00
+t=516555 SteerL changed to -1.00
+t=516825 SteerL changed to 0.00
+t=516915 SteerL changed to -1.00
+t=517025 SteerL changed to 0.00
+t=517145 SteerL changed to -1.00
+t=517195 SteerL changed to 0.00
+T: 420.00s | Pos: (483, -inf, -788395) | Spd: 13396 km/h | Yaw: 1.57 | Steer: 0.00
+t=517795 SteerR changed to 1.00
+t=518295 SteerR changed to 0.00
+t=522145 SteerR changed to 1.00
+t=522255 Gas changed to 0.00
+t=522415 Gas changed to 1.00
+T: 425.00s | Pos: (483, -inf, -807126) | Spd: 13570 km/h | Yaw: 1.57 | Steer: 1.00
+t=522755 Gas changed to 0.00
+t=522785 Gas changed to 1.00
+t=523315 Gas changed to 0.00
+t=523425 Gas changed to 1.00
+t=523585 Gas changed to 0.00
+t=523685 Gas changed to 1.00
+t=524035 SteerR changed to 0.00
+t=524355 SteerL changed to -1.00
+t=524405 SteerL changed to 0.00
+t=527365 SteerR changed to 1.00
+t=527695 SteerR changed to 0.00
+T: 430.00s | Pos: (483, -inf, -826089) | Spd: 13742 km/h | Yaw: 1.57 | Steer: 0.00
+t=528315 SteerL changed to -1.00
+t=528525 SteerL changed to 0.00
+t=531195 Gas changed to 0.00
+t=531315 SteerL changed to -1.00
+t=531435 Gas changed to 1.00
+t=531505 SteerL changed to 0.00
+t=531675 SteerR changed to 1.00
+t=531705 Gas changed to 0.00
+t=531875 Gas changed to 1.00
+t=532005 Gas changed to 0.00
+t=532115 Gas changed to 1.00
+T: 435.00s | Pos: (483, -inf, -845295) | Spd: 13903 km/h | Yaw: 1.57 | Steer: 1.00
+t=533325 SteerR changed to 0.00
+t=537655 SteerR changed to 1.00
+t=537685 SteerR changed to 0.00
+T: 440.00s | Pos: (483, -inf, -864731) | Spd: 14083 km/h | Yaw: 1.57 | Steer: 0.00
+t=541335 SteerL changed to -1.00
+t=541425 SteerL changed to 0.00
+t=542445 SteerR changed to 1.00
+t=542535 SteerR changed to 0.00
+T: 445.00s | Pos: (483, -inf, -884417) | Spd: 14263 km/h | Yaw: 1.57 | Steer: 0.00
+t=542755 SteerR changed to 1.00
+t=543035 SteerR changed to 0.00
+t=543125 SteerR changed to 1.00
+t=544505 SteerR changed to 0.00
+t=544915 SteerR changed to 1.00
+t=545135 SteerR changed to 0.00
+t=545685 SteerR changed to 1.00
+t=545995 Gas changed to 0.00
+t=546195 Gas changed to 1.00
+T: 450.00s | Pos: (483, -inf, -904350) | Spd: 14436 km/h | Yaw: 1.57 | Steer: 1.00
+t=547725 SteerR changed to 0.00
+t=551375 Gas changed to 0.00
+t=552435 SteerR changed to 1.00
+T: 455.00s | Pos: (483, -inf, -924522) | Spd: 14569 km/h | Yaw: 1.57 | Steer: 1.00
+t=554335 Gas changed to 1.00
+t=554775 SteerR changed to 0.00
+t=557525 SteerR changed to 1.00
+T: 460.00s | Pos: (483, -inf, -944819) | Spd: 14690 km/h | Yaw: 1.57 | Steer: 1.00
+t=557835 SteerR changed to 0.00
+t=557935 SteerR changed to 1.00
+t=558055 SteerR changed to 0.00
+t=558195 SteerR changed to 1.00
+t=558905 SteerR changed to 0.00
+t=559525 SteerR changed to 1.00
+t=559595 SteerR changed to 0.00
+t=560005 SteerR changed to 1.00
+t=560785 SteerR changed to 0.00
+t=560785 Gas changed to 0.00
+t=560945 SteerL changed to -1.00
+t=562155 Gas changed to 1.00
+T: 465.00s | Pos: (483, -inf, -965332) | Spd: 14821 km/h | Yaw: 1.57 | Steer: -1.00
+t=563245 SteerL changed to 0.00
+t=565525 SteerR changed to 1.00
+t=565575 SteerR changed to 0.00
+t=566015 SteerL changed to -1.00
+t=566045 Gas changed to 0.00
+t=566195 SteerL changed to 0.00
+t=566295 SteerR changed to 1.00
+t=567225 Gas changed to 1.00
+t=567245 SteerR changed to 0.00
+t=567305 SteerR changed to 1.00
+T: 470.00s | Pos: (483, -inf, -986030) | Spd: 14959 km/h | Yaw: 1.57 | Steer: 1.00
+t=568195 SteerR changed to 0.00
+t=570005 SteerL changed to -1.00
+t=570175 SteerL changed to 0.00
+t=570875 SteerR changed to 1.00
+t=570975 SteerR changed to 0.00
+t=571585 SteerL changed to -1.00
+t=571715 SteerL changed to 0.00
+t=571825 SteerL changed to -1.00
+t=571945 SteerL changed to 0.00
+t=572225 SteerL changed to -1.00
+t=572425 SteerL changed to 0.00
+t=572505 SteerL changed to -1.00
+T: 475.00s | Pos: (483, -inf, -1006931) | Spd: 15139 km/h | Yaw: 1.57 | Steer: -1.00
+t=573105 SteerL changed to 0.00
+t=573285 SteerR changed to 1.00
+t=575545 Gas changed to 0.00
+t=575885 Gas changed to 1.00
+t=576555 SteerR changed to 0.00
+t=577555 SteerL changed to -1.00
+T: 480.00s | Pos: (483, -inf, -1028076) | Spd: 15307 km/h | Yaw: 1.57 | Steer: -1.00
+t=578195 SteerL changed to 0.00
+t=578785 SteerR changed to 1.00
+t=579405 SteerR changed to 0.00
+t=582425 SteerL changed to -1.00
+T: 485.00s | Pos: (483, -inf, -1049461) | Spd: 15487 km/h | Yaw: 1.57 | Steer: -1.00
+t=582705 SteerL changed to 0.00
+t=582965 SteerR changed to 1.00
+t=583875 Gas changed to 0.00
+t=584075 Gas changed to 1.00
+t=584515 Gas changed to 0.00
+t=584665 Gas changed to 1.00
+t=585105 SteerR changed to 0.00
+T: 490.00s | Pos: (483, -inf, -1071084) | Spd: 15654 km/h | Yaw: 1.57 | Steer: 0.00
+t=588675 SteerR changed to 1.00
+t=588935 SteerR changed to 0.00
+t=589315 SteerL changed to -1.00
+t=589625 SteerL changed to 0.00
+t=590255 SteerR changed to 1.00
+t=590965 Gas changed to 0.00
+t=591535 Gas changed to 1.00
+T: 495.00s | Pos: (483, -inf, -1092939) | Spd: 15814 km/h | Yaw: 1.57 | Steer: 1.00
+t=592965 SteerR changed to 0.00
+t=593155 SteerR changed to 1.00
+t=593265 SteerR changed to 0.00
+t=593405 SteerR changed to 1.00
+t=593625 SteerR changed to 0.00
+t=593745 SteerR changed to 1.00
+t=593915 SteerR changed to 0.00
+t=594025 SteerR changed to 1.00
+t=594215 SteerR changed to 0.00
+t=594315 SteerR changed to 1.00
+t=594655 SteerR changed to 0.00
+T: 500.00s | Pos: (483, -inf, -1115029) | Spd: 15994 km/h | Yaw: 1.57 | Steer: 0.00
+t=598075 SteerR changed to 1.00
+t=598205 SteerR changed to 0.00
+t=598755 SteerL changed to -1.00
+t=598845 SteerL changed to 0.00
+t=599275 SteerR changed to 1.00
+t=599315 SteerR changed to 0.00
+t=600815 SteerL changed to -1.00
+t=600905 SteerL changed to 0.00
+t=602375 SteerL changed to -1.00
+t=602425 SteerL changed to 0.00
+T: 505.00s | Pos: (483, -inf, -1137369) | Spd: 16174 km/h | Yaw: 1.57 | Steer: 0.00
+t=603355 SteerR changed to 1.00
+t=605265 SteerR changed to 0.00
+t=606255 SteerR changed to 1.00
+t=606555 Gas changed to 0.00
+t=606835 Gas changed to 1.00
+T: 510.00s | Pos: (483, -inf, -1159959) | Spd: 16345 km/h | Yaw: 1.57 | Steer: 1.00
+t=608335 SteerR changed to 0.00
+t=609725 SteerR changed to 1.00
+t=609765 SteerR changed to 0.00
+t=611955 Gas changed to 0.00
+t=612105 SteerL changed to -1.00
+T: 515.00s | Pos: (483, -inf, -1182786) | Spd: 16498 km/h | Yaw: 1.57 | Steer: -1.00
+t=613235 SteerL changed to 0.00
+t=613435 SteerR changed to 1.00
+t=614885 Gas changed to 1.00
+t=615755 SteerR changed to 0.00
+T: 520.00s | Pos: (483, -inf, -1205751) | Spd: 16599 km/h | Yaw: 1.57 | Steer: 0.00
+t=618775 SteerR changed to 1.00
+t=619905 SteerR changed to 0.00
+t=620125 SteerR changed to 1.00
+t=620185 SteerR changed to 0.00
+t=620485 SteerL changed to -1.00
+t=620545 SteerL changed to 0.00
+t=620835 SteerR changed to 1.00
+t=620855 Gas changed to 0.00
+t=621155 SteerR changed to 0.00
+t=621305 SteerR changed to 1.00
+t=621375 Gas changed to 1.00
+t=621705 SteerR changed to 0.00
+t=621895 SteerL changed to -1.00
+t=621915 Gas changed to 0.00
+t=622065 Gas changed to 1.00
+t=622075 SteerL changed to 0.00
+t=622105 Gas changed to 0.00
+t=622145 SteerL changed to -1.00
+T: 525.00s | Pos: (483, -inf, -1228919) | Spd: 16734 km/h | Yaw: 1.57 | Steer: -1.00
+t=622995 Gas changed to 1.00
+t=624605 SteerL changed to 0.00
+t=625115 SteerR changed to 1.00
+t=625425 SteerR changed to 0.00
+t=626725 SteerL changed to -1.00
+t=626885 Gas changed to 0.00
+t=626885 SteerL changed to 0.00
+t=627035 SteerR changed to 1.00
+T: 530.00s | Pos: (483, -inf, -1252270) | Spd: 16874 km/h | Yaw: 1.57 | Steer: 1.00
+t=627915 Gas changed to 1.00
+t=629205 SteerR changed to 0.00
+t=629925 SteerL changed to -1.00
+t=630125 SteerL changed to 0.00
+t=631355 SteerL changed to -1.00
+t=631515 SteerL changed to 0.00
+t=631655 SteerL changed to -1.00
+t=631785 SteerL changed to 0.00
+t=631995 SteerL changed to -1.00
+t=632265 SteerL changed to 0.00
+t=632355 SteerL changed to -1.00
+t=632495 SteerL changed to 0.00
+t=632585 SteerL changed to -1.00
+T: 535.00s | Pos: (483, -inf, -1275821) | Spd: 17046 km/h | Yaw: 1.57 | Steer: -1.00
+t=633005 SteerL changed to 0.00
+t=633295 SteerR changed to 1.00
+t=633535 Gas changed to 0.00
+t=634015 Gas changed to 1.00
+t=634385 SteerR changed to 0.00
+t=634505 SteerR changed to 1.00
+t=636505 SteerR changed to 0.00
+t=637385 SteerL changed to -1.00
+T: 540.00s | Pos: (483, -inf, -1299600) | Spd: 17209 km/h | Yaw: 1.57 | Steer: -1.00
+t=637815 SteerL changed to 0.00
+t=637945 SteerL changed to -1.00
+t=638085 SteerL changed to 0.00
+t=638595 SteerR changed to 1.00
+t=639135 SteerR changed to 0.00
+T: 545.00s | Pos: (483, -inf, -1323628) | Spd: 17390 km/h | Yaw: 1.57 | Steer: 0.00
+t=643065 SteerR changed to 1.00
+t=643095 Gas changed to 0.00
+t=643655 Gas changed to 1.00
+t=644215 SteerR changed to 0.00
+t=644325 SteerR changed to 1.00
+t=644975 SteerR changed to 0.00
+T: 550.00s | Pos: (483, -inf, -1347885) | Spd: 17550 km/h | Yaw: 1.57 | Steer: 0.00
+t=647985 SteerR changed to 1.00
+t=648165 SteerR changed to 0.00
+t=648595 SteerR changed to 1.00
+t=648875 SteerR changed to 0.00
+t=649285 SteerL changed to -1.00
+t=649565 SteerL changed to 0.00
+t=649785 SteerL changed to -1.00
+t=649845 SteerL changed to 0.00
+t=652455 SteerR changed to 1.00
+t=652625 SteerR changed to 0.00
+T: 555.00s | Pos: (483, -inf, -1372385) | Spd: 17730 km/h | Yaw: 1.57 | Steer: 0.00
+t=652735 SteerR changed to 1.00
+t=654275 SteerR changed to 0.00
+t=654655 SteerR changed to 1.00
+t=654795 SteerR changed to 0.00
+T: 560.00s | Pos: (483, -inf, -1397136) | Spd: 17910 km/h | Yaw: 1.57 | Steer: 0.00
+t=658465 SteerL changed to -1.00
+t=658555 SteerL changed to 0.00
+t=659165 SteerL changed to -1.00
+t=659205 SteerL changed to 0.00
+t=660855 SteerL changed to -1.00
+t=660895 SteerL changed to 0.00
+t=662355 SteerR changed to 1.00
+t=662435 SteerR changed to 0.00
+T: 565.00s | Pos: (483, -inf, -1422137) | Spd: 18090 km/h | Yaw: 1.57 | Steer: 0.00
+t=662885 SteerR changed to 1.00
+t=663555 SteerR changed to 0.00
+t=663665 SteerR changed to 1.00
+t=664725 SteerR changed to 0.00
+t=664965 SteerR changed to 1.00
+t=665005 SteerR changed to 0.00
+t=665145 SteerR changed to 1.00
+t=665255 SteerR changed to 0.00
+t=665785 SteerR changed to 1.00
+t=666235 Gas changed to 0.00
+t=666445 Gas changed to 1.00
+t=666625 Gas changed to 0.00
+t=666845 Gas changed to 1.00
+t=667615 SteerR changed to 0.00
+T: 570.00s | Pos: (483, -inf, -1447383) | Spd: 18255 km/h | Yaw: 1.57 | Steer: 0.00
+t=667755 SteerR changed to 1.00
+t=667955 SteerR changed to 0.00
+t=672295 Gas changed to 0.00
+t=672295 SteerL changed to -1.00
+t=672385 SteerL changed to 0.00
+t=672595 SteerR changed to 1.00
+T: 575.00s | Pos: (483, -inf, -1472860) | Spd: 18420 km/h | Yaw: 1.57 | Steer: 1.00
+t=674335 Gas changed to 1.00
+t=675305 SteerR changed to 0.00
+T: 580.00s | Pos: (483, -inf, -1498495) | Spd: 18542 km/h | Yaw: 1.57 | Steer: 0.00
+t=678055 SteerR changed to 1.00
+t=678565 SteerR changed to 0.00
+t=678675 SteerR changed to 1.00
+t=679185 SteerR changed to 0.00
+t=679695 SteerL changed to -1.00
+t=679825 SteerL changed to 0.00
+t=680155 SteerR changed to 1.00
+t=680255 Gas changed to 0.00
+t=680825 Gas changed to 1.00
+t=680985 SteerR changed to 0.00
+t=681175 SteerL changed to -1.00
+t=681185 Gas changed to 0.00
+t=682385 Gas changed to 1.00
+T: 585.00s | Pos: (483, -inf, -1524342) | Spd: 18658 km/h | Yaw: 1.57 | Steer: -1.00
+t=683465 SteerL changed to 0.00
+t=686105 SteerL changed to -1.00
+t=686285 Gas changed to 0.00
+t=686285 SteerL changed to 0.00
+t=686465 SteerR changed to 1.00
+t=687375 Gas changed to 1.00
+T: 590.00s | Pos: (483, -inf, -1550366) | Spd: 18799 km/h | Yaw: 1.57 | Steer: 1.00
+t=688485 SteerR changed to 0.00
+t=689295 SteerL changed to -1.00
+t=689585 SteerL changed to 0.00
+t=690485 SteerR changed to 1.00
+t=690565 SteerR changed to 0.00
+t=691325 SteerL changed to -1.00
+t=691815 SteerL changed to 0.00
+t=691935 SteerL changed to -1.00
+t=692105 SteerL changed to 0.00
+t=692155 SteerL changed to -1.00
+t=692515 SteerL changed to 0.00
+T: 595.00s | Pos: (483, -inf, -1576602) | Spd: 18979 km/h | Yaw: 1.57 | Steer: 0.00
+t=692765 SteerR changed to 1.00
+t=693435 Gas changed to 0.00
+t=693705 Gas changed to 1.00
+t=694135 Gas changed to 0.00
+t=694325 Gas changed to 1.00
+t=695865 SteerR changed to 0.00
+t=696755 SteerL changed to -1.00
+t=697135 SteerL changed to 0.00
+t=697365 SteerL changed to -1.00
+t=697585 SteerL changed to 0.00
+T: 600.00s | Pos: (483, -inf, -1603069) | Spd: 19143 km/h | Yaw: 1.57 | Steer: 0.00
+t=697985 SteerR changed to 1.00
+t=698175 SteerR changed to 0.00
+t=698265 SteerR changed to 1.00
+t=698715 SteerR changed to 0.00
+t=701955 SteerL changed to -1.00
+t=702085 SteerL changed to 0.00
+t=702455 SteerR changed to 1.00
+T: 605.00s | Pos: (483, -inf, -1629782) | Spd: 19323 km/h | Yaw: 1.57 | Steer: 1.00
+t=702895 Gas changed to 0.00
+t=703275 Gas changed to 1.00
+t=704435 SteerR changed to 0.00
+T: 610.00s | Pos: (483, -inf, -1656731) | Spd: 19489 km/h | Yaw: 1.57 | Steer: 0.00
+t=707725 SteerR changed to 1.00
+t=708015 SteerR changed to 0.00
+t=708485 SteerL changed to -1.00
+t=708795 SteerL changed to 0.00
+t=710535 SteerR changed to 1.00
+t=710605 SteerR changed to 0.00
+t=710755 SteerR changed to 1.00
+t=710905 SteerR changed to 0.00
+t=711605 SteerR changed to 1.00
+t=711685 Gas changed to 0.00
+t=711825 Gas changed to 1.00
+T: 615.00s | Pos: (483, -inf, -1683924) | Spd: 19664 km/h | Yaw: 1.57 | Steer: 1.00
+t=713015 SteerR changed to 0.00
+t=713165 SteerR changed to 1.00
+t=713295 SteerR changed to 0.00
+t=713465 SteerR changed to 1.00
+t=713725 SteerR changed to 0.00
+t=716985 SteerR changed to 1.00
+t=717125 SteerR changed to 0.00
+t=717595 SteerL changed to -1.00
+T: 620.00s | Pos: (483, -inf, -1711361) | Spd: 19845 km/h | Yaw: 1.57 | Steer: -1.00
+t=717735 SteerL changed to 0.00
+t=717855 SteerL changed to -1.00
+t=717975 SteerL changed to 0.00
+t=720735 SteerL changed to -1.00
+t=720815 SteerL changed to 0.00
+t=721405 SteerR changed to 1.00
+t=721525 SteerR changed to 0.00
+t=721965 SteerR changed to 1.00
+t=722275 SteerR changed to 0.00
+t=722385 SteerR changed to 1.00
+t=722605 SteerR changed to 0.00
+T: 625.00s | Pos: (483, -inf, -1739049) | Spd: 20025 km/h | Yaw: 1.57 | Steer: 0.00
+t=722725 SteerR changed to 1.00
+t=724065 SteerR changed to 0.00
+t=724325 SteerL changed to -1.00
+t=724355 SteerL changed to 0.00
+t=724865 SteerR changed to 1.00
+t=725805 Gas changed to 0.00
+t=726065 Gas changed to 1.00
+t=726895 SteerR changed to 0.00
+T: 630.00s | Pos: (483, -inf, -1766981) | Spd: 20196 km/h | Yaw: 1.57 | Steer: 0.00
+t=728265 SteerR changed to 1.00
+t=728285 SteerR changed to 0.00
+t=730635 Gas changed to 0.00
+t=730875 SteerR changed to 1.00
+t=730965 SteerR changed to 0.00
+t=731555 SteerR changed to 1.00
+t=732165 SteerR changed to 0.00
+t=732275 SteerR changed to 1.00
+t=732355 SteerR changed to 0.00
+t=732435 SteerR changed to 1.00
+T: 635.00s | Pos: (483, -inf, -1795131) | Spd: 20301 km/h | Yaw: 1.57 | Steer: 1.00
+t=734475 SteerR changed to 0.00
+t=734525 Gas changed to 1.00
+t=735255 SteerL changed to -1.00
+t=735495 SteerL changed to 0.00
+t=737055 SteerR changed to 1.00
+t=737515 SteerR changed to 0.00
+t=737615 SteerR changed to 1.00
+T: 640.00s | Pos: (483, -inf, -1823375) | Spd: 20416 km/h | Yaw: 1.57 | Steer: 1.00
+t=738325 SteerR changed to 0.00
+t=739345 SteerR changed to 1.00
+t=739355 Gas changed to 0.00
+t=739985 Gas changed to 1.00
+t=740125 SteerR changed to 0.00
+t=740275 SteerL changed to -1.00
+t=740295 Gas changed to 0.00
+t=741435 Gas changed to 1.00
+t=742655 SteerL changed to 0.00
+T: 645.00s | Pos: (483, -inf, -1851812) | Spd: 20532 km/h | Yaw: 1.57 | Steer: 0.00
+t=742965 SteerL changed to -1.00
+t=743085 SteerL changed to 0.00
+t=743905 SteerR changed to 1.00
+t=744105 SteerR changed to 0.00
+t=744975 SteerL changed to -1.00
+t=745145 SteerL changed to 0.00
+t=745245 SteerL changed to -1.00
+t=745395 SteerL changed to 0.00
+t=745445 Gas changed to 0.00
+t=745645 SteerR changed to 1.00
+t=746785 Gas changed to 1.00
+t=747655 SteerR changed to 0.00
+T: 650.00s | Pos: (483, -inf, -1880426) | Spd: 20664 km/h | Yaw: 1.57 | Steer: 0.00
+t=748855 SteerL changed to -1.00
+t=749115 SteerL changed to 0.00
+t=749825 SteerR changed to 1.00
+t=749905 SteerR changed to 0.00
+t=750015 SteerR changed to 1.00
+t=750075 SteerR changed to 0.00
+t=750485 SteerL changed to -1.00
+t=750665 SteerL changed to 0.00
+t=750905 SteerL changed to -1.00
+t=751015 SteerL changed to 0.00
+t=751105 SteerL changed to -1.00
+t=751805 SteerL changed to 0.00
+t=752165 SteerR changed to 1.00
+T: 655.00s | Pos: (483, -inf, -1909252) | Spd: 20844 km/h | Yaw: 1.57 | Steer: 1.00
+t=753025 Gas changed to 0.00
+t=753345 Gas changed to 1.00
+t=753925 Gas changed to 0.00
+t=754105 Gas changed to 1.00
+t=755245 SteerR changed to 0.00
+t=756205 SteerL changed to -1.00
+t=756335 SteerL changed to 0.00
+t=756415 SteerL changed to -1.00
+t=756925 SteerL changed to 0.00
+t=757455 SteerR changed to 1.00
+T: 660.00s | Pos: (483, -inf, -1938306) | Spd: 21006 km/h | Yaw: 1.57 | Steer: 1.00
+t=758075 SteerR changed to 0.00
+t=758595 SteerR changed to 1.00
+t=758625 SteerR changed to 0.00
+t=761325 SteerL changed to -1.00
+t=761395 SteerL changed to 0.00
+t=761885 SteerR changed to 1.00
+t=762225 Gas changed to 0.00
+T: 665.00s | Pos: (483, -inf, -1967602) | Spd: 21169 km/h | Yaw: 1.57 | Steer: 1.00
+t=762725 Gas changed to 1.00
+t=762935 SteerR changed to 0.00
+t=763035 SteerR changed to 1.00
+t=763895 SteerR changed to 0.00
+t=767275 SteerR changed to 1.00
+t=767615 SteerR changed to 0.00
+T: 670.00s | Pos: (483, -inf, -1997129) | Spd: 21349 km/h | Yaw: 1.57 | Steer: 0.00
+t=768185 SteerL changed to -1.00
+t=768485 SteerL changed to 0.00
+t=771245 SteerR changed to 1.00
+t=772545 SteerR changed to 0.00
+t=772635 SteerR changed to 1.00
+T: 675.00s | Pos: (483, -inf, -2026906) | Spd: 21529 km/h | Yaw: 1.57 | Steer: 1.00
+t=772935 SteerR changed to 0.00
+t=773145 SteerR changed to 1.00
+t=773325 SteerR changed to 0.00
+t=777425 SteerL changed to -1.00
+t=777475 SteerL changed to 0.00
+T: 680.00s | Pos: (483, -inf, -2056933) | Spd: 21709 km/h | Yaw: 1.57 | Steer: 0.00
+t=780055 SteerL changed to -1.00
+t=780125 SteerL changed to 0.00
+t=781005 SteerR changed to 1.00
+t=781105 SteerR changed to 0.00
+t=781385 SteerR changed to 1.00
+t=781485 SteerR changed to 0.00
+t=781585 SteerR changed to 1.00
+t=781775 SteerR changed to 0.00
+t=781825 SteerR changed to 1.00
+t=782115 SteerR changed to 0.00
+t=782205 SteerR changed to 1.00
+T: 685.00s | Pos: (483, -inf, -2087211) | Spd: 21889 km/h | Yaw: 1.57 | Steer: 1.00
+t=783415 SteerR changed to 0.00
+t=783915 SteerL changed to -1.00
+t=783975 SteerL changed to 0.00
+t=784135 SteerR changed to 1.00
+t=784695 SteerR changed to 0.00
+t=784785 SteerR changed to 1.00
+t=785235 Gas changed to 0.00
+t=785535 Gas changed to 1.00
+t=786455 SteerR changed to 0.00
+t=786935 SteerL changed to -1.00
+t=786975 SteerL changed to 0.00
+T: 690.00s | Pos: (483, -inf, -2117731) | Spd: 22059 km/h | Yaw: 1.57 | Steer: 0.00
+t=787705 SteerL changed to -1.00
+t=787755 SteerL changed to 0.00
+t=790555 Gas changed to 0.00
+t=791055 SteerR changed to 1.00
+t=792495 Gas changed to 1.00
+T: 695.00s | Pos: (483, -inf, -2148456) | Spd: 22169 km/h | Yaw: 1.57 | Steer: 1.00
+t=793025 Gas changed to 0.00
+t=793475 Gas changed to 1.00
+t=793915 SteerR changed to 0.00
+t=796595 SteerR changed to 1.00
+t=797235 SteerR changed to 0.00
+t=797365 SteerR changed to 1.00
+T: 700.00s | Pos: (483, -inf, -2179350) | Spd: 22333 km/h | Yaw: 1.57 | Steer: 1.00
+t=797855 SteerR changed to 0.00
+t=798075 SteerL changed to -1.00
+t=798265 SteerL changed to 0.00
+t=798295 SteerL changed to -1.00
+t=798325 SteerL changed to 0.00
+t=798855 Gas changed to 0.00
+t=798875 SteerR changed to 1.00
+t=799775 SteerR changed to 0.00
+t=799835 SteerL changed to -1.00
+t=799955 Gas changed to 1.00
+t=799995 Gas changed to 0.00
+t=800025 Gas changed to 1.00
+t=800295 SteerL changed to 0.00
+t=800375 SteerL changed to -1.00
+t=800665 SteerL changed to 0.00
+t=800715 SteerL changed to -1.00
+t=802245 SteerL changed to 0.00
+t=802355 SteerL changed to -1.00
+t=802415 SteerL changed to 0.00
+T: 705.00s | Pos: (483, -inf, -2210466) | Spd: 22472 km/h | Yaw: 1.57 | Steer: 0.00
+t=804805 SteerL changed to -1.00
+t=804905 Gas changed to 0.00
+t=805025 SteerL changed to 0.00
+t=805115 SteerR changed to 1.00
+t=806265 Gas changed to 1.00
+t=807105 SteerR changed to 0.00
+T: 710.00s | Pos: (483, -inf, -2241791) | Spd: 22603 km/h | Yaw: 1.57 | Steer: 0.00
+t=808125 SteerL changed to -1.00
+t=808345 SteerL changed to 0.00
+t=809385 SteerR changed to 1.00
+t=809435 SteerR changed to 0.00
+t=809995 SteerL changed to -1.00
+t=810325 SteerL changed to 0.00
+t=810485 SteerL changed to -1.00
+t=810555 SteerL changed to 0.00
+t=810685 SteerL changed to -1.00
+t=811305 SteerL changed to 0.00
+t=811545 SteerR changed to 1.00
+t=812335 Gas changed to 0.00
+t=812555 Gas changed to 1.00
+T: 715.00s | Pos: (483, -inf, -2273310) | Spd: 22776 km/h | Yaw: 1.57 | Steer: 1.00
+t=812865 Gas changed to 0.00
+t=813145 Gas changed to 1.00
+t=814615 SteerR changed to 0.00
+t=815735 SteerL changed to -1.00
+t=815905 SteerL changed to 0.00
+t=815945 SteerL changed to -1.00
+t=816365 SteerL changed to 0.00
+t=816845 SteerR changed to 1.00
+t=817495 SteerR changed to 0.00
+T: 720.00s | Pos: (483, -inf, -2305055) | Spd: 22946 km/h | Yaw: 1.57 | Steer: 0.00
+t=820775 SteerL changed to -1.00
+t=820865 SteerL changed to 0.00
+t=821255 SteerR changed to 1.00
+t=822335 Gas changed to 0.00
+t=822535 Gas changed to 1.00
+T: 725.00s | Pos: (483, -inf, -2337051) | Spd: 23119 km/h | Yaw: 1.57 | Steer: 1.00
+t=823245 SteerR changed to 0.00
+t=826155 SteerR changed to 1.00
+t=826355 SteerR changed to 0.00
+t=826515 SteerR changed to 1.00
+t=826615 SteerR changed to 0.00
+t=827215 SteerL changed to -1.00
+t=827505 SteerL changed to 0.00
+T: 730.00s | Pos: (483, -inf, -2369286) | Spd: 23299 km/h | Yaw: 1.57 | Steer: 0.00
+t=827785 SteerR changed to 1.00
+t=827845 SteerR changed to 0.00
+t=828205 SteerL changed to -1.00
+t=828985 SteerL changed to 0.00
+t=830265 Gas changed to 0.00
+t=830275 SteerR changed to 1.00
+t=830415 Gas changed to 1.00
+t=830605 SteerR changed to 0.00
+t=830725 SteerR changed to 1.00
+t=831075 SteerR changed to 0.00
+t=831195 SteerR changed to 1.00
+t=831295 SteerR changed to 0.00
+t=831405 SteerR changed to 1.00
+t=831545 SteerR changed to 0.00
+t=831635 SteerR changed to 1.00
+t=832115 SteerR changed to 0.00
+t=832255 SteerR changed to 1.00
+t=832365 SteerR changed to 0.00
+t=832535 SteerL changed to -1.00
+t=832615 SteerL changed to 0.00
+T: 735.00s | Pos: (483, -inf, -2401768) | Spd: 23474 km/h | Yaw: 1.57 | Steer: 0.00
+t=836145 SteerL changed to -1.00
+t=836255 SteerL changed to 0.00
+t=836705 SteerL changed to -1.00
+t=836765 SteerL changed to 0.00
+T: 740.00s | Pos: (483, -inf, -2434497) | Spd: 23654 km/h | Yaw: 1.57 | Steer: 0.00
+t=839495 SteerR changed to 1.00
+t=839575 SteerR changed to 0.00
+t=840745 SteerR changed to 1.00
+t=840995 SteerR changed to 0.00
+t=841085 SteerR changed to 1.00
+t=842165 SteerR changed to 0.00
+t=842315 SteerR changed to 1.00
+T: 745.00s | Pos: (483, -inf, -2467475) | Spd: 23834 km/h | Yaw: 1.57 | Steer: 1.00
+t=842885 SteerR changed to 0.00
+t=843255 SteerL changed to -1.00
+t=843315 SteerL changed to 0.00
+t=843595 SteerR changed to 1.00
+t=844385 Gas changed to 0.00
+t=844625 Gas changed to 1.00
+t=845705 SteerR changed to 0.00
+t=847065 SteerL changed to -1.00
+t=847085 SteerL changed to 0.00
+T: 750.00s | Pos: (483, -inf, -2500698) | Spd: 24006 km/h | Yaw: 1.57 | Steer: 0.00
+t=849745 Gas changed to 0.00
+t=850335 SteerR changed to 1.00
+t=852235 Gas changed to 1.00
+T: 755.00s | Pos: (483, -inf, -2534150) | Spd: 24096 km/h | Yaw: 1.57 | Steer: 1.00
+t=852915 SteerR changed to 0.00
+t=855295 SteerL changed to -1.00
+t=855375 SteerL changed to 0.00
+t=855755 SteerR changed to 1.00
+t=856125 SteerR changed to 0.00
+t=856235 SteerR changed to 1.00
+t=856365 SteerR changed to 0.00
+t=856425 SteerR changed to 1.00
+t=857145 SteerR changed to 0.00
+T: 760.00s | Pos: (483, -inf, -2567743) | Spd: 24276 km/h | Yaw: 1.57 | Steer: 0.00
+t=858065 SteerR changed to 1.00
+t=858105 Gas changed to 0.00
+t=858835 SteerR changed to 0.00
+t=858995 SteerL changed to -1.00
+t=859295 SteerL changed to 0.00
+t=859445 SteerL changed to -1.00
+t=859765 Gas changed to 1.00
+t=860045 Gas changed to 0.00
+t=860115 Gas changed to 1.00
+t=861495 SteerL changed to 0.00
+T: 765.00s | Pos: (483, -inf, -2601528) | Spd: 24394 km/h | Yaw: 1.57 | Steer: 0.00
+t=863445 SteerR changed to 1.00
+t=863515 SteerR changed to 0.00
+t=863915 SteerL changed to -1.00
+t=864155 SteerL changed to 0.00
+t=864205 Gas changed to 0.00
+t=864255 SteerR changed to 1.00
+t=865485 Gas changed to 1.00
+t=866375 SteerR changed to 0.00
+t=867515 SteerL changed to -1.00
+t=867695 SteerL changed to 0.00
+T: 770.00s | Pos: (483, -inf, -2635502) | Spd: 24528 km/h | Yaw: 1.57 | Steer: 0.00
+t=869125 SteerL changed to -1.00
+t=869335 SteerL changed to 0.00
+t=869435 SteerL changed to -1.00
+t=869685 SteerL changed to 0.00
+t=869745 SteerL changed to -1.00
+t=870045 SteerL changed to 0.00
+t=870115 SteerL changed to -1.00
+t=870365 SteerL changed to 0.00
+t=870705 SteerR changed to 1.00
+t=871215 Gas changed to 0.00
+t=871675 Gas changed to 1.00
+T: 775.00s | Pos: (483, -inf, -2669692) | Spd: 24692 km/h | Yaw: 1.57 | Steer: 1.00
+t=873705 SteerR changed to 0.00
+t=874795 SteerL changed to -1.00
+t=874975 SteerL changed to 0.00
+t=875035 SteerL changed to -1.00
+t=875325 SteerL changed to 0.00
+t=876065 SteerR changed to 1.00
+t=876625 SteerR changed to 0.00
+T: 780.00s | Pos: (483, -inf, -2704112) | Spd: 24872 km/h | Yaw: 1.57 | Steer: 0.00
+t=878305 SteerL changed to -1.00
+t=878325 Gas changed to 0.00
+t=878555 Gas changed to 1.00
+t=880045 SteerL changed to 0.00
+t=880255 SteerR changed to 1.00
+t=880545 Gas changed to 0.00
+t=880775 Gas changed to 1.00
+t=882015 SteerR changed to 0.00
+t=882065 SteerR changed to 1.00
+t=882425 SteerR changed to 0.00
+T: 785.00s | Pos: (483, -inf, -2738771) | Spd: 25035 km/h | Yaw: 1.57 | Steer: 0.00
+t=885765 SteerR changed to 1.00
+t=886155 SteerR changed to 0.00
+t=886495 SteerL changed to -1.00
+t=886825 SteerL changed to 0.00
+T: 790.00s | Pos: (483, -inf, -2773669) | Spd: 25216 km/h | Yaw: 1.57 | Steer: 0.00
+t=887965 Gas changed to 0.00
+t=888045 SteerR changed to 1.00
+t=888355 Gas changed to 1.00
+t=891325 SteerR changed to 0.00
+t=891785 SteerL changed to -1.00
+t=891855 SteerL changed to 0.00
+T: 795.00s | Pos: (483, -inf, -2808797) | Spd: 25382 km/h | Yaw: 1.57 | Steer: 0.00
+t=895145 SteerL changed to -1.00
+t=895345 SteerL changed to 0.00
+T: 800.00s | Pos: (483, -inf, -2844175) | Spd: 25562 km/h | Yaw: 1.57 | Steer: 0.00
+t=898245 SteerL changed to -1.00
+t=898305 SteerL changed to 0.00
+t=898675 SteerR changed to 1.00
+t=898835 SteerR changed to 0.00
+t=899195 SteerL changed to -1.00
+t=899285 SteerL changed to 0.00
+t=899935 SteerR changed to 1.00
+t=901655 SteerR changed to 0.00
+t=902085 SteerR changed to 1.00
+t=902285 SteerR changed to 0.00
+T: 805.00s | Pos: (483, -inf, -2879804) | Spd: 25742 km/h | Yaw: 1.57 | Steer: 0.00
+t=902825 SteerR changed to 1.00
+t=903765 Gas changed to 0.00
+t=904015 Gas changed to 1.00
+t=904825 SteerR changed to 0.00
+t=905265 SteerR changed to 1.00
+t=905325 SteerR changed to 0.00
+t=906235 SteerL changed to -1.00
+t=906285 SteerL changed to 0.00
+T: 810.00s | Pos: (483, -inf, -2915671) | Spd: 25913 km/h | Yaw: 1.57 | Steer: 0.00
+t=908715 Gas changed to 0.00
+t=909555 SteerR changed to 1.00
+t=912095 Gas changed to 1.00
+t=912415 SteerR changed to 0.00
+T: 815.00s | Pos: (483, -inf, -2951676) | Spd: 25972 km/h | Yaw: 1.57 | Steer: 0.00
+t=914185 SteerL changed to -1.00
+t=914365 SteerL changed to 0.00
+t=915435 SteerR changed to 1.00
+t=916385 SteerR changed to 0.00
+t=916595 SteerR changed to 1.00
+t=916785 SteerR changed to 0.00
+T: 820.00s | Pos: (483, -inf, -2987874) | Spd: 26152 km/h | Yaw: 1.57 | Steer: 0.00
+t=917715 SteerR changed to 1.00
+t=917905 Gas changed to 0.00
+t=918435 Gas changed to 1.00
+t=918495 SteerR changed to 0.00
+t=918635 SteerL changed to -1.00
+t=918885 Gas changed to 0.00
+t=919735 Gas changed to 1.00
+t=921555 SteerL changed to 0.00
+t=921865 SteerR changed to 1.00
+t=922375 SteerR changed to 0.00
+T: 825.00s | Pos: (483, -inf, -3024282) | Spd: 26282 km/h | Yaw: 1.57 | Steer: 0.00
+t=923085 SteerL changed to -1.00
+t=923455 SteerL changed to 0.00
+t=923485 Gas changed to 0.00
+t=923675 SteerR changed to 1.00
+t=924795 Gas changed to 1.00
+t=925885 SteerR changed to 0.00
+t=926625 SteerL changed to -1.00
+t=926825 SteerL changed to 0.00
+t=927025 SteerL changed to -1.00
+t=927135 SteerL changed to 0.00
+T: 830.00s | Pos: (483, -inf, -3060846) | Spd: 26415 km/h | Yaw: 1.57 | Steer: 0.00
+t=927935 SteerR changed to 1.00
+t=928015 SteerR changed to 0.00
+t=928545 SteerL changed to -1.00
+t=928695 SteerL changed to 0.00
+t=928775 SteerL changed to -1.00
+t=929005 SteerL changed to 0.00
+t=929105 SteerL changed to -1.00
+t=929185 SteerL changed to 0.00
+t=929275 SteerL changed to -1.00
+t=929385 SteerL changed to 0.00
+t=929445 SteerL changed to -1.00
+t=929895 SteerL changed to 0.00
+t=930075 SteerR changed to 1.00
+t=930245 Gas changed to 0.00
+t=930495 Gas changed to 1.00
+t=932445 Gas changed to 0.00
+t=932685 Gas changed to 1.00
+T: 835.00s | Pos: (483, -inf, -3097659) | Spd: 26578 km/h | Yaw: 1.57 | Steer: 1.00
+t=932725 Gas changed to 0.00
+t=932965 Gas changed to 1.00
+t=933295 SteerR changed to 0.00
+t=934075 SteerL changed to -1.00
+t=934285 SteerL changed to 0.00
+t=934395 SteerL changed to -1.00
+t=934645 SteerL changed to 0.00
+t=934725 SteerL changed to -1.00
+t=934935 SteerL changed to 0.00
+t=935565 SteerR changed to 1.00
+t=936105 SteerR changed to 0.00
+T: 840.00s | Pos: (483, -inf, -3134686) | Spd: 26749 km/h | Yaw: 1.57 | Steer: 0.00
+t=940175 SteerR changed to 1.00
+t=940425 Gas changed to 0.00
+t=940755 Gas changed to 1.00
+t=941175 SteerR changed to 0.00
+t=941285 SteerR changed to 1.00
+t=942125 SteerR changed to 0.00
+T: 845.00s | Pos: (483, -inf, -3171956) | Spd: 26918 km/h | Yaw: 1.57 | Steer: 0.00
+t=944745 SteerR changed to 1.00
+t=944815 SteerR changed to 0.00
+t=945255 SteerR changed to 1.00
+t=945405 SteerR changed to 0.00
+t=945495 SteerR changed to 1.00
+t=945715 SteerR changed to 0.00
+t=946105 SteerL changed to -1.00
+t=946465 SteerL changed to 0.00
+T: 850.00s | Pos: (483, -inf, -3209468) | Spd: 27098 km/h | Yaw: 1.57 | Steer: 0.00
+t=948045 Gas changed to 0.00
+t=948055 SteerR changed to 1.00
+t=948555 Gas changed to 1.00
+t=949855 SteerR changed to 0.00
+t=949915 SteerR changed to 1.00
+t=950015 SteerR changed to 0.00
+t=950115 SteerR changed to 1.00
+t=950365 SteerR changed to 0.00
+t=950475 SteerR changed to 1.00
+t=950635 SteerR changed to 0.00
+t=950805 SteerR changed to 1.00
+t=951455 SteerR changed to 0.00
+T: 855.00s | Pos: (483, -inf, -3247204) | Spd: 27260 km/h | Yaw: 1.57 | Steer: 0.00
+t=954985 SteerR changed to 1.00
+t=955155 SteerR changed to 0.00
+t=957435 SteerL changed to -1.00
+t=957585 SteerL changed to 0.00
+T: 860.00s | Pos: (483, -inf, -3285191) | Spd: 27440 km/h | Yaw: 1.57 | Steer: 0.00
+t=958745 SteerR changed to 1.00
+t=958865 SteerR changed to 0.00
+t=959365 SteerL changed to -1.00
+t=959435 SteerL changed to 0.00
+t=959745 SteerR changed to 1.00
+t=959835 SteerR changed to 0.00
+t=960245 SteerR changed to 1.00
+t=961065 SteerR changed to 0.00
+t=961155 SteerR changed to 1.00
+t=962085 SteerR changed to 0.00
+T: 865.00s | Pos: (483, -inf, -3323427) | Spd: 27620 km/h | Yaw: 1.57 | Steer: 0.00
+t=962875 SteerR changed to 1.00
+t=962925 SteerR changed to 0.00
+t=963045 SteerR changed to 1.00
+t=963505 Gas changed to 0.00
+t=963735 Gas changed to 1.00
+t=965155 SteerR changed to 0.00
+t=966415 SteerL changed to -1.00
+t=966485 SteerL changed to 0.00
+t=966945 SteerR changed to 1.00
+t=967465 SteerR changed to 0.00
+T: 870.00s | Pos: (483, -inf, -3361903) | Spd: 27792 km/h | Yaw: 1.57 | Steer: 0.00
+t=968855 Gas changed to 0.00
+t=969695 SteerR changed to 1.00
+t=972255 Gas changed to 1.00
+t=972435 SteerR changed to 0.00
+T: 875.00s | Pos: (483, -inf, -3400528) | Spd: 27849 km/h | Yaw: 1.57 | Steer: 0.00
+t=974995 SteerR changed to 1.00
+t=975215 SteerR changed to 0.00
+t=975435 SteerR changed to 1.00
+t=975545 SteerR changed to 0.00
+t=975655 SteerR changed to 1.00
+t=976075 SteerR changed to 0.00
+t=976285 SteerR changed to 1.00
+t=976745 SteerR changed to 0.00
+t=976945 SteerL changed to -1.00
+t=977155 SteerL changed to 0.00
+t=977525 SteerR changed to 1.00
+t=977635 Gas changed to 0.00
+T: 880.00s | Pos: (483, -inf, -3439334) | Spd: 28027 km/h | Yaw: 1.57 | Steer: 1.00
+t=978135 Gas changed to 1.00
+t=978445 SteerR changed to 0.00
+t=978645 SteerL changed to -1.00
+t=979135 SteerL changed to 0.00
+t=979225 SteerL changed to -1.00
+t=979785 Gas changed to 0.00
+t=980115 Gas changed to 1.00
+t=981085 SteerL changed to 0.00
+t=981335 SteerL changed to -1.00
+t=981435 SteerL changed to 0.00
+t=982395 SteerR changed to 1.00
+t=982465 SteerR changed to 0.00
+T: 885.00s | Pos: (483, -inf, -3478356) | Spd: 28180 km/h | Yaw: 1.57 | Steer: 0.00
+t=983845 Gas changed to 0.00
+t=983985 SteerR changed to 1.00
+t=985075 Gas changed to 1.00
+t=985705 SteerR changed to 0.00
+t=986075 SteerR changed to 1.00
+t=986155 SteerR changed to 0.00
+t=987155 SteerL changed to -1.00
+t=987325 SteerL changed to 0.00
+T: 890.00s | Pos: (483, -inf, -3517590) | Spd: 28316 km/h | Yaw: 1.57 | Steer: 0.00
+t=988895 SteerL changed to -1.00
+t=989135 SteerL changed to 0.00
+t=989225 SteerL changed to -1.00
+t=990005 SteerL changed to 0.00
+t=990255 SteerR changed to 1.00
+t=991375 Gas changed to 0.00
+t=991875 Gas changed to 1.00
+t=992395 SteerR changed to 0.00
+t=992455 SteerR changed to 1.00
+T: 895.00s | Pos: (483, -inf, -3557036) | Spd: 28478 km/h | Yaw: 1.57 | Steer: 1.00
+t=993385 SteerR changed to 0.00
+t=994355 SteerL changed to -1.00
+t=994515 SteerL changed to 0.00
+t=994635 SteerL changed to -1.00
+t=995045 SteerL changed to 0.00
+t=995675 SteerR changed to 1.00
+t=996305 SteerR changed to 0.00
+t=996685 SteerL changed to -1.00
+t=996745 SteerL changed to 0.00
+T: 900.00s | Pos: (483, -inf, -3596714) | Spd: 28658 km/h | Yaw: 1.57 | Steer: 0.00
+t=1000115 SteerR changed to 1.00
+t=1000335 Gas changed to 0.00
+t=1000565 Gas changed to 1.00
+t=1001975 SteerR changed to 0.00
+t=1002415 SteerR changed to 1.00
+t=1002455 SteerR changed to 0.00
+T: 905.00s | Pos: (483, -inf, -3636638) | Spd: 28830 km/h | Yaw: 1.57 | Steer: 0.00
+t=1004755 SteerR changed to 1.00
+t=1004855 SteerR changed to 0.00
+t=1005025 SteerR changed to 1.00
+t=1005165 SteerR changed to 0.00
+t=1005235 SteerR changed to 1.00
+t=1005325 SteerR changed to 0.00
+t=1006125 SteerL changed to -1.00
+t=1006335 SteerL changed to 0.00
+t=1007265 Gas changed to 0.00
+t=1007275 SteerR changed to 1.00
+T: 910.00s | Pos: (483, -inf, -3676805) | Spd: 28994 km/h | Yaw: 1.57 | Steer: 1.00
+t=1007865 Gas changed to 1.00
+t=1007945 Gas changed to 0.00
+t=1007975 Gas changed to 1.00
+t=1008275 Gas changed to 0.00
+t=1008445 Gas changed to 1.00
+t=1010095 SteerR changed to 0.00
+t=1010205 SteerR changed to 1.00
+t=1011065 SteerR changed to 0.00
+t=1011255 SteerL changed to -1.00
+t=1011315 SteerL changed to 0.00
+t=1012355 SteerR changed to 1.00
+T: 915.00s | Pos: (483, -inf, -3717183) | Spd: 29161 km/h | Yaw: 1.57 | Steer: 1.00
+t=1013075 SteerR changed to 0.00
+t=1014735 SteerL changed to -1.00
+t=1014905 SteerL changed to 0.00
+t=1016275 SteerL changed to -1.00
+t=1016355 SteerL changed to 0.00
+t=1017495 SteerR changed to 1.00
+T: 920.00s | Pos: (483, -inf, -3757811) | Spd: 29342 km/h | Yaw: 1.57 | Steer: 1.00
+t=1017715 SteerR changed to 0.00
+t=1019255 SteerR changed to 1.00
+t=1019615 SteerR changed to 0.00
+t=1019705 SteerR changed to 1.00
+t=1019875 SteerR changed to 0.00
+t=1019955 SteerR changed to 1.00
+t=1020255 SteerR changed to 0.00
+t=1020335 SteerR changed to 1.00
+t=1021235 SteerR changed to 0.00
+t=1021425 SteerR changed to 1.00
+t=1021535 SteerR changed to 0.00
+t=1022145 SteerR changed to 1.00
+T: 925.00s | Pos: (483, -inf, -3798690) | Spd: 29522 km/h | Yaw: 1.57 | Steer: 1.00
+t=1023265 Gas changed to 0.00
+t=1023515 Gas changed to 1.00
+t=1024215 SteerR changed to 0.00
+T: 930.00s | Pos: (483, -inf, -3839805) | Spd: 29692 km/h | Yaw: 1.57 | Steer: 0.00
+t=1028355 Gas changed to 0.00
+t=1028985 SteerR changed to 1.00
+t=1030845 Gas changed to 1.00
+t=1031385 SteerR changed to 0.00
+t=1032095 SteerR changed to 1.00
+t=1032155 SteerR changed to 0.00
+T: 935.00s | Pos: (483, -inf, -3881081) | Spd: 29782 km/h | Yaw: 1.57 | Steer: 0.00
+t=1034745 SteerR changed to 1.00
+t=1035215 SteerR changed to 0.00
+t=1035325 SteerR changed to 1.00
+t=1036015 SteerR changed to 0.00
+t=1036615 SteerL changed to -1.00
+t=1036695 SteerL changed to 0.00
+t=1037025 Gas changed to 0.00
+t=1037025 SteerR changed to 1.00
+t=1037385 Gas changed to 1.00
+T: 940.00s | Pos: (483, -inf, -3922570) | Spd: 29948 km/h | Yaw: 1.57 | Steer: 1.00
+t=1037865 SteerR changed to 0.00
+t=1037995 Gas changed to 0.00
+t=1038075 SteerL changed to -1.00
+t=1039115 Gas changed to 1.00
+t=1040875 SteerL changed to 0.00
+t=1041335 SteerR changed to 1.00
+t=1041765 SteerR changed to 0.00
+t=1042685 SteerL changed to -1.00
+T: 945.00s | Pos: (483, -inf, -3964246) | Spd: 30088 km/h | Yaw: 1.57 | Steer: -1.00
+t=1042995 SteerL changed to 0.00
+t=1043095 Gas changed to 0.00
+t=1043155 SteerR changed to 1.00
+t=1044275 Gas changed to 1.00
+t=1045295 SteerR changed to 0.00
+t=1046315 SteerL changed to -1.00
+t=1046525 SteerL changed to 0.00
+T: 950.00s | Pos: (483, -inf, -4006101) | Spd: 30225 km/h | Yaw: 1.57 | Steer: 0.00
+t=1048055 SteerL changed to -1.00
+t=1048245 SteerL changed to 0.00
+t=1048315 SteerL changed to -1.00
+t=1048605 SteerL changed to 0.00
+t=1048695 SteerL changed to -1.00
+t=1049175 SteerL changed to 0.00
+t=1049565 SteerR changed to 1.00
+t=1050375 Gas changed to 0.00
+t=1050585 Gas changed to 1.00
+t=1051005 Gas changed to 0.00
+t=1051345 Gas changed to 1.00
+t=1052625 SteerR changed to 0.00
+T: 955.00s | Pos: (483, -inf, -4048191) | Spd: 30384 km/h | Yaw: 1.57 | Steer: 0.00
+t=1053785 SteerL changed to -1.00
+t=1054345 SteerL changed to 0.00
+t=1055015 SteerR changed to 1.00
+t=1055585 SteerR changed to 0.00
+T: 960.00s | Pos: (483, -inf, -4090516) | Spd: 30563 km/h | Yaw: 1.57 | Steer: 0.00
+t=1058785 SteerL changed to -1.00
+t=1058925 SteerL changed to 0.00
+t=1059265 SteerR changed to 1.00
+t=1059605 Gas changed to 0.00
+t=1059865 Gas changed to 1.00
+t=1060335 SteerR changed to 0.00
+t=1060455 SteerR changed to 1.00
+t=1060785 Gas changed to 0.00
+t=1061085 Gas changed to 1.00
+t=1061425 SteerR changed to 0.00
+T: 965.00s | Pos: (483, -inf, -4133078) | Spd: 30723 km/h | Yaw: 1.57 | Steer: 0.00
+t=1063715 SteerL changed to -1.00
+t=1063775 SteerL changed to 0.00
+t=1064835 SteerR changed to 1.00
+t=1065125 SteerR changed to 0.00
+t=1065455 SteerR changed to 1.00
+t=1065525 SteerR changed to 0.00
+t=1065725 SteerL changed to -1.00
+t=1065965 SteerL changed to 0.00
+T: 970.00s | Pos: (483, -inf, -4175874) | Spd: 30902 km/h | Yaw: 1.57 | Steer: 0.00
+t=1069025 SteerR changed to 1.00
+t=1069305 Gas changed to 0.00
+t=1069485 Gas changed to 1.00
+t=1070645 SteerR changed to 0.00
+t=1071255 SteerR changed to 1.00
+t=1071305 SteerR changed to 0.00
+T: 975.00s | Pos: (483, -inf, -4218901) | Spd: 31075 km/h | Yaw: 1.57 | Steer: 0.00
+t=1074385 SteerR changed to 1.00
+t=1074525 SteerR changed to 0.00
+t=1076985 SteerL changed to -1.00
+t=1077075 SteerL changed to 0.00
+T: 980.00s | Pos: (483, -inf, -4262186) | Spd: 31254 km/h | Yaw: 1.57 | Steer: 0.00
+t=1078815 SteerR changed to 1.00
+t=1078895 SteerR changed to 0.00
+t=1079315 SteerR changed to 1.00
+t=1079505 SteerR changed to 0.00
+t=1079645 SteerR changed to 1.00
+t=1079795 SteerR changed to 0.00
+t=1079925 SteerR changed to 1.00
+t=1080395 SteerR changed to 0.00
+t=1080445 SteerR changed to 1.00
+t=1081465 SteerR changed to 0.00
+t=1082355 SteerR changed to 1.00
+T: 985.00s | Pos: (483, -inf, -4305719) | Spd: 31433 km/h | Yaw: 1.57 | Steer: 1.00
+t=1082825 Gas changed to 0.00
+t=1083095 Gas changed to 1.00
+t=1084485 SteerR changed to 0.00
+t=1085795 SteerL changed to -1.00
+t=1085835 SteerL changed to 0.00
+t=1086445 SteerR changed to 1.00
+t=1086885 SteerR changed to 0.00
+T: 990.00s | Pos: (483, -inf, -4349488) | Spd: 31603 km/h | Yaw: 1.57 | Steer: 0.00
+t=1088255 Gas changed to 0.00
+t=1089225 SteerR changed to 1.00
+t=1090655 Gas changed to 1.00
+t=1091125 Gas changed to 0.00
+t=1091255 Gas changed to 1.00
+t=1091845 SteerR changed to 0.00
+t=1092155 SteerL changed to -1.00
+T: 995.00s | Pos: (483, -inf, -4393488) | Spd: 31692 km/h | Yaw: 1.57 | Steer: -1.00
+t=1093885 SteerL changed to 0.00
+t=1094375 SteerR changed to 1.00
+t=1094935 SteerR changed to 0.00
+t=1095035 SteerR changed to 1.00
+t=1095775 SteerR changed to 0.00
+t=1096185 SteerL changed to -1.00
+t=1096335 SteerL changed to 0.00
+t=1096595 SteerR changed to 1.00
+t=1096615 Gas changed to 0.00
+t=1096975 Gas changed to 1.00
+t=1097415 SteerR changed to 0.00
+t=1097555 Gas changed to 0.00
+t=1097565 SteerL changed to -1.00
+T: 1000.00s | Pos: (483, -inf, -4437630) | Spd: 31853 km/h | Yaw: 1.57 | Steer: -1.00
+t=1098735 Gas changed to 1.00
+t=1100115 SteerL changed to 0.00
+t=1101075 SteerR changed to 1.00
+t=1101285 SteerR changed to 0.00
+t=1102105 SteerL changed to -1.00
+t=1102435 SteerL changed to 0.00
+t=1102595 Gas changed to 0.00
+t=1102655 SteerR changed to 1.00
+T: 1005.00s | Pos: (483, -inf, -4481943) | Spd: 31991 km/h | Yaw: 1.57 | Steer: 1.00
+t=1103915 Gas changed to 1.00
+t=1104795 SteerR changed to 0.00
+t=1106125 SteerL changed to -1.00
+t=1106255 SteerL changed to 0.00
+t=1107175 SteerL changed to -1.00
+t=1107375 SteerL changed to 0.00
+t=1107555 SteerL changed to -1.00
+t=1107625 SteerL changed to 0.00
+T: 1010.00s | Pos: (483, -inf, -4526443) | Spd: 32127 km/h | Yaw: 1.57 | Steer: 0.00
+t=1107995 SteerL changed to -1.00
+t=1108115 SteerL changed to 0.00
+t=1108205 SteerL changed to -1.00
+t=1108345 SteerL changed to 0.00
+t=1108445 SteerL changed to -1.00
+t=1108945 SteerL changed to 0.00
+t=1109205 SteerR changed to 1.00
+t=1109485 SteerR changed to 0.00
+t=1109565 SteerR changed to 1.00
+t=1109805 Gas changed to 0.00
+t=1110095 Gas changed to 1.00
+t=1110345 Gas changed to 0.00
+t=1110565 Gas changed to 1.00
+t=1112275 SteerR changed to 0.00
+T: 1015.00s | Pos: (483, -inf, -4571190) | Spd: 32288 km/h | Yaw: 1.57 | Steer: 0.00
+t=1113525 SteerL changed to -1.00
+t=1113735 SteerL changed to 0.00
+t=1113795 SteerL changed to -1.00
+t=1114145 SteerL changed to 0.00
+t=1114535 SteerR changed to 1.00
+t=1115135 SteerR changed to 0.00
+t=1116725 Gas changed to 0.00
+t=1116745 SteerR changed to 1.00
+t=1117095 Gas changed to 1.00
+t=1117635 SteerR changed to 0.00
+T: 1020.00s | Pos: (483, -inf, -4616160) | Spd: 32454 km/h | Yaw: 1.57 | Steer: 0.00
+t=1118345 SteerR changed to 1.00
+t=1118375 SteerR changed to 0.00
+t=1118785 SteerR changed to 1.00
+t=1118845 SteerR changed to 0.00
+t=1119275 SteerR changed to 1.00
+t=1119485 Gas changed to 0.00
+t=1119765 Gas changed to 1.00
+t=1120405 SteerR changed to 0.00
+t=1120515 SteerR changed to 1.00
+t=1121215 SteerR changed to 0.00
+T: 1025.00s | Pos: (483, -inf, -4661360) | Spd: 32623 km/h | Yaw: 1.57 | Steer: 0.00
+t=1123605 SteerL changed to -1.00
+t=1123665 SteerL changed to 0.00
+t=1124525 SteerR changed to 1.00
+t=1124915 SteerR changed to 0.00
+t=1125345 SteerL changed to -1.00
+t=1125685 SteerL changed to 0.00
+t=1126395 SteerR changed to 1.00
+t=1126635 SteerR changed to 0.00
+t=1126955 Gas changed to 0.00
+t=1126975 SteerR changed to 1.00
+t=1127675 Gas changed to 1.00
+T: 1030.00s | Pos: (483, -inf, -4706796) | Spd: 32777 km/h | Yaw: 1.57 | Steer: 1.00
+t=1128195 SteerR changed to 0.00
+t=1128425 SteerR changed to 1.00
+t=1128615 SteerR changed to 0.00
+t=1128705 SteerR changed to 1.00
+t=1128885 SteerR changed to 0.00
+t=1128995 SteerR changed to 1.00
+t=1129155 SteerR changed to 0.00
+t=1129345 SteerR changed to 1.00
+t=1130425 SteerR changed to 0.00
+T: 1035.00s | Pos: (483, -inf, -4752444) | Spd: 32956 km/h | Yaw: 1.57 | Steer: 0.00
+t=1134255 SteerR changed to 1.00
+t=1134355 SteerR changed to 0.00
+t=1137365 SteerL changed to -1.00
+t=1137425 SteerL changed to 0.00
+T: 1040.00s | Pos: (483, -inf, -4798342) | Spd: 33135 km/h | Yaw: 1.57 | Steer: 0.00
+t=1138735 SteerR changed to 1.00
+t=1138835 SteerR changed to 0.00
+t=1139425 SteerR changed to 1.00
+t=1140015 SteerR changed to 0.00
+t=1140105 SteerR changed to 1.00
+t=1141305 SteerR changed to 0.00
+t=1141935 SteerR changed to 1.00
+t=1142035 SteerR changed to 0.00
+t=1142265 SteerR changed to 1.00
+t=1142545 Gas changed to 0.00
+T: 1045.00s | Pos: (483, -inf, -4844488) | Spd: 33309 km/h | Yaw: 1.57 | Steer: 1.00
+t=1142725 Gas changed to 1.00
+t=1142915 SteerR changed to 0.00
+t=1143075 SteerR changed to 1.00
+t=1143235 Gas changed to 0.00
+t=1143515 Gas changed to 1.00
+t=1144475 SteerR changed to 0.00
+t=1145075 SteerL changed to -1.00
+t=1145115 SteerL changed to 0.00
+T: 1050.00s | Pos: (483, -inf, -4890861) | Spd: 33477 km/h | Yaw: 1.57 | Steer: 0.00
+t=1149145 Gas changed to 0.00
+t=1149195 SteerR changed to 1.00
+t=1151155 Gas changed to 1.00
+t=1151875 SteerR changed to 0.00
+t=1152055 SteerR changed to 1.00
+t=1152155 SteerR changed to 0.00
+T: 1055.00s | Pos: (483, -inf, -4937382) | Spd: 33585 km/h | Yaw: 1.57 | Steer: 0.00
+t=1152915 SteerL changed to -1.00
+t=1154165 SteerL changed to 0.00
+t=1155025 SteerR changed to 1.00
+t=1155975 SteerR changed to 0.00
+t=1156255 SteerL changed to -1.00
+t=1156375 SteerL changed to 0.00
+t=1156985 Gas changed to 0.00
+t=1157005 SteerR changed to 1.00
+T: 1060.00s | Pos: (483, -inf, -4984132) | Spd: 33738 km/h | Yaw: 1.57 | Steer: 1.00
+t=1157845 SteerR changed to 0.00
+t=1157985 SteerL changed to -1.00
+t=1158535 Gas changed to 1.00
+t=1158865 SteerL changed to 0.00
+t=1158955 SteerL changed to -1.00
+t=1160005 SteerL changed to 0.00
+t=1160155 SteerL changed to -1.00
+t=1160355 SteerL changed to 0.00
+t=1161075 SteerL changed to -1.00
+t=1161185 SteerL changed to 0.00
+T: 1065.00s | Pos: (483, -inf, -5031075) | Spd: 33888 km/h | Yaw: 1.57 | Steer: 0.00
+t=1163195 SteerL changed to -1.00
+t=1163465 SteerL changed to 0.00
+t=1163685 Gas changed to 0.00
+t=1163855 SteerR changed to 1.00
+t=1164785 Gas changed to 1.00
+t=1165955 SteerR changed to 0.00
+t=1167065 SteerL changed to -1.00
+t=1167255 SteerL changed to 0.00
+T: 1070.00s | Pos: (483, -inf, -5078212) | Spd: 34027 km/h | Yaw: 1.57 | Steer: 0.00
+t=1168095 SteerL changed to -1.00
+t=1168195 SteerL changed to 0.00
+t=1168685 SteerL changed to -1.00
+t=1168835 SteerL changed to 0.00
+t=1168955 SteerL changed to -1.00
+t=1169125 SteerL changed to 0.00
+t=1169205 SteerL changed to -1.00
+t=1169855 SteerL changed to 0.00
+t=1170175 SteerR changed to 1.00
+t=1171015 Gas changed to 0.00
+t=1171455 Gas changed to 1.00
+T: 1075.00s | Pos: (483, -inf, -5125598) | Spd: 34191 km/h | Yaw: 1.57 | Steer: 1.00
+t=1173355 SteerR changed to 0.00
+t=1173995 SteerL changed to -1.00
+t=1174125 SteerL changed to 0.00
+t=1174305 SteerL changed to -1.00
+t=1174445 SteerL changed to 0.00
+t=1174495 SteerL changed to -1.00
+t=1174895 SteerL changed to 0.00
+t=1175335 SteerR changed to 1.00
+t=1175955 SteerR changed to 0.00
+T: 1080.00s | Pos: (483, -inf, -5173211) | Spd: 34370 km/h | Yaw: 1.57 | Steer: 0.00
+t=1179905 SteerR changed to 1.00
+t=1179995 Gas changed to 0.00
+t=1180355 Gas changed to 1.00
+t=1181795 SteerR changed to 0.00
+t=1182175 SteerL changed to -1.00
+t=1182245 SteerL changed to 0.00
+t=1182605 SteerR changed to 1.00
+t=1182655 SteerR changed to 0.00
+T: 1085.00s | Pos: (483, -inf, -5221055) | Spd: 34537 km/h | Yaw: 1.57 | Steer: 0.00
+t=1184675 SteerR changed to 1.00
+t=1184835 SteerR changed to 0.00
+t=1185095 SteerR changed to 1.00
+t=1185365 SteerR changed to 0.00
+t=1185865 SteerL changed to -1.00
+t=1186175 SteerL changed to 0.00
+T: 1090.00s | Pos: (483, -inf, -5269148) | Spd: 34716 km/h | Yaw: 1.57 | Steer: 0.00
+t=1189095 SteerR changed to 1.00
+t=1189545 Gas changed to 0.00
+t=1189685 Gas changed to 1.00
+t=1190525 SteerR changed to 0.00
+t=1190935 SteerR changed to 1.00
+t=1191515 SteerR changed to 0.00
+t=1191615 SteerL changed to -1.00
+t=1191795 SteerL changed to 0.00
+t=1192405 SteerR changed to 1.00
+T: 1095.00s | Pos: (483, -inf, -5317483) | Spd: 34890 km/h | Yaw: 1.57 | Steer: 1.00
+t=1193615 SteerR changed to 0.00
+T: 1100.00s | Pos: (483, -inf, -5366067) | Spd: 35069 km/h | Yaw: 1.57 | Steer: 0.00
+t=1198685 SteerL changed to -1.00
+t=1198755 SteerL changed to 0.00
+t=1199355 SteerR changed to 1.00
+t=1199455 SteerR changed to 0.00
+t=1199995 SteerR changed to 1.00
+t=1200355 SteerR changed to 0.00
+t=1200425 SteerR changed to 1.00
+t=1201735 SteerR changed to 0.00
+t=1202185 SteerR changed to 1.00
+t=1202375 SteerR changed to 0.00
+t=1202655 SteerR changed to 1.00
+T: 1105.00s | Pos: (483, -inf, -5414900) | Spd: 35249 km/h | Yaw: 1.57 | Steer: 1.00
+t=1202775 SteerR changed to 0.00
+t=1202935 SteerR changed to 1.00
+t=1203805 Gas changed to 0.00
+t=1204025 Gas changed to 1.00
+t=1204835 SteerR changed to 0.00
+t=1205355 SteerR changed to 1.00
+t=1205375 SteerR changed to 0.00
+t=1206185 SteerR changed to 1.00
+t=1206205 SteerR changed to 0.00
+T: 1110.00s | Pos: (483, -inf, -5463971) | Spd: 35420 km/h | Yaw: 1.57 | Steer: 0.00
+t=1208845 Gas changed to 0.00
+t=1209455 SteerR changed to 1.00
+t=1210795 Gas changed to 1.00
+t=1211015 Gas changed to 0.00
+t=1211215 Gas changed to 1.00
+t=1211625 Gas changed to 0.00
+t=1212155 Gas changed to 1.00
+t=1212175 SteerR changed to 0.00
+T: 1115.00s | Pos: (483, -inf, -5513221) | Spd: 35503 km/h | Yaw: 1.57 | Steer: 0.00
+t=1214105 SteerL changed to -1.00
+t=1214145 SteerL changed to 0.00
+t=1215005 SteerR changed to 1.00
+t=1215495 SteerR changed to 0.00
+t=1215595 SteerR changed to 1.00
+t=1216225 SteerR changed to 0.00
+t=1217255 Gas changed to 0.00
+t=1217255 SteerR changed to 1.00
+T: 1120.00s | Pos: (483, -inf, -5562657) | Spd: 35667 km/h | Yaw: 1.57 | Steer: 1.00
+t=1218065 SteerR changed to 0.00
+t=1218255 SteerL changed to -1.00
+t=1218855 Gas changed to 1.00
+t=1220435 SteerL changed to 0.00
+t=1220605 SteerL changed to -1.00
+t=1220685 SteerL changed to 0.00
+T: 1125.00s | Pos: (483, -inf, -5612262) | Spd: 35805 km/h | Yaw: 1.57 | Steer: 0.00
+t=1223055 SteerL changed to -1.00
+t=1223195 Gas changed to 0.00
+t=1223215 SteerL changed to 0.00
+t=1223305 SteerR changed to 1.00
+t=1224205 Gas changed to 1.00
+t=1225285 SteerR changed to 0.00
+t=1226425 SteerL changed to -1.00
+t=1226585 SteerL changed to 0.00
+T: 1130.00s | Pos: (483, -inf, -5662065) | Spd: 35948 km/h | Yaw: 1.57 | Steer: 0.00
+t=1227795 SteerL changed to -1.00
+t=1227925 SteerL changed to 0.00
+t=1228575 SteerL changed to -1.00
+t=1228715 SteerL changed to 0.00
+t=1228995 SteerL changed to -1.00
+t=1229205 SteerL changed to 0.00
+t=1229315 SteerL changed to -1.00
+t=1229515 SteerL changed to 0.00
+t=1229625 SteerL changed to -1.00
+t=1230065 SteerL changed to 0.00
+t=1230265 SteerR changed to 1.00
+t=1230965 Gas changed to 0.00
+t=1231115 Gas changed to 1.00
+T: 1135.00s | Pos: (483, -inf, -5712110) | Spd: 36122 km/h | Yaw: 1.57 | Steer: 1.00
+t=1233575 SteerR changed to 0.00
+t=1234235 SteerL changed to -1.00
+t=1234345 SteerL changed to 0.00
+t=1234445 SteerL changed to -1.00
+t=1234985 SteerL changed to 0.00
+t=1235485 SteerR changed to 1.00
+t=1236065 SteerR changed to 0.00
+t=1237515 Gas changed to 0.00
+t=1237545 SteerR changed to 1.00
+T: 1140.00s | Pos: (483, -inf, -5762404) | Spd: 36294 km/h | Yaw: 1.57 | Steer: 1.00
+t=1237965 Gas changed to 1.00
+t=1238235 SteerR changed to 0.00
+t=1240025 SteerR changed to 1.00
+t=1240735 Gas changed to 0.00
+t=1240945 Gas changed to 1.00
+t=1241665 SteerR changed to 0.00
+t=1241825 SteerR changed to 1.00
+t=1242035 SteerR changed to 0.00
+T: 1145.00s | Pos: (483, -inf, -5812914) | Spd: 36457 km/h | Yaw: 1.57 | Steer: 0.00
+t=1245335 SteerR changed to 1.00
+t=1245705 SteerR changed to 0.00
+t=1245955 SteerL changed to -1.00
+t=1246285 SteerL changed to 0.00
+T: 1150.00s | Pos: (483, -inf, -5863673) | Spd: 36636 km/h | Yaw: 1.57 | Steer: 0.00
+t=1247795 Gas changed to 0.00
+t=1247825 SteerR changed to 1.00
+t=1248315 Gas changed to 1.00
+t=1248385 SteerR changed to 0.00
+t=1249215 SteerR changed to 1.00
+t=1249355 SteerR changed to 0.00
+t=1249525 SteerR changed to 1.00
+t=1250215 SteerR changed to 0.00
+t=1250385 SteerR changed to 1.00
+t=1250885 SteerR changed to 0.00
+t=1250995 SteerR changed to 1.00
+t=1251155 SteerR changed to 0.00
+t=1251305 SteerR changed to 1.00
+t=1251435 SteerR changed to 0.00
+t=1251715 SteerL changed to -1.00
+t=1251785 SteerL changed to 0.00
+t=1252685 SteerR changed to 1.00
+T: 1155.00s | Pos: (483, -inf, -5914673) | Spd: 36796 km/h | Yaw: 1.57 | Steer: 1.00
+t=1253195 SteerR changed to 0.00
+t=1255975 SteerL changed to -1.00
+t=1256005 SteerL changed to 0.00
+t=1257535 SteerL changed to -1.00
+t=1257675 SteerL changed to 0.00
+T: 1160.00s | Pos: (483, -inf, -5965905) | Spd: 36976 km/h | Yaw: 1.57 | Steer: 0.00
+t=1258515 SteerR changed to 1.00
+t=1258665 SteerR changed to 0.00
+t=1260275 SteerR changed to 1.00
+t=1262045 SteerR changed to 0.00
+t=1262585 SteerR changed to 1.00
+t=1262685 SteerR changed to 0.00
+T: 1165.00s | Pos: (483, -inf, -6017386) | Spd: 37155 km/h | Yaw: 1.57 | Steer: 0.00
+t=1263075 SteerR changed to 1.00
+t=1263445 Gas changed to 0.00
+t=1263595 Gas changed to 1.00
+t=1265125 SteerR changed to 0.00
+T: 1170.00s | Pos: (483, -inf, -6069116) | Spd: 37329 km/h | Yaw: 1.57 | Steer: 0.00
+t=1268765 Gas changed to 0.00
+t=1269795 SteerR changed to 1.00
+t=1271785 Gas changed to 1.00
+t=1272145 SteerR changed to 0.00
+t=1272335 SteerR changed to 1.00
+t=1272395 SteerR changed to 0.00
+T: 1175.00s | Pos: (483, -inf, -6121088) | Spd: 37400 km/h | Yaw: 1.57 | Steer: 0.00
+t=1275115 SteerR changed to 1.00
+t=1275475 SteerR changed to 0.00
+t=1275585 SteerR changed to 1.00
+t=1276475 SteerR changed to 0.00
+t=1276975 SteerL changed to -1.00
+t=1277105 SteerL changed to 0.00
+t=1277395 Gas changed to 0.00
+t=1277405 SteerR changed to 1.00
+T: 1180.00s | Pos: (483, -inf, -6173157) | Spd: 37568 km/h | Yaw: 1.57 | Steer: 1.00
+t=1278005 Gas changed to 1.00
+t=1278275 SteerR changed to 0.00
+t=1278385 SteerL changed to -1.00
+t=1278515 Gas changed to 0.00
+t=1279525 Gas changed to 1.00
+t=1280845 SteerL changed to 0.00
+t=1281495 SteerL changed to -1.00
+t=1281585 SteerL changed to 0.00
+t=1281965 SteerR changed to 1.00
+t=1282115 SteerR changed to 0.00
+T: 1185.00s | Pos: (483, -inf, -6225407) | Spd: 37700 km/h | Yaw: 1.57 | Steer: 0.00
+t=1283235 SteerL changed to -1.00
+t=1283395 SteerL changed to 0.00
+t=1283425 Gas changed to 0.00
+t=1283525 SteerR changed to 1.00
+t=1284035 SteerR changed to 0.00
+t=1284115 SteerR changed to 1.00
+t=1284555 Gas changed to 1.00
+t=1285785 SteerR changed to 0.00
+t=1286605 SteerL changed to -1.00
+t=1286815 SteerL changed to 0.00
+T: 1190.00s | Pos: (483, -inf, -6277895) | Spd: 37839 km/h | Yaw: 1.57 | Steer: 0.00
+t=1287895 SteerL changed to -1.00
+t=1288035 SteerL changed to 0.00
+t=1288345 SteerL changed to -1.00
+t=1288455 SteerL changed to 0.00
+t=1288565 SteerL changed to -1.00
+t=1288745 SteerL changed to 0.00
+t=1288845 SteerL changed to -1.00
+t=1289105 SteerL changed to 0.00
+t=1289195 SteerL changed to -1.00
+t=1289595 SteerL changed to 0.00
+t=1289855 SteerR changed to 1.00
+t=1290055 Gas changed to 0.00
+t=1290395 Gas changed to 1.00
+t=1290525 Gas changed to 0.00
+t=1290685 Gas changed to 1.00
+t=1291025 SteerR changed to 0.00
+t=1291165 SteerR changed to 1.00
+T: 1195.00s | Pos: (483, -inf, -6330575) | Spd: 38001 km/h | Yaw: 1.57 | Steer: 1.00
+t=1293085 SteerR changed to 0.00
+t=1294065 SteerL changed to -1.00
+t=1294675 SteerL changed to 0.00
+t=1295175 SteerR changed to 1.00
+t=1295765 SteerR changed to 0.00
+t=1296015 SteerR changed to 1.00
+t=1296065 SteerR changed to 0.00
+T: 1200.00s | Pos: (483, -inf, -6383479) | Spd: 38180 km/h | Yaw: 1.57 | Steer: 0.00
+t=1299125 SteerL changed to -1.00
+t=1299265 SteerL changed to 0.00
+t=1299635 SteerR changed to 1.00
+t=1299695 Gas changed to 0.00
+t=1299965 Gas changed to 1.00
+t=1300735 Gas changed to 0.00
+t=1300915 Gas changed to 1.00
+t=1301525 SteerR changed to 0.00
+T: 1205.00s | Pos: (483, -inf, -6436632) | Spd: 38343 km/h | Yaw: 1.57 | Steer: 0.00
+t=1305065 SteerR changed to 1.00
+t=1305445 SteerR changed to 0.00
+t=1305735 SteerL changed to -1.00
+t=1306065 SteerL changed to 0.00
+t=1307515 Gas changed to 0.00
+t=1307535 SteerR changed to 1.00
+T: 1210.00s | Pos: (483, -inf, -6490012) | Spd: 38516 km/h | Yaw: 1.57 | Steer: 1.00
+t=1307795 Gas changed to 1.00
+t=1308345 SteerR changed to 0.00
+t=1308805 SteerR changed to 1.00
+t=1308955 SteerR changed to 0.00
+t=1309095 SteerR changed to 1.00
+t=1309475 SteerR changed to 0.00
+t=1309575 SteerR changed to 1.00
+t=1309855 SteerR changed to 0.00
+t=1309945 SteerR changed to 1.00
+t=1310855 SteerR changed to 0.00
+T: 1215.00s | Pos: (483, -inf, -6543627) | Spd: 38692 km/h | Yaw: 1.57 | Steer: 0.00
+t=1314745 SteerR changed to 1.00
+t=1314835 SteerR changed to 0.00
+t=1315265 SteerR changed to 1.00
+t=1315335 SteerR changed to 0.00
+t=1317045 SteerL changed to -1.00
+t=1317215 SteerL changed to 0.00
+T: 1220.00s | Pos: (483, -inf, -6597491) | Spd: 38871 km/h | Yaw: 1.57 | Steer: 0.00
+t=1317985 SteerR changed to 1.00
+t=1318125 SteerR changed to 0.00
+t=1318565 SteerL changed to -1.00
+t=1318625 SteerL changed to 0.00
+t=1319775 SteerR changed to 1.00
+t=1320415 Gas changed to 0.00
+t=1320605 Gas changed to 1.00
+t=1321575 SteerR changed to 0.00
+t=1321775 SteerR changed to 1.00
+t=1321865 SteerR changed to 0.00
+t=1322245 SteerR changed to 1.00
+t=1322315 SteerR changed to 0.00
+T: 1225.00s | Pos: (483, -inf, -6651594) | Spd: 39043 km/h | Yaw: 1.57 | Steer: 0.00
+t=1322895 SteerR changed to 1.00
+t=1323255 Gas changed to 0.00
+t=1323425 Gas changed to 1.00
+t=1323565 Gas changed to 0.00
+t=1323675 Gas changed to 1.00
+t=1324895 SteerR changed to 0.00
+t=1326305 SteerL changed to -1.00
+t=1326325 SteerL changed to 0.00
+T: 1230.00s | Pos: (483, -inf, -6705933) | Spd: 39213 km/h | Yaw: 1.57 | Steer: 0.00
+t=1329355 Gas changed to 0.00
+t=1329375 SteerL changed to -1.00
+t=1329485 SteerL changed to 0.00
+t=1329745 SteerR changed to 1.00
+t=1331725 Gas changed to 1.00
+t=1332425 SteerR changed to 0.00
+T: 1235.00s | Pos: (483, -inf, -6760433) | Spd: 39307 km/h | Yaw: 1.57 | Steer: 0.00
+t=1334825 SteerR changed to 1.00
+t=1334925 SteerR changed to 0.00
+t=1335285 SteerR changed to 1.00
+t=1335825 SteerR changed to 0.00
+t=1335935 SteerR changed to 1.00
+t=1336115 SteerR changed to 0.00
+t=1336205 SteerR changed to 1.00
+t=1336535 SteerR changed to 0.00
+t=1337405 SteerL changed to -1.00
+t=1337455 SteerL changed to 0.00
+t=1337685 SteerR changed to 1.00
+T: 1240.00s | Pos: (483, -inf, -6815152) | Spd: 39486 km/h | Yaw: 1.57 | Steer: 1.00
+t=1337705 Gas changed to 0.00
+t=1338405 SteerR changed to 0.00
+t=1338525 SteerL changed to -1.00
+t=1338655 Gas changed to 1.00
+t=1338915 SteerL changed to 0.00
+t=1339245 SteerL changed to -1.00
+t=1341465 SteerL changed to 0.00
+t=1342085 SteerR changed to 1.00
+t=1342415 SteerR changed to 0.00
+T: 1245.00s | Pos: (483, -inf, -6870072) | Spd: 39632 km/h | Yaw: 1.57 | Steer: 0.00
+t=1343165 SteerL changed to -1.00
+t=1343465 SteerL changed to 0.00
+t=1343735 SteerL changed to -1.00
+t=1343755 SteerL changed to 0.00
+t=1343805 Gas changed to 0.00
+t=1343985 SteerR changed to 1.00
+t=1344975 Gas changed to 1.00
+t=1346095 SteerR changed to 0.00
+T: 1250.00s | Pos: (483, -inf, -6925183) | Spd: 39769 km/h | Yaw: 1.57 | Steer: 0.00
+t=1347845 SteerL changed to -1.00
+t=1348135 SteerL changed to 0.00
+t=1348935 SteerL changed to -1.00
+t=1349225 SteerL changed to 0.00
+t=1349275 SteerL changed to -1.00
+t=1349935 SteerL changed to 0.00
+t=1350195 SteerR changed to 1.00
+t=1350235 Gas changed to 0.00
+t=1350365 Gas changed to 1.00
+t=1351695 Gas changed to 0.00
+t=1352135 Gas changed to 1.00
+T: 1255.00s | Pos: (483, -inf, -6980537) | Spd: 39928 km/h | Yaw: 1.57 | Steer: 1.00
+t=1353355 SteerR changed to 0.00
+t=1353865 SteerL changed to -1.00
+t=1354035 SteerL changed to 0.00
+t=1354535 SteerL changed to -1.00
+t=1355045 SteerL changed to 0.00
+t=1355435 SteerR changed to 1.00
+t=1355645 SteerR changed to 0.00
+t=1355715 SteerR changed to 1.00
+t=1356255 SteerR changed to 0.00
+t=1356535 SteerL changed to -1.00
+t=1356615 SteerL changed to 0.00
+T: 1260.00s | Pos: (483, -inf, -7036117) | Spd: 40107 km/h | Yaw: 1.57 | Steer: 0.00
+t=1359335 SteerL changed to -1.00
+t=1359445 SteerL changed to 0.00
+t=1360005 SteerR changed to 1.00
+t=1360525 Gas changed to 0.00
+t=1360675 Gas changed to 1.00
+t=1360925 Gas changed to 0.00
+t=1360975 Gas changed to 1.00
+t=1361175 Gas changed to 0.00
+t=1361355 Gas changed to 1.00
+t=1361955 SteerR changed to 0.00
+t=1362175 SteerR changed to 1.00
+t=1362255 SteerR changed to 0.00
+T: 1265.00s | Pos: (483, -inf, -7091928) | Spd: 40273 km/h | Yaw: 1.57 | Steer: 0.00
+t=1364485 SteerL changed to -1.00
+t=1364595 SteerL changed to 0.00
+t=1364795 SteerL changed to -1.00
+t=1364935 SteerL changed to 0.00
+t=1365075 SteerR changed to 1.00
+t=1365235 SteerR changed to 0.00
+t=1365335 SteerR changed to 1.00
+t=1365735 SteerR changed to 0.00
+t=1366045 SteerL changed to -1.00
+t=1366355 SteerL changed to 0.00
+T: 1270.00s | Pos: (483, -inf, -7147987) | Spd: 40452 km/h | Yaw: 1.57 | Steer: 0.00
+t=1368135 Gas changed to 0.00
+t=1368215 SteerR changed to 1.00
+t=1368375 Gas changed to 1.00
+t=1368685 SteerR changed to 0.00
+t=1369195 SteerR changed to 1.00
+t=1369495 SteerR changed to 0.00
+t=1369575 SteerR changed to 1.00
+t=1369725 SteerR changed to 0.00
+t=1369825 SteerR changed to 1.00
+t=1371195 SteerR changed to 0.00
+t=1371605 SteerL changed to -1.00
+t=1371665 SteerL changed to 0.00
+t=1372115 SteerR changed to 1.00
+T: 1275.00s | Pos: (483, -inf, -7204284) | Spd: 40623 km/h | Yaw: 1.57 | Steer: 1.00
+t=1373515 SteerR changed to 0.00
+t=1374895 SteerR changed to 1.00
+t=1375045 SteerR changed to 0.00
+t=1375705 SteerL changed to -1.00
+t=1375795 SteerL changed to 0.00
+t=1377685 SteerL changed to -1.00
+T: 1280.00s | Pos: (483, -inf, -7260829) | Spd: 40802 km/h | Yaw: 1.57 | Steer: -1.00
+t=1377745 SteerL changed to 0.00
+t=1378395 SteerR changed to 1.00
+t=1378515 SteerR changed to 0.00
+t=1378835 SteerL changed to -1.00
+t=1378915 SteerL changed to 0.00
+t=1379635 SteerR changed to 1.00
+t=1380555 SteerR changed to 0.00
+t=1380665 SteerR changed to 1.00
+t=1381535 SteerR changed to 0.00
+t=1381815 SteerR changed to 1.00
+t=1381895 SteerR changed to 0.00
+t=1382495 SteerR changed to 1.00
+T: 1285.00s | Pos: (483, -inf, -7317624) | Spd: 40981 km/h | Yaw: 1.57 | Steer: 1.00
+t=1383015 SteerR changed to 0.00
+t=1383125 SteerR changed to 1.00
+t=1383205 Gas changed to 0.00
+t=1383505 Gas changed to 1.00
+t=1384085 Gas changed to 0.00
+t=1384295 Gas changed to 1.00
+t=1384735 SteerR changed to 0.00
+t=1385485 SteerL changed to -1.00
+t=1385515 SteerL changed to 0.00
+t=1386405 SteerL changed to -1.00
+t=1386465 SteerL changed to 0.00
+t=1386775 SteerR changed to 1.00
+T: 1290.00s | Pos: (483, -inf, -7374642) | Spd: 41142 km/h | Yaw: 1.57 | Steer: 1.00
+t=1388335 Gas changed to 0.00
+t=1388555 Gas changed to 1.00
+t=1389015 Gas changed to 0.00
+t=1389255 Gas changed to 1.00
+t=1389645 SteerR changed to 0.00
+t=1389725 SteerR changed to 1.00
+t=1390035 Gas changed to 0.00
+t=1392165 Gas changed to 1.00
+t=1392595 SteerR changed to 0.00
+T: 1295.00s | Pos: (483, -inf, -7431892) | Spd: 41229 km/h | Yaw: 1.57 | Steer: 0.00
+t=1395745 SteerR changed to 1.00
+t=1396825 SteerR changed to 0.00
+t=1397265 SteerL changed to -1.00
+t=1397385 SteerL changed to 0.00
+t=1397545 Gas changed to 0.00
+t=1397665 SteerR changed to 1.00
+T: 1300.00s | Pos: (483, -inf, -7489279) | Spd: 41402 km/h | Yaw: 1.57 | Steer: 1.00
+t=1397985 SteerR changed to 0.00
+t=1398105 SteerR changed to 1.00
+t=1398415 Gas changed to 1.00
+t=1398605 SteerR changed to 0.00
+t=1398775 SteerL changed to -1.00
+t=1399225 Gas changed to 0.00
+t=1399885 Gas changed to 1.00
+t=1401365 SteerL changed to 0.00
+t=1401765 SteerL changed to -1.00
+t=1401865 SteerL changed to 0.00
+t=1402155 SteerR changed to 1.00
+t=1402515 SteerR changed to 0.00
+T: 1305.00s | Pos: (483, -inf, -7546839) | Spd: 41532 km/h | Yaw: 1.57 | Steer: 0.00
+t=1403175 SteerL changed to -1.00
+t=1403585 SteerL changed to 0.00
+t=1403715 Gas changed to 0.00
+t=1403865 SteerR changed to 1.00
+t=1405125 Gas changed to 1.00
+t=1405955 SteerR changed to 0.00
+t=1407095 SteerL changed to -1.00
+t=1407335 SteerL changed to 0.00
+T: 1310.00s | Pos: (483, -inf, -7604589) | Spd: 41661 km/h | Yaw: 1.57 | Steer: 0.00
+t=1409025 SteerL changed to -1.00
+t=1409435 SteerL changed to 0.00
+t=1409555 SteerL changed to -1.00
+t=1409775 SteerL changed to 0.00
+t=1409865 SteerL changed to -1.00
+t=1410165 SteerL changed to 0.00
+t=1410505 SteerR changed to 1.00
+t=1410705 Gas changed to 0.00
+t=1410995 Gas changed to 1.00
+T: 1315.00s | Pos: (483, -inf, -7662578) | Spd: 41830 km/h | Yaw: 1.57 | Steer: 1.00
+t=1413685 SteerR changed to 0.00
+t=1414075 SteerL changed to -1.00
+t=1414215 SteerL changed to 0.00
+t=1414325 SteerL changed to -1.00
+t=1414515 SteerL changed to 0.00
+t=1414605 SteerL changed to -1.00
+t=1414745 SteerL changed to 0.00
+t=1414845 SteerL changed to -1.00
+t=1415045 SteerL changed to 0.00
+t=1415445 SteerR changed to 1.00
+t=1415705 SteerR changed to 0.00
+t=1415795 SteerR changed to 1.00
+t=1416155 SteerR changed to 0.00
+T: 1320.00s | Pos: (483, -inf, -7720801) | Spd: 42009 km/h | Yaw: 1.57 | Steer: 0.00
+t=1419635 SteerL changed to -1.00
+t=1419675 SteerL changed to 0.00
+t=1419965 SteerR changed to 1.00
+t=1420055 Gas changed to 0.00
+t=1420665 Gas changed to 1.00
+t=1421755 SteerR changed to 0.00
+t=1422345 SteerR changed to 1.00
+t=1422375 SteerR changed to 0.00
+T: 1325.00s | Pos: (483, -inf, -7779273) | Spd: 42167 km/h | Yaw: 1.57 | Steer: 0.00
+t=1424785 SteerR changed to 1.00
+t=1424895 SteerR changed to 0.00
+t=1425575 SteerR changed to 1.00
+t=1425875 SteerR changed to 0.00
+t=1426385 SteerL changed to -1.00
+t=1426715 SteerL changed to 0.00
+T: 1330.00s | Pos: (483, -inf, -7837963) | Spd: 42346 km/h | Yaw: 1.57 | Steer: 0.00
+t=1429475 SteerR changed to 1.00
+t=1429635 SteerR changed to 0.00
+t=1429725 SteerR changed to 1.00
+t=1430065 Gas changed to 0.00
+t=1430165 Gas changed to 1.00
+t=1430695 SteerR changed to 0.00
+t=1430775 SteerR changed to 1.00
+t=1431135 SteerR changed to 0.00
+t=1431275 SteerR changed to 1.00
+t=1431445 SteerR changed to 0.00
+t=1431695 SteerR changed to 1.00
+t=1431815 SteerR changed to 0.00
+T: 1335.00s | Pos: (483, -inf, -7896903) | Spd: 42522 km/h | Yaw: 1.57 | Steer: 0.00
+t=1435325 SteerL changed to -1.00
+t=1435425 SteerL changed to 0.00
+T: 1340.00s | Pos: (483, -inf, -7956086) | Spd: 42701 km/h | Yaw: 1.57 | Steer: 0.00
+t=1437765 SteerL changed to -1.00
+t=1437835 SteerL changed to 0.00
+t=1438865 SteerR changed to 1.00
+t=1438975 SteerR changed to 0.00
+t=1439675 SteerR changed to 1.00
+t=1439745 SteerR changed to 0.00
+t=1440195 SteerR changed to 1.00
+t=1440635 SteerR changed to 0.00
+t=1440725 SteerR changed to 1.00
+t=1441955 SteerR changed to 0.00
+t=1442195 SteerR changed to 1.00
+t=1442295 SteerR changed to 0.00
+T: 1345.00s | Pos: (483, -inf, -8015519) | Spd: 42880 km/h | Yaw: 1.57 | Steer: 0.00
+t=1443045 SteerR changed to 1.00
+t=1443155 Gas changed to 0.00
+t=1443595 Gas changed to 1.00
+t=1443765 Gas changed to 0.00
+t=1443875 Gas changed to 1.00
+t=1444465 SteerR changed to 0.00
+t=1444565 SteerR changed to 1.00
+t=1444795 SteerR changed to 0.00
+t=1444925 SteerR changed to 1.00
+t=1445105 SteerR changed to 0.00
+t=1445235 SteerR changed to 1.00
+t=1445465 SteerR changed to 0.00
+t=1446075 SteerL changed to -1.00
+t=1446125 SteerL changed to 0.00
+t=1446905 SteerR changed to 1.00
+t=1446945 SteerR changed to 0.00
+t=1447375 SteerL changed to -1.00
+T: 1350.00s | Pos: (483, -inf, -8075173) | Spd: 43040 km/h | Yaw: 1.57 | Steer: -1.00
+t=1448125 SteerL changed to 0.00
+t=1449775 SteerL changed to -1.00
+t=1450095 SteerL changed to 0.00
+t=1450245 Gas changed to 0.00
+t=1450345 SteerR changed to 1.00
+t=1452675 Gas changed to 1.00
+T: 1355.00s | Pos: (483, -inf, -8135077) | Spd: 43132 km/h | Yaw: 1.57 | Steer: 1.00
+t=1453045 SteerR changed to 0.00
+t=1454905 SteerL changed to -1.00
+t=1454995 SteerL changed to 0.00
+t=1455935 SteerR changed to 1.00
+t=1457045 SteerR changed to 0.00
+T: 1360.00s | Pos: (483, -inf, -8195108) | Spd: 43311 km/h | Yaw: 1.57 | Steer: 0.00
+t=1458115 Gas changed to 0.00
+t=1458115 SteerR changed to 1.00
+t=1458495 Gas changed to 1.00
+t=1458855 SteerR changed to 0.00
+t=1459105 Gas changed to 0.00
+t=1459105 SteerL changed to -1.00
+t=1460165 Gas changed to 1.00
+t=1461805 SteerL changed to 0.00

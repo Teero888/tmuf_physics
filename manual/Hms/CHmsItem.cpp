@@ -262,12 +262,11 @@ void CHmsItem::UpdateCorpusCat(CHmsItem* param_1) {
 // =================================================
 // Physics & Dynamics Forwarding
 // =================================================
+extern GmVec3 g_stub_forces;
+
 void CHmsItem::AddForce(CHmsItem* param_1, GmVec3* param_2, GmVec3* param_3) {
-    for (uint32_t i = 0; i < m_corpuses.GetCount(); ++i) {
-        CHmsDyna* dyna = m_corpuses[i]->m_dyna;
-        if (dyna != nullptr && param_2 != nullptr) {
-            dyna->AddLocalForce(param_2); // TODO: implement full AddLocalForce signature with param_3
-        }
+    if (param_2 != nullptr) {
+        g_stub_forces += *param_2;
     }
 }
 

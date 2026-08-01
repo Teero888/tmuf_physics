@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "IJ7qFqOY+wY=",
+  "success": true,
+  "projectFilePath": "/home/teero/software/tmnf_physics/ExtractTuning/ExtractTuning.csproj",
+  "expectedPackageFiles": [
+    "/home/teero/.nuget/packages/gbx.net/2.4.2/gbx.net.2.4.2.nupkg.sha512",
+    "/home/teero/.nuget/packages/gbx.net.lzo/2.1.5/gbx.net.lzo.2.1.5.nupkg.sha512",
+    "/home/teero/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.2/microsoft.extensions.dependencyinjection.abstractions.10.0.2.nupkg.sha512",
+    "/home/teero/.nuget/packages/microsoft.extensions.logging.abstractions/10.0.2/microsoft.extensions.logging.abstractions.10.0.2.nupkg.sha512",
+    "/home/teero/.nuget/packages/nativesharplzo/0.3.5/nativesharplzo.0.3.5.nupkg.sha512",
+    "/home/teero/.nuget/packages/system.diagnostics.diagnosticsource/10.0.2/system.diagnostics.diagnosticsource.10.0.2.nupkg.sha512",
+    "/home/teero/.nuget/packages/system.io.hashing/10.0.2/system.io.hashing.10.0.2.nupkg.sha512",
+    "/home/teero/.nuget/packages/tmessentials/2.7.0/tmessentials.2.7.0.nupkg.sha512"
+  ],
+  "logs": []
+}

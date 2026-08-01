@@ -1,0 +1,706 @@
+/home/teero/software/tmnf_physics/manual/GbxDumper/Program.cs(46,27): warning CS8602: Dereference of a possibly null reference. [/home/teero/software/tmnf_physics/manual/GbxDumper/GbxDumper.csproj]
+/home/teero/software/tmnf_physics/manual/GbxDumper/Program.cs(51,29): warning CS8604: Possible null reference argument for parameter 'obj' in 'void Program.PrintObject(object obj, string indent)'. [/home/teero/software/tmnf_physics/manual/GbxDumper/GbxDumper.csproj]
+--- TUNING [29] ---
+Id = 151965696
+SteerRadiusMin = 2
+SteerRadiusCoef = 0.85
+MaxSpeed = 277.7778
+AbsorbingValKi = 40
+AbsorbingValKa = 1
+AbsorbingValMin = 0
+AbsorbingValMax = 0.7
+AbsorbingValRest = 0.2
+RelSpeedMultCoef = 0.2
+DebugAbsorbCoef = 0.2
+Name = 20juin2006
+Mass = 1
+CMAftForce = 0
+CMDownUp = 0.45
+IsFakeEngine = True
+GravityCoef = 3
+SteerSpeed = 20
+ReverseMaxSpeed = 138.61111
+TurboBoost = 5
+BrakeBase = 1
+LinearFluidFrictionCoef = 0.03
+AngularFluidFrictionCoef1 = 0.4
+InertiaMass = 5
+InertiaHalfDiag = <0.5, 0.5, 1>
+TireMaterial = 9
+ShockModel = Demo03
+SteerModel = Steer06
+SteerGroundTorque = 0.08
+SoundEngineVolume = 0.6
+SoundSkidSandVolume = 1
+SoundImpactVolume = 1
+SoundBodyImpact_Hard_Threshold = 50
+SoundSkidConcreteVolume = 1
+DisplaySteerRadiusMin = 0
+DisplaySteerRadiusCoef = 0
+DecrepitudeImpactVal = 25
+DecrepitudeCoef = 0.2
+VibrationPeriodSpeedCoef = 0.0005
+AngularFluidFrictionCoef2 = 0.2
+BodyFrictionCoef = 0.3
+BodyFrictionCoef_Metal = 0.2
+BodyRestCoef_Metal = -0.5
+BodyRestCoef = -0.5
+WheelFrictionCoef_Concrete = 0
+WheelRestCoef_Concrete = -0.8
+WheelFrictionCoef_Metal = 0
+WheelRestCoef_Metal = -0.8
+GravityCoefAir = 2.5
+RolloverAxial = 0.3
+AirControlDuration = 30000
+SteerAngleMax = 0.523599
+SlipAngleForceMax = 0.087266
+SlipAngleForceCoef1 = 10
+SlipAngleForceCoef2 = 0.01
+AngularSpeedYImpulseScale = 0.55
+SteerLowSpeed = 30
+AccelCurve:
+  Id = 83992576
+  Ys:
+    1
+    2
+    6
+    12
+    16
+    11
+    7
+    5.5
+    1
+  RealInterp = Linear
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    -1000
+    -102
+    -80
+    -35
+    0
+    101
+    201
+    401
+    801
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+LateralSlopeAdherenceMin = 0.3
+LateralSlopeAdherenceMax = 0.7
+AxialSlopeAdherenceMin = 0.4
+AxialSlopeAdherenceMax = 0.7
+SteerGroundTorqueSlippingCoef = 1
+MaxSideFrictionBlendCoef = 0.018
+MaxSideFriction:
+  Id = 83992576
+  Ys:
+    80
+    80
+    75
+    67
+    60
+    55
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    100
+    200
+    300
+    400
+    500
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+MaxSideFrictionSliding = 0.35
+GroundSlowDownBase = 1
+AbsorbTension = 5
+SideFriction1 = 40
+RolloverLateral:
+  Id = 83992576
+  Ys:
+    0
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+LateralContactSlowDown:
+  Id = 83992576
+  Ys:
+    0
+    12
+    24
+    48
+    70
+  RealInterp = Linear
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    50
+    100
+    200
+    400
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+SteerSlowDown:
+  Id = 83992576
+  Ys:
+    1
+    0
+    0
+    0
+    0
+    0
+  RealInterp = Linear
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    -50
+    0
+    50
+    100
+    200
+    300
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+SideFriction2 = 0
+RubberBallElasticity = 1
+SteerSlowDownFadeInDuration = 1500
+RolloverLateralFromAngle:
+  Id = 83992576
+  Ys:
+    0
+    0.4
+    0.8
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    0.4
+    0.8
+    1
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+MaxAngularSpeedYAirControl = 3.14
+BrakeCoef = 1.75
+BrakeMax = 60
+BrakeMaxDynamic = 30
+GroundSlowDownCoef = 0.3
+SteerSlowDownFadeOutDuration = 1000
+SteerSlowDownCoef = 0.5
+TurboDuration = 250
+SteerDriveTorque:
+  Id = 83992576
+  Ys:
+    7
+    16
+    10.4
+    8.5
+    6.8
+    5.5
+    4.25
+    4
+    3.75
+    3.75
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    -100
+    0
+    50
+    100
+    150
+    200
+    300
+    400
+    500
+    600
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+LimitToMaxSpeedForce = 10
+SlopeSpeedGainLimit = 0
+SoundWheelImpact_Hard_Threshold = 50
+SoundWheelImpact_Soft_Threshold = 10
+SoundBodyImpact_Soft_Threshold = 10
+AngularSpeedClamp = 100
+LinearSpeed2PositiveDeltaMax = 10000
+NoSteerSlowDownWhenSlipping = False
+M4LateralFrictionSquareForce = 1
+M4LateralFrictionTorque = 1
+M4LateralFrictionForce = 1
+M4SteerRadiusFromSpeed:
+  Id = 83992576
+  Ys:
+    10
+    20
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    100
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M4MaxFrictionTorqueFromSpeed:
+  Id = 83992576
+  Ys:
+    100
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M4MaxFrictionTorqueWhenSlippingCoef = 1
+M4MaxFrictionForceFromSpeed:
+  Id = 83992576
+  Ys:
+    40
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M4MaxFrictionForceWhenSlipping = 1
+M4SteerRadiusWhenSlippingCoef = 1
+M4LateralFrictionSquareTorque = 0
+M4SlipAngleSpeed = 0.005
+M4SteerRadiusCoefFromSlipAngle = 0.3
+M4LeaveSlippingSpeed = 1
+M4SteerAngleWhenSlippingMax = 0.785398
+M5SlippingAccelCurve:
+  Id = 83992576
+  Ys:
+    10
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M5LateralConstantSlowDownDuration = 500
+M5SteerCoefFromSpeed:
+  Id = 83992576
+  Ys:
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M5SmoothInputSteerDurationFromSpeed:
+  Id = 83992576
+  Ys:
+    0
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M5MaxAxialRolloverTorque = 20
+M5KeepSlidingAccelDuration = 0
+M5KeepSteerSlowDownDurarion = 1
+M5KeepNoSteerSlowDownWhenSlippingDuration = 0
+M5AccelSlipCoefMax = 1
+WaterGravity = 1
+WaterReboundMinHSpeed = 55.555557
+WaterBumpMinSpeed = 50
+WaterBumpSlowDownFromSpeedRatio:
+  Id = 83992576
+  Ys:
+    0.7
+    0.7
+    0.6
+    0.6
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    0.4
+    0.5
+    1
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+WaterFrictionFromSpeed:
+  Id = 83992576
+  Ys:
+    0
+    0.2
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    2
+    50
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+WaterReboundFromSpeedRatio:
+  Id = 83992576
+  Ys:
+    0.9
+    0.9
+    1.5
+    1.5
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    0.4
+    0.5
+    1
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+WaterAngularFriction = 0.1
+WaterSplashFromSpeed = 
+ModulationFromWheelCompression:
+  Id = 83992576
+  Ys:
+    0.1
+    0.3
+    1
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    0.6
+    0.975
+    1
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6InertialMass = 5
+M6ForceEpsilon = 0.01
+M6InertialTorqueModualtionX = 0.05
+M6InertialTorqueModulationZ = 0.05
+M6MaxSpeed4Burnout = 20.833334
+M6BurnoutRadius:
+  Id = 83992576
+  Ys:
+    1
+    2
+    3
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    5
+    10
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6BurnoutFricMod = 0.01
+M6RolloverLateralFromSpeedRatio:
+  Id = 83992576
+  Ys:
+    0
+    0.8
+    1
+    1
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    1
+    10
+    20
+    30
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6BurnoutCenterForceCoeff2 = 0.2
+M6BurnoutRpmAcc = 6000
+M6AirRpmAcc = 6000
+M6AirRpmDeadening = 3000
+M6RpmLossCoefOnGearUp = 17000
+M6RpmGainCoefOnGearDown = 11500
+M6SpeedLimitPositiveForTakeOffFront = 3
+M6RpmGainOnTakeOff = 10000
+M6RpmLossOnTakeOffFinished = 4000
+M6SpeedLimitPositiveForTakeOffRear = 2
+M6SpeedLimitNegForTakeOffFront = -2
+M6SpeedLimitNegTakeOffRear = -3
+BrakeHeatSpeedFromFBrake:
+  Id = 83992576
+  Ys:
+    0
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    20
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+BrakeCoolingSpeed = -0.3
+M6BrakeMaxRear = 100
+M6BrakeMaxDynamicRear = 50
+M6MaxDiffBtwnPropulsionAndSpeed = 200
+AccelCurveRearGear:
+  Id = 83992576
+  Ys:
+    0.1
+    1.5
+    8
+    30
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    -150
+    -100
+    -50
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6BurnoutLateralSpeed:
+  Id = 83992576
+  Ys:
+    0
+    30
+    30
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    1
+    10
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6BurnoutLateralSpeedCoeff = 2
+M6MinSpeed4Burnout = 3
+M6BurnoutSteerCoeff = 6
+M6BurnoutCenterForceCoeff = 1
+M6BurnoutRadiusMax = 20
+M6BurnoutLateralSpeedMax = 20.833334
+M6BurnoutSteerCoeff2 = 2
+M6BurnoutSteerCoeff3 = 1
+M6BrakeModulationWhenSlipping = 0.5
+M6BurnoutDuration = 500
+M6BurnoutAccMod = 0.5
+M6AfterBurnoutAccMod = 1
+M6AfterBurnoutDuration = 150
+M6FrictionModulationWhenSlipNBrake = 0.2
+M6BrakeSmokeIntensity = 1
+M6BurnoutSmokeVelocity = 1
+M6BurnoutSmokeIntensity = 5
+M6BurnoutRolloverFromSpeed:
+  Id = 83992576
+  Ys:
+    1.5
+    1.2
+    0.2
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    10
+    50
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6DonutRolloverFromSpeed:
+  Id = 83992576
+  Ys:
+    0
+    5
+    6
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    10
+    20
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+M6MaxDiffBtwGroundNormal = 0.35
+M6BurnoutWheelAngularRotation = 150
+M6MaxPosAngle4Burnout = 1.7453
+M6MaxNegAngle4Burnout = 0.785
+M6AfterBurnoutImpulse = 0
+M6MaxRpm = 11000
+SteerDurationBeforeSteerSlowDown = 200
+AirControlZCoefFromAngularSpeed:
+  Id = 83992576
+  Ys:
+    1
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+WaterAngularFrictionSq = 0.2
+Turbo2Boost = 20
+Turbo2Duration = 100
+VisualSteerAngleFromSpeed:
+  Id = 83992576
+  Ys:
+    30
+    10
+  RealInterp = None
+  ForceTangentMinX = False
+  ForceTangentMaxX = False
+  ForcedTangentMinX = 0
+  ForcedTangentMaxX = 0
+  Xs:
+    0
+    100
+  Chunks:
+    CFuncKeys chunk 0x05002001
+    CFuncKeys chunk 0x05002003
+    CFuncKeysReal chunk 0x0501A001
+  GameVersion = Unspecified
+EngineGearRatios = 
+EngineAutoGearMaxRPMs = 
+EngineAutoGearMinRPMs = 
+GameVersion = Unspecified

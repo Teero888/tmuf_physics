@@ -12,7 +12,9 @@ struct CPfmHeap;
 
 class CSceneVehicleCarTuning : public CMwNod {
 public:
-    uint8_t m_padding_0x14[0x28 - 0x14];
+    CFastBuffer<void*> m_field_14; // Just use void* to avoid CMwNodRef include issues
+    uint8_t m_padding_0x24[0x28 - 0x24];
+
     CFuncKeysReal* m_steerSlowDown;             // 0x28
     float m_steerSlowDownFactor;               // 0x2C
     float m_steerDriveTorqueFactor;            // 0x30
@@ -39,13 +41,15 @@ public:
     uint32_t GetMwClassId();
     void Chunk(CFuncSegment* param_1, CClassicArchive* param_2, uint32_t param_3);
     
-    float GetLateralContactSlowDownFromSpeed(...) { return 0; }
-    float GetMaxSideFrictionFromSpeed(...) { return 0; }
-    float GetAccelFromSpeed(...) { return 0; }
-    float GetSteerDriveTorqueFromSpeed(...) { return 0; }
-    float GetRolloverLateralCoefFromAngle(...) { return 0; }
-    float GetRolloverLateralFromSpeed(...) { return 0; }
-    float GetSteerSlowDownFromSpeed(...) { return 0; }
+    float EvaluateCurve(struct CFuncKeysReal* curve, float x);
+
+    float GetLateralContactSlowDownFromSpeed(float speed);
+    float GetMaxSideFrictionFromSpeed(float speed);
+    float GetAccelFromSpeed(float speed);
+    float GetSteerDriveTorqueFromSpeed(float speed);
+    float GetRolloverLateralCoefFromAngle(float angle);
+    float GetRolloverLateralFromSpeed(float speed);
+    float GetSteerSlowDownFromSpeed(float speed);
 };
 
 #endif // CSCENEVEHICLECARTUNING_HPP

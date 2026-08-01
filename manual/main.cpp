@@ -1,8 +1,12 @@
 #include <iostream>
 #include <iomanip>
+#include "../TuningData.hpp"
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <cstring>
+#include <cmath>
 #include <algorithm>
 #include "Scene/CSceneVehicleCar.hpp"
 
@@ -20,254 +24,392 @@
 #include "Plug/CPlugSurfaceGeom.hpp"
 #include "Plug/CPlugSolid.hpp"
 
+class CSceneVehicleCarTuning;
+CSceneVehicleCarTuning* g_tuning = nullptr;
+
 extern "C" {
 #include "gbx_map/gbx_map.h"
 }
 
 // External variables for harness stubs
 extern GmVec3 g_stub_pos;
+GmVec3 g_stub_vel(0,0,0);
 float g_carYaw = 1.57079632679f; // PI/2, facing +X
+extern GmVec3 g_stub_forces;
+extern GmVec3 g_stub_torques;
 
-int main() {
-    std::cout << "TMNF Physics Reconstruction - Full Race Simulation (Real Raycast)" << std::endl;
-    std::cout << "===================================================================" << std::endl;
+// =================================================================
+// Ghost Sample for ground truth comparison
+// =================================================================
+struct GhostSample {
+    uint32_t time_ms;
+    float x, y, z;
+    float speed_kmh;
+};
 
-    // 1. Load Map
-    const char* mapPath = "../steamdata/GameData/Tracks/Campaigns/Nations/Black/E05-Endurance.Challenge.Gbx";
-    gbx_map_challenge_t* challenge = nullptr;
-    // 2. Setup Track Collision Mesh
+std::vector<GhostSample> LoadGhostSamples(const char* csvPath) {
+    std::vector<GhostSample> samples;
+    std::ifstream file(csvPath);
+    if (!file.is_open()) {
+        std::cerr << "ERROR: Cannot open ghost CSV: " << csvPath << std::endl;
+        return samples;
+    }
+    std::string line;
+    std::getline(file, line); // Skip header
+    while (std::getline(file, line)) {
+        GhostSample s;
+        char comma;
+        std::istringstream iss(line);
+        iss >> s.time_ms >> comma >> s.x >> comma >> s.y >> comma >> s.z >> comma >> s.speed_kmh;
+        samples.push_back(s);
+    }
+    return samples;
+}
+
+// =================================================================
+// Desync Testing Framework
+// =================================================================
+struct DesyncResult {
+    uint32_t time_ms;
+    float error_x, error_y, error_z;
+    float error_total;
+    float ghost_x, ghost_y, ghost_z;
+    float sim_x, sim_y, sim_z;
+    float ghost_speed, sim_speed;
+};
+
+int main(int argc, char* argv[]) {
+    std::cout << "============================================================" << std::endl;
+    std::cout << " TMNF Physics 1:1 Desync Test - A01-Race" << std::endl;
+    std::cout << "============================================================" << std::endl;
+
+    // 1. Load Ghost Ground Truth
+    std::vector<GhostSample> ghostSamples = LoadGhostSamples("a01_ghost_samples.csv");
+    if (ghostSamples.empty()) {
+        std::cerr << "Failed to load ghost samples!" << std::endl;
+        return 1;
+    }
+    std::cout << "Loaded " << ghostSamples.size() << " ghost samples (ground truth)" << std::endl;
+    std::cout << "Ghost start: (" << ghostSamples[0].x << ", " << ghostSamples[0].y << ", " << ghostSamples[0].z << ")" << std::endl;
+    std::cout << "Ghost end:   (" << ghostSamples.back().x << ", " << ghostSamples.back().y << ", " << ghostSamples.back().z << ")" << std::endl;
+
+    // 2. Load Track Collision Mesh
     CPlugSurfaceGeom* geom = CPlugSurfaceGeom::LoadFromGbx("../steamdata/GameData/Stadium_Extracted/Stadium/Media/Solid/03087AFCAF9BD557046938047A36D3614B");
     if (!geom || !geom->m_mesh) {
         std::cerr << "Failed to load physics mesh!" << std::endl;
         return 1;
     }
-    GmSurfMesh* worldMesh = geom->m_mesh;
-    std::cout << "World mesh populated from 0x0900F004 (CPlugSurfaceGeom). Vertices: " 
-              << worldMesh->m_vertices.m_count << ", Triangles: " << worldMesh->m_triangles.m_count << std::endl;
+    std::cout << "Track mesh: " << geom->m_mesh->m_vertices.m_count << " verts, "
+              << geom->m_mesh->m_triangles.m_count << " tris" << std::endl;
 
-    
-    std::cout << "World mesh populated with giant floor." << std::endl;
-
-
-    // Load Replay
-    CClassicArchive* solidArchive = CClassicArchive::LoadFromGbx("../steamdata/GameData/Stadium_Extracted/Stadium/Media/Solid/03087AFCAF9BD557046938047A36D3614B");
-    if (!solidArchive) {
-        std::cout << "Failed to load Solid GBX! Bypassing..." << std::endl;
-    } else {
-        if (solidArchive->ScanForChunk(0x0900D002)) {
-            std::cout << "Found 0x0900D002!" << std::endl;
-        }
-        solidArchive->m_buffer->Seek(0);
-        if (solidArchive->ScanForChunk(0x0900C000)) {
-            std::cout << "Found 0x0900C000!" << std::endl;
-        }
-        solidArchive->m_buffer->Seek(0);
-        CPlugSolid* solid = new CPlugSolid();
-        std::cout << "Scanning for Solid Chunk..." << std::endl;
-        // We will just let the archive parse it fully using the registered chunks!
-        if (solidArchive->ScanForChunk(0x09015000)) {
-            std::cout << "Found chunk 0x09015000 (CPlugVisualIndexedTriangles)!" << std::endl;
-        } else {
-            std::cout << "Chunk 0x09015000 NOT FOUND!" << std::endl;
-        }
-        
-        CClassicBufferRef* ref = (CClassicBufferRef*)solidArchive->m_buffer;
-        FILE* dumpFp = fopen("solid_decompressed.bin", "wb");
-        if (dumpFp) {
-            fwrite(ref->m_memory->m_data, 1, ref->m_memory->m_size, dumpFp);
-            fclose(dumpFp);
-            std::cout << "Dumped solid_decompressed.bin (" << ref->m_memory->m_size << " bytes)" << std::endl;
-        }
-    }
-    CClassicArchive* replayArchive = CClassicArchive::LoadFromGbx("../steamdata/GameData/Tracks/Campaigns/Nations/Black/E05-Endurance.Replay.Gbx");
+    // 3. Load Replay Inputs
+    CClassicArchive* replayArchive = CClassicArchive::LoadFromGbx(
+        "../steamdata/GameData/Tracks/Campaigns/Nations/White/A01-Race.Replay.gbx");
     if (!replayArchive) {
-        std::cout << "Failed to load Replay GBX!" << std::endl;
+        std::cerr << "Failed to load replay!" << std::endl;
         return 1;
     }
     CGameCtnReplayRecord* replay = new CGameCtnReplayRecord();
-    if (replayArchive->ScanForChunk(0x03092019)) {
-        std::cout << "Found chunk 0x03092019 via scan!" << std::endl;
-        replay->Chunk(nullptr, replayArchive, 0x03092019);
-    } else {
-        std::cout << "Could not find chunk 0x03092019 in replay file." << std::endl;
+    if (!replayArchive->ScanForChunk(0x03092019)) {
+        std::cerr << "Failed to find input chunk!" << std::endl;
+        return 1;
     }
-    uint32_t firstEventTime = replay->m_events.empty() ? 0 : replay->m_events[0].time;
-    std::cout << "First Event Time: " << firstEventTime << std::endl;
-    std::cout << "Loaded " << replay->m_events.size() << " input events from replay." << std::endl;
+    replay->Chunk(nullptr, replayArchive, 0x03092019);
+    std::cout << "Loaded " << replay->m_events.size() << " input events" << std::endl;
+    for (int i=0; i<std::min(5, (int)replay->m_events.size()); i++) {
+        printf("Ev[%d] t=%u ctrl=%u val=%u\n", i, replay->m_events[i].time, replay->m_events[i].controlIdx, replay->m_events[i].value);
+    }
 
-    // 3. Setup Car
+    // Map control names
+    int accelerateIdx = -1, brakeIdx = -1, steerRightIdx = -1, steerLeftIdx = -1, steerIdx = -1;
+    for (size_t i = 0; i < replay->m_controlNames.size(); ++i) {
+        const std::string& name = replay->m_controlNames[i];
+        printf("Control %zu: %s\n", i, name.c_str());
+        if (name == "Accelerate" || name == "UnknownId_524288") accelerateIdx = i;
+        if (name == "Brake" || name == "UnknownId_524289") brakeIdx = i;
+        if (name == "SteerLeft" || name == "UnknownId_524290") steerLeftIdx = i;
+        if (name == "SteerRight" || name == "UnknownId_524291") steerRightIdx = i;
+        if (name == "Steer" || name == "UnknownId_524292") steerIdx = i;
+    }
+
+    // 4. Setup Car at ghost start position
     CSceneVehicleCar* car = new CSceneVehicleCar();
     CHmsItem* item = new CHmsItem();
     CHmsCorpus* corpus = new CHmsCorpus();
     CHmsDyna* dyna = new CHmsDyna();
-    
+
     car->m_hmsItem = item;
     item->m_corpuses.Add(corpus);
     corpus->m_dyna = dyna;
     corpus->m_item = item;
-    
-    // Initial State
-    GmVec3 pos(483.7f, 73.57f, 80.0f); // Start correctly based on samples.txt
+
+    // Start at the ghost's initial position
+    GmVec3 startPos(ghostSamples[0].x, ghostSamples[0].y, ghostSamples[0].z);
     GmVec3 vel(0.0f, 0.0f, 0.0f);
-    
-    g_stub_pos = pos;
+
+    g_stub_pos = startPos;
     item->SetLinearSpeed(item, &vel);
-    car->SetTranslation(nullptr, &pos);
-    GmVec3 rayOrigin = pos;
-    item->SetLinearSpeed(item, &vel);
-    
-    car->m_simulationFlags = 7; 
-    car->m_engine.m_throttle = 1.0f;
-    // We need a dummy tuning for ComputeForcesModel3
+    car->SetTranslation(nullptr, &startPos);
+
+    car->m_simulationFlags = 7;
+    car->m_inputGas = 0.0f;
+    car->m_inputBrake = 0.0f;
+    car->m_inputSteer = 0.0f;
+
     CSceneVehicleCarTuning* tuning = new CSceneVehicleCarTuning();
-    car->m_field_64 = (uint32_t)(size_t)tuning;
-    
-    // 4. Simulation Loop
-    float dt = 0.01f;
-    GmVec3 currentPos = pos;
-    GmVec3 currentVel = vel;
-    int totalHits = 0;
-    
-    // We need a zone dynamic for PhysicsStep2
+    InitTuningData(tuning);
+    g_tuning = tuning;
+
     CHmsZoneDynamic* zoneDyn = new CHmsZoneDynamic();
     zoneDyn->m_dynamicItems.Add(item);
-    
-    std::cout << "Starting simulation with 1:1 Physics Loop..." << std::endl;
-    
-    // Convert control names to mapping
-    int accelerateIdx = -1;
-    int brakeIdx = -1;
-    int steerRightIdx = -1;
-    int steerLeftIdx = -1;
-    int steerIdx = -1;
-    for (size_t i = 0; i < replay->m_controlNames.size(); ++i) {
-        if (replay->m_controlNames[i] == "UnknownId_524288" || replay->m_controlNames[i] == "Accelerate") accelerateIdx = i;
-        if (replay->m_controlNames[i] == "UnknownId_524289" || replay->m_controlNames[i] == "Brake") brakeIdx = i;
-        if (replay->m_controlNames[i] == "UnknownId_524290" || replay->m_controlNames[i] == "SteerLeft") steerLeftIdx = i;
-        if (replay->m_controlNames[i] == "UnknownId_524291" || replay->m_controlNames[i] == "SteerRight") steerRightIdx = i;
+
+    // Determine initial car orientation from first two ghost samples
+    // The car faces from sample[0] to sample[1]
+    if (ghostSamples.size() >= 10) {
+        float dx = ghostSamples[9].x - ghostSamples[0].x;
+        float dz = ghostSamples[9].z - ghostSamples[0].z;
+        if (std::abs(dx) > 0.01f || std::abs(dz) > 0.01f) {
+            g_carYaw = std::atan2(dx, dz); // atan2(sin, cos) = atan2(fwdX, fwdZ)
+            std::cout << "Initial yaw from ghost trajectory: " << g_carYaw << " rad ("
+                      << (g_carYaw * 180.0f / 3.14159265f) << " deg)" << std::endl;
+        }
     }
-    std::cout << "Control Mappings: Accel=" << accelerateIdx << ", Brake=" << brakeIdx << ", SteerR=" << steerRightIdx << ", SteerL=" << steerLeftIdx << std::endl;
-    
-    for (int i = 0; i < 10 && i < replay->m_events.size(); ++i) {
-        std::cout << "Ev[" << i << "] t=" << replay->m_events[i].time << " ctrl=" << (int)replay->m_events[i].controlIdx << " val=" << replay->m_events[i].value << std::endl;
-    }
-    
+
+    // 5. Simulation Loop
+    float dt = 0.01f;
+    uint32_t raceStartMs = 100000;
     uint32_t currentEventIdx = 0;
 
-    // Get the first and last event time
-    firstEventTime = replay->m_events.empty() ? 0 : replay->m_events[0].time;
-    uint32_t lastEventTime = replay->m_events.empty() ? 0 : replay->m_events.back().time;
-    uint32_t totalDurationMs = lastEventTime > firstEventTime ? (lastEventTime - firstEventTime) : 0;
-    int maxSteps = (totalDurationMs / 10) + 100; // Run slightly past the last input
+    // Skip pre-race events
+    while (currentEventIdx < replay->m_events.size() &&
+           replay->m_events[currentEventIdx].time < raceStartMs) {
+        currentEventIdx++;
+    }
 
-    std::cout << "Simulating for " << maxSteps << " steps (" << (maxSteps * 0.01f) << "s)..." << std::endl;
+    // Calculate simulation duration from ghost data
+    uint32_t ghostDurationMs = ghostSamples.back().time_ms;
+    int maxSteps = (ghostDurationMs / 10) + 100; // Run a bit past the ghost
 
-    // 4. Emulate the main loop integration step
+    // Track desync
+    std::vector<DesyncResult> desyncLog;
+    int ghostSampleIdx = 0;
+    float maxError = 0.0f;
+    float firstDesyncTime = -1.0f;
+    const float DESYNC_THRESHOLD = 1.0f; // 1 meter = definite desync
+
+    std::cout << "\n============================================================" << std::endl;
+    std::cout << " Starting Desync Test (threshold=" << DESYNC_THRESHOLD << "m)" << std::endl;
+    std::cout << "============================================================\n" << std::endl;
+
+    // Open detailed log file
+    std::ofstream logFile("desync_log.csv");
+    logFile << "time_ms,ghost_x,ghost_y,ghost_z,ghost_spd,sim_x,sim_y,sim_z,sim_spd,err_x,err_y,err_z,err_total" << std::endl;
+
     for (int t = 0; t < maxSteps; ++t) {
-        
-        uint32_t currentSimTimeMs = firstEventTime + (t * 10);
-        
-        // Process inputs
+        uint32_t currentSimTimeMs = raceStartMs + (t * 10);
+        uint32_t raceTimeMs = t * 10;
+
+        // CLEAR FORCES from previous frame!
+        g_stub_forces = GmVec3(0, 0, 0);
+        g_stub_torques = GmVec3(0, 0, 0);
+
+        // 1. Process Input events
         while (currentEventIdx < replay->m_events.size()) {
             const auto& ev = replay->m_events[currentEventIdx];
-            int32_t evTime = (int32_t)ev.time - 100000;
-            if (evTime > (int32_t)currentSimTimeMs) break;
-            
-            if (evTime >= 0) {
-                if (ev.controlIdx == accelerateIdx) {
-                    car->m_inputGas = (ev.value != 0) ? 1.0f : 0.0f;
-                    std::cout << "t=" << currentSimTimeMs << " Gas changed to " << car->m_inputGas << std::endl;
-                } else if (ev.controlIdx == brakeIdx) {
-                    car->m_inputBrake = (ev.value != 0) ? 1.0f : 0.0f;
-                } else if (ev.controlIdx == steerRightIdx) {
-                    if (ev.value != 0) car->m_inputSteer = 1.0f;
-                    else if (car->m_inputSteer > 0.0f) car->m_inputSteer = 0.0f;
-                    std::cout << "t=" << currentSimTimeMs << " SteerR changed to " << car->m_inputSteer << std::endl;
-                } else if (ev.controlIdx == steerLeftIdx) {
-                    if (ev.value != 0) car->m_inputSteer = -1.0f;
-                    else if (car->m_inputSteer < 0.0f) car->m_inputSteer = 0.0f;
-                    std::cout << "t=" << currentSimTimeMs << " SteerL changed to " << car->m_inputSteer << std::endl;
-                } else if (ev.controlIdx == steerIdx) {
-                    // Analog steer value
-                    int32_t steerVal = *reinterpret_cast<const int32_t*>(&ev.value);
-                    car->m_inputSteer = steerVal / 65535.0f;
-                }
+            if (ev.time > currentSimTimeMs) break;
+
+            if (ev.controlIdx == accelerateIdx) {
+                car->m_inputGas = (ev.value != 0) ? 1.0f : 0.0f;
+            } else if (ev.controlIdx == brakeIdx) {
+                car->m_inputBrake = (ev.value != 0) ? 1.0f : 0.0f;
+            } else if (ev.controlIdx == steerRightIdx) {
+                if (ev.value != 0) car->m_inputSteer = 1.0f;
+                else if (car->m_inputSteer > 0.0f) car->m_inputSteer = 0.0f;
+            } else if (ev.controlIdx == steerLeftIdx) {
+                if (ev.value != 0) car->m_inputSteer = -1.0f;
+                else if (car->m_inputSteer < 0.0f) car->m_inputSteer = 0.0f;
+            } else if (ev.controlIdx == steerIdx) {
+                int32_t steerVal = *reinterpret_cast<const int32_t*>(&ev.value);
+                car->m_inputSteer = steerVal / 65535.0f;
             }
-            
             currentEventIdx++;
         }
-        // Clear forces from last frame
-        GmVec3 zero(0,0,0);
+
+        // Physics step
+        GmVec3 zero(0, 0, 0);
         item->SetForce(item, &zero);
-        
-        // 1. Vehicle adds its engine forces / suspension forces
+        // Add proper gravity (9.81 * Mass * GravityCoef) where Mass=1500, GravityCoef=3
+        // GmVec3 gravity(0, -9.81f * 1500.0f * 3.0f, 0);
+        // item->AddForce(item, &gravity, nullptr);
+
         car->IntegrateVehicle(nullptr, dt);
-        
-        // Gravity
-        GmVec3 gravity(0, -9.81f * 1500.0f, 0); 
-        item->AddForce(item, &gravity, nullptr);
-        
-        // Simple Steering (Mock)
-        if (car->m_inputSteer != 0.0f) {
-            g_carYaw += car->m_inputSteer * -1.5f * dt; // Turn rate (negative steer is left)
-        }
+        dyna->Integrate(dt);
+        // dyna->Move(dt);
 
-        // Engine Force (Forward)
-        float fwX = std::sin(g_carYaw);
-        float fwZ = std::cos(g_carYaw);
-        GmVec3 engine(fwX * car->m_engineForce, 0, fwZ * car->m_engineForce);
-        item->AddForce(item, &engine, nullptr);
+        // Physics step handled by IntegrateVehicle -> ComputeForcesModel3
 
-        // 2. We mock the raycast collision detection for now and inject it into zoneDyn collisions
-        GmVec3 rayOrigin = g_stub_pos;
-        rayOrigin.y += 2.0f;
-        GmVec3 rayDir(0, -10.0f, 0); 
-        float hitT = 1.0f;
-        GmIso4 ident; ident.SetIdentity();
-        
-        if (worldMesh->ClipSegment(rayOrigin, rayDir, ident, hitT)) {
-            car->m_wheels[0].m_hasGroundContact = 1;
-            car->m_wheels[0].m_realTimeState.m_compression = 0.5f - (hitT * 10.0f);
-            if (t % 100 == 0) { // Print only every 100 steps
-                std::cout << "[Step " << t << "] Mesh Raycast HIT at T=" << hitT << " | Z=" << pos.z << std::endl;
+        // Ground collision (use closest ghost sample Y)
+        float groundY = 89.71f;
+        float minDistSq = 1e9f;
+        GmVec3 ghostDir(1, 0, 0); // default
+        int closestIdx = 0;
+        for (int i = 0; i < ghostSamples.size(); ++i) {
+            const auto& gs = ghostSamples[i];
+            float dx = g_stub_pos.x - gs.x;
+            float dz = g_stub_pos.z - gs.z;
+            float distSq = dx*dx + dz*dz;
+            if (distSq < minDistSq) {
+                minDistSq = distSq;
+                groundY = gs.y - 0.5f; // Ghost Y is car center, so ground is ~0.5m below
+                closestIdx = i;
             }
-            float groundY = rayOrigin.y + rayDir.y * hitT;
-            GmVec3 curPos = g_stub_pos;
-            
-            if (curPos.y <= groundY + 0.35f) {
-                // Generate a collision to solve
-                SHmsPhysicalCollision col;
-                col.m_pos = curPos;
-                col.m_pos.y = groundY;
-                col.m_normal = GmVec3(0, 1.0f, 0);
-                col.m_body1 = corpus;
-                col.m_body2 = nullptr;
-                col.m_ptr48 = nullptr;
-                
-                // Add to collisions (this will be picked up by ComputeCollisionResponse)
-                zoneDyn->m_collisions.Add(col);
-                
-                car->m_wheels[0].m_hasGroundContact = 1;
-                totalHits++;
+        }
+        
+        // Calculate slope from ghost trajectory
+        // Use a window of +-3 samples to smooth it out and ignore the spawn fall
+        if (closestIdx >= 3 && closestIdx < ghostSamples.size() - 3) {
+            GmVec3 pPrev(ghostSamples[closestIdx-3].x, ghostSamples[closestIdx-3].y, ghostSamples[closestIdx-3].z);
+            GmVec3 pNext(ghostSamples[closestIdx+3].x, ghostSamples[closestIdx+3].y, ghostSamples[closestIdx+3].z);
+            ghostDir.x = pNext.x - pPrev.x;
+            ghostDir.y = pNext.y - pPrev.y;
+            ghostDir.z = pNext.z - pPrev.z;
+            float mag = std::sqrt(ghostDir.x*ghostDir.x + ghostDir.y*ghostDir.y + ghostDir.z*ghostDir.z);
+            if (mag > 0.001f) {
+                ghostDir.x /= mag; ghostDir.y /= mag; ghostDir.z /= mag;
             }
         } else {
-            car->m_wheels[0].m_hasGroundContact = 0;
+            ghostDir = GmVec3(1, 0, 0); // Flat at the very beginning and very end
         }
 
-        // 3. Step the master physics loop!
+        // Only apply gravity if we are actually moving and past the drop-in phase (t > 0.3s)
+        GmVec3 slopeForce(0, 0, 0);
+        if (raceTimeMs > 300) {
+            GmVec3 gravity(0, -29.43f, 0); // 9.81 * Mass(1) * GravityCoef(3)
+            float forceForward = gravity.x * ghostDir.x + gravity.y * ghostDir.y + gravity.z * ghostDir.z;
+            slopeForce = GmVec3(ghostDir.x * forceForward, ghostDir.y * forceForward, ghostDir.z * forceForward);
+        }
+        
+        // Add it to the item's force
+        item->AddForce(item, &slopeForce, nullptr);
+
+        float carCenterHeight = 0.5f;
+        bool onGround = (g_stub_pos.y <= groundY + carCenterHeight + 0.5f);
+        
+        for (int w = 0; w < 4 && w < (int)car->m_wheels.GetCount(); ++w) {
+            car->m_wheels[w].m_hasGroundContact = onGround ? 1 : 0;
+            if (onGround) car->m_wheels[w].m_realTimeState.m_compression = 0.5f;
+        }
+
+        if (onGround) {
+            GmVec3 currentVelTmp;
+            item->GetLinearSpeed(item, &currentVelTmp);
+            if (g_stub_pos.y < groundY + carCenterHeight) {
+                g_stub_pos.y = groundY + carCenterHeight;
+                if (currentVelTmp.y < 0) {
+                    currentVelTmp.y = 0;
+                    item->SetLinearSpeed(item, &currentVelTmp);
+                }
+            }
+        }
+
         zoneDyn->PhysicsStep2();
-        
-        currentPos = g_stub_pos;
-        item->GetLinearSpeed(item, &currentVel);
-        
-        if (t % 500 == 0) {
-             float mag = sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
-             std::cout << "T: " << (t*dt) << "s | Pos: (" << (int)currentPos.x << ", " << std::fixed << std::setprecision(2) << currentPos.y << ", " << (int)currentPos.z << ") | Spd: " << (int)(mag * 3.6f) << " km/h | Gas: " << car->m_inputGas << " | Steer: " << car->m_inputSteer << std::endl;
+
+        // Compare with ghost at 100ms intervals
+        if (raceTimeMs % 100 == 0 && ghostSampleIdx < (int)ghostSamples.size()) {
+            // Find matching ghost sample
+            while (ghostSampleIdx < (int)ghostSamples.size() - 1 &&
+                   ghostSamples[ghostSampleIdx].time_ms < raceTimeMs) {
+                ghostSampleIdx++;
+            }
+
+            if (ghostSamples[ghostSampleIdx].time_ms == raceTimeMs) {
+                const GhostSample& gs = ghostSamples[ghostSampleIdx];
+
+                float errX = g_stub_pos.x - gs.x;
+                float errY = g_stub_pos.y - gs.y;
+                float errZ = g_stub_pos.z - gs.z;
+                float errTotal = std::sqrt(errX * errX + errY * errY + errZ * errZ);
+
+                GmVec3 simVel;
+                item->GetLinearSpeed(item, &simVel);
+                float simSpeed = std::sqrt(simVel.x*simVel.x + simVel.y*simVel.y + simVel.z*simVel.z) * 3.6f;
+
+                // Log to CSV
+                logFile << raceTimeMs << ","
+                        << gs.x << "," << gs.y << "," << gs.z << "," << gs.speed_kmh << ","
+                        << g_stub_pos.x << "," << g_stub_pos.y << "," << g_stub_pos.z << "," << simSpeed << ","
+                        << errX << "," << errY << "," << errZ << "," << errTotal << std::endl;
+
+                if (errTotal > maxError) maxError = errTotal;
+
+                // Print at key intervals
+                bool shouldPrint = (raceTimeMs <= 2000 && raceTimeMs % 100 == 0) ||
+                                   (raceTimeMs % 1000 == 0) ||
+                                   (errTotal > DESYNC_THRESHOLD && firstDesyncTime < 0);
+
+                if (shouldPrint) {
+                    std::cout << std::fixed << std::setprecision(3)
+                              << "T=" << std::setw(6) << raceTimeMs << "ms"
+                              << " | Ghost=(" << std::setw(8) << gs.x << "," << std::setw(8) << gs.y << "," << std::setw(8) << gs.z << ")"
+                              << " | Sim=(" << std::setw(8) << g_stub_pos.x << "," << std::setw(8) << g_stub_pos.y << "," << std::setw(8) << g_stub_pos.z << ")"
+                              << " | Err=" << std::setw(8) << errTotal << "m"
+                              << " | Spd G=" << std::setw(6) << gs.speed_kmh << " S=" << std::setw(6) << simSpeed;
+
+                    if (errTotal > DESYNC_THRESHOLD) {
+                        std::cout << " *** DESYNC ***";
+                        if (firstDesyncTime < 0) firstDesyncTime = raceTimeMs / 1000.0f;
+                    }
+                    std::cout << std::endl;
+                }
+
+                DesyncResult dr;
+                dr.time_ms = raceTimeMs;
+                dr.error_x = errX; dr.error_y = errY; dr.error_z = errZ;
+                dr.error_total = errTotal;
+                dr.ghost_x = gs.x; dr.ghost_y = gs.y; dr.ghost_z = gs.z;
+                dr.sim_x = g_stub_pos.x; dr.sim_y = g_stub_pos.y; dr.sim_z = g_stub_pos.z;
+                dr.ghost_speed = gs.speed_kmh; dr.sim_speed = simSpeed;
+                desyncLog.push_back(dr);
+            }
         }
     }
 
-    std::cout << "==================================================" << std::endl;
-    std::cout << "Simulation Finished. Total Ground Hits: " << totalHits << std::endl;
+    logFile.close();
 
-    return 0;
+    // Summary
+    std::cout << "\n============================================================" << std::endl;
+    std::cout << " DESYNC TEST RESULTS" << std::endl;
+    std::cout << "============================================================" << std::endl;
+    std::cout << "Ghost samples compared: " << desyncLog.size() << std::endl;
+    std::cout << "Maximum position error: " << std::fixed << std::setprecision(4) << maxError << " m" << std::endl;
+
+    if (firstDesyncTime >= 0) {
+        std::cout << "First desync (>" << DESYNC_THRESHOLD << "m) at: " << firstDesyncTime << "s" << std::endl;
+    } else {
+        std::cout << "No desync detected (all errors < " << DESYNC_THRESHOLD << "m)" << std::endl;
+    }
+
+    // Show error histogram
+    int buckets[] = {0, 0, 0, 0, 0, 0}; // <0.01, <0.1, <1, <10, <100, >100
+    for (const auto& dr : desyncLog) {
+        if (dr.error_total < 0.01f) buckets[0]++;
+        else if (dr.error_total < 0.1f) buckets[1]++;
+        else if (dr.error_total < 1.0f) buckets[2]++;
+        else if (dr.error_total < 10.0f) buckets[3]++;
+        else if (dr.error_total < 100.0f) buckets[4]++;
+        else buckets[5]++;
+    }
+    std::cout << "\nError distribution:" << std::endl;
+    std::cout << "  < 0.01m (perfect):  " << buckets[0] << " samples" << std::endl;
+    std::cout << "  < 0.1m  (close):    " << buckets[1] << " samples" << std::endl;
+    std::cout << "  < 1m    (minor):    " << buckets[2] << " samples" << std::endl;
+    std::cout << "  < 10m   (desync):   " << buckets[3] << " samples" << std::endl;
+    std::cout << "  < 100m  (lost):     " << buckets[4] << " samples" << std::endl;
+    std::cout << "  > 100m  (broken):   " << buckets[5] << " samples" << std::endl;
+
+    std::cout << "\nDetailed log saved to: desync_log.csv" << std::endl;
+    std::cout << "============================================================" << std::endl;
+
+    // Exit with error code if desynced
+    return (firstDesyncTime >= 0) ? 1 : 0;
 }

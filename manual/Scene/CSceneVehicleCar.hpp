@@ -40,6 +40,12 @@ enum EVehicleEvent {
 
 class CSceneVehicleCar : public CSceneVehicle {
 public:
+
+    void WheelAddForceToVehicle(CSceneVehicleCar *param_1, void *param_2, void *param_3, void *param_4);
+    void AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3);
+    void AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3);
+    void AddVehicleForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3, GmVec3 *param_4);
+
     struct SDynaPart {
         virtual ~SDynaPart();
         uint8_t m_padding[24];
@@ -59,12 +65,14 @@ public:
         float m_gearShiftTimer;     // 0x24 (+0x5C0)
         int m_field_0x28;           // 0x28 (+0x5C4)
         int m_currentGear;          // 0x2C (+0x5C8)
+        float m_field_0x30;
 
         virtual ~SEngine();
         void Reset();
     };
 
     struct SSimulationWheel {
+
         struct SRealTimeState {
             virtual ~SRealTimeState();
             float m_compression;         // 0x00 (Wheel + 0xB4)
@@ -148,8 +156,16 @@ public:
     SEngine m_engine;                      // 0x59C
     
     float m_engineForce;                   // 0x5E8
+    float m_field_0x5ec;
+    float m_field_0x5f0;
+    float m_field_0x5f4;
+    float m_field_0x5f8;
+    float m_field_0x5fc;
+    int m_field_0x600;
     
-    uint8_t m_padding_final[0x60C - 0x5EC];
+    uint8_t m_padding_final[0x840 - 0x604];
+    float m_field_0x840;
+    
     CSceneVehicleCar* m_pilotCar;          // 0x60C
 
     CSceneVehicleCar();
