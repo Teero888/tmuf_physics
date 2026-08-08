@@ -44,6 +44,29 @@ int main() {
     passed &= ExpectExecutableValue<std::uint32_t>(executable, "zero scalar slot", 0x72c178, 0);
     passed &= ExpectExecutableValue(executable, "uniform gravity", 0x759790,
                                     kDefaultUniformGravity);
+    passed &= ExpectExecutableValue(executable, "line intersection epsilon", 0x7785dc,
+                                    kLineIntersectionEpsilon);
+    passed &= ExpectExecutableValue(executable, "coincident surface epsilon", 0x7be3f8,
+                                    kCoincidentSurfaceEpsilon);
+    passed &= ExpectExecutableValue(executable, "plane normal squared epsilon", 0x91a8ac,
+                                    kPlaneNormalSquaredEpsilon);
+    passed &= ExpectExecutableValue(executable, "plane construction squared epsilon", 0x907588,
+                                    kPlaneNormalSquaredEpsilon);
+    passed &= ExpectExecutableValue(executable, "plane solve axis threshold", 0x731460,
+                                    kPlaneSolveAxisThreshold);
+    passed &= ExpectExecutableValue(executable, "plane normal dot threshold", 0x744a20,
+                                    kPlaneNormalDotThreshold);
+
+    // CHmsCollisionBuffer's native vtable is AddCollision, GetCollision,
+    // GetCount. The constructor then reserves 0x32 physical contacts.
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "collision buffer AddCollision vtable slot", 0x755e28, 0x005380f0u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "collision buffer GetCollision vtable slot", 0x755e2c, 0x00537350u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "collision buffer GetCount vtable slot", 0x755e30, 0x0073ac50u);
+    passed &= ExpectExecutableValue<std::uint16_t>(
+        executable, "collision buffer reserve-50 instruction", 0x1380c9, 0x326au);
 
     if (!passed) return 1;
     std::puts("original executable constants regression: PASS");

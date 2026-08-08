@@ -4,6 +4,9 @@
 #include "GmVec3.hpp"
 #include <cstdint>
 
+template <typename T>
+class CFastBuffer;
+
 class GmIso3;
 class GmIso4;
 class GmLine3;
@@ -38,11 +41,13 @@ public:
     void PlaneEqSetNormPos(const GmVec3& normal, const GmVec3& pos);
 
     // Clipping (Frustum)
-    void GetClipFlag(uint& outFlag) const;
-    static void GetClipFlags(const GmVec4* vecs, uint* outFlags, unsigned int count);
+    void GetClipFlag(uint32_t& outFlag) const;
+    static void GetClipFlags(const GmVec4* vecs, uint32_t* outFlags, uint32_t count);
     
-    // Renderer Clipping (Highly context-dependent, likely belongs to a renderer class)
-    static void PolygonClip(void* param_1, void* param_2); 
+    // Clips a homogeneous polygon against the six HalfCube planes in the same
+    // order as the original engine: near/far, bottom/top, left/right.
+    static void PolygonClip(CFastBuffer<GmVec4>& vertices,
+                            CFastBuffer<uint32_t>& clipFlags);
     static void PlaneEqMult(GmVec4* res, GmVec4* a, GmIso4* b);
 };
 

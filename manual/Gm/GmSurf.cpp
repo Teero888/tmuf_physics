@@ -1,5 +1,6 @@
 #include "GmSurf.hpp"
 #include "GmCollision.hpp"
+#include "TmForeverPhysicsConstants.hpp"
 #include <cmath>
 
 // Collision Dispatch Matrix (9x9)
@@ -60,19 +61,29 @@ void GmSurf::StaticInit() {
 }
 
 int GmSurf::ComputeCollision(LocatedGmSurf* locA, LocatedGmSurf* locB, CGmCollisionBuffer* buf) {
-    if (!locA || !locB || !locA->m_surf || !locB->m_surf) return 0;
+    if (!locA || !locB || !buf || !locA->m_surf || !locB->m_surf) return 0;
     
     uint8_t typeA = locA->m_surf->m_type;
     uint8_t typeB = locB->m_surf->m_type;
     
     if (typeA >= 9 || typeB >= 9) return 0;
     
-    GmCollisionFunc func = g_GmCollisionMatrix[typeA][typeB];
-    if (func) {
-        return func(locA, locB, buf);
+    if (typeA <= typeB) {
+        GmCollisionFunc func = g_GmCollisionMatrix[typeA][typeB];
+        return func ? func(locA, locB, buf) : 0;
     }
-    
-    return 0;
+
+    // The native dispatcher always invokes pair functions with the lower type
+    // first, then reverses only the contacts appended by that invocation.
+    const uint32_t firstNewCollision = buf->GetCount();
+    GmCollisionFunc func = g_GmCollisionMatrix[typeB][typeA];
+    if (!func || func(locB, locA, buf) == 0) return 0;
+
+    const uint32_t collisionCount = buf->GetCount();
+    for (uint32_t index = firstNewCollision; index < collisionCount; ++index) {
+        buf->GetCollision(index)->Neg();
+    }
+    return 1;
 }
 
 void GmSurf::GetBoundingBox(GmBoxAligned& outBox) const {
@@ -95,8 +106,52 @@ GmSurfSphere::~GmSurfSphere() {}
 GmSurfPolygon::GmSurfPolygon(uint8_t param) { m_type = 5; }
 GmSurfPolygon::~GmSurfPolygon() {}
 
-// Stubs for functions not yet implemented
-int GmCollision_Sphere_Sphere(LocatedGmSurf* p1, LocatedGmSurf* p2, CGmCollisionBuffer* p3) { return 0; }
+int GmCollision_Sphere_Sphere(LocatedGmSurf* locA,
+                              LocatedGmSurf* locB,
+                              CGmCollisionBuffer* buffer) {
+    GmSurfSphere* sphereA = static_cast<GmSurfSphere*>(locA->m_surf);
+    GmSurfSphere* sphereB = static_cast<GmSurfSphere*>(locB->m_surf);
+
+    const float deltaX = locB->m_location.tX - locA->m_location.tX;
+    const float deltaY = locB->m_location.tY - locA->m_location.tY;
+    const float deltaZ = locB->m_location.tZ - locA->m_location.tZ;
+    const float distanceSquared =
+        deltaZ * deltaZ + deltaX * deltaX + deltaY * deltaY;
+    const float radiusSum = sphereB->m_radius + sphereA->m_radius;
+
+    if (!(distanceSquared < radiusSum * radiusSum)) return 0;
+
+    const float distance = std::sqrt(distanceSquared);
+    GmCollision* collision = buffer->AddCollision();
+    if (distance <= TmForeverPhysicsConstants::kCoincidentSurfaceEpsilon) {
+        collision->m_vec2 = {0.0f, -1.0f, 0.0f};
+        collision->m_vec1 = {0.0f, sphereB->m_radius, 0.0f};
+        collision->m_vec3 = {locA->m_location.tX,
+                             locA->m_location.tY,
+                             locA->m_location.tZ};
+    } else {
+        const float inverseDistance = 1.0f / distance;
+        const float directionX = deltaX * inverseDistance;
+        const float directionY = deltaY * inverseDistance;
+        const float directionZ = deltaZ * inverseDistance;
+
+        collision->m_vec2 = {-directionX, -directionY, -directionZ};
+        const float penetration = radiusSum - distance;
+        collision->m_vec1 = {penetration * directionX,
+                             penetration * directionY,
+                             penetration * directionZ};
+        collision->m_vec3 = {
+            locA->m_location.tX + sphereA->m_radius * directionX,
+            locA->m_location.tY + sphereA->m_radius * directionY,
+            locA->m_location.tZ + sphereA->m_radius * directionZ};
+    }
+
+    collision->m_id1 = sphereA->m_flags;
+    collision->m_id2 = sphereB->m_flags;
+    return 1;
+}
+
+// Collision pairs still awaiting native translations.
 int GmCollision_Sphere_Ellipsoid(LocatedGmSurf* p1, LocatedGmSurf* p2, CGmCollisionBuffer* p3) { return 0; }
 int GmCollision_Sphere_Polygon(LocatedGmSurf* p1, LocatedGmSurf* p2, CGmCollisionBuffer* p3) { return 0; }
 int GmCollision_Sphere_Box(LocatedGmSurf* p1, LocatedGmSurf* p2, CGmCollisionBuffer* p3) { return 0; }

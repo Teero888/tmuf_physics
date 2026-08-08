@@ -28,6 +28,31 @@ inline constexpr float kNormalizeSquaredEpsilon = 9.99999943962492920972e-11f;
 // front-wheel rotation expression.
 inline constexpr float kZero = 0.0f;
 
+// Geometry tolerances recovered from the native routines that consume them.
+// Several addresses contain the same value, but keeping the constants named by
+// their use makes it possible to audit each native comparison independently.
+
+// .rdata 0x00b785dc and 0x00bbe3f8.
+inline constexpr float kLineIntersectionEpsilon =
+    9.99999974737875163555e-6f; // 0x3727C5AC
+inline constexpr float kCoincidentSurfaceEpsilon =
+    9.99999974737875163555e-6f; // 0x3727C5AC
+
+// .data 0x00d1a8ac and 0x00d07588. These are 1e-10f, not the 1e-6f
+// approximation that was previously used by GmVec4 plane construction.
+inline constexpr float kPlaneNormalSquaredEpsilon =
+    9.99999943962492920972e-11f; // 0x2EDBE6FE
+
+// .rdata 0x00b31460. PlaneEqInterPlane uses this to choose a stable pair of
+// coordinates for its 2x2 solve.
+inline constexpr float kPlaneSolveAxisThreshold = 0.5f; // 0x3F000000
+
+// .rdata 0x00b44a20 and 0x00b362c0. The executable stores these as doubles
+// widened from 0.99f and 0.1f respectively.
+inline constexpr double kPlaneNormalDotThreshold =
+    0.9900000095367431640625;
+inline constexpr double kPlaneDistanceThreshold = kInputThreshold;
+
 // .rdata 0x00b59790: Y component installed by the
 // CHmsForceFieldUniform constructor. CHmsZoneDynamic multiplies this by the
 // physical object's gravity coefficient and mass before accumulating it.

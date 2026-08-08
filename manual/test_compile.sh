@@ -111,6 +111,18 @@ if [ $FAIL -eq 0 ]; then
         exit 1
     fi
 
+    echo -n "Compiling geometry/collision regression ... "
+    if g++ tests/unit/geometry_collision_test.cpp $OBJECTS -o build/geometry_collision_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/geometry_collision_test; then
+        exit 1
+    fi
+
     echo ""
     echo "Run './physics_harness' to validate simulation."
 else

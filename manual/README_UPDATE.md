@@ -1,5 +1,8 @@
 # Physics Integration Update
 
+The current implementation/parity audit is tracked in
+[`PARITY_STATUS.md`](PARITY_STATUS.md).
+
 The TrackMania physics engine reconstruction has been successfully updated to load and integrate `.obj` files into the core C++ simulation loop.
 
 ## Changes:

@@ -7,7 +7,12 @@
 #include "GmQuat.hpp"
 #include <cstdint>
 
+// Temporary single-body state used by the standalone harnesses while the
+// native per-corpus state layout is still being reconstructed.
 extern GmVec3 g_stub_pos;
+extern GmVec3 g_stub_forces;
+extern GmVec3 g_stub_torques;
+extern GmVec3 g_stub_angVel;
 
 // Forward declarations
 class CHmsItem;

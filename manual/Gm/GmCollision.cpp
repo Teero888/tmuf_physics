@@ -111,57 +111,6 @@ int GmCollision_Sphere_Box(LocatedGmSurf* locA, LocatedGmSurf* locB, CGmCollisio
     return 1;
 }
 
-int GmCollision_Sphere_Sphere(LocatedGmSurf* locA, LocatedGmSurf* locB, CGmCollisionBuffer* buf) {
-    GmSurfSphere* sphereA = static_cast<GmSurfSphere*>(locA->m_surf);
-    GmSurfSphere* sphereB = static_cast<GmSurfSphere*>(locB->m_surf);
-
-    GmVec3 delta;
-    delta.x = locB->m_location.tX - locA->m_location.tX;
-    delta.y = locB->m_location.tY - locA->m_location.tY;
-    delta.z = locB->m_location.tZ - locA->m_location.tZ;
-
-    float sumRadius = sphereB->m_radius + sphereA->m_radius;
-    float distSq = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-
-    if (distSq < sumRadius * sumRadius) {
-        float dist = std::sqrt(distSq);
-        GmCollision* col = buf->AddCollision();
-
-        if (dist <= 1e-5f) {
-            col->m_vec2.x = 0.0f; col->m_vec2.y = 1.0f; col->m_vec2.z = 0.0f; // Normal
-            
-            col->m_vec1.x = 0.0f; col->m_vec1.y = sphereB->m_radius; col->m_vec1.z = 0.0f; // penetration vector
-            
-            col->m_vec3.x = locA->m_location.tX;
-            col->m_vec3.y = locA->m_location.tY;
-            col->m_vec3.z = locA->m_location.tZ; // contact point
-        } else {
-            float invDist = 1.0f / dist;
-            GmVec3 dir;
-            dir.x = delta.x * invDist;
-            dir.y = delta.y * invDist;
-            dir.z = delta.z * invDist;
-
-            col->m_vec2.x = -dir.x; col->m_vec2.y = -dir.y; col->m_vec2.z = -dir.z; // Normal points from B to A
-
-            float penetration = sumRadius - dist;
-            col->m_vec1.x = penetration * dir.x;
-            col->m_vec1.y = penetration * dir.y;
-            col->m_vec1.z = penetration * dir.z; // Vector from A to B scaled by penetration
-
-            col->m_vec3.x = locA->m_location.tX + sphereA->m_radius * dir.x;
-            col->m_vec3.y = locA->m_location.tY + sphereA->m_radius * dir.y;
-            col->m_vec3.z = locA->m_location.tZ + sphereA->m_radius * dir.z; // Contact point on A's surface
-        }
-
-        col->m_id1 = sphereA->m_flags;
-        col->m_id2 = sphereB->m_flags;
-
-        return 1;
-    }
-    return 0;
-}
-
 }
 
 extern "C" {

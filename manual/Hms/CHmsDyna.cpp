@@ -52,7 +52,9 @@ void CHmsDyna::AddLocalTorque(GmVec3* param_2) { g_stub_torques += *param_2; }
 void CHmsDyna::GetLocalAngularSpeed(GmVec3* param_2) {
     *param_2 = g_stub_angVel;
 }
-void CHmsDyna::SetLocalAngularSpeed(GmVec3* param_2) {}
+void CHmsDyna::SetLocalAngularSpeed(GmVec3* param_2) {
+    if (param_2 != nullptr) g_stub_angVel = *param_2;
+}
 void CHmsDyna::SetLocalLinearSpeed(GmVec3* param_2) {
     *(float*)&m_field_0x3ac = param_2->x;
     *(float*)&m_field_0x3a8 = param_2->y;

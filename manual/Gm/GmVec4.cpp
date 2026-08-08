@@ -3,14 +3,75 @@
 #include "GmVec3.hpp"
 #include "GmLine3.hpp" // Assuming this has a GmVec3 pos and GmVec3 dir
 #include "GmIso4.hpp"
+#include "CFastBuffer.hpp"
+#include "TmForeverPhysicsConstants.hpp"
 #include <cmath>
 
-// Common game engine epsilons extracted from the assembly TODO: verify these values from game memory
-const float EPSILON_INTERSECT = 0.00001f; // _DAT_00b785dc
-const float EPSILON_SQUARED   = 0.000001f; // _DAT_00d1a8ac / _DAT_00d07588
-const float EPSILON_DOT       = 0.999f;    // _DAT_00b44a20
-const float EPSILON_DIST      = 0.001f;    // _DAT_00b362c0
-const float EPSILON_LINEAR    = 0.0001f;   // _DAT_00b31460
+namespace {
+
+struct GmReal4_64 {
+    double values[4];
+};
+
+uint32_t GetClipFlag64(const GmReal4_64& value) {
+    const double x = value.values[0];
+    const double y = value.values[1];
+    const double z = value.values[2];
+    const double w = value.values[3];
+
+    uint32_t flag = static_cast<uint32_t>(z < 0.0);
+    flag ^= static_cast<uint32_t>(w < z) * 2u;
+    flag ^= static_cast<uint32_t>(y < -w) * 4u;
+    flag ^= static_cast<uint32_t>(w < y) * 8u;
+    flag ^= static_cast<uint32_t>(x < -w) << 4u;
+    flag ^= static_cast<uint32_t>(w < x) << 5u;
+    return flag;
+}
+
+double ClipEdgeParameter(const GmReal4_64& previous,
+                         const GmReal4_64& current,
+                         uint32_t plane) {
+    const uint32_t coordinate = 2u - plane / 2u;
+    const long double previousCoordinate = previous.values[coordinate];
+    const long double currentCoordinate = current.values[coordinate];
+    const long double previousW = previous.values[3];
+    const long double currentW = current.values[3];
+
+    long double parameter;
+    if (plane == 0u) {
+        parameter = previousCoordinate /
+                    (previousCoordinate - currentCoordinate);
+    } else if ((plane & 1u) != 0u) {
+        const long double numerator = previousW - previousCoordinate;
+        parameter = numerator /
+                    (currentCoordinate + numerator - currentW);
+    } else {
+        parameter = (-previousW - previousCoordinate) /
+                    (currentW + currentCoordinate - previousW - previousCoordinate);
+    }
+
+    // The native routine stores the x87 result to a double before clamping.
+    double roundedParameter = static_cast<double>(parameter);
+    if (roundedParameter < 0.0) roundedParameter = 0.0;
+    if (roundedParameter > 1.0) roundedParameter = 1.0;
+    return roundedParameter;
+}
+
+GmReal4_64 BlendClipVertex(const GmReal4_64& previous,
+                           const GmReal4_64& current,
+                           double parameter) {
+    const long double currentWeight = parameter;
+    const long double previousWeight = 1.0L - currentWeight;
+    GmReal4_64 result{};
+    for (uint32_t component = 0; component < 4; ++component) {
+        result.values[component] = static_cast<double>(
+            static_cast<long double>(previous.values[component]) * previousWeight +
+            static_cast<long double>(current.values[component]) * currentWeight);
+    }
+    return result;
+}
+
+} // namespace
 
 // =================================================
 // Basic Math
@@ -88,7 +149,7 @@ void GmVec4::SetLeftMult(const GmVec4& v, const GmIso4& m) {
 bool GmVec4::PlaneEqInterLine(const GmVec3& lineOrigin, const GmVec3& lineDir, float& outT) const {
     float dotDir = lineDir.z * z + lineDir.x * x + lineDir.y * y;
     
-    if (std::abs(dotDir) > EPSILON_INTERSECT) {
+    if (std::abs(dotDir) > TmForeverPhysicsConstants::kLineIntersectionEpsilon) {
         float dotOrigin = lineOrigin.z * z + lineOrigin.x * x + lineOrigin.y * y + w;
         outT = -(dotOrigin / dotDir);
         return true;
@@ -108,7 +169,7 @@ bool GmVec4::PlaneEqInterPlane(const GmVec4& otherPlane, GmLine3& outLine) const
     
     float sqrLen = crossX * crossX + crossY * crossY + crossZ * crossZ;
     
-    if (sqrLen > EPSILON_SQUARED) {
+    if (sqrLen > TmForeverPhysicsConstants::kPlaneNormalSquaredEpsilon) {
         // func_0x009c1b40 is an inverse square root routine (1 / sqrt)
         float invLen = 1.0f / std::sqrt(sqrLen); 
         
@@ -117,8 +178,8 @@ bool GmVec4::PlaneEqInterPlane(const GmVec4& otherPlane, GmLine3& outLine) const
         outLine.dir.z *= invLen;
         
         int i0, i1, i2;
-        if (std::abs(outLine.dir.x) <= EPSILON_LINEAR) {
-            if (std::abs(outLine.dir.y) <= EPSILON_LINEAR) {
+        if (std::abs(outLine.dir.x) <= TmForeverPhysicsConstants::kPlaneSolveAxisThreshold) {
+            if (std::abs(outLine.dir.y) <= TmForeverPhysicsConstants::kPlaneSolveAxisThreshold) {
                 i2 = 2; i1 = 1;
             } else {
                 i2 = 1; i1 = 2;
@@ -144,9 +205,11 @@ bool GmVec4::PlaneEqInterPlane(const GmVec4& otherPlane, GmLine3& outLine) const
 }
 
 bool GmVec4::PlaneEqIsNearlyEqual(const GmVec4& other, float dotEpsilon, float distEpsilon) const {
+    (void)dotEpsilon;
+    (void)distEpsilon;
     float dotProduct = other.z * z + other.x * x + other.y * y;
-    if (dotProduct >= EPSILON_DOT) { // Actually uses dotEpsilon param in real usage
-        if (std::abs(w - other.w) <= EPSILON_DIST) { // Actually uses distEpsilon
+    if (dotProduct >= TmForeverPhysicsConstants::kPlaneNormalDotThreshold) {
+        if (std::abs(w - other.w) <= TmForeverPhysicsConstants::kPlaneDistanceThreshold) {
             return true;
         }
     }
@@ -184,7 +247,7 @@ bool GmVec4::PlaneEqSetFrom3Pos(const GmVec3& p1, const GmVec3& p2, const GmVec3
     
     float sqrLen = nz * nz + nx * nx + ny * ny;
     
-    if (sqrLen > EPSILON_SQUARED) {
+    if (sqrLen > TmForeverPhysicsConstants::kPlaneNormalSquaredEpsilon) {
         float invLen = 1.0f / std::sqrt(sqrLen);
         x = invLen * nx;
         y = invLen * ny;
@@ -206,9 +269,9 @@ void GmVec4::PlaneEqSetNormPos(const GmVec3& normal, const GmVec3& pos) {
 // Clipping Logic
 // =================================================
 
-void GmVec4::GetClipFlag(uint& outFlag) const {
+void GmVec4::GetClipFlag(uint32_t& outFlag) const {
     outFlag = 0;
-    uint flag = (z < 0.0f);                      // Bit 0: Near
+    uint32_t flag = (z < 0.0f);                  // Bit 0: Near
     flag = ((w < z) * 2) ^ flag;                 // Bit 1: Far
     flag = ((y < -w) * 4) ^ flag;                // Bit 2: Bottom
     flag = ((w < y) * 8) ^ flag;                 // Bit 3: Top
@@ -221,15 +284,75 @@ void GmVec4::GetClipFlag(uint& outFlag) const {
     outFlag = flag;
 }
 
-void GmVec4::GetClipFlags(const GmVec4* vecs, uint* outFlags, unsigned int count) {
-    for (unsigned int i = 0; i < count; ++i) {
+void GmVec4::GetClipFlags(const GmVec4* vecs, uint32_t* outFlags, uint32_t count) {
+    for (uint32_t i = 0; i < count; ++i) {
         vecs[i].GetClipFlag(outFlags[i]);
     }
 }
 
-// Stub for PolygonClip - Handled by the rendering architecture.
-void GmVec4::PolygonClip(void* param_1, void* param_2) {
-    // This requires definitions for CFastBuffer, CDx9TextureKeeper, 
-    // CVisionHmsZone, CCrystalFace, etc. It handles geometric clipping
-    // in rendering, not core math operations.
+void GmVec4::PolygonClip(CFastBuffer<GmVec4>& vertices,
+                         CFastBuffer<uint32_t>& clipFlags) {
+    const uint32_t inputCount = vertices.GetCount();
+    if (inputCount == 0u || clipFlags.GetCount() != inputCount) {
+        if (inputCount == 0u) clipFlags.AllocSetCount(0u);
+        return;
+    }
+
+    CFastBuffer<GmReal4_64> workingVertices;
+    workingVertices.AllocSetCount(inputCount);
+    for (uint32_t index = 0; index < inputCount; ++index) {
+        workingVertices[index].values[0] = vertices[index].x;
+        workingVertices[index].values[1] = vertices[index].y;
+        workingVertices[index].values[2] = vertices[index].z;
+        workingVertices[index].values[3] = vertices[index].w;
+    }
+
+    for (uint32_t plane = 0; plane < 6u && workingVertices.GetCount() != 0u; ++plane) {
+        const uint32_t planeBit = 1u << plane;
+        const uint32_t oldCount = workingVertices.GetCount();
+        CFastBuffer<GmReal4_64> outputVertices;
+        CFastBuffer<uint32_t> outputFlags;
+        outputVertices.SetSizeAtLeast(oldCount * 2u + 3u);
+        outputFlags.SetSizeAtLeast(oldCount * 2u + 3u);
+
+        for (uint32_t currentIndex = 0; currentIndex <= oldCount; ++currentIndex) {
+            const uint32_t wrappedIndex = currentIndex == oldCount ? 0u : currentIndex;
+            const GmReal4_64& current = workingVertices[wrappedIndex];
+            const uint32_t currentFlag = clipFlags[wrappedIndex];
+            const bool currentInside = (currentFlag & planeBit) == 0u;
+
+            if (currentIndex != 0u) {
+                const uint32_t previousIndex = currentIndex - 1u;
+                const bool previousInside = (clipFlags[previousIndex] & planeBit) == 0u;
+                if (previousInside != currentInside) {
+                    const double parameter = ClipEdgeParameter(
+                        workingVertices[previousIndex], current, plane);
+                    const GmReal4_64 intersection = BlendClipVertex(
+                        workingVertices[previousIndex], current, parameter);
+                    outputVertices.Add(intersection);
+                    outputFlags.Add(GetClipFlag64(intersection) & ~planeBit);
+                }
+            }
+
+            if (currentInside && currentIndex < oldCount) {
+                outputVertices.Add(current);
+                outputFlags.Add(currentFlag);
+            }
+        }
+
+        workingVertices.AllocSetCount(outputVertices.GetCount());
+        clipFlags.AllocSetCount(outputFlags.GetCount());
+        for (uint32_t index = 0; index < outputVertices.GetCount(); ++index) {
+            workingVertices[index] = outputVertices[index];
+            clipFlags[index] = outputFlags[index];
+        }
+    }
+
+    vertices.AllocSetCount(workingVertices.GetCount());
+    for (uint32_t index = 0; index < workingVertices.GetCount(); ++index) {
+        vertices[index].x = static_cast<float>(workingVertices[index].values[0]);
+        vertices[index].y = static_cast<float>(workingVertices[index].values[1]);
+        vertices[index].z = static_cast<float>(workingVertices[index].values[2]);
+        vertices[index].w = static_cast<float>(workingVertices[index].values[3]);
+    }
 }
