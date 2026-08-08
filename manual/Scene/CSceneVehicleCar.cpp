@@ -3,18 +3,33 @@
 #include "CSceneVehicleCarTuning.hpp"
 #include "TmForeverPhysicsConstants.hpp"
 #include "VehicleGroundSupport.hpp"
+#include "CHmsCorpus.hpp"
+#include "CHmsDyna.hpp"
 #include "CHmsItem.hpp"
 #include "GmMat3.hpp"
 #include <cmath>
 #include <algorithm>
 
-extern float g_carYaw;
 extern CSceneVehicleCarTuning* g_tuning;
 
 namespace {
 
+CHmsDyna* GetCarDyna(const CSceneVehicleCar& car) {
+    if (car.m_hmsItem == nullptr ||
+        car.m_hmsItem->m_corpuses.GetCount() == 0u) {
+        return nullptr;
+    }
+    CHmsCorpus* corpus = car.m_hmsItem->m_corpuses[0];
+    return corpus != nullptr ? corpus->m_dyna : nullptr;
+}
+
+float GetCarYaw(const CSceneVehicleCar& car) {
+    CHmsDyna* dyna = GetCarDyna(car);
+    return dyna != nullptr ? dyna->m_yaw : 0.0f;
+}
+
 VehicleChassisBasis GetChassisBasis(const CSceneVehicleCar& car) {
-    return BuildVehicleChassisBasis(car.m_chassisUp, g_carYaw);
+    return BuildVehicleChassisBasis(car.m_chassisUp, GetCarYaw(car));
 }
 
 GmVec3 LocalToWorld(const VehicleChassisBasis& basis, const GmVec3& local) {
@@ -249,8 +264,9 @@ void CSceneVehicleCar::EngineIntegrate(CSceneVehicleCar* pilot, float dt, float 
     m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
     
     // Transform world velocity to local frame
-    float c = std::cos(g_carYaw);
-    float s = std::sin(g_carYaw);
+    const float yaw = GetCarYaw(*this);
+    float c = std::cos(yaw);
+    float s = std::sin(yaw);
     float localForwardSpeed = linSpeed.x * s + linSpeed.z * c; // forward = dot(vel, fwd)
     float speed = std::abs(localForwardSpeed);
 
@@ -378,8 +394,9 @@ void CSceneVehicleCar::ApplyFrictionForces(CSceneVehicleCar* pilot, float dt) {
     m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
     
     // Convert global velocity to local velocity
-    float c = std::cos(g_carYaw);
-    float s = std::sin(g_carYaw);
+    const float yaw = GetCarYaw(*this);
+    float c = std::cos(yaw);
+    float s = std::sin(yaw);
     
     // forward is along (sin(yaw), 0, cos(yaw))
     float localZ = linSpeed.x * s + linSpeed.z * c; // forward speed
@@ -447,8 +464,9 @@ void CSceneVehicleCar::ComputeForcesModel3(CSceneVehicleCar* pilot, float dt) {
     m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
     
     // Convert global velocity to local velocity
-    float c = std::cos(g_carYaw);
-    float s = std::sin(g_carYaw);
+    const float yaw = GetCarYaw(*this);
+    float c = std::cos(yaw);
+    float s = std::sin(yaw);
     
     // forward is along (sin(yaw), 0, cos(yaw))
     p6.x = linSpeed.x * c - linSpeed.z * s;     // right
@@ -490,8 +508,9 @@ void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
     GmVec3 linearSpeed(0.0f, 0.0f, 0.0f);
     m_hmsItem->GetLinearSpeed(m_hmsItem, &linearSpeed);
 
-    const float c = std::cos(g_carYaw);
-    const float s = std::sin(g_carYaw);
+    const float yaw = GetCarYaw(*this);
+    const float c = std::cos(yaw);
+    const float s = std::sin(yaw);
     const float localLateralSpeed = linearSpeed.x * c - linearSpeed.z * s;
     const float localForwardSpeed = linearSpeed.x * s + linearSpeed.z * c;
 
@@ -625,7 +644,6 @@ void CSceneVehicleCar::AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicle
         this->m_hmsItem->AddTorque(this->m_hmsItem, &global_t);
     }
 }
-extern float g_carYaw;
 void CSceneVehicleCar::AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3) {
     if (this->m_hmsItem) {
         const GmVec3* localForce = reinterpret_cast<const GmVec3*>(param_2);

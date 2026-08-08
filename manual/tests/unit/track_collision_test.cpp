@@ -1,4 +1,5 @@
 #include "Gm/GmSurf.hpp"
+#include "Track/TrackMapLoader.hpp"
 
 #include <cmath>
 #include <cstdio>
@@ -9,7 +10,6 @@
 
 class CSceneVehicleCarTuning;
 CSceneVehicleCarTuning* g_tuning = nullptr;
-float g_carYaw = 0.0f;
 
 namespace {
 
@@ -74,10 +74,14 @@ int main(int argc, char** argv) {
     }
 
     GmSurfMesh mesh;
-    bool passed = mesh.LoadFromTmnfCollision(fixturePath);
+    TrackMapLoadResult fixtureResult;
+    bool passed = LoadTrackMapCollision(
+        mesh, fixturePath, TrackMapLoadOptions{}, &fixtureResult);
     std::remove(fixturePath.c_str());
     passed &= mesh.m_vertices.GetCount() == 3;
     passed &= mesh.m_triangles.GetCount() == 1;
+    passed &= fixtureResult.cacheHit;
+    passed &= !fixtureResult.sourceWasChallengeGbx;
 
     GmIso4 identity;
     identity.SetIdentity();
@@ -98,9 +102,27 @@ int main(int argc, char** argv) {
         rayPosition, rayDirection, identity, hitT, material) != 0;
     passed &= material == 16;
 
-    if (argc == 2) {
+    if (argc != 1 && argc != 4) {
+        std::cerr << "Usage: " << argv[0]
+                  << " [A01-Race.Challenge.Gbx PacksDirectory "
+                     "TrackCollisionExtractor.csproj]\n";
+        return 2;
+    }
+
+    if (argc == 4) {
         GmSurfMesh a01;
-        passed &= a01.LoadFromTmnfCollision(argv[1]);
+        TrackMapLoadOptions options;
+        options.packsDirectory = argv[2];
+        options.extractorProject = argv[3];
+        TrackMapLoadResult a01Result;
+        passed &= LoadTrackMapCollision(a01, argv[1], options, &a01Result);
+        passed &= a01Result.sourceWasChallengeGbx;
+        passed &= a01Result.mapName == "A01-Race";
+        passed &= a01Result.mapAuthor == "Nadeo";
+        passed &= a01Result.environment == "Stadium";
+        passed &= a01Result.blockCount == 397;
+        passed &= a01.m_vertices.GetCount() == 98089;
+        passed &= a01.m_triangles.GetCount() == 176184;
         const GmVec3 spawnRayPosition(171.199997f, 90.209999f, 688.0f);
         const GmVec3 spawnRayDirection(0.0f, -2.0f, 0.0f);
         hitT = 1.0f;
@@ -114,6 +136,19 @@ int main(int argc, char** argv) {
         passed &= a01.ClipSegment3(
             spawnRayPosition, spawnRayDirection, identity, hitT, material) != 0;
         passed &= material == 16;
+
+        // A second load must reuse the fingerprinted cache and produce the
+        // same mesh without invoking the extractor again.
+        GmSurfMesh cachedA01;
+        TrackMapLoadResult cachedResult;
+        passed &= LoadTrackMapCollision(
+            cachedA01, argv[1], options, &cachedResult);
+        passed &= cachedResult.cacheHit;
+        passed &= cachedResult.collisionCachePath ==
+            a01Result.collisionCachePath;
+        passed &= cachedA01.m_vertices.GetCount() == a01.m_vertices.GetCount();
+        passed &= cachedA01.m_triangles.GetCount() ==
+            a01.m_triangles.GetCount();
     }
 
     if (!passed) return 1;

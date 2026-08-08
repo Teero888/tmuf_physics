@@ -262,11 +262,16 @@ void CHmsItem::UpdateCorpusCat(CHmsItem* param_1) {
 // =================================================
 // Physics & Dynamics Forwarding
 // =================================================
-extern GmVec3 g_stub_forces;
-
 void CHmsItem::AddForce(CHmsItem* param_1, GmVec3* param_2, GmVec3* param_3) {
-    if (param_2 != nullptr) {
-        g_stub_forces += *param_2;
+    if (param_2 == nullptr) return;
+    for (uint32_t i = 0; i < m_corpuses.GetCount(); ++i) {
+        CHmsDyna* dyna = m_corpuses[i]->m_dyna;
+        if (dyna != nullptr) {
+            // CSceneVehicleCar currently supplies a world-space force. Keep
+            // that explicit at this adapter boundary; CHmsDyna::AddLocalForce
+            // remains available for native local-space callers.
+            dyna->AddForce(param_1, param_2, param_3);
+        }
     }
 }
 

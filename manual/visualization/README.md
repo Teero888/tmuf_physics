@@ -2,13 +2,15 @@
 
 The visual test is a deliberately small SDL2 wireframe viewer. Its shared step
 helper mirrors the replay harness's 100 Hz vehicle, wheel-contact, gravity, and
-track-collision ordering. The default map and spawn are A01-Race.
+track-collision ordering. The default input is A01's original
+`A01-Race.Challenge.Gbx`; its collision is extracted from `Stadium.pak` once
+and then reused from the system temporary cache.
 
-Build and run it from this directory:
+Build and run it from `manual/visualization`:
 
 ```sh
-./visualization/build.sh
-./visualization/interactive_physics_test
+./build.sh
+./interactive_physics_test
 ```
 
 Controls:
@@ -28,24 +30,29 @@ number of visible collision triangles are shown in the window title. Green
 wheel marks have ground contact, red marks do not, and the orange line is the
 driven trajectory.
 
-To load another exported collision map and choose its spawn:
+To load another TMNF map and choose its spawn:
 
 ```sh
-./visualization/interactive_physics_test /path/to/map.tmnfcol \
+./interactive_physics_test /path/to/map.Challenge.Gbx \
+  --packs /path/to/TMNF/Packs \
   --start 171.2 90.21 688.0 --yaw 90
 ```
 
-The collision extractor accepts arbitrary challenge files:
+An existing `.tmnfcol` remains accepted as input. Force regeneration after
+extractor development with `--rebuild-map-cache`, or select a cache location
+with `--cache-dir PATH`.
+
+The extractor can also be run explicitly for inspection:
 
 ```sh
-dotnet run --project TrackCollisionExtractor -- \
-  /path/to/map.Challenge.Gbx ../steamdata/Packs /tmp/map.tmnfcol
+dotnet run --project ../TrackCollisionExtractor -- \
+  /path/to/map.Challenge.Gbx ../../steamdata/Packs /tmp/map.tmnfcol
 ```
 
 For a noninteractive startup/render smoke test:
 
 ```sh
-SDL_VIDEODRIVER=dummy ./visualization/interactive_physics_test \
+SDL_VIDEODRIVER=dummy ./interactive_physics_test \
   --frames 3 --screenshot /tmp/tmnf-physics.bmp
 ```
 

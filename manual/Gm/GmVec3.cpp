@@ -184,15 +184,19 @@ void GmVec3::Mult(const GmIso4& mat) {
 // Function: GmVec3::SetMult
 // =================================================
 void GmVec3::SetMult(const GmVec3& v, const GmIso4& mat) {
-    // 3D vector multiplied by 4x4 matrix with perspective divide
-    GmVec4 v4 = { v.x, v.y, v.z, 1.0f };
-    GmVec4 result;
-    result.SetMult(v4, mat); // From GmVec4 class
-
-    float invW = 1.0f / std::abs(result.w);
-    this->x = result.x * invW;
-    this->y = result.y * invW;
-    this->z = result.z * invW;
+    // GmIso4 stores a 3x3 basis followed by translation. The native routine
+    // expands this affine multiply directly; it does not perform a projective
+    // divide (the old reconstruction accidentally treated tX/tY/tZ as a
+    // fourth matrix column and divided by their dot product).
+    const float resultX =
+        mat.m00 * v.x + mat.m01 * v.y + mat.m02 * v.z + mat.tX;
+    const float resultY =
+        mat.m10 * v.x + mat.m11 * v.y + mat.m12 * v.z + mat.tY;
+    const float resultZ =
+        mat.m20 * v.x + mat.m21 * v.y + mat.m22 * v.z + mat.tZ;
+    x = resultX;
+    y = resultY;
+    z = resultZ;
 }
 
 // =================================================

@@ -6,7 +6,6 @@
 // The current harness keeps these two process-wide integration values in
 // main.cpp. Define inert versions for a library-only regression executable.
 CSceneVehicleCarTuning* g_tuning = nullptr;
-float g_carYaw = 0.0f;
 
 namespace {
 

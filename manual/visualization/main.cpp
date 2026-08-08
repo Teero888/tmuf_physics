@@ -10,6 +10,7 @@
 #include "Scene/CSceneVehicleCarTuning.hpp"
 #include "Scene/TmForeverPhysicsConstants.hpp"
 #include "Scene/VehicleGroundSupport.hpp"
+#include "Track/TrackMapLoader.hpp"
 #include "VehicleTrackSimulation.hpp"
 
 #include <algorithm>
@@ -22,7 +23,6 @@
 #include <string>
 
 extern CSceneVehicleCarTuning* g_tuning;
-extern float g_carYaw;
 
 namespace {
 
@@ -32,12 +32,16 @@ constexpr GmVec3 kDefaultStart{171.199997f, 90.209999f, 688.0f};
 constexpr float kDefaultYaw = kPi * 0.5f;
 
 struct Options {
-    std::string collisionPath;
+    std::string mapPath;
+    std::string packsDirectory;
+    std::string extractorProject;
+    std::string cacheDirectory;
     std::string screenshotPath;
     GmVec3 start = kDefaultStart;
     float yaw = kDefaultYaw;
     int frameLimit = -1;
     bool topDown = false;
+    bool forceCacheRebuild = false;
 };
 
 struct ViewState {
@@ -80,8 +84,12 @@ std::string ExecutableDirectory(const char* argv0) {
 
 void PrintUsage(const char* executable) {
     std::cout
-        << "Usage: " << executable << " [collision.tmnfcol] [options]\n"
-        << "  --collision PATH     Collision cache to load\n"
+        << "Usage: " << executable << " [map.Challenge.Gbx|collision.tmnfcol] [options]\n"
+        << "  --map PATH           Challenge.Gbx map or TMNFCOL1 cache to load\n"
+        << "  --packs PATH         TMNF Packs directory (for Challenge.Gbx)\n"
+        << "  --extractor PATH     TrackCollisionExtractor.csproj path\n"
+        << "  --cache-dir PATH     Generated collision-cache directory\n"
+        << "  --rebuild-map-cache  Regenerate collision even if cached\n"
         << "  --start X Y Z        Respawn position (default: A01 start)\n"
         << "  --yaw DEGREES        Respawn heading (default: 90)\n"
         << "  --top-down           Start with the top-down camera\n"
@@ -108,8 +116,13 @@ bool ParseInt(const char* text, int& value) {
 }
 
 bool ParseOptions(int argc, char** argv, Options& options) {
-    options.collisionPath =
-        ExecutableDirectory(argv[0]) + "/../a01_collision.tmnfcol";
+    const std::string executableDirectory = ExecutableDirectory(argv[0]);
+    options.mapPath = executableDirectory +
+        "/../../steamdata/GameData/Tracks/Campaigns/Nations/White/"
+        "A01-Race.Challenge.Gbx";
+    options.packsDirectory = executableDirectory + "/../../steamdata/Packs";
+    options.extractorProject = executableDirectory +
+        "/../TrackCollisionExtractor/TrackCollisionExtractor.csproj";
     for (int i = 1; i < argc; ++i) {
         const std::string argument = argv[i];
         if (argument == "--help" || argument == "-h") {
@@ -120,12 +133,45 @@ bool ParseOptions(int argc, char** argv, Options& options) {
             options.topDown = true;
             continue;
         }
-        if (argument == "--collision" && i + 1 < argc) {
-            options.collisionPath = argv[++i];
+        if ((argument == "--map" || argument == "--collision") &&
+            i + 1 < argc) {
+            options.mapPath = argv[++i];
+            continue;
+        }
+        if (argument.rfind("--map=", 0) == 0) {
+            options.mapPath = argument.substr(6);
             continue;
         }
         if (argument.rfind("--collision=", 0) == 0) {
-            options.collisionPath = argument.substr(12);
+            options.mapPath = argument.substr(12);
+            continue;
+        }
+        if (argument == "--packs" && i + 1 < argc) {
+            options.packsDirectory = argv[++i];
+            continue;
+        }
+        if (argument.rfind("--packs=", 0) == 0) {
+            options.packsDirectory = argument.substr(8);
+            continue;
+        }
+        if (argument == "--extractor" && i + 1 < argc) {
+            options.extractorProject = argv[++i];
+            continue;
+        }
+        if (argument.rfind("--extractor=", 0) == 0) {
+            options.extractorProject = argument.substr(12);
+            continue;
+        }
+        if (argument == "--cache-dir" && i + 1 < argc) {
+            options.cacheDirectory = argv[++i];
+            continue;
+        }
+        if (argument.rfind("--cache-dir=", 0) == 0) {
+            options.cacheDirectory = argument.substr(12);
+            continue;
+        }
+        if (argument == "--rebuild-map-cache") {
+            options.forceCacheRebuild = true;
             continue;
         }
         if (argument == "--yaw" && i + 1 < argc) {
@@ -161,7 +207,7 @@ bool ParseOptions(int argc, char** argv, Options& options) {
             continue;
         }
         if (!argument.empty() && argument[0] != '-') {
-            options.collisionPath = argument;
+            options.mapPath = argument;
             continue;
         }
         std::cerr << "Unknown or incomplete option: " << argument << '\n';
@@ -175,10 +221,25 @@ public:
     bool Initialize(const Options& options) {
         startPosition = options.start;
         startYaw = options.yaw;
-        if (!mesh.LoadFromTmnfCollision(options.collisionPath)) {
-            std::cerr << "Could not load collision mesh: "
-                      << options.collisionPath << '\n';
+        TrackMapLoadOptions loadOptions;
+        loadOptions.packsDirectory = options.packsDirectory;
+        loadOptions.extractorProject = options.extractorProject;
+        loadOptions.cacheDirectory = options.cacheDirectory;
+        loadOptions.forceCacheRebuild = options.forceCacheRebuild;
+        TrackMapLoadResult loadResult;
+        if (!LoadTrackMapCollision(
+                mesh, options.mapPath, loadOptions, &loadResult)) {
+            std::cerr << "Could not load map: " << options.mapPath << '\n'
+                      << loadResult.error << '\n';
             return false;
+        }
+
+        if (loadResult.sourceWasChallengeGbx) {
+            std::cout << "Map: " << loadResult.mapName << " by "
+                      << loadResult.mapAuthor << " (" << loadResult.blockCount
+                      << " placed blocks)\n"
+                      << "Collision cache: " << loadResult.collisionCachePath
+                      << (loadResult.cacheHit ? " [reused]\n" : " [generated]\n");
         }
 
         car = new CSceneVehicleCar();
@@ -204,10 +265,8 @@ public:
     }
 
     void Reset() {
-        g_stub_pos = startPosition;
-        g_carYaw = startYaw;
-        g_stub_forces = GmVec3(0.0f, 0.0f, 0.0f);
-        g_stub_torques = GmVec3(0.0f, 0.0f, 0.0f);
+        dyna->m_position = startPosition;
+        dyna->m_yaw = startYaw;
         GmVec3 zero(0.0f, 0.0f, 0.0f);
         item->SetLinearSpeed(item, &zero);
         item->SetAngularSpeed(item, &zero);
@@ -233,7 +292,7 @@ public:
         simulatedSeconds = 0.0;
         lastDiagnostics = VehicleTrackStepDiagnostics{};
         trail.clear();
-        trail.push_back(g_stub_pos);
+        trail.push_back(dyna->m_position);
     }
 
     void SetInput(float gas, float brake, float steer) {
@@ -246,7 +305,7 @@ public:
         lastDiagnostics = StepVehicleOnTrack(
             *car, *item, *zone, mesh, tuning, kPhysicsDt);
         simulatedSeconds += kPhysicsDt;
-        trail.push_back(g_stub_pos);
+        trail.push_back(dyna->m_position);
         if (trail.size() > 6000) trail.pop_front();
     }
 
@@ -274,14 +333,16 @@ Camera BuildChaseCamera(
     const InteractiveSimulation& simulation, const ViewState& view,
     int width, int height) {
     const VehicleChassisBasis carBasis = BuildVehicleChassisBasis(
-        simulation.car->m_chassisUp, g_carYaw);
+        simulation.car->m_chassisUp, simulation.dyna->m_yaw);
     Camera camera;
     camera.width = std::max(width, 1);
     camera.height = std::max(height, 1);
-    camera.position = g_stub_pos - carBasis.forward * view.chaseDistance +
+    camera.position = simulation.dyna->m_position -
+        carBasis.forward * view.chaseDistance +
         GmVec3(0.0f, 5.0f, 0.0f);
     const GmVec3 target =
-        g_stub_pos + carBasis.forward * 7.0f + GmVec3(0.0f, 0.6f, 0.0f);
+        simulation.dyna->m_position + carBasis.forward * 7.0f +
+        GmVec3(0.0f, 0.6f, 0.0f);
     camera.forward = Normalized(target - camera.position);
     camera.right = Normalized(GmVec3::Cross(
         GmVec3(0.0f, 1.0f, 0.0f), camera.forward));
@@ -338,9 +399,10 @@ bool DrawPerspectiveLine(
 }
 
 SDL_FPoint ToTopDown(
-    const GmVec3& world, const VehicleChassisBasis& basis,
+    const GmVec3& world, const GmVec3& origin,
+    const VehicleChassisBasis& basis,
     float zoom, int width, int height) {
-    const GmVec3 relative = world - g_stub_pos;
+    const GmVec3 relative = world - origin;
     return {
         width * 0.5f + GmVec3::Dot(relative, basis.right) * zoom,
         height * 0.62f - GmVec3::Dot(relative, basis.forward) * zoom,
@@ -368,8 +430,10 @@ int DrawTrackChase(
         const GmVec3& a = simulation.mesh.m_vertices[triangle.indices[0]];
         const GmVec3& b = simulation.mesh.m_vertices[triangle.indices[1]];
         const GmVec3& c = simulation.mesh.m_vertices[triangle.indices[2]];
-        const float centerX = (a.x + b.x + c.x) / 3.0f - g_stub_pos.x;
-        const float centerZ = (a.z + b.z + c.z) / 3.0f - g_stub_pos.z;
+        const float centerX =
+            (a.x + b.x + c.x) / 3.0f - simulation.dyna->m_position.x;
+        const float centerZ =
+            (a.z + b.z + c.z) / 3.0f - simulation.dyna->m_position.z;
         if (centerX * centerX + centerZ * centerZ > radiusSquared) continue;
         SetTrackColor(renderer, triangle);
         bool visible = DrawPerspectiveLine(renderer, camera, a, b);
@@ -392,12 +456,17 @@ int DrawTrackTopDown(
         const GmVec3& a = simulation.mesh.m_vertices[triangle.indices[0]];
         const GmVec3& b = simulation.mesh.m_vertices[triangle.indices[1]];
         const GmVec3& c = simulation.mesh.m_vertices[triangle.indices[2]];
-        const float centerX = (a.x + b.x + c.x) / 3.0f - g_stub_pos.x;
-        const float centerZ = (a.z + b.z + c.z) / 3.0f - g_stub_pos.z;
+        const float centerX =
+            (a.x + b.x + c.x) / 3.0f - simulation.dyna->m_position.x;
+        const float centerZ =
+            (a.z + b.z + c.z) / 3.0f - simulation.dyna->m_position.z;
         if (centerX * centerX + centerZ * centerZ > radiusSquared) continue;
-        const SDL_FPoint pa = ToTopDown(a, basis, zoom, width, height);
-        const SDL_FPoint pb = ToTopDown(b, basis, zoom, width, height);
-        const SDL_FPoint pc = ToTopDown(c, basis, zoom, width, height);
+        const SDL_FPoint pa = ToTopDown(
+            a, simulation.dyna->m_position, basis, zoom, width, height);
+        const SDL_FPoint pb = ToTopDown(
+            b, simulation.dyna->m_position, basis, zoom, width, height);
+        const SDL_FPoint pc = ToTopDown(
+            c, simulation.dyna->m_position, basis, zoom, width, height);
         SetTrackColor(renderer, triangle);
         SDL_RenderDrawLineF(renderer, pa.x, pa.y, pb.x, pb.y);
         SDL_RenderDrawLineF(renderer, pb.x, pb.y, pc.x, pc.y);
@@ -411,13 +480,13 @@ void DrawCarChase(
     SDL_Renderer* renderer, const InteractiveSimulation& simulation,
     const Camera& camera) {
     const VehicleChassisBasis basis = BuildVehicleChassisBasis(
-        simulation.car->m_chassisUp, g_carYaw);
+        simulation.car->m_chassisUp, simulation.dyna->m_yaw);
     constexpr float halfWidth = 0.95f;
     constexpr float halfHeight = 0.45f;
     constexpr float halfLength = 1.8f;
     GmVec3 corners[8];
     for (int i = 0; i < 8; ++i) {
-        corners[i] = g_stub_pos +
+        corners[i] = simulation.dyna->m_position +
             basis.right * ((i & 1) ? halfWidth : -halfWidth) +
             basis.up * ((i & 2) ? halfHeight : -halfHeight) +
             basis.forward * ((i & 4) ? halfLength : -halfLength);
@@ -432,7 +501,7 @@ void DrawCarChase(
     }
 
     for (int i = 0; i < simulation.lastDiagnostics.wheelCount; ++i) {
-        const GmVec3 wheel = g_stub_pos +
+        const GmVec3 wheel = simulation.dyna->m_position +
             basis.right * TmForeverPhysicsConstants::kStadiumWheelLocalX[i] +
             basis.up * TmForeverPhysicsConstants::kStadiumWheelLocalY[i] +
             basis.forward * TmForeverPhysicsConstants::kStadiumWheelLocalZ[i];
@@ -448,8 +517,8 @@ void DrawCarChase(
 
     SDL_SetRenderDrawColor(renderer, 72, 220, 115, 255);
     DrawPerspectiveLine(
-        renderer, camera, g_stub_pos,
-        g_stub_pos + simulation.car->m_chassisUp * 2.0f);
+        renderer, camera, simulation.dyna->m_position,
+        simulation.dyna->m_position + simulation.car->m_chassisUp * 2.0f);
 }
 
 void DrawCarTopDown(SDL_Renderer* renderer, int width, int height) {
@@ -478,9 +547,11 @@ void DrawTrail(
     for (; point != simulation.trail.end(); ++point, ++previous) {
         if (view.topDown) {
             const SDL_FPoint a = ToTopDown(
-                *previous, basis, view.topDownZoom, width, height);
+                *previous, simulation.dyna->m_position, basis,
+                view.topDownZoom, width, height);
             const SDL_FPoint b = ToTopDown(
-                *point, basis, view.topDownZoom, width, height);
+                *point, simulation.dyna->m_position, basis,
+                view.topDownZoom, width, height);
             SDL_RenderDrawLineF(renderer, a.x, a.y, b.x, b.y);
         } else {
             DrawPerspectiveLine(renderer, camera, *previous, *point);
@@ -496,7 +567,7 @@ int Render(
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     const VehicleChassisBasis basis = BuildVehicleChassisBasis(
-        simulation.car->m_chassisUp, g_carYaw);
+        simulation.car->m_chassisUp, simulation.dyna->m_yaw);
     const Camera camera = BuildChaseCamera(simulation, view, width, height);
     int trianglesDrawn = 0;
     if (view.topDown) {
@@ -539,7 +610,6 @@ bool SaveScreenshot(
 } // namespace
 
 CSceneVehicleCarTuning* g_tuning = nullptr;
-float g_carYaw = kDefaultYaw;
 
 int main(int argc, char** argv) {
     Options options;
@@ -681,7 +751,9 @@ int main(int argc, char** argv) {
                 "TMNF Physics | %6.1f km/h | t %.2fs | pos %.2f %.2f %.2f | "
                 "%d/4 wheels | %s%s | %d tris",
                 simulation.SpeedKmh(), simulation.simulatedSeconds,
-                g_stub_pos.x, g_stub_pos.y, g_stub_pos.z,
+                simulation.dyna->m_position.x,
+                simulation.dyna->m_position.y,
+                simulation.dyna->m_position.z,
                 simulation.lastDiagnostics.groundedWheelCount,
                 view.topDown ? "top" : "chase",
                 paused ? " | PAUSED" : "", trianglesDrawn);
@@ -695,8 +767,9 @@ int main(int argc, char** argv) {
     SDL_DestroyWindow(window);
     SDL_Quit();
     std::cout << "Final state: t=" << simulation.simulatedSeconds
-              << "s pos=(" << g_stub_pos.x << ", " << g_stub_pos.y
-              << ", " << g_stub_pos.z << ") speed="
+              << "s pos=(" << simulation.dyna->m_position.x << ", "
+              << simulation.dyna->m_position.y << ", "
+              << simulation.dyna->m_position.z << ") speed="
               << simulation.SpeedKmh() << " km/h grounded="
               << simulation.lastDiagnostics.groundedWheelCount << "/4\n";
     return 0;

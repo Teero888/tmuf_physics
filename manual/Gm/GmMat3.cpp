@@ -27,9 +27,9 @@ void GmMat3::ArchiveGmMat3(CClassicArchive& archive) {
 // =================================================
 void GmMat3::GetLine(uint32_t index, GmVec3& outLine) const {
     const float* m = reinterpret_cast<const float*>(this);
-    outLine.x = m[index * 3 + 0];
-    outLine.y = m[index * 3 + 1];
-    outLine.z = m[index * 3 + 2];
+    outLine.x = m[index];
+    outLine.y = m[index + 3u];
+    outLine.z = m[index + 6u];
 }
 
 // =================================================
@@ -476,26 +476,28 @@ void GmMat3::SetIdentity() {
 // =================================================
 void GmMat3::SetLine(uint32_t index, const GmVec3& line) {
     float* m = reinterpret_cast<float*>(this);
-    m[index * 3 + 0] = line.x;
-    m[index * 3 + 1] = line.y;
-    m[index * 3 + 2] = line.z;
+    m[index] = line.x;
+    m[index + 3u] = line.y;
+    m[index + 6u] = line.z;
 }
 
 // =================================================
 // Function: GmMat3::SetMult
 // =================================================
 void GmMat3::SetMult(const GmMat3& a, const GmMat3& b) {
-    this->m00 = (a.m00 * b.m00) + (a.m01 * b.m10) + (a.m02 * b.m20);
-    this->m01 = (a.m00 * b.m01) + (a.m01 * b.m11) + (a.m02 * b.m21);
-    this->m02 = (a.m00 * b.m02) + (a.m01 * b.m12) + (a.m02 * b.m22);
-    
-    this->m10 = (a.m10 * b.m00) + (a.m11 * b.m10) + (a.m12 * b.m20);
-    this->m11 = (a.m10 * b.m01) + (a.m11 * b.m11) + (a.m12 * b.m21);
-    this->m12 = (a.m10 * b.m02) + (a.m11 * b.m12) + (a.m12 * b.m22);
-    
-    this->m20 = (a.m20 * b.m00) + (a.m21 * b.m10) + (a.m22 * b.m20);
-    this->m21 = (a.m20 * b.m01) + (a.m21 * b.m11) + (a.m22 * b.m21);
-    this->m22 = (a.m20 * b.m02) + (a.m21 * b.m12) + (a.m22 * b.m22);
+    // Native SetMult composes A followed by B, hence the stored matrix is
+    // B*A for the engine's column-vector affine convention.
+    this->m00 = (b.m00 * a.m00) + (b.m01 * a.m10) + (b.m02 * a.m20);
+    this->m01 = (b.m00 * a.m01) + (b.m01 * a.m11) + (b.m02 * a.m21);
+    this->m02 = (b.m00 * a.m02) + (b.m01 * a.m12) + (b.m02 * a.m22);
+
+    this->m10 = (b.m10 * a.m00) + (b.m11 * a.m10) + (b.m12 * a.m20);
+    this->m11 = (b.m10 * a.m01) + (b.m11 * a.m11) + (b.m12 * a.m21);
+    this->m12 = (b.m10 * a.m02) + (b.m11 * a.m12) + (b.m12 * a.m22);
+
+    this->m20 = (b.m20 * a.m00) + (b.m21 * a.m10) + (b.m22 * a.m20);
+    this->m21 = (b.m20 * a.m01) + (b.m21 * a.m11) + (b.m22 * a.m21);
+    this->m22 = (b.m20 * a.m02) + (b.m21 * a.m12) + (b.m22 * a.m22);
 }
 
 // =================================================
@@ -571,4 +573,7 @@ void GmMat3::Transpose() {
     this->m12 = this->m21;
     this->m21 = temp;
 }
-void GmMat3::Mult(GmMat3* res, void* a) {}
+void GmMat3::Mult(GmMat3* res, void* a) {
+    if (res == nullptr || a == nullptr) return;
+    res->Mult(*static_cast<GmMat3*>(a));
+}

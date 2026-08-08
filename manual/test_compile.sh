@@ -14,7 +14,7 @@ FAIL=0
 mkdir -p build
 
 # Find all .cpp files except main.cpp
-FILES=$(find . -maxdepth 2 -name "*.cpp" -not -path "./build/*" -not -name "main.cpp" -not -name "dump_tuning.cpp")
+FILES=$(find . -maxdepth 2 -name "*.cpp" -not -path "./build/*" -not -path "./visualization/*" -not -name "main.cpp" -not -name "dump_tuning.cpp")
 
 echo "======================================"
 echo "           compiling objects          "
@@ -107,8 +107,21 @@ if [ $FAIL -eq 0 ]; then
         exit 1
     fi
 
-    if ! ./build/track_collision_test; then
-        exit 1
+    A01_MAP="../steamdata/GameData/Tracks/Campaigns/Nations/White/A01-Race.Challenge.Gbx"
+    PACKS_DIR="../steamdata/Packs"
+    EXTRACTOR_PROJECT="TrackCollisionExtractor/TrackCollisionExtractor.csproj"
+    if command -v dotnet >/dev/null 2>&1 && [ -f "$A01_MAP" ] && \
+       [ -f "$PACKS_DIR/Stadium.pak" ] && [ -f "$PACKS_DIR/packlist.dat" ] && \
+       [ -f "$EXTRACTOR_PROJECT" ]; then
+        if ! ./build/track_collision_test \
+            "$A01_MAP" "$PACKS_DIR" "$EXTRACTOR_PROJECT"; then
+            exit 1
+        fi
+    else
+        echo "A01 GBX integration inputs unavailable; running cache-format test only."
+        if ! ./build/track_collision_test; then
+            exit 1
+        fi
     fi
 
     echo -n "Compiling geometry/collision regression ... "

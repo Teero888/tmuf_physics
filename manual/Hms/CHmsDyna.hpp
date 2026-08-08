@@ -7,13 +7,6 @@
 #include "GmQuat.hpp"
 #include <cstdint>
 
-// Temporary single-body state used by the standalone harnesses while the
-// native per-corpus state layout is still being reconstructed.
-extern GmVec3 g_stub_pos;
-extern GmVec3 g_stub_forces;
-extern GmVec3 g_stub_torques;
-extern GmVec3 g_stub_angVel;
-
 // Forward declarations
 class CHmsItem;
 class CClassicBufferMemory;
@@ -157,6 +150,19 @@ public:
     uint32_t m_field_0x564;
     uint8_t m_padding_0x568[36];
     GmMat3* m_field_0x58c;
+
+    // Typed standalone state mirroring the fields recovered in
+    // CHmsStateDyna: translation +0x34, linear speed +0x40, angular speed
+    // +0x58, force +0x64, and torque +0x70. Keeping these values on the body
+    // is essential even though the legacy guessed padding above cannot retain
+    // the executable's 32-bit offsets in a 64-bit build.
+    GmVec3 m_position;
+    GmVec3 m_force;
+    GmVec3 m_torque;
+    GmVec3 m_angularSpeed;
+    GmVec3 m_preStepLinearSpeed;
+    GmVec3 m_preStepAngularSpeed;
+    float m_yaw;
 
     // Member Functions
     CHmsDyna();

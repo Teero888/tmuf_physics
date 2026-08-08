@@ -3,6 +3,7 @@
 #include "CSceneVehicleCar.hpp"
 #include "CSceneVehicleCarTuning.hpp"
 #include "VehicleGroundSupport.hpp"
+#include "CHmsCorpus.hpp"
 #include "CHmsDyna.hpp"
 #include "CHmsItem.hpp"
 #include "CHmsZoneDynamic.hpp"
@@ -12,10 +13,6 @@
 #include <algorithm>
 #include <limits>
 
-extern float g_carYaw;
-extern GmVec3 g_stub_forces;
-extern GmVec3 g_stub_torques;
-
 VehicleTrackStepDiagnostics StepVehicleOnTrack(
     CSceneVehicleCar& car,
     CHmsItem& item,
@@ -24,17 +21,22 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
     CSceneVehicleCarTuning& tuning,
     float dt) {
     VehicleTrackStepDiagnostics diagnostics;
+    if (item.m_corpuses.GetCount() == 0u ||
+        item.m_corpuses[0] == nullptr ||
+        item.m_corpuses[0]->m_dyna == nullptr) {
+        return diagnostics;
+    }
+    CHmsDyna& dyna = *item.m_corpuses[0]->m_dyna;
 
     // Force and torque accumulators belong to one native 100 Hz frame.
-    g_stub_forces = GmVec3(0.0f, 0.0f, 0.0f);
-    g_stub_torques = GmVec3(0.0f, 0.0f, 0.0f);
     GmVec3 zero(0.0f, 0.0f, 0.0f);
     item.SetForce(&item, &zero);
+    item.SetTorque(&item, &zero);
 
     GmIso4 worldMeshTransform;
     worldMeshTransform.SetIdentity();
     const VehicleChassisBasis queryBasis =
-        BuildVehicleChassisBasis(car.m_chassisUp, g_carYaw);
+        BuildVehicleChassisBasis(car.m_chassisUp, dyna.m_yaw);
     GmVec3 groundNormal(0.0f, 0.0f, 0.0f);
     float supportedRootY = -std::numeric_limits<float>::infinity();
     VehicleWheelGroundSample supportSamples[
@@ -56,7 +58,7 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
         const GmVec3 wheelOffset =
             queryBasis.right * localX + queryBasis.up * localY +
             queryBasis.forward * localZ;
-        const GmVec3 wheelCenter = g_stub_pos + wheelOffset;
+        const GmVec3 wheelCenter = dyna.m_position + wheelOffset;
 
         const GmVec3 rayPosition =
             wheelCenter + GmVec3(0.0f, 0.25f, 0.0f);
@@ -113,7 +115,7 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
         groundNormal = GmVec3(0.0f, 1.0f, 0.0f);
     }
     const VehicleGroundSupportResult support = ComputeVehicleGroundSupport(
-        supportSamples, wheelCount, g_carYaw);
+        supportSamples, wheelCount, dyna.m_yaw);
     if (diagnostics.onGround && support.valid) {
         groundNormal = support.basis.up;
         supportedRootY = support.rootY;
@@ -130,7 +132,7 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
     if (diagnostics.onGround) {
         GmVec3 velocity;
         item.GetLinearSpeed(&item, &velocity);
-        g_stub_pos.y = supportedRootY;
+        dyna.m_position.y = supportedRootY;
         GmVec3 resolvedVelocity =
             RemoveInwardSupportVelocity(velocity, groundNormal);
         if (resolvedVelocity.x != velocity.x ||
@@ -149,9 +151,9 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
     car.IntegrateVehicle(nullptr, dt);
     item.AddForce(&item, &groundReaction, nullptr);
 
-    diagnostics.position = g_stub_pos;
+    diagnostics.position = dyna.m_position;
     item.GetLinearSpeed(&item, &diagnostics.velocity);
-    diagnostics.accumulatedForce = g_stub_forces;
+    diagnostics.accumulatedForce = dyna.m_force;
     dynamicZone.PhysicsStep2();
     return diagnostics;
 }

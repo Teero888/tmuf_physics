@@ -2,6 +2,7 @@
 #include "../../Scene/CSceneVehicleCarTuning.hpp"
 #include "../../Scene/TmForeverPhysicsConstants.hpp"
 #include "../../Scene/VehicleGroundSupport.hpp"
+#include "../../Hms/CHmsCorpus.hpp"
 #include "../../Hms/CHmsDyna.hpp"
 #include "../../Hms/CHmsItem.hpp"
 
@@ -10,9 +11,6 @@
 #include <type_traits>
 
 CSceneVehicleCarTuning* g_tuning = nullptr;
-float g_carYaw = 0.0f;
-extern GmVec3 g_stub_forces;
-extern GmVec3 g_stub_torques;
 
 using Model3Signature = void (CSceneVehicleCar::*)(
     float, GmVec3*, float, float, GmVec3*, GmVec3*, float, int, void*, int*, float*);
@@ -29,6 +27,11 @@ bool Expect(const char* name, bool condition) {
 
 bool Near(float actual, float expected, float tolerance = 1.0e-6f) {
     return std::abs(actual - expected) <= tolerance;
+}
+
+bool VecNear(const GmVec3& actual, const GmVec3& expected) {
+    return Near(actual.x, expected.x) && Near(actual.y, expected.y) &&
+           Near(actual.z, expected.z);
 }
 
 } // namespace
@@ -87,33 +90,38 @@ int main() {
     passed &= Expect("no initial ground contact", car.IsGroundContact() == 0);
 
     CHmsItem suspensionItem;
+    CHmsCorpus* suspensionCorpus = new CHmsCorpus();
+    suspensionCorpus->m_dyna = new CHmsDyna();
+    suspensionCorpus->m_item = &suspensionItem;
+    suspensionItem.m_corpuses.Add(suspensionCorpus);
+    CHmsDyna* suspensionDyna = suspensionCorpus->m_dyna;
     car.m_hmsItem = &suspensionItem;
     wheel.m_hasGroundContact = 1;
     wheel.m_realTimeState.m_compression = 0.15f;
     wheel.m_realTimeState.m_velocity = 0.5f;
-    g_stub_forces = GmVec3(0.0f, 0.0f, 0.0f);
+    suspensionDyna->m_force = GmVec3(0.0f, 0.0f, 0.0f);
     const GmVec3 suspensionPoint(0.0f, 0.0f, 0.0f);
     car.WheelAddForceToVehicle(&wheel, &suspensionPoint);
     passed &= Expect("Demo03 suspension spring-damper scalar",
                      Near(wheel.m_suspensionForce, 1.5f));
     passed &= Expect("Demo03 suspension acts on local up axis",
-                     Near(g_stub_forces.x, 0.0f) &&
-                     Near(g_stub_forces.y, 1.5f) &&
-                     Near(g_stub_forces.z, 0.0f));
+                     Near(suspensionDyna->m_force.x, 0.0f) &&
+                     Near(suspensionDyna->m_force.y, 1.5f) &&
+                     Near(suspensionDyna->m_force.z, 0.0f));
     wheel.m_hasGroundContact = 0;
-    g_stub_forces = GmVec3(0.0f, 0.0f, 0.0f);
+    suspensionDyna->m_force = GmVec3(0.0f, 0.0f, 0.0f);
     car.WheelAddForceToVehicle(&wheel, &suspensionPoint);
     passed &= Expect("suspension helper ignores uncontacted wheel",
-                     Near(g_stub_forces.x, 0.0f) &&
-                     Near(g_stub_forces.y, 0.0f) &&
-                     Near(g_stub_forces.z, 0.0f));
+                     Near(suspensionDyna->m_force.x, 0.0f) &&
+                     Near(suspensionDyna->m_force.y, 0.0f) &&
+                     Near(suspensionDyna->m_force.z, 0.0f));
 
     // CHmsDyna::AddLocalForce multiplies by the complete chassis rotation,
     // rather than applying yaw alone. A road normal tilted toward +Z makes
     // local forward point down the corresponding slope.
     constexpr float kSqrtHalf = 0.7071067811865475244f;
     car.m_chassisUp = GmVec3(0.0f, kSqrtHalf, kSqrtHalf);
-    g_stub_forces = GmVec3(0.0f, 0.0f, 0.0f);
+    suspensionDyna->m_force = GmVec3(0.0f, 0.0f, 0.0f);
     const GmVec3 pitchedLocalForward(0.0f, 0.0f, 2.0f);
     car.AddVehicleCentralForce(
         &car,
@@ -121,9 +129,9 @@ int main() {
             const_cast<GmVec3*>(&pitchedLocalForward)),
         nullptr);
     passed &= Expect("local force uses full chassis rotation",
-                     Near(g_stub_forces.x, 0.0f) &&
-                     Near(g_stub_forces.y, -2.0f * kSqrtHalf) &&
-                     Near(g_stub_forces.z, 2.0f * kSqrtHalf));
+                     Near(suspensionDyna->m_force.x, 0.0f) &&
+                     Near(suspensionDyna->m_force.y, -2.0f * kSqrtHalf) &&
+                     Near(suspensionDyna->m_force.z, 2.0f * kSqrtHalf));
     car.m_chassisUp = GmVec3(0.0f, 1.0f, 0.0f);
     car.m_hmsItem = nullptr;
 
@@ -285,17 +293,29 @@ int main() {
     CHmsDyna dyna;
     GmVec3 initialSpeed(2.0f, 0.0f, 0.0f);
     dyna.SetLinearSpeed(nullptr, &initialSpeed);
-    g_stub_pos = GmVec3(0.0f, 0.0f, 0.0f);
-    g_stub_forces = GmVec3(1.0f, 0.0f, 0.0f);
-    g_stub_torques = GmVec3(0.0f, 0.0f, 0.0f);
+    dyna.m_position = GmVec3(0.0f, 0.0f, 0.0f);
+    dyna.m_force = GmVec3(1.0f, 0.0f, 0.0f);
+    dyna.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
     dyna.Integrate(0.5f);
     dyna.Move(0.5f);
     GmVec3 integratedSpeed;
     dyna.GetLocalLinearSpeed(&integratedSpeed);
     passed &= Expect("explicit Euler uses pre-force speed for translation",
-                     Near(g_stub_pos.x, 1.0f));
+                     Near(dyna.m_position.x, 1.0f));
     passed &= Expect("force still updates end-of-step speed",
                      Near(integratedSpeed.x, 2.5f));
+
+    CHmsDyna independentBody;
+    independentBody.m_position = GmVec3(50.0f, 60.0f, 70.0f);
+    independentBody.m_force = GmVec3(4.0f, 5.0f, 6.0f);
+    passed &= Expect("dynamic position is per body",
+                     VecNear(independentBody.m_position,
+                             GmVec3(50.0f, 60.0f, 70.0f)) &&
+                     VecNear(dyna.m_position, GmVec3(1.0f, 0.0f, 0.0f)));
+    passed &= Expect("dynamic force accumulator is per body",
+                     VecNear(independentBody.m_force,
+                             GmVec3(4.0f, 5.0f, 6.0f)) &&
+                     VecNear(dyna.m_force, GmVec3(0.0f, 0.0f, 0.0f)));
 
     if (!passed) return 1;
     std::puts("vehicle state regression: PASS");

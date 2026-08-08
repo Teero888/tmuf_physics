@@ -39,6 +39,10 @@ int main() {
     passed &= ExpectExecutableValue(executable, "input threshold", 0x7362c0, kInputThreshold);
     passed &= ExpectExecutableValue(executable, "normalization epsilon", 0x90ac60,
                                     kNormalizeSquaredEpsilon);
+    passed &= ExpectExecutableValue(executable, "collision normalization epsilon", 0x91a938,
+                                    kCollisionNormalizeSquaredEpsilon);
+    passed &= ExpectExecutableValue(executable, "collision edge squared-distance epsilon", 0x7bdc5c,
+                                    kCollisionEdgeSquaredDistanceEpsilon);
     passed &= ExpectExecutableValue(executable, "speed curve scale", 0x73d2a8,
                                     kSpeedCurveScale);
     passed &= ExpectExecutableValue<std::uint32_t>(executable, "zero scalar slot", 0x72c178, 0);

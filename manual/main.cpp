@@ -22,6 +22,7 @@
 #include "Scene/CSceneVehicleCarTuning.hpp"
 #include "Scene/TmForeverPhysicsConstants.hpp"
 #include "Scene/VehicleGroundSupport.hpp"
+#include "Track/TrackMapLoader.hpp"
 #include "Game/CGameCtnReplayRecord.hpp"
 #include "Classic/CClassicArchive.hpp"
 #include "Plug/CPlugSolid.hpp"
@@ -34,12 +35,6 @@ extern "C" {
 }
 
 // External variables for harness stubs
-extern GmVec3 g_stub_pos;
-GmVec3 g_stub_vel(0,0,0);
-float g_carYaw = 1.57079632679f; // PI/2, facing +X
-extern GmVec3 g_stub_forces;
-extern GmVec3 g_stub_torques;
-
 // =================================================================
 // Ghost Sample for ground truth comparison
 // =================================================================
@@ -83,14 +78,30 @@ struct DesyncResult {
 int main(int argc, char* argv[]) {
     bool traceInputs = false;
     bool traceForces = false;
-    std::string collisionPath = "a01_collision.tmnfcol";
+    std::string mapPath =
+        "../steamdata/GameData/Tracks/Campaigns/Nations/White/"
+        "A01-Race.Challenge.Gbx";
+    TrackMapLoadOptions mapLoadOptions;
+    mapLoadOptions.packsDirectory = "../steamdata/Packs";
+    mapLoadOptions.extractorProject =
+        "TrackCollisionExtractor/TrackCollisionExtractor.csproj";
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "--trace-inputs") == 0) {
             traceInputs = true;
         } else if (std::strcmp(argv[i], "--trace-forces") == 0) {
             traceForces = true;
         } else if (std::strncmp(argv[i], "--collision=", 12) == 0) {
-            collisionPath = argv[i] + 12;
+            mapPath = argv[i] + 12;
+        } else if (std::strncmp(argv[i], "--map=", 6) == 0) {
+            mapPath = argv[i] + 6;
+        } else if (std::strncmp(argv[i], "--packs=", 8) == 0) {
+            mapLoadOptions.packsDirectory = argv[i] + 8;
+        } else if (std::strncmp(argv[i], "--extractor=", 12) == 0) {
+            mapLoadOptions.extractorProject = argv[i] + 12;
+        } else if (std::strncmp(argv[i], "--cache-dir=", 12) == 0) {
+            mapLoadOptions.cacheDirectory = argv[i] + 12;
+        } else if (std::strcmp(argv[i], "--rebuild-map-cache") == 0) {
+            mapLoadOptions.forceCacheRebuild = true;
         }
     }
 
@@ -108,14 +119,24 @@ int main(int argc, char* argv[]) {
     std::cout << "Ghost start: (" << ghostSamples[0].x << ", " << ghostSamples[0].y << ", " << ghostSamples[0].z << ")" << std::endl;
     std::cout << "Ghost end:   (" << ghostSamples.back().x << ", " << ghostSamples.back().y << ", " << ghostSamples.back().z << ")" << std::endl;
 
-    // 2. Load the exact collision surfaces selected by the A01 challenge's
-    // block variants. Generate this standalone cache with
-    // ./export_a01_collision.sh after installing/restoring the extractor.
+    // 2. Load the map and exact collision surfaces selected by its block
+    // variants. Challenge.Gbx inputs are resolved against Stadium.pak and the
+    // derived collision is cached automatically.
     GmSurfMesh worldMesh;
-    if (!worldMesh.LoadFromTmnfCollision(collisionPath)) {
-        std::cerr << "Failed to load A01 collision cache: " << collisionPath << '\n'
-                  << "Run ./export_a01_collision.sh first." << std::endl;
+    TrackMapLoadResult mapLoadResult;
+    if (!LoadTrackMapCollision(
+            worldMesh, mapPath, mapLoadOptions, &mapLoadResult)) {
+        std::cerr << "Failed to load A01 map: " << mapPath << '\n'
+                  << mapLoadResult.error << std::endl;
         return 1;
+    }
+    if (mapLoadResult.sourceWasChallengeGbx) {
+        std::cout << "Map: " << mapLoadResult.mapName << " by "
+                  << mapLoadResult.mapAuthor << ", "
+                  << mapLoadResult.blockCount << " placed blocks\n"
+                  << "Collision cache: " << mapLoadResult.collisionCachePath
+                  << (mapLoadResult.cacheHit ? " [reused]" : " [generated]")
+                  << std::endl;
     }
     std::cout << "Track mesh: " << worldMesh.m_vertices.m_count << " verts, "
               << worldMesh.m_triangles.m_count << " tris" << std::endl;
@@ -168,7 +189,8 @@ int main(int argc, char* argv[]) {
     GmVec3 startPos(ghostSamples[0].x, ghostSamples[0].y, ghostSamples[0].z);
     GmVec3 vel(0.0f, 0.0f, 0.0f);
 
-    g_stub_pos = startPos;
+    dyna->m_position = startPos;
+    dyna->m_yaw = 1.57079632679f; // PI/2, facing +X
     item->SetLinearSpeed(item, &vel);
     car->SetTranslation(nullptr, &startPos);
 
@@ -190,9 +212,9 @@ int main(int argc, char* argv[]) {
         float dx = ghostSamples[9].x - ghostSamples[0].x;
         float dz = ghostSamples[9].z - ghostSamples[0].z;
         if (std::abs(dx) > 0.01f || std::abs(dz) > 0.01f) {
-            g_carYaw = std::atan2(dx, dz); // atan2(sin, cos) = atan2(fwdX, fwdZ)
-            std::cout << "Initial yaw from ghost trajectory: " << g_carYaw << " rad ("
-                      << (g_carYaw * 180.0f / 3.14159265f) << " deg)" << std::endl;
+            dyna->m_yaw = std::atan2(dx, dz); // atan2(sin, cos) = atan2(fwdX, fwdZ)
+            std::cout << "Initial yaw from ghost trajectory: " << dyna->m_yaw << " rad ("
+                      << (dyna->m_yaw * 180.0f / 3.14159265f) << " deg)" << std::endl;
         }
     }
 
@@ -238,9 +260,9 @@ int main(int argc, char* argv[]) {
         if (ghostSamples[ghostSampleIdx].time_ms != raceTimeMs) return;
 
         const GhostSample& gs = ghostSamples[ghostSampleIdx];
-        const float errX = g_stub_pos.x - gs.x;
-        const float errY = g_stub_pos.y - gs.y;
-        const float errZ = g_stub_pos.z - gs.z;
+        const float errX = dyna->m_position.x - gs.x;
+        const float errY = dyna->m_position.y - gs.y;
+        const float errZ = dyna->m_position.z - gs.z;
         const float errTotal = std::sqrt(errX * errX + errY * errY + errZ * errZ);
 
         GmVec3 simVel;
@@ -250,7 +272,7 @@ int main(int argc, char* argv[]) {
 
         logFile << raceTimeMs << ","
                 << gs.x << "," << gs.y << "," << gs.z << "," << gs.speed_kmh << ","
-                << g_stub_pos.x << "," << g_stub_pos.y << "," << g_stub_pos.z << "," << simSpeed << ","
+                << dyna->m_position.x << "," << dyna->m_position.y << "," << dyna->m_position.z << "," << simSpeed << ","
                 << errX << "," << errY << "," << errZ << "," << errTotal << std::endl;
 
         if (errTotal > maxError) maxError = errTotal;
@@ -262,7 +284,7 @@ int main(int argc, char* argv[]) {
             std::cout << std::fixed << std::setprecision(3)
                       << "T=" << std::setw(6) << raceTimeMs << "ms"
                       << " | Ghost=(" << std::setw(8) << gs.x << "," << std::setw(8) << gs.y << "," << std::setw(8) << gs.z << ")"
-                      << " | Sim=(" << std::setw(8) << g_stub_pos.x << "," << std::setw(8) << g_stub_pos.y << "," << std::setw(8) << g_stub_pos.z << ")"
+                      << " | Sim=(" << std::setw(8) << dyna->m_position.x << "," << std::setw(8) << dyna->m_position.y << "," << std::setw(8) << dyna->m_position.z << ")"
                       << " | Err=" << std::setw(8) << errTotal << "m"
                       << " | Spd G=" << std::setw(6) << gs.speed_kmh << " S=" << std::setw(6) << simSpeed;
 
@@ -278,7 +300,7 @@ int main(int argc, char* argv[]) {
         dr.error_x = errX; dr.error_y = errY; dr.error_z = errZ;
         dr.error_total = errTotal;
         dr.ghost_x = gs.x; dr.ghost_y = gs.y; dr.ghost_z = gs.z;
-        dr.sim_x = g_stub_pos.x; dr.sim_y = g_stub_pos.y; dr.sim_z = g_stub_pos.z;
+        dr.sim_x = dyna->m_position.x; dr.sim_y = dyna->m_position.y; dr.sim_z = dyna->m_position.z;
         dr.ghost_speed = gs.speed_kmh; dr.sim_speed = simSpeed;
         desyncLog.push_back(dr);
     };
@@ -292,8 +314,8 @@ int main(int argc, char* argv[]) {
         compareWithGhost(raceTimeMs);
 
         // CLEAR FORCES from previous frame!
-        g_stub_forces = GmVec3(0, 0, 0);
-        g_stub_torques = GmVec3(0, 0, 0);
+        dyna->m_force = GmVec3(0, 0, 0);
+        dyna->m_torque = GmVec3(0, 0, 0);
 
         // 1. Process Input events
         while (currentEventIdx < replay->m_events.size()) {
@@ -324,7 +346,7 @@ int main(int argc, char* argv[]) {
         // contact system works at these solid-node transforms; a center ray
         // incorrectly gave all four wheels the same contact and material.
         const VehicleChassisBasis queryBasis =
-            BuildVehicleChassisBasis(car->m_chassisUp, g_carYaw);
+            BuildVehicleChassisBasis(car->m_chassisUp, dyna->m_yaw);
         GmVec3 groundNormal(0.0f, 0.0f, 0.0f);
         float supportedRootY = -std::numeric_limits<float>::infinity();
         int groundedWheelCount = 0;
@@ -347,7 +369,7 @@ int main(int argc, char* argv[]) {
             const GmVec3 wheelOffset =
                 queryBasis.right * localX + queryBasis.up * localY +
                 queryBasis.forward * localZ;
-            const GmVec3 wheelCenter = g_stub_pos + wheelOffset;
+            const GmVec3 wheelCenter = dyna->m_position + wheelOffset;
 
             const GmVec3 rayPosition = wheelCenter + GmVec3(0.0f, 0.25f, 0.0f);
             const GmVec3 rayDirection(
@@ -397,7 +419,7 @@ int main(int argc, char* argv[]) {
         if (onGround) groundNormal.Normalize();
         else groundNormal = GmVec3(0.0f, 1.0f, 0.0f);
         const VehicleGroundSupportResult support = ComputeVehicleGroundSupport(
-            supportSamples, wheelCount, g_carYaw);
+            supportSamples, wheelCount, dyna->m_yaw);
         if (onGround && support.valid) {
             // This semantic support reconstruction lets the chassis pitch and
             // roll across axle transitions while the native ellipsoid-contact
@@ -418,7 +440,7 @@ int main(int argc, char* argv[]) {
         if (onGround) {
             GmVec3 currentVelTmp;
             item->GetLinearSpeed(item, &currentVelTmp);
-            g_stub_pos.y = supportedRootY;
+            dyna->m_position.y = supportedRootY;
             const GmVec3 resolvedVelocity =
                 RemoveInwardSupportVelocity(currentVelTmp, groundNormal);
             if (resolvedVelocity.x != currentVelTmp.x ||
@@ -452,9 +474,9 @@ int main(int argc, char* argv[]) {
             GmVec3 traceVelocity;
             item->GetLinearSpeed(item, &traceVelocity);
             std::cout << "ForceTrace t=" << raceTimeMs
-                      << " pos=(" << g_stub_pos.x << ',' << g_stub_pos.y << ',' << g_stub_pos.z << ')'
+                      << " pos=(" << dyna->m_position.x << ',' << dyna->m_position.y << ',' << dyna->m_position.z << ')'
                       << " vel=(" << traceVelocity.x << ',' << traceVelocity.y << ',' << traceVelocity.z << ')'
-                      << " force=(" << g_stub_forces.x << ',' << g_stub_forces.y << ',' << g_stub_forces.z << ')'
+                      << " force=(" << dyna->m_force.x << ',' << dyna->m_force.y << ',' << dyna->m_force.z << ')'
                       << " normal=(" << groundNormal.x << ',' << groundNormal.y << ',' << groundNormal.z << ')'
                       << " groundedWheels=" << groundedWheelCount
                       << " materials=[";

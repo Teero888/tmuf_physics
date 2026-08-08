@@ -121,12 +121,10 @@ void GmVec4::SetBlend(const GmVec4& v1, const GmVec4& v2, float t) {
 }
 
 void GmVec4::SetMult(const GmVec4& v, const GmIso4& m) {
-    // Standard Row Vector multiplication (v * M) 
-    // Assuming the bottom row of M is [0, 0, 0, 1]
-    x = v.x * m.m00 + v.y * m.m10 + v.z * m.m20;
-    y = v.x * m.m01 + v.y * m.m11 + v.z * m.m21;
-    z = v.x * m.m02 + v.y * m.m12 + v.z * m.m22;
-    w = v.x * m.tX  + v.y * m.tY  + v.z * m.tZ + v.w;
+    x = m.m00 * v.x + m.m01 * v.y + m.m02 * v.z + m.tX * v.w;
+    y = m.m10 * v.x + m.m11 * v.y + m.m12 * v.z + m.tY * v.w;
+    z = m.m20 * v.x + m.m21 * v.y + m.m22 * v.z + m.tZ * v.w;
+    w = v.w;
 }
 
 void GmVec4::Mult(const GmIso4& m) {
