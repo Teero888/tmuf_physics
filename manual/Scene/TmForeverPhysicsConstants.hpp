@@ -29,10 +29,25 @@ inline constexpr float kNormalizeSquaredEpsilon = 9.99999943962492920972e-11f;
 inline constexpr float kCollisionNormalizeSquaredEpsilon =
     9.99999943962492920972e-11f; // 0x2EDBE6FE
 
+// .data 0x00d1fb48. TransformByNOMat uses this before normalizing a
+// reflection-recomputed triangle plane.
+inline constexpr float kMeshTransformNormalSquaredEpsilon =
+    9.99999943962492920972e-11f; // 0x2EDBE6FE
+
+// .data 0x00d1fc38. GmSurfPolygon::ComputeNormalFromVertices falls back to
+// +X when the generated normal is shorter than this squared-length threshold.
+inline constexpr float kPolygonNormalSquaredEpsilon =
+    9.99999943962492920972e-11f; // 0x2EDBE6FE
+
 // .rdata 0x00bbdc5c. The native sphere/mesh edge-interior branch has a wider
 // guard than its vertex branch and rejects squared distances at or below
 // 1e-5f before producing a normal.
 inline constexpr float kCollisionEdgeSquaredDistanceEpsilon =
+    9.99999974737875163555e-6f; // 0x3727C5AC
+
+// .rdata 0x00b55d98. Collision-group preparation uses this threshold when
+// comparing two corpuses' squared linear speeds.
+inline constexpr float kCollisionSpeedSquaredDifferenceEpsilon =
     9.99999974737875163555e-6f; // 0x3727C5AC
 
 // .rdata pointer slot 0x00b2c178 resolves to the zero scalar used in the

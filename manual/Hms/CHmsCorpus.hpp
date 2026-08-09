@@ -7,6 +7,8 @@
 #include "GmIso3.hpp"
 #include "GmIso4.hpp"
 #include "GmMat3.hpp"
+#include "GmSurf.hpp"
+#include "CFastBuffer.hpp"
 #include <cstdint>
 
 // Forward Declarations
@@ -54,6 +56,11 @@ public:
     uint32_t m_flags54;                    // 0x54 (Initialized to 0xFFFFFFFF)
     CHmsDyna* m_dyna;                      // 0x58 (Only exists if Corpus is dynamic)
 
+    // Typed standalone collision leaves. Native builds these by recursively
+    // combining the corpus transform with CPlugTree surface nodes; keeping
+    // the resulting located surfaces here avoids any 32-bit offset casts.
+    CFastBuffer<LocatedGmSurf> m_collisionSurfaces;
+
     // =================================================
     // Member Functions
     // =================================================
@@ -71,6 +78,8 @@ public:
     int WaterGetPlaneEqInZone(CHmsCorpus* param_1, GmVec4* param_2);
     
     void ComputeCurrentState(CHmsCorpus* param_1, float param_2);
+    void AddCollisionSurface(GmSurf* surface, const GmIso4& location);
+    void ClearCollisionSurfaces();
     void GetLocation(GmLocFreeVal* param_1, GmIso4* param_2);
     void OldRestoreStaticState(CHmsCorpus* param_1, CClassicBufferMemory* param_2, int param_3, uint8_t param_4, int param_5);
     void RefreshFromSolid(CHmsCorpus* param_1);

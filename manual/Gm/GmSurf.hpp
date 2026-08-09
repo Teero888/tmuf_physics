@@ -90,6 +90,7 @@ public:
 
     GmSurfPolygon(uint8_t param);
     virtual ~GmSurfPolygon();
+    void ComputeNormalFromVertices();
 };
 
 // =================================================

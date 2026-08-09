@@ -16,6 +16,19 @@ void GmIso4::SetTranslation(const GmVec3& trans) {
     tZ = trans.z;
 }
 
+void GmIso4::SetUScaleTrans(float scale, const GmVec3& trans) {
+    SetNUScaleTrans({scale, scale, scale}, trans);
+}
+
+void GmIso4::SetNUScaleTrans(const GmVec3& scale, const GmVec3& trans) {
+    m00 = scale.x; m01 = 0.0f;    m02 = 0.0f;
+    m10 = 0.0f;    m11 = scale.y; m12 = 0.0f;
+    m20 = 0.0f;    m21 = 0.0f;    m22 = scale.z;
+    tX = trans.x;
+    tY = trans.y;
+    tZ = trans.z;
+}
+
 void GmIso4::Set(const GmIso4& other) {
     rot.m00 = other.rot.m00; rot.m01 = other.rot.m01; rot.m02 = other.rot.m02;
     rot.m10 = other.rot.m10; rot.m11 = other.rot.m11; rot.m12 = other.rot.m12;
@@ -52,6 +65,52 @@ void GmIso4::SetInverse(const GmIso4& other) {
 void GmIso4::Inverse() {
     const GmIso4 original = *this;
     SetInverse(original);
+}
+
+void GmIso4::UScaleSetInverse(const GmIso4& other) {
+    rot.SetTranspose(other.rot);
+    const float inverseSquaredScale =
+        1.0f / (m00 * m00 + m01 * m01 + m02 * m02);
+    m00 *= inverseSquaredScale; m01 *= inverseSquaredScale; m02 *= inverseSquaredScale;
+    m10 *= inverseSquaredScale; m11 *= inverseSquaredScale; m12 *= inverseSquaredScale;
+    m20 *= inverseSquaredScale; m21 *= inverseSquaredScale; m22 *= inverseSquaredScale;
+    tX = -other.tX;
+    tY = -other.tY;
+    tZ = -other.tZ;
+    const float inverseTranslationX =
+        m00 * tX + m01 * tY + m02 * tZ;
+    const float inverseTranslationY =
+        m10 * tX + m11 * tY + m12 * tZ;
+    const float inverseTranslationZ =
+        m20 * tX + m21 * tY + m22 * tZ;
+    tX = inverseTranslationX;
+    tY = inverseTranslationY;
+    tZ = inverseTranslationZ;
+}
+
+void GmIso4::NUScaleSetInverse(const GmIso4& other) {
+    rot.SetTranspose(other.rot);
+    const float inverseSquaredScaleX =
+        1.0f / (m00 * m00 + m01 * m01 + m02 * m02);
+    const float inverseSquaredScaleY =
+        1.0f / (m10 * m10 + m11 * m11 + m12 * m12);
+    const float inverseSquaredScaleZ =
+        1.0f / (m20 * m20 + m21 * m21 + m22 * m22);
+    m00 *= inverseSquaredScaleX; m01 *= inverseSquaredScaleX; m02 *= inverseSquaredScaleX;
+    m10 *= inverseSquaredScaleY; m11 *= inverseSquaredScaleY; m12 *= inverseSquaredScaleY;
+    m20 *= inverseSquaredScaleZ; m21 *= inverseSquaredScaleZ; m22 *= inverseSquaredScaleZ;
+    tX = -other.tX;
+    tY = -other.tY;
+    tZ = -other.tZ;
+    const float inverseTranslationX =
+        m00 * tX + m01 * tY + m02 * tZ;
+    const float inverseTranslationY =
+        m10 * tX + m11 * tY + m12 * tZ;
+    const float inverseTranslationZ =
+        m20 * tX + m21 * tY + m22 * tZ;
+    tX = inverseTranslationX;
+    tY = inverseTranslationY;
+    tZ = inverseTranslationZ;
 }
 
 void GmIso4::SetMult(const GmIso4& a, const GmIso4& b) {

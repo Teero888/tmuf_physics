@@ -21,12 +21,29 @@ gaps are below in dependency order.
   clipping path.
 - `GmSurf::ComputeCollision` now applies the native type ordering and reverses
   only newly appended contacts.
-- Sphere/sphere, sphere/oriented-box, and sphere/mesh collision generation plus
+- Sphere/sphere, sphere/ellipsoid, sphere/polygon, sphere/oriented-box,
+  sphere/mesh, ellipsoid/polygon, ellipsoid/mesh, box/box, and box/mesh
+  and mesh/mesh collision generation plus
   `CHmsCollisionBuffer` are translated from the native routines and covered by
-  regression tests. Sphere/mesh currently scans faces in buffer order because
-  the standalone octree is not yet the game's broadphase structure.
+  regression tests. The ellipsoid/polygon tests preserve the executable's
+  unusual polygon-local output frame. Sphere/mesh, ellipsoid/mesh, and box/mesh
+  currently scan faces in buffer order, while mesh/mesh scans triangle pairs
+  in buffer order, because the standalone octree is not yet the game's
+  broadphase structure. Their translated narrowphase and contact payloads are
+  independent of that acceleration structure; first-hit selection can differ
+  when more than one candidate collides.
 - Native affine point/vector transforms, `GmMat3` composition/line access, and
   the typed `GmIso4` inverse/composition/blend operations have focused tests.
+- `GmSurfMesh::TransformByNOMat` now follows the native vertex transform,
+  reflection winding/plane rebuild, and conditional broadphase rebuild path.
+- Native surface defaults and sphere/ellipsoid/box/mesh bounding-box dispatch
+  are connected, including the executable's `-1.0f` empty-box convention.
+- `CHmsCollisionManager` now owns typed zones/groups rather than guessed
+  native-offset padding. Zone add/remove, corpus registration, the five native
+  group-pair records, squared-speed preparation (including the executable's
+  `1e-5f` threshold), pair filtering, and a typed located-surface-to-physical-
+  contact path have focused coverage. This standalone path deliberately stops
+  before the native `CPlugTree` and static-collision-octree recursion.
 
 ## Critical path to a self-contained simulation
 
@@ -44,23 +61,28 @@ gaps are below in dependency order.
 
 ### 1. Finish collision generation and traversal
 
-- Nine `GmSurf` pair handlers are still unconditional no-ops: sphere with
-  ellipsoid/polygon, the ellipsoid pairs, box/box, box/mesh, and mesh/mesh.
+- Every pair handler registered by the native `GmSurf` dispatch matrix now has
+  a translated narrowphase and contact path. Native octree traversal order is
+  still substituted with deterministic face-buffer order for mesh candidates.
+- The native 9x9 registration matrix is now covered exhaustively. In
+  particular, the executable does not register ellipsoid/ellipsoid or
+  ellipsoid/box handlers; earlier manual declarations for those inferred pairs
+  have been removed from the C++ dispatch path.
 - `Gm/GmCollision.cpp` contains older approximate handlers with C linkage.
   They are intentionally not connected to the C++ dispatch table and should be
   replaced with native translations, not enabled as parity implementations.
-- Almost every `CHmsCollisionManager::SGroup` and `SZone` traversal, broadphase,
-  segment query, and corpus detection method is empty.
-- `GmSurfMesh::TransformByNOMat` is empty. The current raycast uses a custom
-  spatial side table rather than the original octree traversal and still has
-  approximate epsilon tests.
+- Corpus-to-corpus detection works for typed located surfaces, but native
+  `CPlugTree` surface extraction, static-collision-octree construction and
+  traversal, tree/root collision recursion, and every manager segment query
+  remain empty.
+- The current raycast uses a custom spatial side table rather than the original
+  octree traversal and still has approximate epsilon tests.
 
-The collision-manager declarations first need typed standalone replacements
-for the executable's 32-bit `LocatedGmSurf`, `CHmsCorpus`, `SGroup`, and
-`SZone` layouts. Their current 64-bit declarations mix guessed padding with
-native offsets, so directly translating `SZone::DetectCollisionsCorpus` would
-be memory-unsafe. Once those wrappers are corrected, that traversal is the
-next useful vertical slice, followed by ellipsoid/mesh contact generation.
+The manager's `SGroup`/`SZone` ownership and dynamic pair tables are now typed,
+but `CHmsCorpus`, `CPlugTree`, and static octree leaves still need equivalent
+typed collision views. The next useful slice is extracting located surfaces
+from a corpus tree and building the static broadphase, then replacing the
+current explicit surface registration with that native traversal.
 
 ### 2. Replace harness-global rigid-body state
 
@@ -84,8 +106,9 @@ next useful vertical slice, followed by ellipsoid/mesh contact generation.
   are implemented. Some weakly typed compatibility entry points remain
   intentionally guarded because their reconstructed signatures are not yet
   trustworthy.
-- Other empty transforms include `GmLocVal` and `GmLocFreeVal` operations;
-  non-uniform-scale inverse paths also still need native validation.
+- Other empty transforms include `GmLocVal` and `GmLocFreeVal` operations.
+  `GmIso4` uniform/non-uniform scale construction and inverse paths now follow
+  their native routines and have focused composition coverage.
 - The game is 32-bit and relies on x87 evaluation plus 32-bit object layouts.
   The current 64-bit build changes pointer-sized layouts and floating-point
   evaluation. A parity build should either target 32-bit explicitly or remove

@@ -136,6 +136,18 @@ if [ $FAIL -eq 0 ]; then
         exit 1
     fi
 
+    echo -n "Compiling collision manager regression ... "
+    if g++ tests/unit/collision_manager_test.cpp $OBJECTS -o build/collision_manager_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/collision_manager_test; then
+        exit 1
+    fi
+
     echo ""
     echo "Run './physics_harness' to validate simulation."
 else

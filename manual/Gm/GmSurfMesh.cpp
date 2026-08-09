@@ -1,5 +1,6 @@
 #include "GmSurf.hpp"
 #include "GmFunc.hpp"
+#include "TmForeverPhysicsConstants.hpp"
 #include <cmath>
 #include <algorithm>
 #include <cstdint>
@@ -257,8 +258,19 @@ int GmSurfMesh::ClipSegment3(
 
 void GmSurfMesh::GetMeshBoundingBox(GmBoxAligned& outBox) const {
     outBox.InitEmpty();
-    for (uint32_t i = 0; i < m_vertices.m_count; ++i) {
-        outBox.Union(m_vertices[i]);
+    // Native 0x008f02d0 returns the root octree bounds when triangles exist,
+    // and an empty box otherwise. The standalone broadphase is a side table,
+    // so reconstruct the same root geometry from referenced face vertices.
+    if (m_triangles.m_count == 0u) return;
+    for (uint32_t triangleIndex = 0;
+         triangleIndex < m_triangles.m_count;
+         ++triangleIndex) {
+        const GmSurfTriangle& triangle = m_triangles[triangleIndex];
+        for (uint32_t corner = 0; corner < 3u; ++corner) {
+            if (triangle.indices[corner] < m_vertices.m_count) {
+                outBox.Union(m_vertices[triangle.indices[corner]]);
+            }
+        }
     }
 }
 
@@ -327,7 +339,53 @@ void GmSurfMesh::BuildOctree() {
 
     g_gmSurfMeshSpatialIndices.emplace(this, std::move(index));
 }
-void GmSurfMesh::TransformByNOMat(const GmIso4& transform) {}
+void GmSurfMesh::TransformByNOMat(const GmIso4& transform) {
+    // Native 0x008f3ea0 first bakes the affine transform into every vertex.
+    // It only rebuilds triangle planes when the transform changes handedness;
+    // direct transforms deliberately leave the stored planes untouched.
+    const bool hadSpatialIndex =
+        g_gmSurfMeshSpatialIndices.find(this) !=
+        g_gmSurfMeshSpatialIndices.end();
+    for (uint32_t vertexIndex = 0;
+         vertexIndex < m_vertices.m_count;
+         ++vertexIndex) {
+        m_vertices[vertexIndex].Mult(transform);
+    }
+
+    if (transform.rot.IsIndirect()) {
+        for (uint32_t triangleIndex = 0;
+             triangleIndex < m_triangles.m_count;
+             ++triangleIndex) {
+            GmSurfTriangle& triangle = m_triangles[triangleIndex];
+            std::swap(triangle.indices[1], triangle.indices[2]);
+            if (triangle.indices[0] >= m_vertices.m_count ||
+                triangle.indices[1] >= m_vertices.m_count ||
+                triangle.indices[2] >= m_vertices.m_count) {
+                continue;
+            }
+
+            const GmVec3& first = m_vertices[triangle.indices[0]];
+            const GmVec3 edgeA =
+                m_vertices[triangle.indices[1]] - first;
+            const GmVec3 edgeB =
+                m_vertices[triangle.indices[2]] - first;
+            GmVec3 normal = GmVec3::Cross(edgeA, edgeB);
+            const float normalLengthSquared = GmVec3::Dot(normal, normal);
+            if (normalLengthSquared >
+                TmForeverPhysicsConstants::
+                    kMeshTransformNormalSquaredEpsilon) {
+                normal *= 1.0f / std::sqrt(normalLengthSquared);
+            }
+            triangle.planeNormal = normal;
+            triangle.planeDist = -GmVec3::Dot(normal, first);
+        }
+    }
+
+    // The executable rebuilds its octree only when one was already present.
+    // The standalone vertical-ray side table is the corresponding broadphase
+    // cache and must follow the same invalidation rule.
+    if (m_octree.GetCount() != 0u || hadSpatialIndex) BuildOctree();
+}
 
 #include <sstream>
 

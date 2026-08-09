@@ -1,4 +1,5 @@
 #include "CPlugSurface.hpp"
+#include "GmSurf.hpp"
 
 CPlugSurface::CPlugSurface() : CMwNod(), m_nod14(nullptr) {}
 CPlugSurface::~CPlugSurface() {}
@@ -7,7 +8,7 @@ CMwClassInfo* CPlugSurface::MwGetClassInfo(CFuncSegment* param_1) { return nullp
 CMwNod* CPlugSurface::MwNewCPlugSurface() { return new CPlugSurface(); }
 
 int CPlugSurface::ComputeCollision(LocatedGmSurf* param_1, LocatedGmSurf* param_2, CGmCollisionBuffer* param_3) {
-    return 0;
+    return GmSurf::ComputeCollision(param_1, param_2, param_3);
 }
 
 int CPlugSurface::MwIsKindOf(uint32_t classId) { return 0; }

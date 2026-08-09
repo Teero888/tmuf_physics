@@ -6,6 +6,7 @@
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
 #include <cstdint>
+#include <vector>
 
 // Forward declarations
 class CHmsCorpus;
@@ -31,15 +32,31 @@ class CHmsCollisionManager : public CMwNod {
 public:
     struct SGroup {
         struct SAgainstGroup {
-            SGroup* m_against; // 0x00
-            void* m_data;      // 0x04
-            virtual ~SAgainstGroup();
+            SGroup* m_against = nullptr;
+            uint32_t m_config[5]{};
+            uint32_t m_lineCount = 0;
+            uint32_t m_columnCount = 0;
+            std::vector<uint32_t> m_isToPerformCollision;
+
+            uint32_t& Get(uint32_t line, uint32_t column) {
+                return m_isToPerformCollision[
+                    line * m_columnCount + column];
+            }
         };
 
-        virtual ~SGroup();
-        uint8_t m_padding[0x20 - 0x04];
-        CFastBuffer<SAgainstGroup> m_againstGroups; // 0x20
-        uint8_t m_padding2[0x44 - 0x2C]; // Total size 0x44
+        // Native 32-bit offsets are 0x00, 0x0c, 0x18, 0x24, and 0x30.
+        // These typed members preserve the same semantics without pretending
+        // pointer-sized C++ objects retain the executable's byte offsets.
+        CFastBuffer<CHmsCorpus*> m_corpuses;
+        CFastBuffer<CHmsCorpus*> m_nonStaticCorpuses;
+        CFastBuffer<float> m_squaredLinearSpeeds;
+        std::vector<SAgainstGroup> m_againstGroups;
+        CFastBuffer<uint8_t> m_staticCollisionTreeData;
+        uint32_t m_groupId = 0;
+        uint32_t m_skipDynamicPairPreparation = 0;
+
+        SGroup() = default;
+        ~SGroup() = default;
 
         void AddCorpus(CHmsZone* param_1, CHmsCorpus* param_2);
         void AddNonStaticCorpus(CHmsCorpus* param_2);
@@ -53,15 +70,17 @@ public:
     };
 
     struct SZone {
-        virtual ~SZone();
-        SGroup m_groups[5]; // 0x04 to 0x153
-        
-        // 0x154: GmMap2
-        uint8_t m_padding[0x15c - 0x154];
-        uint32_t m_field_0x15c;
-        // ...
-        CHmsCorpus* m_corpus18c;
-        LocatedGmSurf* m_surf190;
+        SGroup m_groups[5];
+        uint32_t m_zoneId = 0;
+        CHmsCollisionManager* m_manager = nullptr;
+        CHmsCorpus* m_corpus18c = nullptr;
+        LocatedGmSurf* m_surf190 = nullptr;
+        CHmsCollisionBuffer* m_activeCollisionBuffer = nullptr;
+
+        SZone(uint32_t zoneId, CHmsCollisionManager* manager);
+        ~SZone() = default;
+
+        void RebuildPairTables();
 
         int ComputeCollision(LocatedGmSurf* param_1, LocatedGmSurf* param_2, CGmCollisionBuffer* param_3);
         int ComputeCollisionTree1RootOnly(SPlugTreeLocatedPair* param_2, GmBoxAligned* param_3);
@@ -81,8 +100,10 @@ public:
         void UpdateStaticCollisionTrees(CHmsCollisionManager* param_1);
     };
 
-    uint8_t m_padding_0x14[16];
+    // Native fields +0x14 and +0x18. They are typed semantically for the
+    // standalone 64-bit build rather than accessed through native offsets.
     uint32_t m_field_0x14;
+    CFastBuffer<SZone*> m_zones;
 
     CHmsCollisionManager();
     virtual ~CHmsCollisionManager();

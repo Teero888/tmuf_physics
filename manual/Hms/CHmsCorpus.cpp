@@ -50,6 +50,19 @@ CHmsCorpus::~CHmsCorpus() {
     }
 }
 
+void CHmsCorpus::AddCollisionSurface(
+    GmSurf* surface, const GmIso4& location) {
+    if (surface == nullptr) return;
+    LocatedGmSurf located{};
+    located.m_surf = surface;
+    located.m_location = location;
+    m_collisionSurfaces.Add(located);
+}
+
+void CHmsCorpus::ClearCollisionSurfaces() {
+    m_collisionSurfaces.m_count = 0;
+}
+
 void* CHmsCorpus::_vector_deleting_destructor_(CRpcCallInternal* param_1, uint32_t param_2) {
     this->~CHmsCorpus();
     if ((param_2 & 1) != 0) {

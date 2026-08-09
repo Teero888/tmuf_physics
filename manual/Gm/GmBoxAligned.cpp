@@ -264,7 +264,9 @@ void GmBoxAligned::ArchiveABoxOld1(CClassicArchive* archive) {
 
 void GmBoxAligned::InitEmpty() {
     this->center = GmVec3{0, 0, 0};
-    this->extents = GmVec3{-1e30f, -1e30f, -1e30f}; // Indicates empty
+    // Native empty boxes use the shared -1.0f scalar. IsNull checks only the
+    // X extent, but all three components are initialized identically.
+    this->extents = GmVec3{-1.0f, -1.0f, -1.0f};
 }
 
 void GmBoxAligned::Union(GmBoxAligned* out, const GmBoxAligned* a, const GmBoxAligned* b) {

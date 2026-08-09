@@ -41,8 +41,14 @@ int main() {
                                     kNormalizeSquaredEpsilon);
     passed &= ExpectExecutableValue(executable, "collision normalization epsilon", 0x91a938,
                                     kCollisionNormalizeSquaredEpsilon);
+    passed &= ExpectExecutableValue(executable, "mesh transform normal epsilon", 0x91fb48,
+                                    kMeshTransformNormalSquaredEpsilon);
+    passed &= ExpectExecutableValue(executable, "polygon normal epsilon", 0x91fc38,
+                                    kPolygonNormalSquaredEpsilon);
     passed &= ExpectExecutableValue(executable, "collision edge squared-distance epsilon", 0x7bdc5c,
                                     kCollisionEdgeSquaredDistanceEpsilon);
+    passed &= ExpectExecutableValue(executable, "collision speed squared-difference epsilon", 0x755d98,
+                                    kCollisionSpeedSquaredDifferenceEpsilon);
     passed &= ExpectExecutableValue(executable, "speed curve scale", 0x73d2a8,
                                     kSpeedCurveScale);
     passed &= ExpectExecutableValue<std::uint32_t>(executable, "zero scalar slot", 0x72c178, 0);
