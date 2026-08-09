@@ -38,3 +38,6 @@ manual/*.tmnfcol
 manual/TrackCollisionExtractor/bin
 manual/TrackCollisionExtractor/obj
 .cache
+
+manual/physics_harness
+manual/visualization/interactive_physics_test
