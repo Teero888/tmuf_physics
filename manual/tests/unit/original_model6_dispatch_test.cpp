@@ -72,9 +72,117 @@ int main() {
     passed &= ExpectBytes(executable, "Model6 eleven-argument return", 0x3c6824,
                           std::array<std::uint8_t, 3>{0xc2, 0x2c, 0x00});
 
+    // EngineIntegrate is a two-stack-argument thiscall. IntegrateVehicle
+    // checks freewheel and reverse itself, lays down input followed by dt, and
+    // calls the sole engine entry point.
+    passed &= ExpectBytes(executable, "EngineIntegrate two-argument return", 0x3be2a0,
+                          std::array<std::uint8_t, 3>{0xc2, 0x08, 0x00});
+    passed &= ExpectBytes(executable, "engine freewheel check", 0x3c3afc,
+                          std::array<std::uint8_t, 7>{0x83, 0xbe, 0x0c, 0x06, 0x00, 0x00, 0x00});
+    passed &= ExpectBytes(executable, "engine reverse-input check", 0x3c3b0f,
+                          std::array<std::uint8_t, 7>{0x83, 0xbe, 0xc4, 0x05, 0x00, 0x00, 0x00});
+    passed &= ExpectBytes(executable, "EngineIntegrate call", 0x3c3b38,
+                          std::array<std::uint8_t, 5>{0xe8, 0xc3, 0x9b, 0xff, 0xff});
+
+    // ComputeForces passes its local-speed stack vector as the sole argument
+    // to ApplyFrictionForces. Both native exits pop exactly that pointer.
+    passed &= ExpectBytes(executable, "ApplyFrictionForces call", 0x3c6ba3,
+                          std::array<std::uint8_t, 5>{0xe8, 0x68, 0x81, 0xff, 0xff});
+    passed &= ExpectBytes(executable, "ApplyFrictionForces one-argument return",
+                          0x3bef4d,
+                          std::array<std::uint8_t, 3>{0xc2, 0x04, 0x00});
+    passed &= ExpectBytes(executable, "ApplyFrictionForces second return",
+                          0x3bf07d,
+                          std::array<std::uint8_t, 3>{0xc2, 0x04, 0x00});
+
+    // ComputeForces snapshots the accumulated local force before friction.
+    // Model6 then loads that second formal argument and forwards it as the
+    // sole stack argument to ApplyWaterForces.
+    passed &= ExpectBytes(executable, "pre-friction force snapshot",
+                          0x3c6b8a,
+                          std::array<std::uint8_t, 10>{
+                              0x8d, 0x44, 0x24, 0x48, 0x50,
+                              0xe8, 0x4c, 0x50, 0xd7, 0xff});
+    passed &= ExpectBytes(executable, "Model6 water-force argument load",
+                          0x3c3eaa,
+                          std::array<std::uint8_t, 7>{
+                              0x8b, 0x84, 0x24, 0x48, 0x01, 0x00, 0x00});
+    passed &= ExpectBytes(executable, "ApplyWaterForces call",
+                          0x3c3ec4,
+                          std::array<std::uint8_t, 8>{
+                              0x50, 0x8b, 0xcb, 0xe8,
+                              0x44, 0xea, 0xff, 0xff});
+    passed &= ExpectBytes(executable, "Model6 wheel suspension call",
+                          0x3c492d,
+                          std::array<std::uint8_t, 5>{
+                              0xe8, 0xde, 0xce, 0xff, 0xff});
+    passed &= ExpectBytes(executable, "central vehicle impulse one-argument return",
+                          0x3be6cf,
+                          std::array<std::uint8_t, 3>{0xc2, 0x04, 0x00});
+
+    // ComputeCollisionResponse builds 0x4C-byte contacts. The second corpus
+    // is stored exactly +0x40 from the first record at stack +0x50, and its
+    // material exactly +0x48 at stack +0x98.
+    passed &= ExpectBytes(executable, "physical contact opposite corpus +0x40",
+                          0x149879,
+                          std::array<std::uint8_t, 11>{
+                              0x89, 0x7c, 0x24, 0x50,
+                              0x89, 0xac, 0x24, 0x90, 0x00, 0x00, 0x00});
+    passed &= ExpectBytes(executable, "physical contact opposite material +0x48",
+                          0x1498b8,
+                          std::array<std::uint8_t, 9>{
+                              0x66, 0x89, 0x94, 0x24, 0x98,
+                              0x00, 0x00, 0x00, 0xd9});
+
+    // The generic scene-mobil contact callback has two stack arguments; the
+    // car virtual and wheel lookup have one, while WheelAbsorbContact has two.
+    passed &= ExpectBytes(executable, "scene mobil absorb two-argument return",
+                          0x3b3a06,
+                          std::array<std::uint8_t, 3>{0xc2, 0x08, 0x00});
+    passed &= ExpectBytes(executable, "vehicle absorb one-argument return",
+                          0x3c38da,
+                          std::array<std::uint8_t, 3>{0xc2, 0x04, 0x00});
+    passed &= ExpectBytes(executable, "wheel lookup one-argument return",
+                          0x3bd07b,
+                          std::array<std::uint8_t, 3>{0xc2, 0x04, 0x00});
+    passed &= ExpectBytes(executable, "wheel absorb two-argument return",
+                          0x3c17f9,
+                          std::array<std::uint8_t, 3>{0xc2, 0x08, 0x00});
+    passed &= ExpectBytes(executable, "vehicle other-material access",
+                          0x3c3419,
+                          std::array<std::uint8_t, 4>{0x0f, 0xb7, 0x47, 0x48});
+    passed &= ExpectBytes(executable, "SDynaMath plain seven-argument return",
+                          0x3bd1dd,
+                          std::array<std::uint8_t, 1>{0xc3});
+    passed &= ExpectBytes(executable, "SDynaMath caller cleanup",
+                          0x3c387b,
+                          std::array<std::uint8_t, 3>{0x83, 0xc4, 0x1c});
+    passed &= ExpectBytes(executable, "local point vehicle impulse return",
+                          0x3be689,
+                          std::array<std::uint8_t, 3>{0xc2, 0x08, 0x00});
+    passed &= ExpectBytes(executable, "wheel opposite corpus token load",
+                          0x3c129c,
+                          std::array<std::uint8_t, 5>{
+                              0x8b, 0x4f, 0x40, 0x85, 0xc9});
+    passed &= ExpectBytes(executable, "wheel opposite +Z axis extraction",
+                          0x3c12b1,
+                          std::array<std::uint8_t, 6>{
+                              0xd9, 0x40, 0x08, 0xd9, 0x5c, 0x24});
+    passed &= ExpectBytes(executable, "wheel opposite corpus token retention",
+                          0x3c12e4,
+                          std::array<std::uint8_t, 9>{
+                              0x8b, 0x4f, 0x40, 0x89, 0x8e,
+                              0x3c, 0x01, 0x00, 0x00});
+    passed &= ExpectBytes(executable, "ground contact id three-argument return",
+                          0x3bf6a1,
+                          std::array<std::uint8_t, 3>{0xc2, 0x0c, 0x00});
+
     // Runtime SMwParamInfo descriptors provide the exact 32-bit object
     // offsets used by both Model3 and Model6.
     passed &= ExpectTuningOffset(executable, 0x002, 0x034); // AccelCurve
+    passed &= ExpectTuningOffset(executable, 0x00b, 0x058); // GroundSlowDownBase
+    passed &= ExpectTuningOffset(executable, 0x00c, 0x05c); // LinearFluidFrictionCoef
+    passed &= ExpectTuningOffset(executable, 0x00e, 0x1e8); // M5 contact duration
     passed &= ExpectTuningOffset(executable, 0x01c, 0x094); // SteerSpeed
     passed &= ExpectTuningOffset(executable, 0x01d, 0x074); // SteerLowSpeed
     passed &= ExpectTuningOffset(executable, 0x01e, 0x098); // SteerGroundTorque
@@ -84,7 +192,36 @@ int main() {
     passed &= ExpectTuningOffset(executable, 0x024, 0x0b0); // sliding coefficient
     passed &= ExpectTuningOffset(executable, 0x025, 0x0b4); // blend coefficient
     passed &= ExpectTuningOffset(executable, 0x030, 0x0e4); // legacy wheel blend
+    passed &= ExpectTuningOffset(executable, 0x03b, 0x204); // WaterGravity
+    passed &= ExpectTuningOffset(executable, 0x03c, 0x208); // rebound minimum H speed
+    passed &= ExpectTuningOffset(executable, 0x03d, 0x20c); // bump minimum speed
+    passed &= ExpectTuningOffset(executable, 0x03e, 0x214); // bump slowdown curve
+    passed &= ExpectTuningOffset(executable, 0x03f, 0x210); // rebound curve
+    passed &= ExpectTuningOffset(executable, 0x040, 0x218); // water friction curve
+    passed &= ExpectTuningOffset(executable, 0x041, 0x21c); // angular friction
+    passed &= ExpectTuningOffset(executable, 0x042, 0x220); // angular friction squared
+    passed &= ExpectTuningOffset(executable, 0x048, 0x0e8); // angular Y impulse scale
+    passed &= ExpectTuningOffset(executable, 0x049, 0x0ec); // angular impulse scale
+    passed &= ExpectTuningOffset(executable, 0x04b, 0x11c); // AbsorbingValMin
+    passed &= ExpectTuningOffset(executable, 0x050, 0x14c); // angular speed clamp
+    passed &= ExpectTuningOffset(executable, 0x051, 0x150); // linear speed^2 delta clamp
+    passed &= ExpectTuningOffset(executable, 0x05a, 0x170); // body friction
+    passed &= ExpectTuningOffset(executable, 0x05b, 0x17c); // body restitution
+    passed &= ExpectTuningOffset(executable, 0x05c, 0x174); // metal body friction
+    passed &= ExpectTuningOffset(executable, 0x05d, 0x178); // metal body restitution
+    passed &= ExpectTuningOffset(executable, 0x05e, 0x180); // concrete wheel friction
+    passed &= ExpectTuningOffset(executable, 0x05f, 0x184); // concrete wheel restitution
+    passed &= ExpectTuningOffset(executable, 0x060, 0x188); // metal wheel friction
+    passed &= ExpectTuningOffset(executable, 0x061, 0x18c); // metal wheel restitution
     passed &= ExpectTuningOffset(executable, 0x065, 0x354); // SteerModel
+    passed &= ExpectTuningOffset(executable, 0x0b1, 0x2d4); // M6MaxRPM
+    passed &= ExpectTuningOffset(executable, 0x0b2, 0x2e0); // M6MinRPM
+    passed &= ExpectTuningOffset(executable, 0x0b3, 0x2c4); // M6GearRatio
+    passed &= ExpectTuningOffset(executable, 0x0b4, 0x2f8); // M6RpmWantedOnGearUp
+    passed &= ExpectTuningOffset(executable, 0x0bc, 0x32c); // positive front speed
+    passed &= ExpectTuningOffset(executable, 0x0bd, 0x330); // positive rear speed
+    passed &= ExpectTuningOffset(executable, 0x0be, 0x334); // negative front speed
+    passed &= ExpectTuningOffset(executable, 0x0bf, 0x338); // negative rear speed
 
     if (!passed) return 1;
     std::puts("original Model6 dispatch/layout regression: PASS");

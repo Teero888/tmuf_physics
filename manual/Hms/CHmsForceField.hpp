@@ -15,15 +15,19 @@ class CFuncColorGradient;
 
 class CHmsForceField : public CMwNod {
 public:
-    CHmsZone* m_zone;    // 0x14
-    uint8_t m_padding[64];
-    uint32_t m_field_0x58;
+    CHmsZone* m_zone;             // native +0x14
+    uint8_t m_padding[60];        // native +0x18 .. +0x53
+    int32_t m_isActive;           // native +0x54 (inherited CHmsPoc state)
+    uint32_t m_field_0x58;        // native +0x58
 
     CHmsForceField();
     virtual ~CHmsForceField();
 
     virtual CMwClassInfo* GetClassInfo() override { return nullptr; }
-    virtual GmVec3 GetValue(CFuncColorGradient* param_1, float param_2) { return GmVec3(0,0,0); }
+    // Vtable +0x8C in the 32-bit executable. The field writes a world-space
+    // acceleration for the queried point and returns whether it applies.
+    virtual bool GetValue(
+        const GmVec3& position, GmVec3& value) const;
 
     CMwClassInfo* MwGetClassInfo(CFuncSegment* param_1);
     static CMwNod* MwNewCHmsForceField();

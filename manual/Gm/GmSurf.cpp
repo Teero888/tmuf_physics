@@ -507,6 +507,54 @@ GmSurf::GmSurf() {
 
 GmSurf::~GmSurf() {}
 
+int GmSurf::ClipSegment(
+    const GmVec3& rayPos,
+    const GmVec3& rayDir,
+    const GmIso4& transform,
+    float& outT,
+    GmVec3& outNormal) {
+    if (m_type == 0u) {
+        return static_cast<GmSurfSphere*>(this)->ClipSegment(
+            rayPos, rayDir,
+            GmVec3(transform.tX, transform.tY, transform.tZ), outT);
+    }
+    if (m_type == 7u) {
+        return static_cast<GmSurfMesh*>(this)->ClipSegment(
+            rayPos, rayDir, transform, outT);
+    }
+    return 0;
+}
+
+int GmSurf::ClipSegment2(
+    const GmVec3& rayPos,
+    const GmVec3& rayDir,
+    const GmIso4& transform,
+    float& outT,
+    GmVec3& outNormal) {
+    if (m_type != 7u) return 0;
+    return static_cast<GmSurfMesh*>(this)->ClipSegment2(
+        rayPos, rayDir, transform, outT, outNormal);
+}
+
+int GmSurf::ClipSegment3(
+    const GmVec3& rayPos,
+    const GmVec3& rayDir,
+    const GmIso4& transform,
+    float& outT,
+    uint16_t& outId) {
+    if (m_type == 0u) {
+        outId = m_flags;
+        return static_cast<GmSurfSphere*>(this)->ClipSegment(
+            rayPos, rayDir,
+            GmVec3(transform.tX, transform.tY, transform.tZ), outT);
+    }
+    if (m_type == 7u) {
+        return static_cast<GmSurfMesh*>(this)->ClipSegment3(
+            rayPos, rayDir, transform, outT, outId);
+    }
+    return 0;
+}
+
 // External collision function prototypes
 extern int GmCollision_Sphere_Sphere(LocatedGmSurf* a, LocatedGmSurf* b, CGmCollisionBuffer* buf);
 extern int GmCollision_Sphere_Ellipsoid(LocatedGmSurf* a, LocatedGmSurf* b, CGmCollisionBuffer* buf);
@@ -606,6 +654,26 @@ GmSurfEllipsoid::~GmSurfEllipsoid() {}
 // GmSurfSphere (Type 0)
 GmSurfSphere::GmSurfSphere() { m_type = 0; }
 GmSurfSphere::~GmSurfSphere() {}
+
+int GmSurfSphere::ClipSegment(
+    const GmVec3& rayPos,
+    const GmVec3& rayDir,
+    const GmVec3& center,
+    float& outT) {
+    const GmVec3 delta = rayPos - center;
+    const float projection = GmVec3::Dot(delta, rayDir);
+    const float directionSquared = GmVec3::Dot(rayDir, rayDir);
+    const float discriminant =
+        projection * projection -
+        (GmVec3::Dot(delta, delta) - m_radius * m_radius) *
+            directionSquared;
+    if (discriminant < 0.0f || directionSquared == 0.0f) return 0;
+    const float hitT =
+        (-projection - std::sqrt(discriminant)) / directionSquared;
+    if (hitT < 0.0f || hitT > 1.0f) return 0;
+    outT = hitT;
+    return 1;
+}
 
 void GmSurfSphere::GetSphereBoundingBox(GmBoxAligned& outBox) const {
     outBox.center = {0.0f, 0.0f, 0.0f};

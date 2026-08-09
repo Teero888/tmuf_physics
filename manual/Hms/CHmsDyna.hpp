@@ -5,7 +5,10 @@
 #include "GmMat3.hpp"
 #include "GmIso4.hpp"
 #include "GmQuat.hpp"
+#include "CFastBuffer.hpp"
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 // Forward declarations
 class CHmsItem;
@@ -15,66 +18,55 @@ class CSceneToyBoat;
 class CScenePoc;
 class CHmsCorpus;
 class CPlugTree;
+class CPlugPhysicalObject;
 struct SPredictionTypeVector;
 enum EPredictionType : int;
 struct SHistoryPoint;
 
 class CHmsDyna {
 public:
-    class CHmsStateDyna {
+    struct CHmsStateDyna {
     public:
-        virtual ~CHmsStateDyna(); // vftable at 0x00
-        int m_field_0x4;
-        uint8_t m_padding_0x8[56];
-        uint32_t m_field_0x40;
-        uint32_t m_field_0x44;
-        uint32_t m_field_0x48;
-        uint32_t m_field_0x4c;
-        uint32_t m_field_0x50;
-        uint32_t m_field_0x54;
-        uint32_t m_field_0x58;
-        uint32_t m_field_0x5c;
-        uint32_t m_field_0x60;
-        uint32_t m_field_0x64;
-        uint32_t m_field_0x68;
-        uint32_t m_field_0x6c;
-        uint32_t m_field_0x70;
-        uint32_t m_field_0x74;
-        uint32_t m_field_0x78;
-        uint8_t m_padding_0x7c[36];
-        uint32_t m_field_0xa0;
-        uint32_t m_field_0xa4;
-        uint32_t m_field_0xa8;
-        uint32_t m_field_0xac;
+        GmQuat m_rotation;                 // 0x00
+        GmMat3 m_rotationMatrix;           // 0x10
+        GmVec3 m_position;                 // 0x34
+        GmVec3 m_linearSpeed;              // 0x40
+        GmVec3 m_additionalLinearSpeed;    // 0x4C
+        GmVec3 m_angularSpeed;             // 0x58
+        GmVec3 m_force;                    // 0x64
+        GmVec3 m_torque;                   // 0x70
+        GmMat3 m_worldInverseInertia;       // 0x7C
+        uint32_t m_hasSavedLinearSpeed;     // 0xA0
+        GmVec3 m_savedLinearSpeed;          // 0xA4
+        uint32_t m_owner32;                 // 0xB0
 
         // Member Functions
         void OldRestoreState(CClassicBufferMemory* param_2, uint8_t param_3);
         void Reset(GmFrustumIso4* param_1);
         void RestoreState(CClassicBufferMemory* param_2, uint8_t param_3);
+        void Initialize();
     };
 
     virtual ~CHmsDyna(); // 0x00
     uint32_t m_field_0x4;
     uint32_t m_field_0x8;
-    uint8_t m_padding_0xc[180];
+    CHmsStateDyna m_asyncState;             // native +0x00C
     uint32_t m_field_0xc0;
-    uint32_t m_field_0xc4;
+    float m_field_0xc4;
     uint8_t m_padding_0xc8[48];
     float m_field_0xf8;
     float m_field_0xfc;
     float m_field_0x100;
     uint32_t m_field_0x104;
-    float* m_field_0x108;
-    uint8_t m_padding_0x10c[176];
-    void* m_field_0x1bc;
-    uint8_t m_padding_0x1c0[176];
-    void* m_field_0x270;
-    uint8_t m_padding_0x274[180];
-    GmQuat* m_field_0x328;
-    CHmsStateDyna* m_field_0x32c;
+    CPlugPhysicalObject* m_field_0x108;
+    CHmsStateDyna m_validatedStateStorage;  // native +0x10C
+    CHmsStateDyna m_currentStateStorage;    // native +0x1C0
+    CHmsStateDyna m_tempState;              // native +0x274
+    CHmsStateDyna* m_validatedState;        // native +0x328
+    CHmsStateDyna* m_currentState;          // native +0x32C
     uint8_t m_padding_0x330[12];
     uint32_t m_field_0x33c;
-    CHmsItem* m_field_0x340;
+    int m_dynamicType;                      // native +0x340
     uint8_t m_padding_0x344[4];
     int m_field_0x348;
     uint32_t m_field_0x34c;
@@ -150,22 +142,33 @@ public:
     uint32_t m_field_0x564;
     uint8_t m_padding_0x568[36];
     GmMat3* m_field_0x58c;
-
-    // Typed standalone state mirroring the fields recovered in
-    // CHmsStateDyna: translation +0x34, linear speed +0x40, angular speed
-    // +0x58, force +0x64, and torque +0x70. Keeping these values on the body
-    // is essential even though the legacy guessed padding above cannot retain
-    // the executable's 32-bit offsets in a 64-bit build.
-    GmVec3 m_position;
-    GmVec3 m_force;
-    GmVec3 m_torque;
-    GmVec3 m_angularSpeed;
-    GmVec3 m_preStepLinearSpeed;
-    GmVec3 m_preStepAngularSpeed;
-    float m_yaw;
+    // The executable stores this CFastBuffer<GmVec3> in the 12-byte region at
+    // +0x330. Keep host-pointer storage out-of-line so the following native
+    // field map is not shifted by 64-bit pointers.
+    CFastBuffer<GmVec3> m_replacements;
 
     // Member Functions
     CHmsDyna();
+    CHmsDyna(const CHmsDyna&) = delete;
+    CHmsDyna& operator=(const CHmsDyna&) = delete;
+
+    CHmsStateDyna& CurrentState() { return *m_currentState; }
+    const CHmsStateDyna& CurrentState() const { return *m_currentState; }
+    CHmsStateDyna& ValidatedState() { return *m_validatedState; }
+    const CHmsStateDyna& ValidatedState() const { return *m_validatedState; }
+    GmVec3& Position() { return m_currentState->m_position; }
+    const GmVec3& Position() const { return m_currentState->m_position; }
+    GmVec3& Force() { return m_currentState->m_force; }
+    const GmVec3& Force() const { return m_currentState->m_force; }
+    GmVec3& Torque() { return m_currentState->m_torque; }
+    const GmVec3& Torque() const { return m_currentState->m_torque; }
+    GmVec3& AngularSpeed() { return m_currentState->m_angularSpeed; }
+    const GmVec3& AngularSpeed() const { return m_currentState->m_angularSpeed; }
+    float GetMass() const;
+    GmVec3 GetCenterOfMassWorld() const;
+    void UpdateWorldInverseInertia();
+    float GetYaw() const;
+    void SetYaw(float yaw);
 
     SHistoryPoint* AddHistoryPoint(GmVec3* param_2, GmMat3* param_3, uint32_t param_4);
     SHistoryPoint* GetLastHistoryPointMinusOne();
@@ -207,7 +210,8 @@ public:
     void GetLocalAngularSpeed(GmVec3* param_2);
     void GetLocalForce(GmVec3* param_2);
     void GetLocalLinearSpeed(GmVec3* param_2);
-    void GetSpeed(CScenePoc* param_1, GmVec3* param_2);
+    void GetSpeed(const GmVec3* point, GmVec3* speed);
+    void AddImpulseAtPoint(const GmVec3* impulse, const GmVec3* point);
     
     void IntegrateStep(CHmsStateDyna* param_2, CHmsStateDyna* param_3, float param_4);
     void Integrate(float dt);
@@ -240,5 +244,20 @@ public:
     void UpdateHistory(uint32_t param_2);
     void ValidateDynamicState();
 };
+
+static_assert(sizeof(CHmsDyna::CHmsStateDyna) == 0xB4,
+              "CHmsStateDyna must retain the native 0xB4-byte layout");
+static_assert(std::is_standard_layout<CHmsDyna::CHmsStateDyna>::value);
+static_assert(std::is_trivially_copyable<CHmsDyna::CHmsStateDyna>::value);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_rotationMatrix) == 0x10);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_position) == 0x34);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_linearSpeed) == 0x40);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_additionalLinearSpeed) == 0x4C);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_angularSpeed) == 0x58);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_force) == 0x64);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_torque) == 0x70);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_worldInverseInertia) == 0x7C);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_hasSavedLinearSpeed) == 0xA0);
+static_assert(offsetof(CHmsDyna::CHmsStateDyna, m_owner32) == 0xB0);
 
 #endif // CHMSDYNA_HPP

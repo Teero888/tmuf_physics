@@ -6,6 +6,10 @@
 #include "Hms/CHmsDyna.hpp"
 #include "Hms/CHmsItem.hpp"
 #include "Hms/CHmsZoneDynamic.hpp"
+#include "Hms/CHmsForceFieldUniform.hpp"
+#include "Plug/CPlugPhysicalObject.hpp"
+#include "Scene/CCallbackSceneVehicleCarComputeForces.hpp"
+#include "Scene/CSceneMobilAbsorbContact.hpp"
 #include "Scene/CSceneVehicleCar.hpp"
 #include "Scene/CSceneVehicleCarTuning.hpp"
 #include "Scene/TmForeverPhysicsConstants.hpp"
@@ -249,14 +253,34 @@ public:
         zone = new CHmsZoneDynamic();
 
         car->m_hmsItem = item;
+        item->m_sceneMobil = car;
+        item->CallbackSet(
+            CB_PHYSICS,
+            CCallbackSceneVehicleCarComputeForces::Instance());
+        item->CallbackSet(
+            CB_ABSORB_CONTACT,
+            CSceneMobilAbsorbContact::Instance());
         item->m_corpuses.Add(corpus);
         corpus->m_dyna = dyna;
         corpus->m_item = item;
-        zone->m_dynamicItems.Add(item);
+        zone->m_dynamicCorpuses.Add(corpus);
         car->m_simulationFlags = 7;
 
         InitTuningData(&tuning);
         g_tuning = &tuning;
+        physicalObject.m_mass = tuning.m_mass;
+        physicalObject.m_forceFieldCoef = tuning.m_gravityCoef;
+        physicalObject.SetInertiaMatrixBox(
+            tuning.m_inertiaMass,
+            GmVec3(tuning.m_inertiaHalfDiagX,
+                   tuning.m_inertiaHalfDiagY,
+                   tuning.m_inertiaHalfDiagZ));
+        dyna->m_field_0x108 = &physicalObject;
+        dyna->m_dynamicType = 1;
+        dyna->UpdateWorldInverseInertia();
+        item->m_flags1 = (item->m_flags1 & ~0x1800u) | (2u << 11u);
+        uniformGravity.m_isActive = 1;
+        zone->AddForceField(&uniformGravity);
         Reset();
 
         std::cout << "Loaded " << mesh.m_vertices.m_count << " vertices and "
@@ -265,8 +289,8 @@ public:
     }
 
     void Reset() {
-        dyna->m_position = startPosition;
-        dyna->m_yaw = startYaw;
+        dyna->Position() = startPosition;
+        dyna->SetYaw(startYaw);
         GmVec3 zero(0.0f, 0.0f, 0.0f);
         item->SetLinearSpeed(item, &zero);
         item->SetAngularSpeed(item, &zero);
@@ -292,7 +316,7 @@ public:
         simulatedSeconds = 0.0;
         lastDiagnostics = VehicleTrackStepDiagnostics{};
         trail.clear();
-        trail.push_back(dyna->m_position);
+        trail.push_back(dyna->Position());
     }
 
     void SetInput(float gas, float brake, float steer) {
@@ -305,13 +329,13 @@ public:
         lastDiagnostics = StepVehicleOnTrack(
             *car, *item, *zone, mesh, tuning, kPhysicsDt);
         simulatedSeconds += kPhysicsDt;
-        trail.push_back(dyna->m_position);
+        trail.push_back(dyna->Position());
         if (trail.size() > 6000) trail.pop_front();
     }
 
     float SpeedKmh() const {
         GmVec3 velocity;
-        item->GetLinearSpeed(item, &velocity);
+        dyna->GetLinearSpeed(nullptr, &velocity);
         return std::sqrt(LengthSquared(velocity)) * 3.6f;
     }
 
@@ -322,6 +346,8 @@ public:
     CHmsDyna* dyna = nullptr;
     CHmsZoneDynamic* zone = nullptr;
     CSceneVehicleCarTuning tuning;
+    CPlugPhysicalObject physicalObject;
+    CHmsForceFieldUniform uniformGravity;
     VehicleTrackStepDiagnostics lastDiagnostics;
     std::deque<GmVec3> trail;
     GmVec3 startPosition = kDefaultStart;
@@ -333,15 +359,15 @@ Camera BuildChaseCamera(
     const InteractiveSimulation& simulation, const ViewState& view,
     int width, int height) {
     const VehicleChassisBasis carBasis = BuildVehicleChassisBasis(
-        simulation.car->m_chassisUp, simulation.dyna->m_yaw);
+        simulation.car->m_chassisUp, simulation.dyna->GetYaw());
     Camera camera;
     camera.width = std::max(width, 1);
     camera.height = std::max(height, 1);
-    camera.position = simulation.dyna->m_position -
+    camera.position = simulation.dyna->Position() -
         carBasis.forward * view.chaseDistance +
         GmVec3(0.0f, 5.0f, 0.0f);
     const GmVec3 target =
-        simulation.dyna->m_position + carBasis.forward * 7.0f +
+        simulation.dyna->Position() + carBasis.forward * 7.0f +
         GmVec3(0.0f, 0.6f, 0.0f);
     camera.forward = Normalized(target - camera.position);
     camera.right = Normalized(GmVec3::Cross(
@@ -431,9 +457,9 @@ int DrawTrackChase(
         const GmVec3& b = simulation.mesh.m_vertices[triangle.indices[1]];
         const GmVec3& c = simulation.mesh.m_vertices[triangle.indices[2]];
         const float centerX =
-            (a.x + b.x + c.x) / 3.0f - simulation.dyna->m_position.x;
+            (a.x + b.x + c.x) / 3.0f - simulation.dyna->Position().x;
         const float centerZ =
-            (a.z + b.z + c.z) / 3.0f - simulation.dyna->m_position.z;
+            (a.z + b.z + c.z) / 3.0f - simulation.dyna->Position().z;
         if (centerX * centerX + centerZ * centerZ > radiusSquared) continue;
         SetTrackColor(renderer, triangle);
         bool visible = DrawPerspectiveLine(renderer, camera, a, b);
@@ -457,16 +483,16 @@ int DrawTrackTopDown(
         const GmVec3& b = simulation.mesh.m_vertices[triangle.indices[1]];
         const GmVec3& c = simulation.mesh.m_vertices[triangle.indices[2]];
         const float centerX =
-            (a.x + b.x + c.x) / 3.0f - simulation.dyna->m_position.x;
+            (a.x + b.x + c.x) / 3.0f - simulation.dyna->Position().x;
         const float centerZ =
-            (a.z + b.z + c.z) / 3.0f - simulation.dyna->m_position.z;
+            (a.z + b.z + c.z) / 3.0f - simulation.dyna->Position().z;
         if (centerX * centerX + centerZ * centerZ > radiusSquared) continue;
         const SDL_FPoint pa = ToTopDown(
-            a, simulation.dyna->m_position, basis, zoom, width, height);
+            a, simulation.dyna->Position(), basis, zoom, width, height);
         const SDL_FPoint pb = ToTopDown(
-            b, simulation.dyna->m_position, basis, zoom, width, height);
+            b, simulation.dyna->Position(), basis, zoom, width, height);
         const SDL_FPoint pc = ToTopDown(
-            c, simulation.dyna->m_position, basis, zoom, width, height);
+            c, simulation.dyna->Position(), basis, zoom, width, height);
         SetTrackColor(renderer, triangle);
         SDL_RenderDrawLineF(renderer, pa.x, pa.y, pb.x, pb.y);
         SDL_RenderDrawLineF(renderer, pb.x, pb.y, pc.x, pc.y);
@@ -480,13 +506,13 @@ void DrawCarChase(
     SDL_Renderer* renderer, const InteractiveSimulation& simulation,
     const Camera& camera) {
     const VehicleChassisBasis basis = BuildVehicleChassisBasis(
-        simulation.car->m_chassisUp, simulation.dyna->m_yaw);
+        simulation.car->m_chassisUp, simulation.dyna->GetYaw());
     constexpr float halfWidth = 0.95f;
     constexpr float halfHeight = 0.45f;
     constexpr float halfLength = 1.8f;
     GmVec3 corners[8];
     for (int i = 0; i < 8; ++i) {
-        corners[i] = simulation.dyna->m_position +
+        corners[i] = simulation.dyna->Position() +
             basis.right * ((i & 1) ? halfWidth : -halfWidth) +
             basis.up * ((i & 2) ? halfHeight : -halfHeight) +
             basis.forward * ((i & 4) ? halfLength : -halfLength);
@@ -501,7 +527,7 @@ void DrawCarChase(
     }
 
     for (int i = 0; i < simulation.lastDiagnostics.wheelCount; ++i) {
-        const GmVec3 wheel = simulation.dyna->m_position +
+        const GmVec3 wheel = simulation.dyna->Position() +
             basis.right * TmForeverPhysicsConstants::kStadiumWheelLocalX[i] +
             basis.up * TmForeverPhysicsConstants::kStadiumWheelLocalY[i] +
             basis.forward * TmForeverPhysicsConstants::kStadiumWheelLocalZ[i];
@@ -517,8 +543,8 @@ void DrawCarChase(
 
     SDL_SetRenderDrawColor(renderer, 72, 220, 115, 255);
     DrawPerspectiveLine(
-        renderer, camera, simulation.dyna->m_position,
-        simulation.dyna->m_position + simulation.car->m_chassisUp * 2.0f);
+        renderer, camera, simulation.dyna->Position(),
+        simulation.dyna->Position() + simulation.car->m_chassisUp * 2.0f);
 }
 
 void DrawCarTopDown(SDL_Renderer* renderer, int width, int height) {
@@ -547,10 +573,10 @@ void DrawTrail(
     for (; point != simulation.trail.end(); ++point, ++previous) {
         if (view.topDown) {
             const SDL_FPoint a = ToTopDown(
-                *previous, simulation.dyna->m_position, basis,
+                *previous, simulation.dyna->Position(), basis,
                 view.topDownZoom, width, height);
             const SDL_FPoint b = ToTopDown(
-                *point, simulation.dyna->m_position, basis,
+                *point, simulation.dyna->Position(), basis,
                 view.topDownZoom, width, height);
             SDL_RenderDrawLineF(renderer, a.x, a.y, b.x, b.y);
         } else {
@@ -567,7 +593,7 @@ int Render(
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     const VehicleChassisBasis basis = BuildVehicleChassisBasis(
-        simulation.car->m_chassisUp, simulation.dyna->m_yaw);
+        simulation.car->m_chassisUp, simulation.dyna->GetYaw());
     const Camera camera = BuildChaseCamera(simulation, view, width, height);
     int trianglesDrawn = 0;
     if (view.topDown) {
@@ -751,9 +777,9 @@ int main(int argc, char** argv) {
                 "TMNF Physics | %6.1f km/h | t %.2fs | pos %.2f %.2f %.2f | "
                 "%d/4 wheels | %s%s | %d tris",
                 simulation.SpeedKmh(), simulation.simulatedSeconds,
-                simulation.dyna->m_position.x,
-                simulation.dyna->m_position.y,
-                simulation.dyna->m_position.z,
+                simulation.dyna->Position().x,
+                simulation.dyna->Position().y,
+                simulation.dyna->Position().z,
                 simulation.lastDiagnostics.groundedWheelCount,
                 view.topDown ? "top" : "chase",
                 paused ? " | PAUSED" : "", trianglesDrawn);
@@ -767,9 +793,9 @@ int main(int argc, char** argv) {
     SDL_DestroyWindow(window);
     SDL_Quit();
     std::cout << "Final state: t=" << simulation.simulatedSeconds
-              << "s pos=(" << simulation.dyna->m_position.x << ", "
-              << simulation.dyna->m_position.y << ", "
-              << simulation.dyna->m_position.z << ") speed="
+              << "s pos=(" << simulation.dyna->Position().x << ", "
+              << simulation.dyna->Position().y << ", "
+              << simulation.dyna->Position().z << ") speed="
               << simulation.SpeedKmh() << " km/h grounded="
               << simulation.lastDiagnostics.groundedWheelCount << "/4\n";
     return 0;

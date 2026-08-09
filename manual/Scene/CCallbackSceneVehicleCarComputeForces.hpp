@@ -12,7 +12,9 @@ public:
     virtual ~CCallbackSceneVehicleCarComputeForces();
 
     // Member Functions
-    virtual void ComputeForces(CCallbackSceneToyBroomStickComputeForces* param_1, CHmsItem* param_2, float dt) override;
+    void ComputeForces(CHmsItem* item, float dt) override;
+
+    static CCallbackSceneVehicleCarComputeForces* Instance();
 };
 
 #endif // CCALLBACKSCENEVEHICLECARCOMPUTEFORCES_HPP

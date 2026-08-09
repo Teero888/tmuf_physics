@@ -2,6 +2,7 @@
 #define CPLUGSOLID_HPP
 
 #include "CMwNod.hpp"
+#include "CPlugPhysicalObject.hpp"
 #include <cstdint>
 
 class CPlugTree;
@@ -21,20 +22,15 @@ struct CPfmHeap;
 class CPlugSolid : public CMwNod {
 public:
     uint32_t m_field_0x14;
-    float m_mass;          // 0x18
-    uint8_t m_padding[36];
-    uint32_t m_field_0x40;
-    uint32_t m_field_0x44;
-    uint32_t m_field_0x48;
-    uint8_t m_padding2[8];
-    CClassicArchive* m_archive54;
-    CClassicArchive* m_archive58;
-    CPlugSolid* m_model5c;
+    CPlugPhysicalObject m_physicalObject; // native +0x18..+0x5F
     uint32_t m_field_0x60;
-    int* m_ptr64;
+    CPlugTree* m_tree;       // native root tree at +0x64
     CPlugSolid* m_solid68;
     float m_field_0x6c;
     uint32_t m_field_0x70;
+
+    float& Mass() { return m_physicalObject.m_mass; }
+    const float& Mass() const { return m_physicalObject.m_mass; }
 
     CPlugSolid();
     virtual ~CPlugSolid();
@@ -49,6 +45,7 @@ public:
     void* _scalar_deleting_destructor_(CPfmHeap* param_1, uint32_t param_2);
     void Chunk(CFuncSegment* param_1, CClassicArchive* param_2, uint32_t param_3);
     void OnNodLoaded(CDx9DeviceCaps* param_1);
+    void SetTree(CPlugTree* tree, bool connectTree = true);
     void SetTree(CPlugSolid* param_1, CPlugTree* param_2, int param_3);
 };
 

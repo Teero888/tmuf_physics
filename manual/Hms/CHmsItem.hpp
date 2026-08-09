@@ -24,6 +24,7 @@ class CHmsZone;
 class CHmsPortal;
 class CHmsDyna;
 class CHmsZoneOverlay;
+struct CHmsPhysicalContact;
 class CFuncSegment;
 class CMwCmdAffectParam;
 class CControlStyle;
@@ -48,7 +49,14 @@ enum ECollisionGroup { CG_DEFAULT = 0, CG_GROUP1 = 1, CG_GROUP2 = 2, CG_GROUP3 =
 enum EContactInterest { CI_NONE = 0, CI_ALL = 2 };
 enum EDynamicType { DT_STATIC = 0, DT_DYNAMIC = 1 };
 enum EMobilStateQuality { MSQ_LOW = 0, MSQ_HIGH = 1 };
-enum ECallback { CB_NONE = 0, CB_RENDER = 1, CB_PHYSICS = 2 };
+enum ECallback {
+    CB_UNRESOLVED_0 = 0,
+    CB_UNRESOLVED_1 = 1,
+    CB_ABSORB_CONTACT = 2,
+    CB_PHYSICS = 3,
+    CB_AFTER_CONTACTS = 4,
+    CB_UNRESOLVED_5 = 5
+};
 
 // =================================================
 // CHmsItem
@@ -62,6 +70,20 @@ public:
 public:
     struct CCallback {
         virtual ~CCallback();
+        virtual ECallback GetType() const = 0;
+        virtual void ComputeForces(CHmsItem* item, float dt) {
+            (void)item;
+            (void)dt;
+        }
+        virtual void AbsorbContact(
+            CHmsItem* item,
+            CHmsPhysicalContact* contact) {
+            (void)item;
+            (void)contact;
+        }
+        virtual void AfterContacts(CHmsItem* item) {
+            (void)item;
+        }
     };
 
     struct CCallbackRenderBeforeTree {
@@ -69,10 +91,10 @@ public:
     };
 
     struct SCallbackList {
-        virtual ~SCallbackList();
-        CCallback* m_callbacks[5]; // 0x04 to 0x14
+        CCallback* m_callbacks[6]; // native 0x00 to 0x14
         
         SCallbackList();
+        ~SCallbackList();
     };
 
     // 0x00 to 0x13 inherited from CMwNod (vftable, m_refCount, m_flags, dependants, receivers)
@@ -84,7 +106,10 @@ public:
     SCallbackList* m_callbacks;            // 0x24
     CFastArray<CHmsPortal*> m_portals;     // 0x28
     CFastBuffer<CHmsCorpus*> m_corpuses;   // 0x34
-    char* m_name;                          // 0x40
+    union {
+        CMwNod* m_sceneMobil;              // 0x40: callback owner
+        char* m_name;                      // compatibility with old dumps
+    };
     CMwNod* m_nod44;                       // 0x44
     int m_saveStateParam1;                 // 0x48
     int m_saveStateParam2;                 // 0x4C
@@ -128,7 +153,7 @@ public:
     void AddImpulse(CHmsItem* param_1, GmVec3* param_2);
     void AddStateForPrediction(CSceneToyBoat* param_1, CClassicBufferMemory* param_2, uint32_t param_3, uint32_t param_4);
     void AddTorque(CHmsItem* param_1, GmVec3* param_2);
-    void CallbackSet(CHmsItem* param_1, ECallback param_2, CCallback* param_3);
+    void CallbackSet(ECallback type, CCallback* callback);
     void Chunk(CFuncSegment* param_1, CClassicArchive* param_2, uint32_t param_3);
     void CreateDefaultData(CCrystal* param_1);
     void CreatePortal(CHmsItem* param_1, CHmsPortal** param_2, CPlugTree* param_3);

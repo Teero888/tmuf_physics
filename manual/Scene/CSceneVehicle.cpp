@@ -1,10 +1,24 @@
 #include "CSceneVehicle.hpp"
+#include "CPlugTree.hpp"
 
 // SEnvironment
 CSceneVehicle::SEnvironment::~SEnvironment() {}
 
 // SSurfaceHandler
-CSceneVehicle::SSurfaceHandler::~SSurfaceHandler() {}
+CSceneVehicle::SSurfaceHandler::SSurfaceHandler() : m_tree(nullptr) {
+    m_baseLocation.SetIdentity();
+    m_surfaceLocation.SetIdentity();
+}
+
+void CSceneVehicle::SSurfaceHandler::Reset() {
+    m_surfaceLocation = m_baseLocation;
+}
+
+void CSceneVehicle::SSurfaceHandler::UpdateSurface() {
+    if (m_tree != nullptr) {
+        m_tree->SetLocation(m_surfaceLocation);
+    }
+}
 
 // SVehicleState
 CSceneVehicle::SVehicleState::~SVehicleState() {}
@@ -30,6 +44,8 @@ CSceneVehicle::CSceneVehicle() : CSceneMobil() {
     m_field_60 = 0;
     m_field_64 = 0;
     m_field_68 = 0;
+    m_waterSplashCount = 0u;
+    m_lastWaterSplashSpeed = GmVec3(0.0f, 0.0f, 0.0f);
 }
 CSceneVehicle::~CSceneVehicle() {}
 
@@ -47,3 +63,9 @@ void CSceneVehicle::VehicleInputGasSet(float gas) { m_inputGas = gas; }
 void CSceneVehicle::VehicleInputBrakeSet(float brake) { m_inputBrake = brake; }
 void CSceneVehicle::VehicleInputSteerSet(float steer) { m_inputSteer = steer; }
 float CSceneVehicle::VehicleInputSteerGet() const { return m_inputSteer; }
+
+void CSceneVehicle::WaterSplash(const GmVec3* worldSpeed) {
+    if (worldSpeed == nullptr) return;
+    ++m_waterSplashCount;
+    m_lastWaterSplashSpeed = *worldSpeed;
+}

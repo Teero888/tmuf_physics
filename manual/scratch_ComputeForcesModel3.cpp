@@ -115,7 +115,7 @@ void CSceneVehicleCar::ComputeForcesModel3_Exact(float param_2,GmVec3 *param_3, 
       uVar23 = 0;
       fVar15 = 1.1723283e-38;
       pSVar10 = pSVar7;
-      this->WheelAddForceToVehicle(pSVar7, &unaff_EBP);
+      this->WheelAddForceToVehicle(pSVar7, param_4);
       unaff_ESI = 1.1723305e-38;
       pSVar8 = DUMMY_CFAST_CALL
                          (&this->m_manoeuvres,

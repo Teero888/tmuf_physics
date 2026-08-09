@@ -69,6 +69,15 @@ float CSceneVehicleCarTuning::M5GetAccelFromSpeed(float speed) {
     return GetAccelFromSpeed(speed);
 }
 
+float CSceneVehicleCarTuning::M5GetLateralContactSlowDownFromSpeed(float speed) {
+    // TmForeverFixed.exe 0x7F3F10 uses the same +0x68 curve as the legacy
+    // helper, but calls the curve's direct-return entry point.
+    return EvaluateCurve(SelectCurve(m_lateralContactSlowDown,
+                                     LateralContactSlowDown),
+                         speed * static_cast<float>(
+                             TmForeverPhysicsConstants::kSpeedCurveScale));
+}
+
 float CSceneVehicleCarTuning::M5GetSlippingAccelFromSpeed(float speed) {
     return m_m5AccelSlipCoefMax *
            EvaluateCurve(&M5SlippingAccelCurve,
@@ -83,6 +92,57 @@ float CSceneVehicleCarTuning::M5GetSteerSlowDownFromSpeed(float speed) {
 float CSceneVehicleCarTuning::M6GetRearGearAccelFromSpeed(float speed) {
     return EvaluateCurve(&AccelCurveRearGear,
                          speed * static_cast<float>(TmForeverPhysicsConstants::kSpeedCurveScale));
+}
+
+float CSceneVehicleCarTuning::GetWaterBumpSlowDownFromSpeedRatio(float ratio) {
+    return EvaluateCurve(
+        SelectCurve(m_waterBumpSlowDownFromSpeedRatio,
+                    WaterBumpSlowDownFromSpeedRatio),
+        ratio);
+}
+
+float CSceneVehicleCarTuning::GetWaterReboundFromSpeedRatio(float ratio) {
+    return EvaluateCurve(
+        SelectCurve(m_waterReboundFromSpeedRatio,
+                    WaterReboundFromSpeedRatio),
+        ratio);
+}
+
+float CSceneVehicleCarTuning::GetWaterFrictionFromSpeed(float speed) {
+    // Fixed executable 0x7F3F40 applies the km/h conversion only to this
+    // speed curve; the two rebound helpers consume an unscaled ratio.
+    return EvaluateCurve(
+        SelectCurve(m_waterFrictionFromSpeed, WaterFrictionFromSpeed),
+        speed * static_cast<float>(
+                    TmForeverPhysicsConstants::kSpeedCurveScale));
+}
+
+void CSceneVehicleCarTuning::M6InitRpmDeltas() {
+    // Exact loop structure of TmForeverFixed.exe 0x7F4170. The first two
+    // upshift deltas and both end downshift deltas remain zero.
+    m_m6RpmDeltaOnGearUp.fill(0.0f);
+    m_m6RpmDeltaOnGearDown.fill(0.0f);
+    for (std::size_t gear = 2; gear < m_m6GearRatios.size(); ++gear) {
+        const float ratio =
+            m_m6GearRatios[gear] / m_m6GearRatios[gear - 1];
+        m_m6RpmDeltaOnGearUp[gear] =
+            m_m6RpmDeltaOnGearUp[gear - 1] * ratio +
+            (m_m6RpmWantedOnGearUp[gear] -
+             m_m6MaxRpmRatios[gear - 1] * ratio) *
+                m_m6MaxRpm;
+    }
+    for (std::size_t gear = 1;
+         gear + 1 < m_m6GearRatios.size(); ++gear) {
+        if (m_m6MaxRpm == 0.0f) {
+            m_m6RpmDeltaOnGearDown[gear] = 0.0f;
+        } else {
+            m_m6RpmDeltaOnGearDown[gear] =
+                m_m6RpmDeltaOnGearUp[gear] / m_m6MaxRpm +
+                (m_m6MinRpmRatios[gear + 1] -
+                 m_m6RpmDeltaOnGearUp[gear + 1] / m_m6MaxRpm) *
+                    m_m6GearRatios[gear] / m_m6GearRatios[gear + 1];
+        }
+    }
 }
 
 float CSceneVehicleCarTuning::GetModel6SteerSpeedFactor(float speed) const {
@@ -117,7 +177,11 @@ float CSceneVehicleCarTuning::GetYawInertia() const {
 
 CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_steerSlowDown = nullptr;
+    m_steerSlowDownFactor =
+        TmForeverPhysicsConstants::kDefaultOldEngineSpeedDivisorBase;
+    m_steerDriveTorqueFactor = 13.888889312744140625f;
     m_steerDriveTorque = nullptr;
+    m_field_38 = 1;
     m_steerRadius = nullptr;
     m_steerSlowDown2 = nullptr;
     m_lateralContactSlowDown = nullptr;
@@ -130,6 +194,9 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_gravityCoef = 1.0f;
     m_gravityCoefAir = 1.0f;
     m_angularFluidFrictionCoef1 = 0.4f;
+    // Native constructor offsets +0x58, +0x5C, and +0x1E8.
+    m_groundSlowDownBase = 1.0f;
+    m_linearFluidFrictionCoef = 0.0f;
     m_steerSpeed = 0.0f;
     m_steerModel = 0;
     m_steerLowSpeed = 0.0f;
@@ -140,15 +207,66 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_sideFriction1 = 0.0f;
     m_maxSideFrictionOverLimitBlend = 1.0f;
     m_m5AccelSlipCoefMax = 1.0f;
+    m_m5LateralConstantSlowDownDuration = 500u;
     m_shockModel = 0;
     m_absorbingValKi = 0.0f;
     m_absorbingValKa = 0.0f;
+    m_absorbingValMin = 0.0f;
     m_absorbingValRest = 0.0f;
+    m_shockModel0ForceFactor =
+        TmForeverPhysicsConstants::kDefaultShockModel0ForceFactor;
     m_absorbTension = 0.0f;
+    // Native constructor offsets +0x170..+0x18C and the impulse controls at
+    // +0xE8/+0xEC/+0x14C/+0x150.
+    m_bodyFrictionCoef = 0.800000011920928955078125f;
+    m_bodyFrictionCoefMetal = 0.4000000059604644775390625f;
+    m_bodyRestCoefMetal = 0.0f;
+    m_bodyRestCoef = 0.0f;
+    m_wheelFrictionCoefConcrete = 0.800000011920928955078125f;
+    m_wheelRestCoefConcrete = 0.0f;
+    m_wheelFrictionCoefMetal = 0.4000000059604644775390625f;
+    m_wheelRestCoefMetal = 0.0f;
+    m_angularSpeedYImpulseScale = 1.0f;
+    m_angularImpulseScale = 1.0f;
+    m_angularSpeedClamp = 100.0f;
+    m_linearSpeedSquaredPositiveDeltaMax = 10000.0f;
     m_lateralSlopeAdherenceMin = 0.0f;
     m_lateralSlopeAdherenceMax = 0.0f;
     m_axialSlopeAdherenceMin = 0.0f;
     m_axialSlopeAdherenceMax = 0.0f;
+    // Exact constructor writes at native tuning +0x204..+0x220.
+    m_waterGravity = 1.0f;
+    m_waterReboundMinHorizontalSpeed =
+        TmForeverPhysicsConstants::kDefaultOldEngineSpeedDivisorBase;
+    m_waterBumpMinSpeed = 50.0f;
+    m_waterBumpSlowDownFromSpeedRatio = nullptr;
+    m_waterReboundFromSpeedRatio = nullptr;
+    m_waterFrictionFromSpeed = nullptr;
+    m_waterAngularFriction = 0.100000001490116119140625f;
+    m_waterAngularFrictionSq =
+        TmForeverPhysicsConstants::kDefaultWaterAngularFrictionSq;
+    m_m6MaxRpm = 0.800000011920928955078125f;
+    m_m6GearRatios = {4.0f, 2.0f, 1.0f, 0.800000011920928955078125f,
+                      0.5f, 0.300000011920928955078125f};
+    m_m6MaxRpmRatios = {0.0f, 0.8125f, 0.8125f, 0.8125f, 0.8125f, 1.0f};
+    m_m6MinRpmRatios = {0.0f, 0.0f, 0.375f, 0.53125f, 0.5625f, 0.625f};
+    m_m6RpmWantedOnGearUp = {0.0f, 0.0f, 0.42850005626678466796875f,
+                             0.333000004291534423828125f, 0.25f,
+                             0.16600000858306884765625f};
+    m_m6RpmDeltaOnGearUp.fill(0.0f);
+    m_m6RpmDeltaOnGearDown.fill(0.0f);
+    m_m6BurnoutRpmAcceleration = 5000.0f;
+    m_m6AirRpmAcceleration = 5000.0f;
+    m_m6AirRpmDeadening = 2500.0f;
+    m_m6RpmLossOnGearUp = 5000.0f;
+    m_m6RpmGainOnGearDown = 10000.0f;
+    m_m6RpmGainOnTakeoff = 10000.0f;
+    m_m6RpmLossOnTakeoffFinished = 4000.0f;
+    m_m6PositiveTakeoffFrontSpeed = 3.0f;
+    m_m6PositiveTakeoffRearSpeed = 2.0f;
+    m_m6NegativeTakeoffFrontSpeed = -2.0f;
+    m_m6NegativeTakeoffRearSpeed = -3.0f;
+    M6InitRpmDeltas();
 }
 
 CSceneVehicleCarTuning::~CSceneVehicleCarTuning() {}

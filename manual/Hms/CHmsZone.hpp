@@ -9,6 +9,7 @@
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
 #include "GmMat3.hpp"
+#include "GmMap2.hpp"
 #include <cstdint>
 
 // Forward Declarations
@@ -100,6 +101,14 @@ public:
     
     CFastBuffer<CAudioSound*> m_sounds;                    // 0x10C (Size 0x0C)
     void (*m_callback)();                                  // 0x118
+
+    // Semantic host view of the collision manager's native SZone water
+    // fields (+0x154 map, +0x178 surface, +0x17C bottom). These do not extend
+    // the claimed 32-bit CHmsZone layout above; they let a standalone corpus
+    // retain the collision-zone data reached by ApplyWaterForces.
+    GmMap2<uint8_t> m_waterCollisionMap;
+    float m_waterCollisionSurfaceHeight;
+    float m_waterCollisionBottomHeight;
 
     // =================================================
     // Member Functions

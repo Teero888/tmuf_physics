@@ -85,6 +85,97 @@ inline constexpr double kPlaneDistanceThreshold = kInputThreshold;
 inline constexpr float kDefaultUniformGravity =
     -9.81000041961669921875f; // 0xC11CF5C3
 
+// CSceneVehicleCar::WheelUpdateSpeedFromVehicleSpeed at 0x007C0EC0 uses
+// these values to drive or brake an airborne wheel and to decay a wheel that
+// is neither driven nor braked. The scale and decay are native doubles, so
+// their full values must survive the float-to-double x87 operations.
+// .rdata 0x00B9EF4C.
+inline constexpr float kWheelInputEpsilon =
+    9.99999974737875163555e-6f; // 0x3727C5AC
+// The same +1e-5f value guards SDynaMath impulse-direction normalization;
+// .rdata 0x00B574FC holds its negative counterpart for AbsorbingValMin.
+inline constexpr float kImpulseDirectionEpsilon = kWheelInputEpsilon;
+inline constexpr float kNegativeAbsorbingValueEpsilon =
+    -9.99999974737875163555e-6f; // 0xB727C5AC
+
+// ApplyWaterForces at 0x007C2910 accepts a body only after more than 0.5f of
+// depth and restricts its rebound branch to less than the widened 0.9f value.
+// The partially-submerged and downward-speed tests use exact zero/-1e-5f.
+inline constexpr float kWaterMinimumDepth = kPlaneSolveAxisThreshold;
+inline constexpr double kWaterReboundMaximumDepth =
+    0.89999997615814208984375; // .rdata 0x00B41EA8
+inline constexpr float kWaterSurfaceDeltaThreshold = 0.0f; // 0x00C418E0
+inline constexpr float kWaterDownwardSpeedThreshold =
+    kNegativeAbsorbingValueEpsilon;
+inline constexpr float kDefaultWaterAngularFrictionSq =
+    0.20000000298023223876953125f; // .rdata 0x00B33A54
+inline constexpr float kDefaultWaterCollisionHeight =
+    -3.4028234663852885981170418348451692544e38f; // .rdata 0x00B55DA4
+// .rdata 0x00B2F718.
+inline constexpr double kWheelGasAngularSpeedScale = 200.0; // 0x4069000000000000
+// .rdata 0x00B9F1C0.
+inline constexpr double kWheelAirborneAngularDecay =
+    0.99500000476837158203125; // 0x3FEFD70A40000000
+// .rdata 0x00B36ADC and 0x00B36184 respectively.
+inline constexpr float kWheelAngularAcceleration = 100.0f; // 0x42C80000
+inline constexpr float kWheelAngularDeceleration = -100.0f; // 0xC2C80000
+
+// SSimulationWheel::SRealTimeState::Integrate at 0x007C1060 wraps its visual
+// wheel angle over 256 full turns and rebuilds its orientation only for a
+// direction vector above the native squared-length guard.
+// .rdata 0x00B9EF64: 256 * the game's single-precision 2*pi value.
+inline constexpr float kWheelRotationAnglePeriod =
+    1608.4954833984375f; // 0x44C90FDB
+// .data 0x00D06A80.
+inline constexpr float kWheelDirectionSquaredEpsilon =
+    9.99999943962492920972e-11f; // 0x2EDBE6FE
+
+// .data 0x00D1A840. GmMat3::SetUpVandDOV independently uses this guard while
+// normalizing the two basis vectors it constructs.
+inline constexpr float kMatrixBasisSquaredEpsilon =
+    9.99999943962492920972e-11f; // 0x2EDBE6FE
+
+// CSceneVehicleCarTuning's constructor initializes the extra ShockModel 0
+// force multiplier from .rdata 0x00B33A54.
+inline constexpr float kDefaultShockModel0ForceFactor =
+    0.20000000298023223876953125f; // 0x3E4CCCCD
+
+// CSceneVehicleCar::SEngine and EngineIntegrate constants. The M6 shift
+// duration and the older engine's shift duration are distinct in the fixed
+// executable.
+// .rdata 0x00B9EFB0.
+inline constexpr float kDefaultEngineMaxRpm = 11000.0f; // 0x462BE000
+// .rdata 0x00B9EFC0 and 0x00B989DC.
+inline constexpr float kM6ShiftDuration = 0.02500000037252902984619140625f; // 0x3CCCCCCD
+inline constexpr float kM6ReverseTakeoffShiftDuration = 0.00200000009499490261077880859375f; // 0x3B03126F
+// .rdata 0x00B9EFD0 and the widened copy at 0x00B9EFC8.
+inline constexpr float kM6ClutchRatioTarget =
+    1.14999997615814208984375f; // 0x3F933333
+inline constexpr double kM6ClutchRatioTargetWide =
+    1.14999997615814208984375;
+// .rdata 0x00B5B8E0 and 0x00C418D8.
+inline constexpr double kM6ClutchRatioResponse =
+    0.300000011920928955078125;
+inline constexpr double kEngineIdleRpm = 1000.0;
+
+// Pre-Model-6 engine path at 0x007BE00B..0x007BE253.
+// .rdata 0x00B80D18, 0x00B43310, 0x00B9EFB8, 0x00B36AE8,
+// and 0x00B3D274.
+inline constexpr float kOldEngineShiftDuration =
+    0.039999999105930328369140625f; // 0x3D23D70A
+inline constexpr double kOldEngineSpeedScale =
+    0.20000000298023223876953125;
+inline constexpr double kOldEngineShiftRpmLoss =
+    1.89999997615814208984375;
+inline constexpr float kOldEngineAirResponse = 3.5f; // 0x40600000
+inline constexpr float kOldEngineGroundResponse = 12.0f; // 0x41400000
+// .rdata 0x00BA3814: constructor default of tuning +0x2C, used as
+// the legacy engine speed divisor base.
+inline constexpr float kDefaultOldEngineSpeedDivisorBase =
+    55.5555572509765625f; // 0x425E38E4
+inline constexpr double kOldEngineLateralSpeedWeight =
+    kM6ClutchRatioResponse;
+
 // Vehicles/Media/Solid/StadiumCar.Solid.Gbx stores the four simulation-wheel
 // nodes at these exact longitudinal coordinates (FLSurf/FRSurf and
 // RLSurf/RRSurf). UpdateParamsFromTuning at 0x7BFFA0 builds their bounding box

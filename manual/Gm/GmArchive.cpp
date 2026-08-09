@@ -1,213 +1,215 @@
 #include "GmArchive.hpp"
 #include "CClassicArchive.hpp"
+
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 
-// =================================================
-// Engine Math Constants (Extracted from Assembly)
-// TODO: dump these from the game memory to verify values
-// =================================================
-extern const float CONST_00b55d40;
-extern const float CONST_00b36110; 
-extern const float CONST_00b530f8;
-extern const float CONST_00b52a58;
-extern const float CONST_00bbdc00;
-extern const float CONST_00bbdbe4; // Likely an epsilon, e.g., 0.00001f
-extern const float CONST_00b2c178; 
-extern const float CONST_00b2c060;
-extern const float CONST_00b9cfa4;
-extern const float CONST_00b9cfa8;
-extern const float CONST_00c418d8;
+namespace {
 
-// =================================================
-// 1:1 Serializers
-// =================================================
+// Exact values loaded by TmForeverFixed.exe. Several qwords contain values
+// first rounded to single precision and then promoted to double.
+constexpr double kPi = 3.1415927410125732;
+constexpr double kHalfPi = 1.5707963705062866;
+constexpr double kPositionStep = 0.0020000000949949026;
+constexpr double kPositionDivisor = -0.0020000000949949026;
+constexpr double kVectorLogScale = 1000.0;
+constexpr float kDirectionEpsilon = 9.999999747378752e-6f;
 
-void GmArchive::ReadVec3Pos_12(CClassicBuffer* buf, GmVec3* vec) {
-    buf->ReadAll(&vec->x, 4);
-    buf->ReadAll(&vec->y, 4);
-    buf->ReadAll(&vec->z, 4);
+template <typename Integer>
+Integer QuantizeAngle(float angle, double scale, double range) {
+    return static_cast<Integer>(
+        static_cast<int>(static_cast<double>(angle) * scale / range));
 }
 
-void GmArchive::WriteVec3Pos_12(CClassicBuffer* buf, const GmVec3* vec) {
-    buf->WriteAll(&vec->x, 4);
-    buf->WriteAll(&vec->y, 4);
-    buf->WriteAll(&vec->z, 4);
-}
-
-void GmArchive::ReadReal_3(CClassicBuffer* buf, float* val) {
-    uint8_t bytes[3];
-    buf->ReadAll(bytes, 3);
-    
-    // Ghidra artifacts converted to clean bit-packing
-    // Converts 24-bit integer back to a mapped float range
-    int packed = (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
-    *val = (float)(((packed & 0xFF) - 128) * 65536 + 2) * CONST_00b55d40;
-}
-
-void GmArchive::WriteReal_3(CClassicBuffer* buf, float val) {
-    float scaled = val / CONST_00bbdc00;
-    int packed = static_cast<int>(std::round(scaled));
-    packed = 0x800000 - packed; // 24-bit signed/offset conversion
-    
-    uint8_t bytes[3];
-    bytes[0] = static_cast<uint8_t>(packed & 0xFF);
-    bytes[1] = static_cast<uint8_t>((packed >> 8) & 0xFF);
-    bytes[2] = static_cast<uint8_t>((packed >> 16) & 0xFF);
-    buf->WriteAll(bytes, 3);
-}
-
-void GmArchive::ReadVec3Pos_9(CClassicBuffer* buf, GmVec3* vec) {
-    ReadReal_3(buf, &vec->x);
-    ReadReal_3(buf, &vec->y);
-    ReadReal_3(buf, &vec->z);
-}
-
-void GmArchive::WriteVec3Pos_9(CClassicBuffer* buf, const GmVec3* vec) {
-    WriteReal_3(buf, vec->x);
-    WriteReal_3(buf, vec->y);
-    WriteReal_3(buf, vec->z);
-}
-
-void GmArchive::ReadVec3Unit_4(CClassicBuffer* buf, GmVec3* vec) {
-    short yaw, pitch;
-    buf->ReadAll(&yaw, 2);
-    buf->ReadAll(&pitch, 2);
-
-    float fYaw = ((float)yaw * CONST_00b36110) / CONST_00b530f8;
-    float fPitch = ((float)pitch * CONST_00b36110) / CONST_00b530f8;
-
-    // Standard Spherical to Cartesian expansion
-    vec->x = std::cos(fPitch) * std::cos(fYaw);
-    vec->y = std::sin(fYaw) * std::cos(fPitch); // Corrected mapping for the __CIsin stack
-    vec->z = std::sin(fPitch);
-}
-
-void GmArchive::WriteVec3Unit_4(CClassicBuffer* buf, const GmVec3* vec) {
-    float lenSqr = vec->x * vec->x + vec->y * vec->y + vec->z * vec->z;
-    float len = std::sqrt(lenSqr);
-    
-    short yaw = 0;
-    short pitch = 0;
-
-    if (len >= CONST_00bbdbe4) {
-        float fCos = vec->x / len;
-        
-        // Clamp to prevent acos domain errors (NaNs)
-        if (fCos < CONST_00b2c060) fCos = CONST_00b2c060;
-        else if (fCos > 1.0f) fCos = 1.0f;
-        
-        float angle = std::acos(fCos);
-        if (vec->y * len < CONST_00b2c178) {
-            angle = -angle;
-        }
-        
-        // Pseudo-logic representing the conversion back to 16-bit
-        yaw = static_cast<short>((angle * CONST_00b52a58) / CONST_00b36110);
-        // (Pitch calculation was stripped or heavily optimized in the provided Ghidra snippet,
-        // but it mirrors the yaw logic using the Z component).
+void WriteUnitVector(
+    CClassicBuffer* buffer, const GmVec3& vector, bool wide) {
+    const float elevation = std::asin(vector.z);
+    const float elevationCosine = std::cos(elevation);
+    float azimuth = 0.0f;
+    if (std::abs(elevationCosine) >= kDirectionEpsilon) {
+        const float horizontalCosine = std::clamp(
+            vector.x / elevationCosine, -1.0f, 1.0f);
+        azimuth = std::acos(horizontalCosine);
+        if (vector.y * elevationCosine < 0.0f) azimuth = -azimuth;
     }
 
-    buf->WriteAll(&yaw, 2);
-    buf->WriteAll(&pitch, 2);
+    if (wide) {
+        const int16_t packedAzimuth =
+            QuantizeAngle<int16_t>(azimuth, 32767.0, kPi);
+        const int16_t packedElevation =
+            QuantizeAngle<int16_t>(elevation, 32767.0, kHalfPi);
+        buffer->WriteAll(&packedAzimuth, sizeof(packedAzimuth));
+        buffer->WriteAll(&packedElevation, sizeof(packedElevation));
+    } else {
+        const int8_t packedAzimuth =
+            QuantizeAngle<int8_t>(azimuth, 127.0, kPi);
+        const int8_t packedElevation =
+            QuantizeAngle<int8_t>(elevation, 127.0, kHalfPi);
+        buffer->WriteAll(&packedAzimuth, sizeof(packedAzimuth));
+        buffer->WriteAll(&packedElevation, sizeof(packedElevation));
+    }
 }
 
-void GmArchive::WriteVec3Unit_2(CClassicBuffer* buf, const GmVec3* vec) {
-    // Exactly the same logic as Unit_4, but writes 8-bit integers (1 byte each)
-    // instead of 16-bit shorts.
-    float lenSqr = vec->x * vec->x + vec->y * vec->y + vec->z * vec->z;
-    float len = std::sqrt(lenSqr);
-    
-    uint8_t yaw = 0;
-    uint8_t pitch = 0;
-
-    if (len >= CONST_00bbdbe4) {
-        float fCos = vec->x / len;
-        if (fCos < CONST_00b2c060) fCos = CONST_00b2c060;
-        else if (fCos > 1.0f) fCos = 1.0f;
-        
-        float angle = std::acos(fCos);
-        if (vec->y * len < CONST_00b2c178) angle = -angle;
-        
-        yaw = static_cast<uint8_t>(angle); // Scaled for 8-bit
+void ReadUnitVector(CClassicBuffer* buffer, GmVec3* vector, bool wide) {
+    float azimuth;
+    float elevation;
+    if (wide) {
+        int16_t packedAzimuth = 0;
+        int16_t packedElevation = 0;
+        buffer->ReadAll(&packedAzimuth, sizeof(packedAzimuth));
+        buffer->ReadAll(&packedElevation, sizeof(packedElevation));
+        azimuth = static_cast<float>(
+            static_cast<double>(packedAzimuth) * kPi / 32767.0);
+        elevation = static_cast<float>(
+            static_cast<double>(packedElevation) * kHalfPi / 32767.0);
+    } else {
+        int8_t packedAzimuth = 0;
+        int8_t packedElevation = 0;
+        buffer->ReadAll(&packedAzimuth, sizeof(packedAzimuth));
+        buffer->ReadAll(&packedElevation, sizeof(packedElevation));
+        azimuth = static_cast<float>(
+            static_cast<double>(packedAzimuth) * kPi / 127.0);
+        elevation = static_cast<float>(
+            static_cast<double>(packedElevation) * kHalfPi / 127.0);
     }
 
-    buf->WriteAll(&yaw, 1);
-    buf->WriteAll(&pitch, 1);
+    const float elevationCosine = std::cos(elevation);
+    vector->x = std::cos(azimuth) * elevationCosine;
+    vector->y = std::sin(azimuth) * elevationCosine;
+    vector->z = std::sin(elevation);
 }
 
-void GmArchive::ReadQuat_6(CClassicBuffer* buf, GmQuat* quat) {
-    short angleData;
-    buf->ReadAll(&angleData, 2);
+} // namespace
 
+void GmArchive::ReadVec3Pos_12(CClassicBuffer* buffer, GmVec3* vector) {
+    buffer->ReadAll(&vector->x, sizeof(vector->x));
+    buffer->ReadAll(&vector->y, sizeof(vector->y));
+    buffer->ReadAll(&vector->z, sizeof(vector->z));
+}
+
+void GmArchive::WriteVec3Pos_12(
+    CClassicBuffer* buffer, const GmVec3* vector) {
+    buffer->WriteAll(&vector->x, sizeof(vector->x));
+    buffer->WriteAll(&vector->y, sizeof(vector->y));
+    buffer->WriteAll(&vector->z, sizeof(vector->z));
+}
+
+void GmArchive::ReadReal_3(CClassicBuffer* buffer, float* value) {
+    uint8_t high = 0;
+    uint16_t low = 0;
+    buffer->ReadAll(&high, sizeof(high));
+    buffer->ReadAll(&low, sizeof(low));
+    const int32_t quantized =
+        (static_cast<int32_t>(high) - 0x80) * 0x10000 + low;
+    *value = static_cast<float>(
+        static_cast<double>(quantized) * kPositionStep);
+}
+
+void GmArchive::WriteReal_3(CClassicBuffer* buffer, float value) {
+    const int32_t quantized = static_cast<int32_t>(
+        static_cast<double>(value) / kPositionDivisor);
+    const uint32_t packed =
+        static_cast<uint32_t>(0x800000 - quantized) & 0xffffffu;
+    const uint8_t high = static_cast<uint8_t>(packed >> 16u);
+    const uint16_t low = static_cast<uint16_t>(packed);
+    buffer->WriteAll(&high, sizeof(high));
+    buffer->WriteAll(&low, sizeof(low));
+}
+
+void GmArchive::ReadVec3Pos_9(CClassicBuffer* buffer, GmVec3* vector) {
+    ReadReal_3(buffer, &vector->x);
+    ReadReal_3(buffer, &vector->y);
+    ReadReal_3(buffer, &vector->z);
+}
+
+void GmArchive::WriteVec3Pos_9(
+    CClassicBuffer* buffer, const GmVec3* vector) {
+    WriteReal_3(buffer, vector->x);
+    WriteReal_3(buffer, vector->y);
+    WriteReal_3(buffer, vector->z);
+}
+
+void GmArchive::ReadVec3Unit_4(CClassicBuffer* buffer, GmVec3* vector) {
+    ReadUnitVector(buffer, vector, true);
+}
+
+void GmArchive::WriteVec3Unit_4(
+    CClassicBuffer* buffer, const GmVec3* vector) {
+    WriteUnitVector(buffer, *vector, true);
+}
+
+void GmArchive::WriteVec3Unit_2(
+    CClassicBuffer* buffer, const GmVec3* vector) {
+    WriteUnitVector(buffer, *vector, false);
+}
+
+void GmArchive::ReadQuat_6(CClassicBuffer* buffer, GmQuat* quaternion) {
+    uint16_t packedAngle = 0;
+    buffer->ReadAll(&packedAngle, sizeof(packedAngle));
     GmVec3 axis;
-    ReadVec3Unit_4(buf, &axis);
+    ReadUnitVector(buffer, &axis, true);
 
-    // Axis-Angle reconstruction. 
-    // The scale factor is implicitly baked into the 'angleData' unpacking.
-    float fScale = std::sin((float)angleData); 
-    
-    quat->x = axis.x * fScale;
-    quat->y = axis.y * fScale;
-    quat->z = axis.z * fScale;
-    quat->w = std::cos((float)angleData);
+    const float angle = static_cast<float>(
+        static_cast<double>(packedAngle) * kPi / 65535.0);
+    const float sine = std::sin(angle);
+    quaternion->w = std::cos(angle);
+    quaternion->x = axis.x * sine;
+    quaternion->y = axis.y * sine;
+    quaternion->z = axis.z * sine;
 }
 
-void GmArchive::WriteQuat_6(CClassicBuffer* buf, const GmQuat* quat) {
-    float angle = std::acos(quat->w);
-    
-    float axisLenSqr = quat->x * quat->x + quat->y * quat->y + quat->z * quat->z;
-    float invLen = (axisLenSqr > 0.0f) ? (1.0f / std::sqrt(axisLenSqr)) : 0.0f;
-    
-    GmVec3 axis;
-    axis.x = quat->x * invLen;
-    axis.y = quat->y * invLen;
-    axis.z = quat->z * invLen;
-
-    short packedAngle = static_cast<short>(std::round((angle * CONST_00b52a58) / CONST_00b36110));
-    
-    buf->WriteAll(&packedAngle, 2);
-    WriteVec3Unit_4(buf, &axis);
-}
-
-void GmArchive::ReadVec3_4(CClassicBuffer* buf, GmVec3* vec) {
-    short packedMag;
-    buf->ReadAll(&packedMag, 2);
-    
-    float mag = 0.0f;
-    if (packedMag != -0x8000) { // 0x8000 is the reserved constant for length 0
-        mag = std::exp((float)packedMag); // __CIexp
+void GmArchive::WriteQuat_6(
+    CClassicBuffer* buffer, const GmQuat* quaternion) {
+    const float angle = std::acos(quaternion->w);
+    const float axisLength = std::sqrt(
+        quaternion->x * quaternion->x +
+        quaternion->y * quaternion->y +
+        quaternion->z * quaternion->z);
+    GmVec3 axis(1.0f, 0.0f, 0.0f);
+    if (axisLength >= kDirectionEpsilon) {
+        const float inverseLength = 1.0f / axisLength;
+        axis = GmVec3(
+            quaternion->x * inverseLength,
+            quaternion->y * inverseLength,
+            quaternion->z * inverseLength);
     }
-    
-    GmVec3 dir;
-    // Uses a distinct internal ReadUnitVec3 implementation for the other 2 bytes
-    // Assumed to be essentially a `ReadVec3Unit_2(buf, &dir)` internally
-    ReadVec3Unit_4(buf, &dir); // Placeholder based on external calls
-    
-    vec->x = dir.x * mag;
-    vec->y = dir.y * mag;
-    vec->z = dir.z * mag;
+
+    const uint16_t packedAngle = static_cast<uint16_t>(
+        static_cast<int>(static_cast<double>(angle) * 65535.0 / kPi));
+    buffer->WriteAll(&packedAngle, sizeof(packedAngle));
+    WriteUnitVector(buffer, axis, true);
 }
 
-void GmArchive::WriteVec3_4(CClassicBuffer* buf, const GmVec3* vec) {
-    float lenSqr = vec->x * vec->x + vec->y * vec->y + vec->z * vec->z;
-    
-    short packedMag = -0x8000;
-    GmVec3 dir = {0, 0, 0};
-    
-    if (lenSqr >= CONST_00bbdbe4) {
-        float invLen = 1.0f / std::sqrt(lenSqr);
-        dir.x = vec->x * invLen;
-        dir.y = vec->y * invLen;
-        dir.z = vec->z * invLen;
-        
-        float logMag = std::log(1.0f / invLen) * CONST_00c418d8;
-        
-        if (logMag < CONST_00b9cfa4) logMag = CONST_00b9cfa4;
-        if (logMag > CONST_00b9cfa8) logMag = CONST_00b9cfa8;
-        
-        packedMag = static_cast<short>(logMag);
+void GmArchive::ReadVec3_4(CClassicBuffer* buffer, GmVec3* vector) {
+    int16_t packedMagnitude = 0;
+    buffer->ReadAll(&packedMagnitude, sizeof(packedMagnitude));
+    const float magnitude = packedMagnitude == INT16_MIN
+        ? 0.0f
+        : std::exp(static_cast<float>(
+              static_cast<double>(packedMagnitude) / kVectorLogScale));
+    GmVec3 direction;
+    ReadUnitVector(buffer, &direction, false);
+    *vector = direction * magnitude;
+}
+
+void GmArchive::WriteVec3_4(
+    CClassicBuffer* buffer, const GmVec3* vector) {
+    const float length = std::sqrt(
+        vector->x * vector->x +
+        vector->y * vector->y +
+        vector->z * vector->z);
+    int16_t packedMagnitude = INT16_MIN;
+    GmVec3 direction(1.0f, 0.0f, 0.0f);
+    if (length >= kDirectionEpsilon) {
+        direction = *vector * (1.0f / length);
+        const float logMagnitude = std::clamp(
+            static_cast<float>(std::log(length) * kVectorLogScale),
+            -32768.0f, 32767.0f);
+        packedMagnitude = static_cast<int16_t>(
+            static_cast<int>(logMagnitude));
     }
-    
-    buf->WriteAll(&packedMag, 2);
-    WriteVec3Unit_2(buf, &dir);
+
+    buffer->WriteAll(&packedMagnitude, sizeof(packedMagnitude));
+    WriteUnitVector(buffer, direction, false);
 }

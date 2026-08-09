@@ -28,15 +28,10 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
     }
     CHmsDyna& dyna = *item.m_corpuses[0]->m_dyna;
 
-    // Force and torque accumulators belong to one native 100 Hz frame.
-    GmVec3 zero(0.0f, 0.0f, 0.0f);
-    item.SetForce(&item, &zero);
-    item.SetTorque(&item, &zero);
-
     GmIso4 worldMeshTransform;
     worldMeshTransform.SetIdentity();
     const VehicleChassisBasis queryBasis =
-        BuildVehicleChassisBasis(car.m_chassisUp, dyna.m_yaw);
+        BuildVehicleChassisBasis(car.m_chassisUp, dyna.GetYaw());
     GmVec3 groundNormal(0.0f, 0.0f, 0.0f);
     float supportedRootY = -std::numeric_limits<float>::infinity();
     VehicleWheelGroundSample supportSamples[
@@ -58,7 +53,7 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
         const GmVec3 wheelOffset =
             queryBasis.right * localX + queryBasis.up * localY +
             queryBasis.forward * localZ;
-        const GmVec3 wheelCenter = dyna.m_position + wheelOffset;
+        const GmVec3 wheelCenter = dyna.Position() + wheelOffset;
 
         const GmVec3 rayPosition =
             wheelCenter + GmVec3(0.0f, 0.25f, 0.0f);
@@ -115,7 +110,7 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
         groundNormal = GmVec3(0.0f, 1.0f, 0.0f);
     }
     const VehicleGroundSupportResult support = ComputeVehicleGroundSupport(
-        supportSamples, wheelCount, dyna.m_yaw);
+        supportSamples, wheelCount, dyna.GetYaw());
     if (diagnostics.onGround && support.valid) {
         groundNormal = support.basis.up;
         supportedRootY = support.rootY;
@@ -131,29 +126,28 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
     GmVec3 groundReaction(0.0f, 0.0f, 0.0f);
     if (diagnostics.onGround) {
         GmVec3 velocity;
-        item.GetLinearSpeed(&item, &velocity);
-        dyna.m_position.y = supportedRootY;
+        dyna.GetLinearSpeed(nullptr, &velocity);
+        dyna.Position().y = supportedRootY;
         GmVec3 resolvedVelocity =
             RemoveInwardSupportVelocity(velocity, groundNormal);
         if (resolvedVelocity.x != velocity.x ||
             resolvedVelocity.y != velocity.y ||
             resolvedVelocity.z != velocity.z) {
-            item.SetLinearSpeed(&item, &resolvedVelocity);
+            dyna.SetLinearSpeed(nullptr, &resolvedVelocity);
         }
         const float normalGravity =
             GmVec3::Dot(gravityForce, groundNormal);
         groundReaction = groundNormal * -normalGravity;
     }
-    item.AddForce(&item, &gravityForce, nullptr);
-
-// The vehicle callback observes contact and gravity. Track support is
+    // Native force preparation resets the accumulators, evaluates gravity and
+    // damping, and invokes the vehicle callback. Track support is
     // added afterwards, before CHmsZoneDynamic integrates velocity and pose.
-    car.IntegrateVehicle(nullptr, dt);
-    item.AddForce(&item, &groundReaction, nullptr);
+    dynamicZone.PrepareForPhysicsStep(dt);
+    dyna.AddForce(nullptr, &groundReaction, nullptr);
 
-    diagnostics.position = dyna.m_position;
-    item.GetLinearSpeed(&item, &diagnostics.velocity);
-    diagnostics.accumulatedForce = dyna.m_force;
-    dynamicZone.PhysicsStep2();
+    diagnostics.position = dyna.Position();
+    dyna.GetLinearSpeed(nullptr, &diagnostics.velocity);
+    diagnostics.accumulatedForce = dyna.Force();
+    dynamicZone.PhysicsStep2(dt);
     return diagnostics;
 }

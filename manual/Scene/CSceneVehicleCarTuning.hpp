@@ -2,6 +2,7 @@
 #define CSCENEVEHICLECARTUNING_HPP
 
 #include "CMwNod.hpp"
+#include <array>
 #include <cstdint>
 
 class CFuncKeysReal;
@@ -42,6 +43,8 @@ public:
     float m_gravityCoef;
     float m_gravityCoefAir;
     float m_angularFluidFrictionCoef1;
+    float m_groundSlowDownBase;
+    float m_linearFluidFrictionCoef;
     float m_steerSpeed;
     int m_steerModel;
     float m_steerLowSpeed;
@@ -52,15 +55,62 @@ public:
     float m_sideFriction1;
     float m_maxSideFrictionOverLimitBlend;
     float m_m5AccelSlipCoefMax;
+    uint32_t m_m5LateralConstantSlowDownDuration;
     int m_shockModel;
     float m_absorbingValKi;
     float m_absorbingValKa;
+    float m_absorbingValMin;
     float m_absorbingValRest;
+    float m_shockModel0ForceFactor;
     float m_absorbTension;
+    float m_bodyFrictionCoef;
+    float m_bodyFrictionCoefMetal;
+    float m_bodyRestCoefMetal;
+    float m_bodyRestCoef;
+    float m_wheelFrictionCoefConcrete;
+    float m_wheelRestCoefConcrete;
+    float m_wheelFrictionCoefMetal;
+    float m_wheelRestCoefMetal;
+    float m_angularSpeedYImpulseScale;
+    float m_angularImpulseScale;
+    float m_angularSpeedClamp;
+    float m_linearSpeedSquaredPositiveDeltaMax;
     float m_lateralSlopeAdherenceMin;
     float m_lateralSlopeAdherenceMax;
     float m_axialSlopeAdherenceMin;
     float m_axialSlopeAdherenceMax;
+
+    // Semantic host view of the native water block at +0x204..+0x220.
+    float m_waterGravity;
+    float m_waterReboundMinHorizontalSpeed;
+    float m_waterBumpMinSpeed;
+    CFuncKeysReal* m_waterBumpSlowDownFromSpeedRatio;
+    CFuncKeysReal* m_waterReboundFromSpeedRatio;
+    CFuncKeysReal* m_waterFrictionFromSpeed;
+    float m_waterAngularFriction;
+    float m_waterAngularFrictionSq;
+
+    // Semantic host view of the native Model-6 engine block. Native offsets:
+    // max RPM +0x2D0; ratios +0x2C4/+0x2D4/+0x2E0; wanted/derived shift
+    // buffers +0x2F8/+0x304/+0x310; scalar response values +0x2EC..+0x338.
+    float m_m6MaxRpm;
+    std::array<float, 6> m_m6GearRatios;
+    std::array<float, 6> m_m6MaxRpmRatios;
+    std::array<float, 6> m_m6MinRpmRatios;
+    std::array<float, 6> m_m6RpmWantedOnGearUp;
+    std::array<float, 6> m_m6RpmDeltaOnGearUp;
+    std::array<float, 6> m_m6RpmDeltaOnGearDown;
+    float m_m6BurnoutRpmAcceleration;
+    float m_m6AirRpmAcceleration;
+    float m_m6AirRpmDeadening;
+    float m_m6RpmLossOnGearUp;
+    float m_m6RpmGainOnGearDown;
+    float m_m6RpmGainOnTakeoff;
+    float m_m6RpmLossOnTakeoffFinished;
+    float m_m6PositiveTakeoffFrontSpeed;
+    float m_m6PositiveTakeoffRearSpeed;
+    float m_m6NegativeTakeoffFrontSpeed;
+    float m_m6NegativeTakeoffRearSpeed;
 
     CSceneVehicleCarTuning();
     virtual ~CSceneVehicleCarTuning();
@@ -82,9 +132,14 @@ public:
     float GetRolloverLateralFromSpeed(float speed);
     float GetSteerSlowDownFromSpeed(float speed);
     float M5GetAccelFromSpeed(float speed);
+    float M5GetLateralContactSlowDownFromSpeed(float speed);
     float M5GetSlippingAccelFromSpeed(float speed);
     float M5GetSteerSlowDownFromSpeed(float speed);
     float M6GetRearGearAccelFromSpeed(float speed);
+    float GetWaterBumpSlowDownFromSpeedRatio(float ratio);
+    float GetWaterReboundFromSpeedRatio(float ratio);
+    float GetWaterFrictionFromSpeed(float speed);
+    void M6InitRpmDeltas();
     float GetModel6SteerSpeedFactor(float speed) const;
     float GetModel6SideForce(float rawForce, float maxForce) const;
     float GetYawInertia() const;

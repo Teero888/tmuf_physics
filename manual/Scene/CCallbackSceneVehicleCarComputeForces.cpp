@@ -3,7 +3,16 @@
 
 CCallbackSceneVehicleCarComputeForces::~CCallbackSceneVehicleCarComputeForces() {}
 
-void CCallbackSceneVehicleCarComputeForces::ComputeForces(CCallbackSceneToyBroomStickComputeForces* param_1, CHmsItem* param_2, float dt) {
-    // In our manual structure, we'll assume the car logic is triggered correctly.
-    // In the actual engine, this callback is attached to a car and calls its ComputeForces.
+void CCallbackSceneVehicleCarComputeForces::ComputeForces(
+    CHmsItem* item, float dt) {
+    if (item == nullptr || item->m_sceneMobil == nullptr) return;
+    CSceneVehicleCar* car =
+        static_cast<CSceneVehicleCar*>(item->m_sceneMobil);
+    car->ComputeForces(nullptr, item, dt);
+}
+
+CCallbackSceneVehicleCarComputeForces*
+CCallbackSceneVehicleCarComputeForces::Instance() {
+    static CCallbackSceneVehicleCarComputeForces callback;
+    return &callback;
 }

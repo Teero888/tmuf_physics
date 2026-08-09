@@ -21,6 +21,7 @@ class CControlStyle;
 class CClassicBufferMemory;
 class CSceneToyBoat;
 class CPlugTree;
+class CPlugSurface;
 class GmLocFreeVal;
 class GmFrustumIso4;
 class CRpcCallInternal;
@@ -49,17 +50,23 @@ public:
 public:
     // 0x00 to 0x37 inherited from CHmsZoneElem (including CMwNod)
     
-    GmVec3 m_translation;                  // 0x3C to 0x47 (X, Y, Z)
+    // Native corpus location is the complete GmIso4 at +0x18..+0x47.
+    GmIso4 m_location;
     CHmsItem* m_item;                      // 0x48 (Pointer back to the base Item definition)
     void* m_ptr4C;                         // 0x4C (Internal rendering/material buffer)
     uint32_t m_ptr50;                      // 0x50 
     uint32_t m_flags54;                    // 0x54 (Initialized to 0xFFFFFFFF)
     CHmsDyna* m_dyna;                      // 0x58 (Only exists if Corpus is dynamic)
 
-    // Typed standalone collision leaves. Native builds these by recursively
-    // combining the corpus transform with CPlugTree surface nodes; keeping
-    // the resulting located surfaces here avoids any 32-bit offset casts.
-    CFastBuffer<LocatedGmSurf> m_collisionSurfaces;
+    struct SCollisionSurface {
+        LocatedGmSurf m_gmSurface;
+        CPlugSurface* m_plugSurface;
+    };
+
+    // Typed standalone collision leaves. They are refreshed from the solid
+    // tree before collision traversal when a solid is available. Direct
+    // GmSurf registration remains a fallback for synthetic callers/tests.
+    CFastBuffer<SCollisionSurface> m_collisionSurfaces;
 
     // =================================================
     // Member Functions
@@ -69,6 +76,13 @@ public:
     virtual void* _vector_deleting_destructor_(CRpcCallInternal* param_1, uint32_t param_2);
 
     static CMwNod* MwNewCHmsCorpus();
+    // CHmsPhysicalContact retains native 32-bit corpus pointers even in the
+    // 64-bit standalone build. Tokens resolve only while exactly one live
+    // corpus owns that low-32-bit value, avoiding unsafe truncation casts.
+    static uint32_t PointerToken(const CHmsCorpus* corpus);
+    static CHmsCorpus* ResolvePointerToken(uint32_t token);
+
+    const GmMat3& CurrentRotation() const;
 
     CMwClassInfo* MwGetClassInfo(CFuncSegment* param_1);
     uint32_t GetMwClassId(CControlStyle* param_1);
@@ -79,7 +93,10 @@ public:
     
     void ComputeCurrentState(CHmsCorpus* param_1, float param_2);
     void AddCollisionSurface(GmSurf* surface, const GmIso4& location);
+    void AddCollisionSurface(CPlugSurface* surface, const GmIso4& location);
     void ClearCollisionSurfaces();
+    bool RefreshCollisionSurfacesFromTree(CPlugTree* root);
+    bool RefreshCollisionSurfacesFromSolid();
     void GetLocation(GmLocFreeVal* param_1, GmIso4* param_2);
     void OldRestoreStaticState(CHmsCorpus* param_1, CClassicBufferMemory* param_2, int param_3, uint8_t param_4, int param_5);
     void RefreshFromSolid(CHmsCorpus* param_1);
@@ -87,7 +104,9 @@ public:
     void RestoreStaticState(CSceneToyBoat* param_1, CClassicBufferMemory* param_2, int param_3, uint32_t param_4, uint32_t param_5, int param_6);
     void RotateOf(CHmsCorpus* param_1, GmMat3* param_2);
     void SetItem(CHmsCorpus* param_1, CHmsItem* param_2);
+    void SetLocation(const GmIso4& location);
     void SetLocation(CPlugTree* param_1, GmIso4* param_2);
+    void SetTranslation(const GmVec3& translation);
     void SetTranslation(GmIso4* param_1, GmVec3* param_2);
 };
 

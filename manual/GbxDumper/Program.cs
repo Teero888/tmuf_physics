@@ -32,6 +32,12 @@ class Program {
                 } else if (val is IEnumerable ien && !(val is string)) {
                     if (p.Name == "Tuning") {
                         // skip
+                    } else {
+                        Console.WriteLine($"{indent}{p.Name}:");
+                        var index = 0;
+                        foreach (var item in ien) {
+                            Console.WriteLine($"{indent}  [{index++}] = {item}");
+                        }
                     }
                 } else {
                     Console.WriteLine($"{indent}{p.Name} = {val}");

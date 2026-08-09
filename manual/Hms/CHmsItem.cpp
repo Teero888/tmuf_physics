@@ -41,11 +41,7 @@ CHmsItem::CCallback::~CCallback() {}
 CHmsItem::CCallbackRenderBeforeTree::~CCallbackRenderBeforeTree() {}
 
 CHmsItem::SCallbackList::SCallbackList() {
-    m_callbacks[0] = nullptr;
-    m_callbacks[1] = nullptr;
-    m_callbacks[2] = nullptr;
-    m_callbacks[3] = nullptr;
-    m_callbacks[4] = nullptr;
+    for (CCallback*& callback : m_callbacks) callback = nullptr;
 }
 CHmsItem::SCallbackList::~SCallbackList() {}
 
@@ -267,10 +263,7 @@ void CHmsItem::AddForce(CHmsItem* param_1, GmVec3* param_2, GmVec3* param_3) {
     for (uint32_t i = 0; i < m_corpuses.GetCount(); ++i) {
         CHmsDyna* dyna = m_corpuses[i]->m_dyna;
         if (dyna != nullptr) {
-            // CSceneVehicleCar currently supplies a world-space force. Keep
-            // that explicit at this adapter boundary; CHmsDyna::AddLocalForce
-            // remains available for native local-space callers.
-            dyna->AddForce(param_1, param_2, param_3);
+            dyna->AddLocalForce(param_2);
         }
     }
 }
@@ -787,27 +780,15 @@ void CHmsItem::VisibleIdSet(CHmsItem* param_1, SPlugVisibleId* param_2) {
     m_visibleId = static_cast<uint16_t>(reinterpret_cast<uintptr_t>(param_1));
 }
 
-void CHmsItem::CallbackSet(CHmsItem* param_1, ECallback param_2, CCallback* param_3) {
-    if (param_2 != CB_NONE) {
-        typedef CHmsItem* (*CBCheck)();
-        CBCheck f = (CBCheck)*((void**)((char*)param_2 + 8));
-        if (f() != param_1) return;
-    }
-    
+void CHmsItem::CallbackSet(ECallback type, CCallback* callback) {
+    const uint32_t index = static_cast<uint32_t>(type);
+    if (index >= 6u) return;
+    if (callback != nullptr && callback->GetType() != type) return;
     if (m_callbacks == nullptr) {
-        if (param_2 == CB_NONE) return;
+        if (callback == nullptr) return;
         m_callbacks = new SCallbackList();
     }
-    
-    CCallback* current = m_callbacks->m_callbacks[reinterpret_cast<uintptr_t>(param_1)];
-    if (current != reinterpret_cast<CCallback*>(param_2)) {
-        if (current != nullptr) {
-            typedef void (*CBDel)();
-            CBDel d = (CBDel)*((void**)((char*)current + 4));
-            d();
-        }
-        m_callbacks->m_callbacks[reinterpret_cast<uintptr_t>(param_1)] = reinterpret_cast<CCallback*>(param_2);
-    }
+    m_callbacks->m_callbacks[index] = callback;
 }
 
 float CHmsItem::GetAsyncBlendBetweenPreviousAndNextStates(CHmsItem* param_1) {

@@ -25,6 +25,7 @@
 #include "CMwCmdAffectParam.hpp"
 #include "CMwValueStd.hpp"
 #include "CRpcCallInternal.hpp"
+#include <limits>
 
 // External globals from assembly mapping
 extern float DAT_00b37b60;
@@ -58,17 +59,17 @@ CHmsZone::CHmsZone() : CMwNod() {
     // Note: CFastBuffer constructors are implicitly called here by C++
     m_parentZone = nullptr;
     m_callback = nullptr;
+    m_nodE8 = nullptr;
     
     m_colorGradient1.x = 1.0f; m_colorGradient1.y = 1.0f; m_colorGradient1.z = 1.0f;
     m_colorGradient2.x = 0.0f; m_colorGradient2.y = 1.0f; m_colorGradient2.z = 1.0f;
     
     m_zoneFlags = 6;
     
-    // GxFog Allocation Mock (Assuming standard construction)
-    m_fog = reinterpret_cast<GxFog*>(new uint8_t[0x40]);
-    if (m_fog != nullptr) {
-        CMwNod::MwAddRef(reinterpret_cast<CMwNod*>(m_fog));
-    }
+    // GxFog is a rendering-only class that is not reconstructed. The old
+    // byte-buffer reinterpret_cast had no CMwNod lifetime or vtable and made
+    // an otherwise valid standalone CHmsZone unsafe to destroy.
+    m_fog = nullptr;
     
     m_fogFlags1 = 0;
     m_fogFlags2 = 1;
@@ -92,6 +93,13 @@ CHmsZone::CHmsZone() : CMwNod() {
     
     m_lightCount = 0;
     m_vPacker = nullptr;
+
+    // A zero/default mask disables water until collision-zone data is loaded.
+    m_waterCollisionMap.m_defaultValue = 0u;
+    // Native CHmsCollisionManager::SZone initializes +0x178/+0x17C from
+    // 0x00B55DA4, the lowest finite IEEE-754 float.
+    m_waterCollisionSurfaceHeight = std::numeric_limits<float>::lowest();
+    m_waterCollisionBottomHeight = std::numeric_limits<float>::lowest();
 }
 
 CHmsZone::~CHmsZone() {

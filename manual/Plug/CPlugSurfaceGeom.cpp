@@ -1,4 +1,5 @@
 #include "CPlugSurfaceGeom.hpp"
+#include <algorithm>
 #include <iostream>
 #include <cstring>
 
@@ -32,15 +33,60 @@ struct CookedTriangle_Geom {
     uint8_t u05;
 };
 
-CPlugSurfaceGeom::CPlugSurfaceGeom() {
-    m_mesh = new GmSurfMesh();
+CPlugSurfaceGeom::CPlugSurfaceGeom()
+    : m_gmSurf(nullptr), m_ownsGmSurf(false) {
+    m_boundingBox.InitEmpty();
 }
 
 CPlugSurfaceGeom::~CPlugSurfaceGeom() {
-    delete m_mesh;
+    if (m_ownsGmSurf) delete m_gmSurf;
+}
+
+GmSurf* CPlugSurfaceGeom::GetGmSurf() const {
+    return m_gmSurf;
+}
+
+GmSurfMesh* CPlugSurfaceGeom::GetMesh() const {
+    return m_gmSurf != nullptr && m_gmSurf->m_type == 7u
+        ? static_cast<GmSurfMesh*>(m_gmSurf)
+        : nullptr;
+}
+
+void CPlugSurfaceGeom::SetGmSurf(GmSurf* surface, bool takeOwnership) {
+    if (surface == m_gmSurf) {
+        m_ownsGmSurf = takeOwnership;
+        return;
+    }
+    if (m_ownsGmSurf) delete m_gmSurf;
+    m_gmSurf = surface;
+    m_ownsGmSurf = takeOwnership;
+    m_boundingBox.InitEmpty();
+    if (surface == nullptr) return;
+    surface->GetBoundingBox(m_boundingBox);
+    if (surface->m_type == 5u) {
+        const GmSurfPolygon* polygon =
+            static_cast<const GmSurfPolygon*>(surface);
+        if (polygon->m_numVertices != 0u) {
+            GmVec3 minimum = polygon->m_vertices[0];
+            GmVec3 maximum = polygon->m_vertices[0];
+            for (uint32_t index = 1u;
+                 index < polygon->m_numVertices && index < 4u; ++index) {
+                const GmVec3& vertex = polygon->m_vertices[index];
+                minimum.x = std::min(minimum.x, vertex.x);
+                minimum.y = std::min(minimum.y, vertex.y);
+                minimum.z = std::min(minimum.z, vertex.z);
+                maximum.x = std::max(maximum.x, vertex.x);
+                maximum.y = std::max(maximum.y, vertex.y);
+                maximum.z = std::max(maximum.z, vertex.z);
+            }
+            m_boundingBox.SetMinMax(minimum, maximum);
+        }
+    }
 }
 
 void CPlugSurfaceGeom::Archive(CClassicArchive* archive) {
+    SetGmSurf(new GmSurfMesh(), true);
+    GmSurfMesh* mesh = GetMesh();
     uint32_t idIndex;
     archive->m_buffer->Read(&idIndex, 4);
 
@@ -56,18 +102,18 @@ void CPlugSurfaceGeom::Archive(CClassicArchive* archive) {
     uint32_t numTriangles;
     archive->m_buffer->Read(&numTriangles, 4);
 
-    m_mesh->m_vertices.SetCount(numVertices);
-    archive->m_buffer->Read(m_mesh->m_vertices.m_data, numVertices * sizeof(GmVec3));
+    mesh->m_vertices.SetCount(numVertices);
+    archive->m_buffer->Read(mesh->m_vertices.m_data, numVertices * sizeof(GmVec3));
 
     // Handle Big-Endian vertices
     for (uint32_t i = 0; i < numVertices; ++i) {
         if (i >= 17 && i <= 24) {
             // Unused/padding/garbage, reconstruct logically later if ever needed
-            m_mesh->m_vertices[i] = GmVec3(0, 0, 0); 
+            mesh->m_vertices[i] = GmVec3(0, 0, 0);
         } else if (i > 24) {
-            m_mesh->m_vertices[i].x = CPlugSurfaceGeom_BSWAP_FLOAT(m_mesh->m_vertices[i].x);
-            m_mesh->m_vertices[i].y = CPlugSurfaceGeom_BSWAP_FLOAT(m_mesh->m_vertices[i].y);
-            m_mesh->m_vertices[i].z = CPlugSurfaceGeom_BSWAP_FLOAT(m_mesh->m_vertices[i].z);
+            mesh->m_vertices[i].x = CPlugSurfaceGeom_BSWAP_FLOAT(mesh->m_vertices[i].x);
+            mesh->m_vertices[i].y = CPlugSurfaceGeom_BSWAP_FLOAT(mesh->m_vertices[i].y);
+            mesh->m_vertices[i].z = CPlugSurfaceGeom_BSWAP_FLOAT(mesh->m_vertices[i].z);
         }
     }
     
@@ -83,17 +129,17 @@ void CPlugSurfaceGeom::Archive(CClassicArchive* archive) {
     std::vector<CookedTriangle_Geom> cookedTriangles(numTriangles);
     archive->m_buffer->Read(cookedTriangles.data(), numTriangles * sizeof(CookedTriangle_Geom));
 
-    m_mesh->m_triangles.SetCount(numTriangles);
+    mesh->m_triangles.SetCount(numTriangles);
     for(uint32_t i=0; i<numTriangles; ++i) {
-        m_mesh->m_triangles[i].indices[0] = cookedTriangles[i].indices[0] & 0xFFFF;
-        m_mesh->m_triangles[i].indices[1] = cookedTriangles[i].indices[1] & 0xFFFF;
-        m_mesh->m_triangles[i].indices[2] = cookedTriangles[i].indices[2] & 0xFFFF;
+        mesh->m_triangles[i].indices[0] = cookedTriangles[i].indices[0] & 0xFFFF;
+        mesh->m_triangles[i].indices[1] = cookedTriangles[i].indices[1] & 0xFFFF;
+        mesh->m_triangles[i].indices[2] = cookedTriangles[i].indices[2] & 0xFFFF;
         
         // Plane equation (Normal + dist)
-        m_mesh->m_triangles[i].planeNormal.x = cookedTriangles[i].planeEq[0];
-        m_mesh->m_triangles[i].planeNormal.y = cookedTriangles[i].planeEq[1];
-        m_mesh->m_triangles[i].planeNormal.z = cookedTriangles[i].planeEq[2];
-        m_mesh->m_triangles[i].planeDist = cookedTriangles[i].planeEq[3];
+        mesh->m_triangles[i].planeNormal.x = cookedTriangles[i].planeEq[0];
+        mesh->m_triangles[i].planeNormal.y = cookedTriangles[i].planeEq[1];
+        mesh->m_triangles[i].planeNormal.z = cookedTriangles[i].planeEq[2];
+        mesh->m_triangles[i].planeDist = cookedTriangles[i].planeEq[3];
     }
     
     // Bounding Box

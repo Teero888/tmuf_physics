@@ -10,13 +10,13 @@ struct CPfmHeap;
 
 class CHmsForceFieldUniform : public CHmsForceField {
 public:
-    int m_field_0x54;
     float m_force[3]; // 0x5C, 0x60, 0x64
 
     CHmsForceFieldUniform();
     virtual ~CHmsForceFieldUniform();
 
-    virtual GmVec3 GetValue(CFuncColorGradient* param_1, float param_2) override;
+    bool GetValue(
+        const GmVec3& position, GmVec3& value) const override;
 
     CMwClassInfo* MwGetClassInfo(CFuncSegment* param_1);
     static CMwNod* MwNewCHmsForceFieldUniform();

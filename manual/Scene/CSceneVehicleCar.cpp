@@ -6,43 +6,43 @@
 #include "CHmsCorpus.hpp"
 #include "CHmsDyna.hpp"
 #include "CHmsItem.hpp"
+#include "CHmsPhysicalContact.hpp"
+#include "CHmsZone.hpp"
+#include "CPlugPhysicalObject.hpp"
+#include "CPlugTree.hpp"
 #include "GmMat3.hpp"
+#include "GmFunc.hpp"
+#include "SDynaMath.hpp"
 #include <cmath>
 #include <algorithm>
+#include <limits>
 
 extern CSceneVehicleCarTuning* g_tuning;
 
 namespace {
 
-CHmsDyna* GetCarDyna(const CSceneVehicleCar& car) {
-    if (car.m_hmsItem == nullptr ||
-        car.m_hmsItem->m_corpuses.GetCount() == 0u) {
-        return nullptr;
+GmVec3 TransformVector(const GmMat3& matrix, const GmVec3& vector) {
+    return GmVec3{
+        matrix.m00 * vector.x + matrix.m01 * vector.y + matrix.m02 * vector.z,
+        matrix.m10 * vector.x + matrix.m11 * vector.y + matrix.m12 * vector.z,
+        matrix.m20 * vector.x + matrix.m21 * vector.y + matrix.m22 * vector.z,
+    };
+}
+
+CHmsDyna* GetVehicleDyna(CHmsItem* item) {
+    if (item == nullptr) return nullptr;
+    if (item->m_corpuses.GetCount() != 0u &&
+        item->m_corpuses[0] != nullptr) {
+        return item->m_corpuses[0]->m_dyna;
     }
-    CHmsCorpus* corpus = car.m_hmsItem->m_corpuses[0];
-    return corpus != nullptr ? corpus->m_dyna : nullptr;
+    // The host declaration retains this convenience link outside the native
+    // 32-bit item layout. It supports synthetic standalone callers that have
+    // not materialized a corpus buffer.
+    return item->m_dyna;
 }
 
-float GetCarYaw(const CSceneVehicleCar& car) {
-    CHmsDyna* dyna = GetCarDyna(car);
-    return dyna != nullptr ? dyna->m_yaw : 0.0f;
-}
-
-VehicleChassisBasis GetChassisBasis(const CSceneVehicleCar& car) {
-    return BuildVehicleChassisBasis(car.m_chassisUp, GetCarYaw(car));
-}
-
-GmVec3 LocalToWorld(const VehicleChassisBasis& basis, const GmVec3& local) {
-    return basis.right * local.x +
-           basis.up * local.y +
-           basis.forward * local.z;
-}
-
-GmVec3 WorldToLocal(const VehicleChassisBasis& basis, const GmVec3& world) {
-    return GmVec3(
-        GmVec3::Dot(world, basis.right),
-        GmVec3::Dot(world, basis.up),
-        GmVec3::Dot(world, basis.forward));
+float SquaredLength(const GmVec3& vector) {
+    return GmVec3::Dot(vector, vector);
 }
 
 } // namespace
@@ -51,23 +51,52 @@ GmVec3 WorldToLocal(const VehicleChassisBasis& basis, const GmVec3& world) {
 CSceneVehicleCar::SDynaPart::~SDynaPart() {}
 
 // SEngine
-CSceneVehicleCar::SEngine::~SEngine() {}
 void CSceneVehicleCar::SEngine::Reset() {
-    // Exact writes performed by SEngine::Reset in TmForeverFixed.exe.
-    // Constructor-owned throttle/scalar defaults deliberately survive Reset.
-    m_field_0x10 = 0.0f;
-    m_engineRpm = 0.0f;
-    m_clutchRpm = 0.0f;
-    m_clutchRatio = 1.0f;
-    m_gearShiftTimer = 0.0f;
+    // Exact writes at TmForeverFixed.exe 0x7BC9A0. The five constructor-owned
+    // scalars at +0x00..+0x10 deliberately survive Reset.
     m_field_0x28 = 0;
+    m_engineRpm = 0.0f;
     m_currentGear = 1;
+    m_clutchRpm = 0.0f;
+    m_field_0x14 = 0.0f;
+    m_gearShiftTimer = 0.0f;
+    m_clutchRatio = 1.0f;
 }
 
 // SSimulationWheel::SRealTimeState
-CSceneVehicleCar::SSimulationWheel::SRealTimeState::~SRealTimeState() {}
 void CSceneVehicleCar::SSimulationWheel::SRealTimeState::Integrate(float dt) {
-    m_rotationAngle += m_angularVelocity * dt;
+    using namespace TmForeverPhysicsConstants;
+
+    m_rotationAngle = GmFunc::Mod(
+        m_rotationAngle + m_angularVelocity * dt,
+        0.0f, kWheelRotationAnglePeriod);
+
+    const float directionSquaredLength =
+        m_direction.x * m_direction.x +
+        m_direction.y * m_direction.y +
+        m_direction.z * m_direction.z;
+    if (directionSquaredLength > kWheelDirectionSquaredEpsilon) {
+        const float inverseLength = 1.0f / std::sqrt(directionSquaredLength);
+        m_direction.x *= inverseLength;
+        m_direction.y *= inverseLength;
+        m_direction.z *= inverseLength;
+
+        const GmVec3 directionOfView(
+            0.0f, -m_direction.z, m_direction.y);
+        m_orientation.rot.SetUpVandDOV(m_direction, directionOfView);
+    }
+
+    if (m_targetSteeringAngle <= m_steeringAngle) {
+        m_steeringAngle -= dt;
+        if (m_steeringAngle < m_targetSteeringAngle) {
+            m_steeringAngle = m_targetSteeringAngle;
+        }
+    } else {
+        m_steeringAngle += dt;
+        if (m_steeringAngle > m_targetSteeringAngle) {
+            m_steeringAngle = m_targetSteeringAngle;
+        }
+    }
 }
 
 // SSimulationWheel::SState
@@ -83,16 +112,23 @@ CSceneVehicleCar::SSimulationWheel::SSimulationWheel()
       m_groundMaterial(0),
       m_isSlipping(0),
       m_suspensionForce(0.0f),
-      m_field_0x15c(0.0f) {
+      m_absorbContactPoint(0.0f, 0.0f, 0.0f),
+      m_groundContactCount(0),
+      m_groundContactNormalSum(0.0f, 0.0f, 0.0f),
+      m_hasLateralContact(0),
+      m_lateralContactPoint(0.0f, 0.0f, 0.0f),
+      m_otherCorpusLocalDirection(0.0f, 0.0f, 0.0f),
+      m_otherCorpusToken(0u),
+      m_localContactPosition(0.0f, 0.0f, 0.0f) {
     m_realTimeState.m_compression = 0.0f;
     m_realTimeState.m_velocity = 0.0f;
     m_realTimeState.m_absorbDelta = 0.0f;
+    m_realTimeState.m_orientation.SetIdentity();
     m_realTimeState.m_angularVelocity = 0.0f;
-    m_realTimeState.m_axisX = 0.0f;
-    m_realTimeState.m_axisY = 0.0f;
+    m_realTimeState.m_direction = GmVec3(0.0f, 0.0f, 0.0f);
     m_realTimeState.m_rotationAngle = 0.0f;
-    m_realTimeState.m_field_0xa0 = 0.0f;
-    m_realTimeState.m_field_0xa4 = 0.0f;
+    m_realTimeState.m_steeringAngle = 0.0f;
+    m_realTimeState.m_targetSteeringAngle = 0.0f;
 }
 
 CSceneVehicleCar::SSimulationWheel::~SSimulationWheel() {}
@@ -102,7 +138,36 @@ CSceneVehicleCar::SVehicleCarState::~SVehicleCarState() {}
 
 // CSceneVehicleCar
 CSceneVehicleCar::CSceneVehicleCar()
-    : CSceneVehicle(), m_freeWheeling(0), m_chassisUp(0.0f, 1.0f, 0.0f) {
+    : CSceneVehicle(),
+      m_freeWheeling(0),
+      m_chassisUp(0.0f, 1.0f, 0.0f),
+      m_useGroundedWheelSpeedOverride(0),
+      m_wheelDriveDisabled(0),
+      m_groundedWheelAngularSpeedOverride(0.0f),
+      m_engineState(0),
+      m_engineClutchBoost(0),
+      m_engineTakeoffMode(0),
+      m_engineLocalVelocity(0.0f, 0.0f, 0.0f),
+      m_engineOutsideTakeoffWindow(0),
+      m_engineShiftDirection(0),
+      m_hasBodyContact(0),
+      m_lastBodyContactTick(std::numeric_limits<uint32_t>::max()),
+      m_hasWaterContact(0),
+      m_frictionCurrentTick(0),
+      m_frictionTickFraction(0.0),
+      m_hasAnyContact(0),
+      m_hasChassisContact(0),
+      m_chassisContactMaterial(0),
+      m_wheelContactMaterial(0),
+      m_frontWheelImpact(0.0f),
+      m_rearWheelImpact(0.0f),
+      m_chassisImpact(0.0f),
+      m_wheelContactCount(0),
+      m_chassisContactCount(0),
+      m_chassisContactPointSum(0.0f, 0.0f, 0.0f),
+      m_chassisContactNormalSum(0.0f, 0.0f, 0.0f),
+      m_appliedImpulseSum(0.0f, 0.0f, 0.0f),
+      m_appliedCentralImpulseSum(0.0f, 0.0f, 0.0f) {
     m_simulationFlags = 0;
     m_smoothedSteer = 0.0f;
     m_field_0x5ec = 0.0f;
@@ -114,12 +179,14 @@ CSceneVehicleCar::CSceneVehicleCar()
     // Exact constructor default; UpdateParamsFromTuning later replaces this
     // with twice the longitudinal wheel extent when vehicle geometry exists.
     m_field_0x840 = 1.0f;
+    // Exact native constructor state at +0x1DC..+0x1F0.
+    m_localBodyBounds.InitEmpty();
 
     // Exact SEngine constructor defaults before Reset.
-    m_engine.m_throttle = 1.0f;
+    m_engine.m_maxRpm = TmForeverPhysicsConstants::kDefaultEngineMaxRpm;
     m_engine.m_field_0x04 = 1.0f;
     m_engine.m_field_0x08 = 1.0f;
-    m_engine.m_field_0x0c = 0.0f;
+    m_engine.m_field_0x0c = 1.0f;
     m_engine.m_field_0x10 = 0.0f;
     m_engine.m_field_0x30 = 0.0f;
     m_engine.Reset();
@@ -153,6 +220,315 @@ CSceneVehicleCar::~CSceneVehicleCar() {}
 CMwNod* CSceneVehicleCar::MwNewCSceneVehicleCar() { return new CSceneVehicleCar(); }
 uint32_t CSceneVehicleCar::GetMwClassId() { return 0x0601D000; }
 
+uint32_t CSceneVehicleCar::GetWheelFromSurfaceTree(
+    uint32_t surfaceTreeToken) const {
+    for (uint32_t index = 0; index < m_wheels.GetCount(); ++index) {
+        const uint32_t wheelTreeToken = static_cast<uint32_t>(
+            reinterpret_cast<uintptr_t>(
+                m_wheels[index].m_surfaceHandler.m_tree));
+        if (wheelTreeToken == surfaceTreeToken) return index;
+    }
+    return std::numeric_limits<uint32_t>::max();
+}
+
+void CSceneVehicleCar::WheelAbsorbContact(
+    SSimulationWheel* wheel,
+    CHmsPhysicalContact* contact) {
+    if (wheel == nullptr || contact == nullptr) return;
+
+    // 0x7C11F5 calls sin(pi/4) as a double and rounds the result to float
+    // before the strict comparison. An unordered normal is not ground.
+    constexpr double kGroundNormalAngle =
+        0.785398185253143310546875;
+    const float minimumGroundNormalX =
+        static_cast<float>(std::sin(kGroundNormalAngle));
+    wheel->m_hasGroundContact =
+        std::abs(contact->m_localNormal.x) < minimumGroundNormalX ? 1 : 0;
+
+    if (wheel->m_hasGroundContact == 0) {
+        m_hasBodyContact = 1;
+        wheel->m_lateralContactPoint = contact->m_localPoint;
+        wheel->m_hasLateralContact = 1;
+    } else {
+        ++wheel->m_groundContactCount;
+        wheel->m_groundContactNormalSum += contact->m_localNormal;
+        wheel->m_groundMaterial = contact->m_otherMaterialId;
+    }
+
+    // Wheel contacts always suppress the generic Hms response before the
+    // optional shock-model-2 impulse branch.
+    contact->m_isActive = 0u;
+
+    // 0x7C129C..0x7C130B observes the opposite corpus orientation. The
+    // executable copies column 2 (its local +Z axis) from the opposite
+    // corpus transform, retains the corpus pointer, then multiplies the
+    // direction by the vehicle corpus rotation transpose. A packed token is
+    // resolved through the live-corpus registry on 64-bit hosts.
+    CHmsCorpus* otherCorpus =
+        CHmsCorpus::ResolvePointerToken(contact->m_otherCorpus32);
+    CHmsCorpus* vehicleCorpus =
+        m_hmsItem != nullptr && m_hmsItem->m_corpuses.GetCount() != 0u
+            ? m_hmsItem->m_corpuses[0]
+            : nullptr;
+    if (otherCorpus != nullptr && vehicleCorpus != nullptr) {
+        const GmMat3& otherRotation = otherCorpus->CurrentRotation();
+        GmVec3 localDirection(
+            otherRotation.m02,
+            otherRotation.m12,
+            otherRotation.m22);
+        localDirection.MultTranspose(vehicleCorpus->CurrentRotation());
+        wheel->m_otherCorpusLocalDirection = localDirection;
+        wheel->m_otherCorpusToken = contact->m_otherCorpus32;
+    }
+
+    wheel->m_absorbContactPoint = contact->m_localPoint;
+
+    if (g_tuning == nullptr || g_tuning->m_shockModel != 2) return;
+
+    // 0x7C134D..0x7C144A lets the damper absorb the contact replacement's
+    // local +Y component. A non-positive replacement is already considered
+    // absorbed; a positive one is limited by compression - AbsorbingValMin.
+    int replacementWasLimited = 0;
+    const float replacementY = contact->m_replacement.y;
+    if (replacementY <= 0.0f) {
+        replacementWasLimited = 1;
+    } else {
+        float absorbedReplacement = replacementY;
+        if (g_tuning->m_absorbingValMin >=
+            TmForeverPhysicsConstants::kNegativeAbsorbingValueEpsilon) {
+            const float availableCompression =
+                wheel->m_realTimeState.m_compression -
+                g_tuning->m_absorbingValMin;
+            if (availableCompression <= absorbedReplacement) {
+                absorbedReplacement = availableCompression;
+                replacementWasLimited = 1;
+            }
+        }
+        if (absorbedReplacement > wheel->m_realTimeState.m_absorbDelta) {
+            wheel->m_realTimeState.m_absorbDelta = absorbedReplacement;
+        }
+        contact->m_replacement.y -= absorbedReplacement;
+    }
+
+    CHmsDyna* dyna = GetVehicleDyna(m_hmsItem);
+    if (dyna == nullptr || dyna->m_field_0x108 == nullptr) return;
+    const CPlugPhysicalObject& physical = *dyna->m_field_0x108;
+
+    const bool isMetal = contact->m_otherMaterialId == 4u;
+    const float restitution = wheel->m_hasGroundContact != 0
+        ? -(isMetal ? g_tuning->m_wheelRestCoefMetal
+                    : g_tuning->m_wheelRestCoefConcrete)
+        : -(isMetal ? g_tuning->m_bodyRestCoefMetal
+                    : g_tuning->m_bodyRestCoef);
+    const float speedAlongNormal =
+        GmVec3::Dot(contact->m_localNormal, contact->m_relativeSpeed);
+    if (!(speedAlongNormal < 0.0f)) return;
+
+    const GmVec3* impulseSpeed = &contact->m_relativeSpeed;
+    const GmVec3* applicationPoint = &contact->m_localPoint;
+    GmVec3 adjustedSpeed;
+    GmVec3 surfacePoint;
+    if (wheel->m_hasGroundContact != 0) {
+        const GmVec3 normalSpeed =
+            contact->m_localNormal * speedAlongNormal;
+        if (replacementWasLimited == 0 && normalSpeed.y < 0.0f) {
+            // When the damper accepted a positive replacement and the normal
+            // velocity points down, remove only that world-up component and
+            // apply the response at the wheel surface rather than the raw
+            // collision point.
+            adjustedSpeed = contact->m_relativeSpeed;
+            adjustedSpeed.y -= normalSpeed.y;
+            if (!(GmVec3::Dot(contact->m_localNormal, adjustedSpeed) < 0.0f)) {
+                return;
+            }
+            surfacePoint = GmVec3(
+                wheel->m_surfaceHandler.m_surfaceLocation.tX,
+                wheel->m_surfaceHandler.m_surfaceLocation.tY,
+                wheel->m_surfaceHandler.m_surfaceLocation.tZ);
+            impulseSpeed = &adjustedSpeed;
+            applicationPoint = &surfacePoint;
+        }
+    }
+
+    const GmVec3 lever = *applicationPoint - physical.m_centerOfMass;
+    GmVec3 impulse;
+    SDynaMath::ComputeImpulse(
+        physical.m_mass, &physical.m_inverseInertia, restitution,
+        impulseSpeed, &contact->m_localNormal, &lever, &impulse);
+    AddVehicleImpulse(&impulse, applicationPoint);
+}
+
+void CSceneVehicleCar::AddVehicleImpulse(
+    const GmVec3* localImpulse,
+    const GmVec3* localPoint) {
+    if (localImpulse == nullptr || localPoint == nullptr) return;
+
+    CHmsDyna* dyna = GetVehicleDyna(m_hmsItem);
+    if (dyna == nullptr || dyna->m_field_0x108 == nullptr) return;
+    CPlugPhysicalObject& physical = *dyna->m_field_0x108;
+    CHmsDyna::CHmsStateDyna& state = dyna->CurrentState();
+
+    // 0x7BE3C0 and 0x7BE3D1 rotate the impulse and transform the point from
+    // vehicle-local coordinates through the current dynamic state.
+    const GmVec3 worldImpulse =
+        TransformVector(state.m_rotationMatrix, *localImpulse);
+    const GmVec3 worldPoint =
+        state.m_position + TransformVector(state.m_rotationMatrix, *localPoint);
+
+    GmVec3 nextLinearSpeed =
+        state.m_linearSpeed + worldImpulse / physical.m_mass;
+    const float oldLinearSpeedSquared = SquaredLength(state.m_linearSpeed);
+    const float nextLinearSpeedSquared = SquaredLength(nextLinearSpeed);
+    const float positiveDeltaLimit = g_tuning != nullptr
+        ? g_tuning->m_linearSpeedSquaredPositiveDeltaMax
+        : 10000.0f;
+    if (oldLinearSpeedSquared < nextLinearSpeedSquared &&
+        positiveDeltaLimit <
+            nextLinearSpeedSquared - oldLinearSpeedSquared) {
+        nextLinearSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+    }
+    state.m_linearSpeed = nextLinearSpeed;
+
+    const GmVec3 worldCenterOfMass =
+        state.m_position + TransformVector(
+            state.m_rotationMatrix, physical.m_centerOfMass);
+    const GmVec3 lever = worldPoint - worldCenterOfMass;
+    const GmVec3 angularImpulse = GmVec3::Cross(lever, worldImpulse);
+    GmVec3 angularDelta =
+        TransformVector(state.m_worldInverseInertia, angularImpulse);
+    if (g_tuning != nullptr) {
+        angularDelta *= g_tuning->m_angularImpulseScale;
+        angularDelta.y *= g_tuning->m_angularSpeedYImpulseScale;
+    }
+    state.m_angularSpeed += angularDelta;
+
+    const float angularSpeedClamp = g_tuning != nullptr
+        ? g_tuning->m_angularSpeedClamp
+        : 100.0f;
+    const float angularSpeedSquared = SquaredLength(state.m_angularSpeed);
+    if (angularSpeedClamp * angularSpeedClamp < angularSpeedSquared) {
+        state.m_angularSpeed *=
+            angularSpeedClamp / std::sqrt(angularSpeedSquared);
+    }
+
+    m_appliedImpulseSum += *localImpulse;
+}
+
+void CSceneVehicleCar::AddVehicleCentralImpulse(
+    const GmVec3* localImpulse) {
+    if (localImpulse == nullptr || m_hmsItem == nullptr) return;
+    m_hmsItem->AddImpulse(
+        m_hmsItem, const_cast<GmVec3*>(localImpulse));
+    m_appliedCentralImpulseSum += *localImpulse;
+}
+
+void CSceneVehicleCar::AbsorbContact(CHmsPhysicalContact* contact) {
+    if (contact == nullptr) return;
+
+    // Native materials 13 and 23 are ignored completely by the car callback.
+    if (contact->m_otherMaterialId == 0x0du ||
+        contact->m_otherMaterialId == 0x17u) {
+        contact->m_replacement = GmVec3(0.0f, 0.0f, 0.0f);
+        contact->m_isActive = 0u;
+        return;
+    }
+
+    m_hasAnyContact = 1;
+    const uint32_t wheelIndex =
+        GetWheelFromSurfaceTree(contact->m_collisionData);
+    const bool hasWheel = wheelIndex !=
+        std::numeric_limits<uint32_t>::max();
+    const float impact = std::abs(
+        GmVec3::Dot(contact->m_localNormal, contact->m_relativeSpeed));
+
+    constexpr double kWheelImpactNormalY =
+        0.20000000298023223876953125;
+    if (!hasWheel ||
+        !(contact->m_localNormal.y >
+          static_cast<float>(kWheelImpactNormalY))) {
+        m_chassisImpact += impact;
+    } else if (m_wheels[wheelIndex].m_isSteerable != 0u) {
+        m_frontWheelImpact += impact;
+    } else {
+        m_rearWheelImpact += impact;
+    }
+
+    if (hasWheel) {
+        m_wheelContactMaterial =
+            static_cast<uint8_t>(contact->m_otherMaterialId);
+        WheelAbsorbContact(&m_wheels[wheelIndex], contact);
+        ++m_wheelContactCount;
+        return;
+    }
+
+    // Steer model 5 discards the tangential replacement component for steep
+    // underside/body contacts. The comparison is strict at native -0.75f.
+    if (g_tuning != nullptr && g_tuning->m_steerModel == 5 &&
+        contact->m_localNormal.y < -0.75f) {
+        contact->m_replacement = contact->m_localNormal *
+            GmVec3::Dot(contact->m_localNormal, contact->m_replacement);
+    }
+
+    m_chassisContactPointSum += contact->m_localPoint;
+    m_chassisContactNormalSum += contact->m_localNormal;
+    ++m_chassisContactCount;
+    m_hasChassisContact = 1;
+    m_chassisContactMaterial =
+        static_cast<uint8_t>(contact->m_otherMaterialId);
+
+    // Shock model 2 owns the body-contact response and therefore disables the
+    // generic solver after optionally applying its friction-limited impulse.
+    if (g_tuning != nullptr && g_tuning->m_shockModel == 2) {
+        const float speedAlongNormal =
+            GmVec3::Dot(contact->m_localNormal, contact->m_relativeSpeed);
+        CHmsDyna* dyna = GetVehicleDyna(m_hmsItem);
+        if (speedAlongNormal < 0.0f && dyna != nullptr &&
+            dyna->m_field_0x108 != nullptr) {
+            const bool isMetal = contact->m_otherMaterialId == 4u;
+            const float restitution =
+                -(isMetal ? g_tuning->m_bodyRestCoefMetal
+                          : g_tuning->m_bodyRestCoef);
+            const float friction =
+                isMetal ? g_tuning->m_bodyFrictionCoefMetal
+                        : g_tuning->m_bodyFrictionCoef;
+
+            const GmVec3 normalSpeed =
+                contact->m_localNormal * speedAlongNormal;
+            GmVec3 tangentSpeed =
+                contact->m_relativeSpeed - normalSpeed;
+            const float normalMagnitude =
+                std::sqrt(SquaredLength(normalSpeed));
+            const float tangentMagnitude =
+                std::sqrt(SquaredLength(tangentSpeed));
+            const float maximumTangentMagnitude =
+                normalMagnitude * friction;
+            if (maximumTangentMagnitude < tangentMagnitude) {
+                tangentSpeed *=
+                    maximumTangentMagnitude / tangentMagnitude;
+            }
+
+            GmVec3 impulseDirection = -(normalSpeed + tangentSpeed);
+            const float directionMagnitude =
+                std::sqrt(SquaredLength(impulseDirection));
+            if (TmForeverPhysicsConstants::kImpulseDirectionEpsilon <
+                directionMagnitude) {
+                impulseDirection *= 1.0f / directionMagnitude;
+                const CPlugPhysicalObject& physical =
+                    *dyna->m_field_0x108;
+                const GmVec3 lever =
+                    contact->m_localPoint - physical.m_centerOfMass;
+                GmVec3 impulse;
+                SDynaMath::ComputeImpulse(
+                    physical.m_mass, &physical.m_inverseInertia,
+                    restitution, &contact->m_relativeSpeed,
+                    &impulseDirection, &lever, &impulse);
+                AddVehicleImpulse(&impulse, &contact->m_localPoint);
+            }
+        }
+        contact->m_isActive = 0u;
+    }
+}
+
 void* CSceneVehicleCar::_vector_deleting_destructor_(CRpcCallInternal* param_1, uint32_t param_2) {
     this->~CSceneVehicleCar();
     if ((param_2 & 1) != 0) {
@@ -165,27 +541,98 @@ void CSceneVehicleCar::Chunk(CFuncSegment* param_1, CClassicArchive* param_2, ui
 
 void CSceneVehicleCar::ComputeForces(CCallbackSceneToyBroomStickComputeForces* param_1, CHmsItem* param_2, float dt) {
     IntegrateVehicle(this, dt);
+
+    // CMwTimerAdapter::GetTickTime supplies an integer millisecond clock to
+    // the native friction helper. Preserve sub-millisecond frame fractions so
+    // fixed and variable standalone steps reach the same duration boundary.
+    if (dt > 0.0f) {
+        const double elapsedMilliseconds =
+            m_frictionTickFraction + static_cast<double>(dt) * 1000.0;
+        const uint32_t wholeMilliseconds =
+            static_cast<uint32_t>(elapsedMilliseconds);
+        m_frictionCurrentTick += wholeMilliseconds;
+        m_frictionTickFraction =
+            elapsedMilliseconds - static_cast<double>(wholeMilliseconds);
+    }
+
+    // Native ComputeForces 0x7C6B7A..0x7C6E77 owns friction and force-model
+    // dispatch. IntegrateVehicle ends after updating steering state.
+    if (m_hmsItem != nullptr && (m_simulationFlags & 2u) != 0u &&
+        (m_simulationFlags & 8u) == 0u) {
+        GmVec3 localLinearSpeed(0.0f, 0.0f, 0.0f);
+        m_hmsItem->GetLinearSpeed(m_hmsItem, &localLinearSpeed);
+        GmVec3 localAngularSpeed(0.0f, 0.0f, 0.0f);
+        m_hmsItem->GetAngularSpeed(m_hmsItem, &localAngularSpeed);
+        // 0x7C6B8A snapshots the force before the 0x7C6BA3 friction call.
+        // Model6 later forwards that unchanged stack value to water handling,
+        // so continuous water replaces the pre-friction force while retaining
+        // the friction contribution added between those two calls.
+        GmVec3 accumulatedLocalForce(0.0f, 0.0f, 0.0f);
+        m_hmsItem->GetForce(m_hmsItem, &accumulatedLocalForce);
+        ApplyFrictionForces(&localLinearSpeed);
+
+        StadiumVehicleMaterials::GroundValues groundMaterial{};
+        int hasGroundMaterial = 0;
+        ComputeVehicleGroundMaterialVals(
+            &groundMaterial, &hasGroundMaterial);
+        float lateralSlopeAdherence = 1.0f;
+        float axialSlopeAdherence = 1.0f;
+        GetSlopeAdherence(
+            accumulatedLocalForce,
+            &lateralSlopeAdherence,
+            &axialSlopeAdherence);
+
+        int hasSlippingWheel = 0;
+        float axialBrakeForce = 0.0f;
+        ComputeForcesModel6(
+            dt, &accumulatedLocalForce,
+            lateralSlopeAdherence, axialSlopeAdherence,
+            &localLinearSpeed, &localAngularSpeed,
+            m_smoothedSteer, hasGroundMaterial, &groundMaterial,
+            &hasSlippingWheel, &axialBrakeForce);
+    }
+
+    // 0x7C786E..0x7C78AD clears the per-pass contact observations after every
+    // wheel/force consumer has run. Opposite-corpus +0x130..+0x13C and the
+    // lateral point +0x160 deliberately persist, matching WheelReset.
+    for (uint32_t index = 0u; index < m_wheels.GetCount(); ++index) {
+        SSimulationWheel& wheel = m_wheels[index];
+        wheel.m_hasGroundContact = 0;
+        wheel.m_groundContactCount = 0u;
+        wheel.m_absorbContactPoint = GmVec3(0.0f, 0.0f, 0.0f);
+        wheel.m_groundContactNormalSum = GmVec3(0.0f, 0.0f, 0.0f);
+        wheel.m_groundMaterial = 0u;
+        wheel.m_hasLateralContact = 0;
+    }
+    m_frontWheelImpact = 0.0f;
+    m_rearWheelImpact = 0.0f;
+    m_chassisImpact = 0.0f;
+    m_hasChassisContact = 0;
+    m_hasAnyContact = 0;
+    m_hasBodyContact = 0;
 }
 
 void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
     if (m_hmsItem == nullptr) return;
 
-    // 1. Engine & Transmission update
-    if ((m_simulationFlags & 4) != 0) {
-        EngineIntegrate(pilot ? pilot : this, dt, 0.0f);
-    }
+    // The native routine obtains this local-space vector before testing its
+    // simulation flags and passes the Z component to each wheel.
+    GmVec3 localVehicleSpeed(0.0f, 0.0f, 0.0f);
+    m_hmsItem->GetLinearSpeed(m_hmsItem, &localVehicleSpeed);
 
-    // 2. Wheel speed & rotation updates
+    m_engineLocalVelocity = localVehicleSpeed;
+
+    // 1. Wheel speed & rotation updates.
     if ((m_simulationFlags & 1) != 0) {
         uint32_t wheelCount = m_wheels.GetCount();
         for (uint32_t i = 0; i < wheelCount; ++i) {
             SSimulationWheel& wheel = m_wheels[i];
-            WheelUpdateSpeedFromVehicleSpeed(&wheel, pilot, dt, 0.0f);
+            WheelUpdateSpeedFromVehicleSpeed(&wheel, localVehicleSpeed.z, dt);
             wheel.m_realTimeState.Integrate(dt);
         }
     }
     
-    // 3. Physical integration (Forces)
+    // 2. Suspension integration.
     if ((m_simulationFlags & 2) != 0) {
         uint32_t wheelCount = m_wheels.GetCount();
         for (uint32_t i = 0; i < wheelCount; ++i) {
@@ -193,7 +640,16 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
         }
     }
 
-    // ApplyFrictionForces(pilot, dt);
+    // 3. Engine and transmission. The native caller selects brake while the
+    // reverse flag is set and suppresses the engine completely in freewheel.
+    if ((m_simulationFlags & 4) != 0) {
+        if (m_freeWheeling != 0) {
+            m_engine.m_engineRpm = 0.0f;
+        } else {
+            EngineIntegrate(
+                m_engine.m_isReverse != 0 ? m_inputBrake : m_inputGas, dt);
+        }
+    }
 
     // IntegrateVehicle in the fixed executable moves +0x5E8 toward the raw
     // steer input at Tuning::SteerSpeed units per second before force dispatch.
@@ -206,36 +662,79 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
         m_smoothedSteer += std::copysign(maxSteerStep, steerDelta);
     }
 
-    // Stadium tuning 29 is Steer06 (enum value 5), which the fixed executable
-    // dispatches to ComputeForcesModel6 at 0x7C3E80.
-    ComputeForcesModel6(pilot, dt);
 }
 
-void CSceneVehicleCar::WheelUpdateSpeedFromVehicleSpeed(SSimulationWheel* wheel, CSceneVehicleCar* pilot, float dt, float param_3) {
-    if (wheel->m_radius < 0.0001f) return;
+void CSceneVehicleCar::WheelUpdateSpeedFromVehicleSpeed(
+    SSimulationWheel* wheel, float vehicleWheelSpeed, float dt) {
+    using namespace TmForeverPhysicsConstants;
 
-    GmVec3 linSpeed(0,0,0);
-    m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
-    
-    float forwardSpeed = linSpeed.z; 
+    if (wheel->m_hasGroundContact != 0) {
+        if (m_useGroundedWheelSpeedOverride != 0 &&
+            m_wheelDriveDisabled == 0) {
+            wheel->m_realTimeState.m_angularVelocity =
+                m_groundedWheelAngularSpeedOverride;
+            return;
+        }
+        wheel->m_realTimeState.m_angularVelocity =
+            vehicleWheelSpeed / wheel->m_radius;
+        return;
+    }
 
-    // Target angular velocity based on speed
-    float targetOmega = forwardSpeed / wheel->m_radius;
-    
-    wheel->m_realTimeState.m_angularVelocity = targetOmega; 
+    float targetAngularSpeed = 0.0f;
+    float angularAcceleration = 0.0f;
+    if (m_inputBrake > kWheelInputEpsilon) {
+        targetAngularSpeed = std::clamp(1.0f - m_inputBrake, 0.0f, 1.0f);
+        angularAcceleration = kWheelAngularDeceleration;
+    } else if (m_inputGas > kWheelInputEpsilon &&
+               m_wheelDriveDisabled == 0 && m_freeWheeling == 0) {
+        targetAngularSpeed = static_cast<float>(
+            static_cast<double>(m_inputGas) * kWheelGasAngularSpeedScale);
+        angularAcceleration = kWheelAngularAcceleration;
+    } else {
+        wheel->m_realTimeState.m_angularVelocity = static_cast<float>(
+            static_cast<double>(wheel->m_realTimeState.m_angularVelocity) *
+            kWheelAirborneAngularDecay);
+    }
+
+    if (std::abs(angularAcceleration) >= kWheelInputEpsilon) {
+        const float candidate =
+            wheel->m_realTimeState.m_angularVelocity +
+            angularAcceleration * dt;
+        wheel->m_realTimeState.m_angularVelocity = candidate;
+        if (angularAcceleration > 0.0f && candidate > targetAngularSpeed) {
+            wheel->m_realTimeState.m_angularVelocity = targetAngularSpeed;
+        } else if (angularAcceleration < 0.0f &&
+                   candidate < targetAngularSpeed) {
+            wheel->m_realTimeState.m_angularVelocity = targetAngularSpeed;
+        }
+    }
 }
 
 void CSceneVehicleCar::WheelIntegrate(SSimulationWheel* wheel, float dt) {
-    if (wheel == nullptr || g_tuning == nullptr || dt <= 0.0f) return;
+    if (wheel == nullptr || g_tuning == nullptr) return;
 
-    if (g_tuning->m_shockModel == 2) {
-        // Exact Demo03 branch at 0x7BD42E..0x7BD505. Contact absorption is
-        // accumulated in wheel +0xBC, subtracted once, then cleared. The
-        // resulting compression moves toward AbsorbingValRest at
-        // AbsorbTension units per second.
+    if (g_tuning->m_shockModel == 0) {
+        wheel->m_realTimeState.m_compression -=
+            wheel->m_realTimeState.m_absorbDelta;
+        wheel->m_realTimeState.m_absorbDelta = 0.0f;
+        wheel->m_surfaceHandler.Reset();
+
+        const float compressionAcceleration =
+            (g_tuning->m_absorbingValRest -
+             wheel->m_realTimeState.m_compression) *
+                g_tuning->m_absorbingValKi -
+            g_tuning->m_absorbingValKa *
+                wheel->m_realTimeState.m_velocity;
+        wheel->m_realTimeState.m_velocity +=
+            compressionAcceleration * dt;
+        wheel->m_realTimeState.m_compression +=
+            wheel->m_realTimeState.m_velocity * dt;
+    } else if (g_tuning->m_shockModel == 1 ||
+               g_tuning->m_shockModel == 2) {
         const float previousCompression = wheel->m_realTimeState.m_compression;
         const float absorbedCompression =
             previousCompression - wheel->m_realTimeState.m_absorbDelta;
+        wheel->m_surfaceHandler.Reset();
         const float compression =
             absorbedCompression +
             (g_tuning->m_absorbingValRest - absorbedCompression) *
@@ -245,55 +744,271 @@ void CSceneVehicleCar::WheelIntegrate(SSimulationWheel* wheel, float dt) {
             (compression - previousCompression) / dt;
         wheel->m_realTimeState.m_compression = compression;
         wheel->m_realTimeState.m_absorbDelta = 0.0f;
+    }
+
+    if (g_tuning->m_shockModel >= 0 && g_tuning->m_shockModel <= 2) {
+        wheel->m_surfaceHandler.m_surfaceLocation.tY -=
+            wheel->m_realTimeState.m_compression;
+    }
+    wheel->m_surfaceHandler.UpdateSurface();
+}
+
+void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
+    using namespace TmForeverPhysicsConstants;
+
+    if (g_tuning == nullptr) return;
+
+    const bool inputActive = input > static_cast<float>(kInputThreshold);
+    bool airborne = true;
+    for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
+        if (m_wheels[i].m_hasGroundContact != 0) {
+            airborne = false;
+            break;
+        }
+    }
+
+    if (m_engine.m_gearShiftTimer > 0.0f) {
+        m_engine.m_gearShiftTimer -= dt;
+    }
+    const bool airborneOrShifting =
+        airborne || m_engine.m_gearShiftTimer > 0.0f;
+
+    const auto clampEngineRpm = [this]() {
+        // 0x7BE257..0x7BE2B7 retains NaN, clamps positive overflow to the
+        // engine's own +0x00 maximum, and clamps negative values to zero.
+        if (m_engine.m_engineRpm > m_engine.m_maxRpm) {
+            m_engine.m_engineRpm = m_engine.m_maxRpm;
+        } else if (m_engine.m_engineRpm < 0.0f) {
+            m_engine.m_engineRpm = 0.0f;
+        }
+    };
+
+    if (g_tuning->m_steerModel != 5) {
+        // Exact legacy path at 0x7BE00B..0x7BE253. It uses the preceding gear
+        // for gears 2..5 and a weighted magnitude of the native +0x70C local
+        // velocity vector.
+        const int gear = std::clamp(m_engine.m_currentGear, 0, 5);
+        const int ratioIndex = gear < 2 ? 0 : gear - 1;
+        const float maximumRatio = g_tuning->m_m6MaxRpmRatios[ratioIndex];
+        const float minimumRatio = g_tuning->m_m6MinRpmRatios[ratioIndex];
+        const float speedScale = static_cast<float>(
+            static_cast<double>(g_tuning->m_steerSlowDownFactor) *
+            kOldEngineSpeedScale);
+        const float weightedSpeed = std::sqrt(
+            m_engineLocalVelocity.z * m_engineLocalVelocity.z +
+            static_cast<float>(kOldEngineLateralSpeedWeight) *
+                m_engineLocalVelocity.x * m_engineLocalVelocity.x +
+            static_cast<float>(kInputThreshold) *
+                m_engineLocalVelocity.y * m_engineLocalVelocity.y);
+        const float normalizedRpm =
+            weightedSpeed / speedScale * g_tuning->m_m6GearRatios[ratioIndex];
+        const bool groundedAndNotShifting = !airborneOrShifting;
+
+        if (groundedAndNotShifting) {
+            if (m_engine.m_isReverse != 0) {
+                if (gear != 0) {
+                    m_engine.m_currentGear = 0;
+                    m_engine.m_gearShiftTimer = kOldEngineShiftDuration;
+                }
+            } else if (gear == 0) {
+                m_engine.m_currentGear = 1;
+                m_engine.m_gearShiftTimer = kOldEngineShiftDuration;
+            } else {
+                int nextGear = gear;
+                if (normalizedRpm > maximumRatio && gear < 5) {
+                    ++nextGear;
+                } else if (normalizedRpm < minimumRatio && gear > 1) {
+                    --nextGear;
+                }
+                if (nextGear != gear) {
+                    m_engine.m_currentGear = nextGear;
+                    m_engine.m_gearShiftTimer = kOldEngineShiftDuration;
+                }
+            }
+        } else if (m_engine.m_gearShiftTimer > 0.0f &&
+                   m_engine.m_gearShiftTimer <= dt + dt) {
+            m_engine.m_engineRpm -=
+                m_engine.m_maxRpm * dt *
+                static_cast<float>(kOldEngineShiftRpmLoss);
+        }
+
+        // The airborne/active-shift path replaces the speed-derived target
+        // with |input| at 0x7BE1FE; the grounded path keeps normalizedRpm.
+        const float targetRpm = m_engine.m_maxRpm *
+            (groundedAndNotShifting ? normalizedRpm : std::abs(input));
+        const float response = groundedAndNotShifting
+            ? kOldEngineGroundResponse
+            : kOldEngineAirResponse;
+        m_engine.m_engineRpm +=
+            (targetRpm - m_engine.m_engineRpm) * dt * response;
+        clampEngineRpm();
         return;
     }
 
-    // Other shock models have separate native branches and remain inert until
-    // their tuning fields and contact-state transforms are represented.
-}
-
-void CSceneVehicleCar::EngineIntegrate(CSceneVehicleCar* pilot, float dt, float param_2) {
-    const float gearRatios[] = { 0.0f, 15.0f, 10.0f, 7.5f, 5.5f, 4.0f };
-    const float upshiftRPM = 10000.0f;
-    const float downshiftRPM = 6000.0f;
-    const float rpmResponse = 5.0f;
-
-    m_engine.m_throttle = m_inputGas;
-
-    GmVec3 linSpeed(0,0,0);
-    m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
-    
-    // Transform world velocity to local frame
-    const float yaw = GetCarYaw(*this);
-    float c = std::cos(yaw);
-    float s = std::sin(yaw);
-    float localForwardSpeed = linSpeed.x * s + linSpeed.z * c; // forward = dot(vel, fwd)
-    float speed = std::abs(localForwardSpeed);
-
-    // Ideal RPM for current speed
-    float wheelRadius = 0.35f;
-    float idealRPM = (speed / wheelRadius) * gearRatios[m_engine.m_currentGear] * (60.0f / (2.0f * 3.14159265f));
-    
-    if (idealRPM < 1000.0f) idealRPM = 1000.0f;
-
-    // Automatic gear shifting
-    if (m_engine.m_gearShiftTimer <= 0.0f) {
-        if (idealRPM > upshiftRPM && m_engine.m_currentGear < 5) {
-            m_engine.m_currentGear++;
-            m_engine.m_gearShiftTimer = 0.3f;
-        } else if (idealRPM < downshiftRPM && m_engine.m_currentGear > 1) {
-            m_engine.m_currentGear--;
-            m_engine.m_gearShiftTimer = 0.2f;
+    if (airborneOrShifting) {
+        if (inputActive) {
+            m_engine.m_engineRpm += g_tuning->m_m6AirRpmAcceleration * dt;
+        } else {
+            m_engine.m_engineRpm -= g_tuning->m_m6AirRpmDeadening * dt;
         }
-    } else {
-        m_engine.m_gearShiftTimer -= dt;
+        clampEngineRpm();
+        return;
     }
 
-    // Sync engine RPM
-    m_engine.m_engineRpm += (idealRPM - m_engine.m_engineRpm) * rpmResponse * dt;
+    const bool takeoffMode =
+        m_engineTakeoffMode == 1 || m_engineTakeoffMode == 2;
+    if (takeoffMode) {
+        if (m_engine.m_currentGear != 0) m_engineState = 4;
+    } else if (m_engineState == 4) {
+        m_engineState = 0;
+    }
 
-    // Original +0x5E8 is smoothed steering, not engine torque.  Propulsion for
-    // this physics generation comes from the tuning acceleration curves.
+    const float speed = m_engineLocalVelocity.z;
+    const auto gearRatio = [this](int gear) {
+        return g_tuning->m_m6GearRatios[std::clamp(gear, 0, 5)];
+    };
+
+    if (m_engineState == 2 || m_engineState == 3) {
+        const bool forwardTakeoff = m_engineState == 2;
+        const float lowSpeed = forwardTakeoff
+            ? g_tuning->m_m6PositiveTakeoffRearSpeed
+            : g_tuning->m_m6NegativeTakeoffRearSpeed;
+        const float highSpeed = forwardTakeoff
+            ? g_tuning->m_m6PositiveTakeoffFrontSpeed
+            : g_tuning->m_m6NegativeTakeoffFrontSpeed;
+        m_engineOutsideTakeoffWindow = forwardTakeoff
+            ? (speed < lowSpeed || speed > highSpeed)
+            : (speed < lowSpeed || speed > highSpeed);
+        m_engine.m_clutchRatio = 1.0f;
+        const int takeoffGear = forwardTakeoff ? 1 : 0;
+        m_engine.m_clutchRpm =
+            std::abs(speed) * gearRatio(takeoffGear) +
+            g_tuning->m_m6RpmDeltaOnGearUp[takeoffGear] * kZero;
+
+        if (m_engineOutsideTakeoffWindow == 0 && inputActive) {
+            m_engine.m_engineRpm += g_tuning->m_m6RpmGainOnTakeoff * dt;
+        } else {
+            m_engine.m_engineRpm -=
+                g_tuning->m_m6RpmLossOnTakeoffFinished * dt;
+        }
+        if (m_engine.m_engineRpm <= m_engine.m_clutchRpm) {
+            m_engine.m_engineRpm = m_engine.m_clutchRpm;
+            m_engineState = 0;
+            m_engineOutsideTakeoffWindow = 0;
+        }
+    } else if (m_engineState == 4) {
+        m_engine.m_clutchRpm = m_engine.m_maxRpm;
+        m_engine.m_clutchRatio = kM6ClutchRatioTarget;
+        if (m_engine.m_engineRpm < m_engine.m_maxRpm) {
+            m_engine.m_engineRpm +=
+                g_tuning->m_m6BurnoutRpmAcceleration * dt;
+        } else if (m_engine.m_engineRpm > m_engine.m_maxRpm) {
+            m_engine.m_engineRpm += g_tuning->m_m6AirRpmDeadening * dt;
+        }
+    } else {
+        if (m_engineClutchBoost != 0 && inputActive) {
+            if (m_engine.m_clutchRatio <= kM6ClutchRatioTarget) {
+                m_engine.m_clutchRatio = static_cast<float>(
+                    (kM6ClutchRatioTargetWide - m_engine.m_clutchRatio) *
+                    kM6ClutchRatioResponse * dt +
+                    m_engine.m_clutchRatio);
+            } else {
+                m_engine.m_clutchRatio = kM6ClutchRatioTarget;
+            }
+        } else {
+            m_engine.m_clutchRatio = 1.0f;
+        }
+
+        const int gear = std::clamp(m_engine.m_currentGear, 0, 5);
+        m_engine.m_clutchRpm =
+            std::abs(speed * m_engine.m_clutchRatio) * gearRatio(gear);
+        if ((m_engine.m_isReverse != 0 && gear != 0) ||
+            (m_engine.m_isReverse == 0 && gear == 0)) {
+            m_engine.m_clutchRpm = 0.0f;
+        }
+
+        if (m_engine.m_engineRpm < m_engine.m_clutchRpm) {
+            m_engine.m_engineRpm +=
+                g_tuning->m_m6RpmGainOnGearDown * dt;
+            if (m_engine.m_engineRpm > m_engine.m_clutchRpm) {
+                m_engineState = 0;
+            }
+        } else {
+            float loss = g_tuning->m_m6RpmLossOnTakeoffFinished;
+            if (inputActive) {
+                loss = (m_engineClutchBoost != 0 && !takeoffMode)
+                    ? g_tuning->m_m6AirRpmDeadening
+                    : g_tuning->m_m6RpmLossOnGearUp;
+            }
+            m_engine.m_engineRpm -= loss * dt;
+            if (m_engine.m_engineRpm < m_engine.m_clutchRpm) {
+                m_engineState = 0;
+            }
+        }
+    }
+
+    // Narrow speed windows initiate the forward/reverse takeoff synchronizers.
+    if (speed > g_tuning->m_m6PositiveTakeoffRearSpeed &&
+        speed < g_tuning->m_m6PositiveTakeoffFrontSpeed &&
+        inputActive && m_engine.m_isReverse == 0 && m_engineState == 0) {
+        m_engineState = 2;
+        m_engineOutsideTakeoffWindow = 0;
+        if (m_engine.m_currentGear == 0) {
+            m_engine.m_gearShiftTimer = kM6ShiftDuration;
+            m_engine.m_currentGear = 1;
+        }
+    } else if (speed < g_tuning->m_m6NegativeTakeoffFrontSpeed &&
+               speed > g_tuning->m_m6NegativeTakeoffRearSpeed &&
+               inputActive && m_engine.m_isReverse != 0 &&
+               m_engineState == 0) {
+        m_engineState = 3;
+        m_engineOutsideTakeoffWindow = 0;
+        if (m_engine.m_currentGear != 0) {
+            m_engine.m_currentGear = 0;
+            m_engine.m_gearShiftTimer = kM6ShiftDuration;
+        }
+    }
+
+    if (m_engineState == 0 || m_engineState == 1) {
+        int gear = std::clamp(m_engine.m_currentGear, 0, 5);
+        if (m_engine.m_isReverse == 0) {
+            if (gear == 0) {
+                m_engineState = 1;
+                m_engineShiftDirection = 0;
+                if (m_engine.m_engineRpm < static_cast<float>(kEngineIdleRpm)) {
+                    m_engine.m_gearShiftTimer = kM6ShiftDuration;
+                    m_engine.m_currentGear = 1;
+                }
+            } else if (m_engine.m_clutchRpm >
+                           g_tuning->m_m6MaxRpmRatios[gear] *
+                               m_engine.m_maxRpm &&
+                       gear < 5) {
+                m_engine.m_gearShiftTimer = kM6ShiftDuration;
+                m_engine.m_currentGear = gear + 1;
+                m_engineState = 1;
+                m_engineShiftDirection = 0;
+            } else if (m_engine.m_clutchRpm <
+                           g_tuning->m_m6MinRpmRatios[gear] *
+                               m_engine.m_maxRpm &&
+                       gear > 1) {
+                m_engine.m_gearShiftTimer = kM6ShiftDuration;
+                m_engine.m_currentGear = gear - 1;
+                m_engineState = 1;
+                m_engineShiftDirection = 1;
+            }
+        } else if (gear != 0) {
+            m_engineState = 1;
+            m_engineShiftDirection = 1;
+            if (m_engine.m_engineRpm < static_cast<float>(kEngineIdleRpm)) {
+                m_engine.m_currentGear = 0;
+                m_engine.m_gearShiftTimer = takeoffMode
+                    ? kM6ReverseTakeoffShiftDuration
+                    : kM6ShiftDuration;
+            }
+        }
+    }
+
+    clampEngineRpm();
 }
 
 void CSceneVehicleCar::VehicleFreeWheelingSet(int enabled) {
@@ -306,6 +1021,30 @@ int CSceneVehicleCar::IsGroundContact() {
     const uint32_t wheelCount = m_wheels.GetCount();
     for (uint32_t i = 0; i < wheelCount; ++i) {
         if (m_wheels[i].m_hasGroundContact != 0) return 1;
+    }
+    return 0;
+}
+
+int CSceneVehicleCar::IsGroundContactId(
+    uint8_t materialId,
+    GmVec3* otherCorpusLocalDirection,
+    CHmsCorpus** otherCorpus) const {
+    if (otherCorpusLocalDirection == nullptr || otherCorpus == nullptr) {
+        return 0;
+    }
+
+    const uint32_t wheelCount = m_wheels.GetCount();
+    for (uint32_t i = 0; i < wheelCount; ++i) {
+        const SSimulationWheel& wheel = m_wheels[i];
+        if (wheel.m_hasGroundContact == 0 ||
+            wheel.m_groundMaterial != materialId) {
+            continue;
+        }
+
+        *otherCorpusLocalDirection = wheel.m_otherCorpusLocalDirection;
+        *otherCorpus =
+            CHmsCorpus::ResolvePointerToken(wheel.m_otherCorpusToken);
+        return 1;
     }
     return 0;
 }
@@ -387,69 +1126,222 @@ void CSceneVehicleCar::GetSlopeAdherence(
         g_tuning->m_axialSlopeAdherenceMax);
 }
 
-void CSceneVehicleCar::ApplyFrictionForces(CSceneVehicleCar* pilot, float dt) {
-    if (m_hmsItem == nullptr) return;
-    
-    GmVec3 linSpeed;
-    m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
-    
-    // Convert global velocity to local velocity
-    const float yaw = GetCarYaw(*this);
-    float c = std::cos(yaw);
-    float s = std::sin(yaw);
-    
-    // forward is along (sin(yaw), 0, cos(yaw))
-    float localZ = linSpeed.x * s + linSpeed.z * c; // forward speed
-    float localX = linSpeed.x * c - linSpeed.z * s; // lateral speed
-    
-    uint32_t wheelCount = m_wheels.GetCount();
-    for (uint32_t i = 0; i < wheelCount; ++i) {
-        SSimulationWheel& wheel = m_wheels[i];
-        if (wheel.m_hasGroundContact) {
-            // Lateral friction (prevent sliding) - per-wheel
-            float lateralSlip = localX;
-            float lateralForceMag = -lateralSlip * 1500.0f; // Strong cornering grip per wheel
-            
-            // Convert local forces back to global (only lateral for now)
-            GmVec3 globalForce(
-                lateralForceMag * c,
-                0,
-                -lateralForceMag * s
-            );
-            
-            m_hmsItem->AddForce(m_hmsItem, &globalForce, nullptr);
+void CSceneVehicleCar::ApplyFrictionForces(
+    const GmVec3* localLinearSpeed) {
+    using namespace TmForeverPhysicsConstants;
+
+    if (localLinearSpeed == nullptr || m_hmsItem == nullptr ||
+        g_tuning == nullptr) {
+        return;
+    }
+
+    const int steerModel = g_tuning->m_steerModel;
+    if ((steerModel == 4 || steerModel == 5) &&
+        m_hasWaterContact != 0 && IsGroundContact() == 0) {
+        return;
+    }
+
+    const float selectedInput =
+        m_engine.m_isReverse == 0 ? m_inputGas : m_inputBrake;
+    if (!(kWheelInputEpsilon < selectedInput) || m_freeWheeling != 0) {
+        const float squaredLength =
+            localLinearSpeed->x * localLinearSpeed->x +
+            localLinearSpeed->y * localLinearSpeed->y +
+            localLinearSpeed->z * localLinearSpeed->z;
+        if (kNormalizeSquaredEpsilon < squaredLength) {
+            const float length = std::sqrt(squaredLength);
+            const float inverseLength = 1.0f / length;
+            const float constantScale =
+                -g_tuning->m_groundSlowDownBase * inverseLength;
+            GmVec3 localForce(
+                localLinearSpeed->x * constantScale,
+                localLinearSpeed->y * constantScale,
+                localLinearSpeed->z * constantScale);
+            if (m_freeWheeling == 0) {
+                const float linearScale =
+                    -g_tuning->m_linearFluidFrictionCoef;
+                localForce.x += localLinearSpeed->x * linearScale;
+                localForce.y += localLinearSpeed->y * linearScale;
+                localForce.z += localLinearSpeed->z * linearScale;
+            }
+            AddVehicleCentralForce(
+                this, reinterpret_cast<CSceneVehicleCar*>(&localForce),
+                nullptr);
         }
     }
-    
-    // Aerodynamic drag (proportional to speed^2, applied in global velocity direction)
-    float speedSq = linSpeed.x * linSpeed.x + linSpeed.y * linSpeed.y + linSpeed.z * linSpeed.z;
-    float speed = std::sqrt(speedSq);
-    if (speed > 0.01f) {
-        // Drag coefficient tuned so top speed ~320 km/h (88.9 m/s)
-        // At top speed: drag = engine force
-        // Engine force at top speed ~ 4000 N
-        // drag = coeff * v^2 = coeff * 88.9^2 = coeff * 7903
-        // coeff = 4000/7903 ≈ 0.506
-        float dragCoeff = 0.5f;
-        float dragMag = dragCoeff * speedSq;
-        GmVec3 drag(
-            -linSpeed.x / speed * dragMag,
-            0, // No vertical drag
-            -linSpeed.z / speed * dragMag
-        );
-        m_hmsItem->AddForce(m_hmsItem, &drag, nullptr);
+
+    if (steerModel < 4) {
+        if (m_hasBodyContact != 0) {
+            const float scale =
+                -g_tuning->GetLateralContactSlowDownFromSpeed(
+                    localLinearSpeed->z);
+            GmVec3 localForce(
+                localLinearSpeed->x * scale,
+                localLinearSpeed->y * scale,
+                localLinearSpeed->z * scale);
+            AddVehicleCentralForce(
+                this, reinterpret_cast<CSceneVehicleCar*>(&localForce),
+                nullptr);
+        }
+        return;
     }
-    
-    // Rolling resistance (small constant opposing force)
-    if (speed > 0.1f) {
-        float rollingCoeff = 50.0f; // Low rolling resistance
-        GmVec3 rolling(
-            -linSpeed.x / speed * rollingCoeff,
-            0,
-            -linSpeed.z / speed * rollingCoeff
-        );
-        m_hmsItem->AddForce(m_hmsItem, &rolling, nullptr);
+
+    const uint32_t currentTick = m_frictionCurrentTick;
+    if (m_hasBodyContact != 0) m_lastBodyContactTick = currentTick;
+    if (m_lastBodyContactTick > currentTick ||
+        currentTick - m_lastBodyContactTick >=
+            g_tuning->m_m5LateralConstantSlowDownDuration) {
+        return;
     }
+
+    const float squaredLength =
+        localLinearSpeed->x * localLinearSpeed->x +
+        localLinearSpeed->y * localLinearSpeed->y +
+        localLinearSpeed->z * localLinearSpeed->z;
+    const float length = std::sqrt(squaredLength);
+    if (!(kWheelInputEpsilon < length)) return;
+
+    const float inverseLength = 1.0f / length;
+    const float scale =
+        -g_tuning->M5GetLateralContactSlowDownFromSpeed(length);
+    GmVec3 localForce(
+        localLinearSpeed->x * inverseLength * scale,
+        localLinearSpeed->y * inverseLength * scale,
+        localLinearSpeed->z * inverseLength * scale);
+    AddVehicleCentralForce(
+        this, reinterpret_cast<CSceneVehicleCar*>(&localForce), nullptr);
+}
+
+int CSceneVehicleCar::ApplyWaterForces(
+    const GmVec3* accumulatedLocalForce) {
+    using namespace TmForeverPhysicsConstants;
+
+    if (accumulatedLocalForce == nullptr || m_hmsItem == nullptr ||
+        g_tuning == nullptr || m_localBodyBounds.IsNull() ||
+        m_hmsItem->m_corpuses.GetCount() == 0u) {
+        return 0;
+    }
+
+    CHmsCorpus* corpus = m_hmsItem->m_corpuses[0];
+    if (corpus == nullptr || corpus->m_zone == nullptr) return 0;
+
+    // Native corpus virtual +0x78 returns the current dynamic transform.
+    // A static corpus retains its stored transform instead.
+    GmIso4 vehicleTransform = corpus->m_location;
+    if (corpus->m_dyna != nullptr) {
+        const CHmsDyna::CHmsStateDyna& state =
+            corpus->m_dyna->CurrentState();
+        vehicleTransform.rot = state.m_rotationMatrix;
+        vehicleTransform.SetTranslation(state.m_position);
+    }
+
+    GmBoxAligned worldBounds;
+    worldBounds.SetMult(m_localBodyBounds, vehicleTransform);
+    const float verticalExtent = std::abs(worldBounds.extents.y);
+    const float minimumY = worldBounds.center.y - verticalExtent;
+    const float maximumY = worldBounds.center.y + verticalExtent;
+
+    CHmsZone& zone = *corpus->m_zone;
+    const bool isInsideMap = zone.m_waterCollisionMap.IsInside(
+        worldBounds.center.x, worldBounds.center.z);
+    const float surfaceHeight = zone.m_waterCollisionSurfaceHeight;
+
+    // An outside point may still use a default mask value of one. Inside
+    // points, and all other outside points, take the full bottom/mask branch.
+    const bool acceptedByOutsideDefault =
+        !isInsideMap && zone.m_waterCollisionMap.m_defaultValue == 1u &&
+        surfaceHeight > minimumY;
+    if (!acceptedByOutsideDefault) {
+        if (maximumY <= zone.m_waterCollisionBottomHeight ||
+            surfaceHeight <= minimumY ||
+            zone.m_waterCollisionMap.GetValue(
+                worldBounds.center.x, worldBounds.center.z) != 1u) {
+            return 0;
+        }
+    }
+
+    const float depth = surfaceHeight - minimumY;
+    if (!(depth > kWaterMinimumDepth)) return 0;
+
+    GmVec3 localLinearSpeed(0.0f, 0.0f, 0.0f);
+    m_hmsItem->GetLinearSpeed(m_hmsItem, &localLinearSpeed);
+    const GmVec3 worldLinearSpeed =
+        TransformVector(vehicleTransform.rot, localLinearSpeed);
+
+    // The shallow, airborne, downward-moving branch produces an impulse and
+    // deliberately reports no continuous water contact for this pass.
+    if (m_hasAnyContact == 0 &&
+        static_cast<double>(depth) < kWaterReboundMaximumDepth &&
+        surfaceHeight - maximumY < kWaterSurfaceDeltaThreshold &&
+        worldLinearSpeed.y < kWaterDownwardSpeedThreshold) {
+        const float horizontalSpeedSquared =
+            worldLinearSpeed.x * worldLinearSpeed.x +
+            worldLinearSpeed.z * worldLinearSpeed.z;
+        const float reboundMinimumSquared =
+            g_tuning->m_waterReboundMinHorizontalSpeed *
+            g_tuning->m_waterReboundMinHorizontalSpeed;
+
+        float speedRatio = -1.0f;
+        bool shouldRebound = false;
+        if (horizontalSpeedSquared <= reboundMinimumSquared) {
+            const float bumpMinimumSquared =
+                g_tuning->m_waterBumpMinSpeed *
+                g_tuning->m_waterBumpMinSpeed;
+            if (SquaredLength(worldLinearSpeed) > bumpMinimumSquared) {
+                speedRatio = 0.0f;
+                shouldRebound = true;
+            }
+        } else {
+            const float horizontalSpeed =
+                std::sqrt(horizontalSpeedSquared);
+            speedRatio = -horizontalSpeed / worldLinearSpeed.y;
+            shouldRebound = !std::isnan(speedRatio) && speedRatio > 0.0f;
+        }
+
+        if (shouldRebound) {
+            const float slowDown =
+                g_tuning->GetWaterBumpSlowDownFromSpeedRatio(speedRatio);
+            const float rebound =
+                g_tuning->GetWaterReboundFromSpeedRatio(speedRatio);
+            const GmVec3 worldImpulse(
+                -rebound * worldLinearSpeed.x,
+                -slowDown * worldLinearSpeed.y,
+                -rebound * worldLinearSpeed.z);
+            GmVec3 localImpulse;
+            localImpulse.SetMultTranspose(
+                worldImpulse, vehicleTransform.rot);
+            WaterSplash(&worldLinearSpeed);
+            AddVehicleCentralImpulse(&localImpulse);
+            return 0;
+        }
+    }
+
+    GmVec3 localDrag(0.0f, 0.0f, 0.0f);
+    const float localSpeed = std::sqrt(SquaredLength(localLinearSpeed));
+    if (kWheelInputEpsilon < localSpeed) {
+        const float dragScale =
+            -g_tuning->GetWaterFrictionFromSpeed(localSpeed);
+        localDrag = localLinearSpeed * dragScale;
+    }
+
+    GmVec3 localAngularSpeed(0.0f, 0.0f, 0.0f);
+    m_hmsItem->GetAngularSpeed(m_hmsItem, &localAngularSpeed);
+    const float angularSpeed =
+        std::sqrt(SquaredLength(localAngularSpeed));
+    const float angularScale =
+        -g_tuning->m_waterAngularFriction -
+        g_tuning->m_waterAngularFrictionSq * angularSpeed;
+    GmVec3 localTorque = localAngularSpeed * angularScale;
+
+    GmVec3 localWaterGravity(0.0f, -g_tuning->m_waterGravity, 0.0f);
+    localWaterGravity.MultTranspose(vehicleTransform.rot);
+    GmVec3 localForce =
+        localWaterGravity + localDrag - *accumulatedLocalForce;
+    AddVehicleCentralForce(
+        this, reinterpret_cast<CSceneVehicleCar*>(&localForce), nullptr);
+    AddVehicleTorque(
+        this, reinterpret_cast<CSceneVehicleCar*>(&localTorque), nullptr);
+    return 1;
 }
 
 void CSceneVehicleCar::ComputeForcesModel3(CSceneVehicleCar* pilot, float dt) {
@@ -462,16 +1354,7 @@ void CSceneVehicleCar::ComputeForcesModel3(CSceneVehicleCar* pilot, float dt) {
     
     GmVec3 linSpeed;
     m_hmsItem->GetLinearSpeed(m_hmsItem, &linSpeed);
-    
-    // Convert global velocity to local velocity
-    const float yaw = GetCarYaw(*this);
-    float c = std::cos(yaw);
-    float s = std::sin(yaw);
-    
-    // forward is along (sin(yaw), 0, cos(yaw))
-    p6.x = linSpeed.x * c - linSpeed.z * s;     // right
-    p6.y = linSpeed.y;                          // up
-    p6.z = linSpeed.z * c + linSpeed.x * s;     // forward
+    p6 = linSpeed;
     
     GmVec3 p7(0, 1.0f, 0); // Ground normal
     float p10[16] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
@@ -486,56 +1369,63 @@ void CSceneVehicleCar::ComputeForcesModel3(CSceneVehicleCar* pilot, float dt) {
     
     // Apply the returned force!
     if (p3.x != 0 || p3.y != 0 || p3.z != 0) {
-        GmVec3 globalForce(
-            p3.x * c + p3.z * s,
-            p3.y,
-            -p3.x * s + p3.z * c
-        );
-        m_hmsItem->AddForce(m_hmsItem, &globalForce, nullptr);
+        m_hmsItem->AddForce(m_hmsItem, &p3, nullptr);
     }
 }
 
-void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
+void CSceneVehicleCar::ComputeForcesModel6(
+    float dt,
+    GmVec3* accumulatedLocalForce,
+    float lateralSlopeAdherence,
+    float axialSlopeAdherence,
+    GmVec3* localLinearSpeed,
+    GmVec3* localAngularSpeed,
+    float processedSteer,
+    int hasGroundMaterial,
+    StadiumVehicleMaterials::GroundValues* groundMaterial,
+    int* hasSlippingWheel,
+    float* axialBrakeForce) {
+    if (hasSlippingWheel != nullptr) *hasSlippingWheel = 0;
+    if (axialBrakeForce != nullptr) *axialBrakeForce = 0.0f;
     if (m_hmsItem == nullptr || g_tuning == nullptr ||
-        g_tuning->m_steerModel != 5 || !IsGroundContact()) {
-        // Airborne, water, and non-Stadium paths have not yet been separated
-        // from the old translation. Keep the prior behavior for those states
-        // while the native Model6 port advances branch by branch.
-        ComputeForcesModel3(pilot, dt);
+        accumulatedLocalForce == nullptr || localLinearSpeed == nullptr ||
+        localAngularSpeed == nullptr || groundMaterial == nullptr) {
         return;
     }
 
-    GmVec3 linearSpeed(0.0f, 0.0f, 0.0f);
-    m_hmsItem->GetLinearSpeed(m_hmsItem, &linearSpeed);
+    // ApplyWaterForces is the first force producer in the native Model6
+    // entry, before suspension and the grounded/airborne branch split.
+    m_hasWaterContact = ApplyWaterForces(accumulatedLocalForce);
 
-    const float yaw = GetCarYaw(*this);
-    const float c = std::cos(yaw);
-    const float s = std::sin(yaw);
-    const float localLateralSpeed = linearSpeed.x * c - linearSpeed.z * s;
-    const float localForwardSpeed = linearSpeed.x * s + linearSpeed.z * c;
-
-    bool hasSlippingWheel = false;
-    for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
-        hasSlippingWheel |= m_wheels[i].m_isSlipping != 0;
+    // 0x7C48F6..0x7C4932 visits every wheel before the force-model tail. The
+    // helper itself rejects uncontacted wheels. Engine state two is the sole
+    // native bypass for this suspension-force pass.
+    if (m_engineState != 2) {
+        for (uint32_t index = 0u; index < m_wheels.GetCount(); ++index) {
+            WheelAddForceToVehicle(&m_wheels[index], 0.0f);
+        }
     }
 
-    StadiumVehicleMaterials::GroundValues groundMaterial{};
-    int hasGroundMaterial = 0;
-    ComputeVehicleGroundMaterialVals(&groundMaterial, &hasGroundMaterial);
+    bool anySlippingWheel = false;
+    for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
+        anySlippingWheel |= m_wheels[i].m_isSlipping != 0;
+    }
+    if (hasSlippingWheel != nullptr && anySlippingWheel) {
+        *hasSlippingWheel = 1;
+    }
 
-    float lateralSlopeAdherence = 1.0f;
-    float axialSlopeAdherence = 1.0f;
-    GmVec3 worldForce(0.0f, 0.0f, 0.0f);
-    m_hmsItem->GetForce(m_hmsItem, &worldForce);
+    if (g_tuning->m_steerModel != 5 || hasGroundMaterial == 0) {
+        // Airborne, water, and non-Stadium paths have not yet been separated
+        // from the old translation. Keep the prior behavior for those states
+        // while the native Model6 port advances branch by branch.
+        ComputeForcesModel3(this, dt);
+        return;
+    }
 
-    // CHmsItem::GetForce reaches CHmsDyna::GetLocalForce in the executable,
-    // which rotates the raw dynamics force by the inverse chassis transform.
-    // Reconstruct that direction basis from the harness's yaw and contact-up
-    // state before passing the vector to the exact slope function.
-    const VehicleChassisBasis chassisBasis = GetChassisBasis(*this);
-    const GmVec3 localForce = WorldToLocal(chassisBasis, worldForce);
-    GetSlopeAdherence(
-        localForce, &lateralSlopeAdherence, &axialSlopeAdherence);
+    const float localLateralSpeed = localLinearSpeed->x;
+    const float localForwardSpeed = localLinearSpeed->z;
+    (void)lateralSlopeAdherence;
+    (void)processedSteer;
 
     // This is the currently ported ordinary-drive subset of the Model6 tail.
     // Its curve, material coefficient, gas multiplier, and axial slope input
@@ -545,13 +1435,13 @@ void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
         m_inputBrake == 0.0f &&
         m_freeWheeling == 0 &&
         m_field_0x600 == 0 &&
-        !hasSlippingWheel &&
+        !anySlippingWheel &&
         localForwardSpeed >= 0.0f;
 
     if (isOrdinaryForwardDrive) {
         const float longitudinalForce =
             g_tuning->M5GetAccelFromSpeed(localForwardSpeed) *
-            m_inputGas * groundMaterial.accelerationCoef *
+            m_inputGas * groundMaterial->accelerationCoef *
             axialSlopeAdherence;
         GmVec3 localDriveForce(0.0f, 0.0f, longitudinalForce);
         AddVehicleCentralForce(
@@ -559,11 +1449,8 @@ void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
     } else {
         // Reverse selection, braking, freewheeling, wheel-slip blending, and
         // special burnout states still use the translated fallback.
-        ComputeForcesModel3(pilot, dt);
+        ComputeForcesModel3(this, dt);
     }
-
-    GmVec3 angularSpeed(0.0f, 0.0f, 0.0f);
-    m_hmsItem->GetAngularSpeed(m_hmsItem, &angularSpeed);
 
     // Exact normal-ground subset at 0x7C5BE5..0x7C5EF0. Model6 evaluates the
     // lateral velocity at each axle, including yaw velocity, and applies half
@@ -580,7 +1467,8 @@ void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
     for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
         const SSimulationWheel& wheel = m_wheels[i];
         const float axleOffset = wheel.m_isSteerable != 0 ? halfWheelbase : -halfWheelbase;
-        const float axleLateralSpeed = localLateralSpeed + angularSpeed.y * axleOffset;
+        const float axleLateralSpeed =
+            localLateralSpeed + localAngularSpeed->y * axleOffset;
         const float rawLateralForce =
             -g_tuning->m_sideFriction1 * 0.5f * axleLateralSpeed;
         const float lateralForce =
@@ -611,68 +1499,54 @@ void CSceneVehicleCar::ComputeForcesModel6(CSceneVehicleCar* pilot, float dt) {
 
 
 void CSceneVehicleCar::WheelAddForceToVehicle(
-    SSimulationWheel* wheel, const GmVec3* localContactPosition) {
-    if (wheel == nullptr || localContactPosition == nullptr ||
-        g_tuning == nullptr || wheel->m_hasGroundContact == 0) {
+    SSimulationWheel* wheel, float unusedForceModelScalar) {
+    (void)unusedForceModelScalar;
+    if (wheel == nullptr || g_tuning == nullptr ||
+        wheel->m_hasGroundContact == 0) {
         return;
     }
 
-    // Stadium uses ShockModel::Demo03 (2). At 0x7C184B..0x7C18D9 the fixed
-    // executable evaluates the spring-damper scalar in this exact order and
-    // applies it on local +Y at wheel +0xA8. The other shock-model branches
-    // remain separate because model zero has an additional tuning factor.
-    if (g_tuning->m_shockModel != 2) return;
-
-    const float suspensionForce =
-        (g_tuning->m_absorbingValRest -
-         wheel->m_realTimeState.m_compression) *
-            g_tuning->m_absorbingValKi -
-        g_tuning->m_absorbingValKa *
-            wheel->m_realTimeState.m_velocity;
+    float suspensionForce = 0.0f;
+    if (g_tuning->m_shockModel == 0) {
+        suspensionForce =
+            g_tuning->m_absorbingValKi *
+            g_tuning->m_shockModel0ForceFactor *
+            (g_tuning->m_absorbingValRest -
+             wheel->m_realTimeState.m_compression);
+    } else if (g_tuning->m_shockModel == 1 ||
+               g_tuning->m_shockModel == 2) {
+        suspensionForce =
+            (g_tuning->m_absorbingValRest -
+             wheel->m_realTimeState.m_compression) *
+                g_tuning->m_absorbingValKi -
+            g_tuning->m_absorbingValKa *
+                wheel->m_realTimeState.m_velocity;
+    } else {
+        return;
+    }
     wheel->m_suspensionForce = suspensionForce;
 
     GmVec3 localForce(0.0f, suspensionForce, 0.0f);
     AddVehicleForce(
         this, reinterpret_cast<CSceneVehicleCar*>(&localForce),
-        const_cast<GmVec3*>(localContactPosition), nullptr);
+        &wheel->m_localContactPosition, nullptr);
 }
 
 void CSceneVehicleCar::AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3) {
     if (this->m_hmsItem) {
-        const GmVec3* local_t = reinterpret_cast<const GmVec3*>(param_2);
-        const GmVec3 global_t = LocalToWorld(GetChassisBasis(*this), *local_t);
-        this->m_hmsItem->AddTorque(this->m_hmsItem, &global_t);
+        this->m_hmsItem->AddTorque(
+            this->m_hmsItem, reinterpret_cast<GmVec3*>(param_2));
     }
 }
 void CSceneVehicleCar::AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3) {
     if (this->m_hmsItem) {
-        const GmVec3* localForce = reinterpret_cast<const GmVec3*>(param_2);
-        const GmVec3 globalForce =
-            LocalToWorld(GetChassisBasis(*this), *localForce);
-        this->m_hmsItem->AddForce(this->m_hmsItem, &globalForce, nullptr);
+        this->m_hmsItem->AddForce(
+            this->m_hmsItem, reinterpret_cast<GmVec3*>(param_2), nullptr);
     }
 }
 void CSceneVehicleCar::AddVehicleForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3, GmVec3 *param_4) {
     if (this->m_hmsItem) {
-        const GmVec3* local_f = reinterpret_cast<const GmVec3*>(param_2);
-        const VehicleChassisBasis chassisBasis = GetChassisBasis(*this);
-        const GmVec3 global_f = LocalToWorld(chassisBasis, *local_f);
-        
-        GmVec3* p = param_3;
-        if (p) {
-            const GmVec3 global_p = LocalToWorld(chassisBasis, *p);
-            this->m_hmsItem->AddForce(this->m_hmsItem, &global_f, &global_p);
-            
-            GmVec3 local_torque;
-            local_torque.x = p->y * local_f->z - p->z * local_f->y;
-            local_torque.y = p->z * local_f->x - p->x * local_f->z;
-            local_torque.z = p->x * local_f->y - p->y * local_f->x;
-            
-            const GmVec3 global_torque =
-                LocalToWorld(chassisBasis, local_torque);
-            this->m_hmsItem->AddTorque(this->m_hmsItem, &global_torque);
-        } else {
-            this->m_hmsItem->AddForce(this->m_hmsItem, &global_f, nullptr);
-        }
+        this->m_hmsItem->AddForce(
+            this->m_hmsItem, reinterpret_cast<GmVec3*>(param_2), param_3);
     }
 }

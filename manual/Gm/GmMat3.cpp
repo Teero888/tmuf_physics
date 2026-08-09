@@ -3,6 +3,7 @@
 #include "GmMat3.hpp"
 #include "GmVec3.hpp" // Assumed to define GmVec3
 #include "CClassicArchive.hpp" // Assumed to define CClassicArchive
+#include "TmForeverPhysicsConstants.hpp"
 
 // Global lookup table for QuarterY rotations (Cos/Sin of 0, 90, 180, 270)
 static const float DAT_00bbd760[4] = { 1.0f, 0.0f, -1.0f, 0.0f };
@@ -405,7 +406,7 @@ void GmMat3::SetDOVandLeftV(const GmVec3& dov, const GmVec3& leftV) {
     };
     
     float lenSqZ = (crossZ.x * crossZ.x) + (crossZ.y * crossZ.y) + (crossZ.z * crossZ.z);
-    if (lenSqZ > 1e-6f) {
+    if (lenSqZ > TmForeverPhysicsConstants::kMatrixBasisSquaredEpsilon) {
         float invZ = GmFunc::InvSqrt(lenSqZ);
         crossZ.x *= invZ; crossZ.y *= invZ; crossZ.z *= invZ;
     }
@@ -539,7 +540,7 @@ void GmMat3::SetUpVandDOV(const GmVec3& upV, const GmVec3& dov) {
     
     GmVec3 normUp = upV;
     float lenSqU = (normUp.x * normUp.x) + (normUp.y * normUp.y) + (normUp.z * normUp.z);
-    if (lenSqU > 1e-6f) {
+    if (lenSqU > TmForeverPhysicsConstants::kMatrixBasisSquaredEpsilon) {
         float invU = GmFunc::InvSqrt(lenSqU);
         normUp.x *= invU; normUp.y *= invU; normUp.z *= invU;
     }

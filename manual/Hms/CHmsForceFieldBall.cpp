@@ -1,15 +1,37 @@
 #include "CHmsForceFieldBall.hpp"
 
+#include <cstring>
+
 CHmsForceFieldBall::CHmsForceFieldBall() : CHmsForceField() {
-    m_pos[0] = 0;
-    m_pos[1] = 0;
-    m_pos[2] = 0;
+    m_pos[0] = 0.0f;
+    m_pos[1] = 0.0f;
+    m_pos[2] = 0.0f;
+    // Exact constructor values at 0x55F700.
+    m_field_0x5c = 0x40000000u; // radius = 2.0f
+    m_field_0x60 = 0x3f800000u; // strength = 1.0f
 }
 
 CHmsForceFieldBall::~CHmsForceFieldBall() {}
 
-GmVec3 CHmsForceFieldBall::GetValue(CFuncColorGradient* param_1, float param_2) {
-    return GmVec3(0, 0, 0);
+bool CHmsForceFieldBall::GetValue(
+    const GmVec3& position, GmVec3& value) const {
+    const GmVec3 delta(
+        m_pos[0] - position.x,
+        m_pos[1] - position.y,
+        m_pos[2] - position.z);
+    const float distanceSquared = GmVec3::Dot(delta, delta);
+    float radius;
+    float strength;
+    std::memcpy(&radius, &m_field_0x5c, sizeof(radius));
+    std::memcpy(&strength, &m_field_0x60, sizeof(strength));
+    constexpr float kDistanceSquaredEpsilon =
+        9.99999943962492920972e-11f;
+    if (distanceSquared >= radius * radius ||
+        distanceSquared <= kDistanceSquaredEpsilon) {
+        return false;
+    }
+    value = delta * (-strength / distanceSquared);
+    return true;
 }
 
 CMwClassInfo* CHmsForceFieldBall::MwGetClassInfo(CFuncSegment* param_1) { return nullptr; }

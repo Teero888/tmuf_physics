@@ -3,11 +3,56 @@
 #include "CHmsCollisionBuffer.hpp"
 #include "CHmsDyna.hpp"
 #include "CHmsItem.hpp"
+#include "CPlugSolid.hpp"
+#include "CPlugSurface.hpp"
+#include "CPlugSurfaceGeom.hpp"
+#include "CPlugTree.hpp"
 #include "TmForeverPhysicsConstants.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <limits>
+
+namespace {
+
+bool BoxesIntersect(
+    const GmBoxAligned& first, const GmBoxAligned& second) {
+    return std::fabs(first.center.x - second.center.x) <=
+               first.extents.x + second.extents.x &&
+           std::fabs(first.center.y - second.center.y) <=
+               first.extents.y + second.extents.y &&
+           std::fabs(first.center.z - second.center.z) <=
+               first.extents.z + second.extents.z;
+}
+
+GmIso4 ComposePlugTreeLocation(
+    const CPlugTree& tree, const GmIso4& parentToWorld) {
+    GmIso4 nodeToWorld = parentToWorld;
+    if (tree.UsesLocation()) {
+        nodeToWorld.SetMult(tree.m_location, parentToWorld);
+    }
+    return nodeToWorld;
+}
+
+void CollectLocatedPlugSurfaces(
+    CPlugTree* tree,
+    const GmIso4& parentToWorld,
+    std::vector<LocatedPlugSurface>& leaves) {
+    if (tree == nullptr || !tree->IsCollisionEnabled()) return;
+    const GmIso4 nodeToWorld =
+        ComposePlugTreeLocation(*tree, parentToWorld);
+    if (tree->m_surface != nullptr &&
+        tree->m_surface->m_geometry != nullptr &&
+        tree->m_surface->m_geometry->GetGmSurf() != nullptr) {
+        leaves.push_back({tree->m_surface, nodeToWorld});
+    }
+    for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
+        CollectLocatedPlugSurfaces(
+            tree->GetChild(index), nodeToWorld, leaves);
+    }
+}
+
+} // namespace
 
 // SGroup
 void CHmsCollisionManager::SGroup::AddCorpus(
@@ -27,7 +72,49 @@ void CHmsCollisionManager::SGroup::AddNonStaticCorpus(CHmsCorpus* corpus) {
     corpus->m_flags54 = m_nonStaticCorpuses.GetCount() - 1u;
 }
 
-void CHmsCollisionManager::SGroup::AddStaticSurfacesFromTree(CHmsCorpus* param_2, CPlugTree* param_3, GmIso4* param_4, void* param_5) {}
+void CHmsCollisionManager::SGroup::AddStaticSurfacesFromTree(
+    CHmsCorpus* corpus,
+    CPlugTree* tree,
+    const GmIso4* parentToWorld,
+    void*) {
+    if (corpus == nullptr || tree == nullptr || parentToWorld == nullptr ||
+        !tree->IsCollisionEnabled()) {
+        return;
+    }
+
+    GmIso4 nodeToWorld = *parentToWorld;
+    if (tree->UsesLocation()) {
+        nodeToWorld.SetMult(tree->m_location, *parentToWorld);
+    }
+
+    for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
+        AddStaticSurfacesFromTree(
+            corpus, tree->GetChild(index), &nodeToWorld, nullptr);
+    }
+
+    if (tree->m_surface == nullptr ||
+        tree->m_surface->m_geometry == nullptr) {
+        return;
+    }
+    GmSurf* gmSurface = tree->m_surface->m_geometry->GetGmSurf();
+    if (gmSurface == nullptr) return;
+
+    GmBoxAligned localBounds;
+    localBounds.InitEmpty();
+    gmSurface->GetBoundingBox(localBounds);
+    if (localBounds.IsNull()) {
+        localBounds = tree->m_surface->m_geometry->m_boundingBox;
+    }
+    if (localBounds.IsNull()) return;
+
+    SStaticCollisionLeaf leaf{};
+    leaf.m_worldBounds.SetMult(localBounds, nodeToWorld);
+    leaf.m_location = nodeToWorld;
+    leaf.m_surface = tree->m_surface;
+    leaf.m_corpus = corpus;
+    leaf.m_tree = tree;
+    m_staticCollisionTreeData.Add(leaf);
+}
 void CHmsCollisionManager::SGroup::ClearAllStatic() {
     for (uint32_t index = 0; index < m_corpuses.GetCount(); ++index) {
         CHmsCorpus* corpus = m_corpuses[index];
@@ -117,7 +204,25 @@ void CHmsCollisionManager::SGroup::RemoveNonStaticCorpus(
         movedCorpus->m_flags54 = removedIndex;
     }
 }
-void CHmsCollisionManager::SGroup::UpdateStaticCollisionTrees(CHmsCollisionManager* param_1) {}
+void CHmsCollisionManager::SGroup::UpdateStaticCollisionTrees(
+    CHmsCollisionManager*) {
+    ClearAllStatic();
+    for (uint32_t index = 0; index < m_corpuses.GetCount(); ++index) {
+        CHmsCorpus* corpus = m_corpuses[index];
+        if (corpus == nullptr || corpus->m_item == nullptr ||
+            (corpus->m_item->m_flags1 & 0x00080000u) == 0u) {
+            continue;
+        }
+        if (corpus->m_flags54 != std::numeric_limits<uint32_t>::max()) {
+            RemoveNonStaticCorpus(corpus);
+        }
+        CPlugSolid* solid = corpus->m_item->m_solid;
+        if (solid != nullptr && solid->m_tree != nullptr) {
+            AddStaticSurfacesFromTree(
+                corpus, solid->m_tree, &corpus->m_location, nullptr);
+        }
+    }
+}
 
 // SZone
 CHmsCollisionManager::SZone::SZone(
@@ -179,14 +284,414 @@ int CHmsCollisionManager::SZone::ComputeCollision(
     CGmCollisionBuffer* buffer) {
     return GmSurf::ComputeCollision(first, second, buffer);
 }
-int CHmsCollisionManager::SZone::ComputeCollisionTree1RootOnly(SPlugTreeLocatedPair* param_2, GmBoxAligned* param_3) { return 0; }
-int CHmsCollisionManager::SZone::ComputeCollisionTree2RootOnly(SPlugTreeLocatedPair* param_2, GmBoxAligned* param_3) { return 0; }
-int CHmsCollisionManager::SZone::IntersectSegment(int param_2, GmVec3* param_3, GmVec3* param_4, float* param_5, CPlugTree** param_6) { return 0; }
-int CHmsCollisionManager::SZone::IntersectSegment2(int param_2, GmVec3* param_3, GmVec3* param_4, int param_5, float* param_6, GmVec3* param_7) { return 0; }
-int CHmsCollisionManager::SZone::IntersectSegment3(int param_2, GmVec3* param_3, GmVec3* param_4, float* param_5, uint16_t* param_6) { return 0; }
-int CHmsCollisionManager::SZone::IntersectSegmentTree(GmVec3* param_2, GmVec3* param_3, CPlugTree* param_4, GmIso4* param_5, float* param_6) { return 0; }
-int CHmsCollisionManager::SZone::IntersectSegmentTree2(GmVec3* param_2, GmVec3* param_3, int param_4, CPlugTree* param_5, GmIso4* param_6, float* param_7, GmVec3* param_8) { return 0; }
-int CHmsCollisionManager::SZone::IntersectSegmentTree3(GmVec3* param_2, GmVec3* param_3, CPlugTree* param_4, GmIso4* param_5, float* param_6, uint16_t* param_7) { return 0; }
+int CHmsCollisionManager::SZone::ComputeCollisionTree1RootOnly(
+    SPlugTreeLocatedPair* pair, GmBoxAligned*) {
+    if (pair == nullptr || pair->m_tree1 == nullptr ||
+        pair->m_parentToWorld1 == nullptr || pair->m_tree2 == nullptr ||
+        pair->m_parentToWorld2 == nullptr ||
+        m_activeCollisionBuffer == nullptr ||
+        !pair->m_tree1->IsCollisionEnabled() ||
+        pair->m_tree1->m_surface == nullptr ||
+        pair->m_tree1->m_surface->m_geometry == nullptr ||
+        pair->m_tree1->m_surface->m_geometry->GetGmSurf() == nullptr) {
+        return 0;
+    }
+
+    LocatedPlugSurface firstRoot{
+        pair->m_tree1->m_surface,
+        ComposePlugTreeLocation(
+            *pair->m_tree1, *pair->m_parentToWorld1)};
+    std::vector<LocatedPlugSurface> secondLeaves;
+    CollectLocatedPlugSurfaces(
+        pair->m_tree2, *pair->m_parentToWorld2, secondLeaves);
+    bool hit = false;
+    for (LocatedPlugSurface& secondLeaf : secondLeaves) {
+        if (CPlugSurface::ComputeCollision(
+                &firstRoot, &secondLeaf,
+                m_activeCollisionBuffer) != 0) {
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
+
+int CHmsCollisionManager::SZone::ComputeCollisionTree2RootOnly(
+    SPlugTreeLocatedPair* pair, GmBoxAligned*) {
+    if (pair == nullptr || pair->m_tree1 == nullptr ||
+        pair->m_parentToWorld1 == nullptr || pair->m_tree2 == nullptr ||
+        pair->m_parentToWorld2 == nullptr ||
+        m_activeCollisionBuffer == nullptr ||
+        !pair->m_tree2->IsCollisionEnabled() ||
+        pair->m_tree2->m_surface == nullptr ||
+        pair->m_tree2->m_surface->m_geometry == nullptr ||
+        pair->m_tree2->m_surface->m_geometry->GetGmSurf() == nullptr) {
+        return 0;
+    }
+
+    std::vector<LocatedPlugSurface> firstLeaves;
+    CollectLocatedPlugSurfaces(
+        pair->m_tree1, *pair->m_parentToWorld1, firstLeaves);
+    LocatedPlugSurface secondRoot{
+        pair->m_tree2->m_surface,
+        ComposePlugTreeLocation(
+            *pair->m_tree2, *pair->m_parentToWorld2)};
+    bool hit = false;
+    for (LocatedPlugSurface& firstLeaf : firstLeaves) {
+        if (CPlugSurface::ComputeCollision(
+                &firstLeaf, &secondRoot,
+                m_activeCollisionBuffer) != 0) {
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
+int CHmsCollisionManager::SZone::IntersectSegment(
+    int groupNumber,
+    GmVec3* rayPos,
+    GmVec3* rayDir,
+    float* outT,
+    CPlugTree** outTree) {
+    if (groupNumber < 1 || groupNumber > 5 || rayPos == nullptr ||
+        rayDir == nullptr || outT == nullptr) {
+        return 0;
+    }
+    *outT = std::numeric_limits<float>::max();
+    if (outTree != nullptr) *outTree = nullptr;
+    bool hit = false;
+    SGroup& group = m_groups[static_cast<uint32_t>(groupNumber - 1)];
+    const GmVec3 rayEnd = *rayPos + *rayDir;
+
+    for (uint32_t index = 0;
+         index < group.m_staticCollisionTreeData.GetCount(); ++index) {
+        SGroup::SStaticCollisionLeaf& leaf =
+            group.m_staticCollisionTreeData[index];
+        if (leaf.m_surface == nullptr || leaf.m_surface->m_geometry == nullptr ||
+            !leaf.m_worldBounds.TestInterSegment(*rayPos, rayEnd)) {
+            continue;
+        }
+        GmSurf* surface = leaf.m_surface->m_geometry->GetGmSurf();
+        if (surface == nullptr) continue;
+        float candidateT = *outT;
+        GmVec3 unusedNormal;
+        if (surface->ClipSegment(
+                *rayPos, *rayDir, leaf.m_location,
+                candidateT, unusedNormal) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            hit = true;
+            if (outTree != nullptr) *outTree = leaf.m_tree;
+        }
+    }
+
+    for (uint32_t index = 0;
+         index < group.m_nonStaticCorpuses.GetCount(); ++index) {
+        CHmsCorpus* corpus = group.m_nonStaticCorpuses[index];
+        if (corpus == nullptr || corpus->m_item == nullptr ||
+            corpus->m_item->m_solid == nullptr ||
+            corpus->m_item->m_solid->m_tree == nullptr) {
+            continue;
+        }
+        float candidateT = *outT;
+        CPlugTree* root = corpus->m_item->m_solid->m_tree;
+        if (IntersectSegmentTree(
+                rayPos, rayDir, root, &corpus->m_location,
+                &candidateT) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            hit = true;
+            if (outTree != nullptr) *outTree = root;
+        }
+    }
+    return hit ? 1 : 0;
+}
+
+int CHmsCollisionManager::SZone::IntersectSegment2(
+    int groupNumber,
+    GmVec3* rayPos,
+    GmVec3* rayDir,
+    int flags,
+    float* outT,
+    GmVec3* outNormal) {
+    if (groupNumber < 1 || groupNumber > 5 || rayPos == nullptr ||
+        rayDir == nullptr || outT == nullptr || outNormal == nullptr) {
+        return 0;
+    }
+    *outT = std::numeric_limits<float>::max();
+    bool hit = false;
+    SGroup& group = m_groups[static_cast<uint32_t>(groupNumber - 1)];
+    const GmVec3 rayEnd = *rayPos + *rayDir;
+
+    for (uint32_t index = 0;
+         index < group.m_staticCollisionTreeData.GetCount(); ++index) {
+        SGroup::SStaticCollisionLeaf& leaf =
+            group.m_staticCollisionTreeData[index];
+        if (leaf.m_surface == nullptr || leaf.m_surface->m_geometry == nullptr ||
+            !leaf.m_worldBounds.TestInterSegment(*rayPos, rayEnd)) {
+            continue;
+        }
+        GmSurf* surface = leaf.m_surface->m_geometry->GetGmSurf();
+        if (surface == nullptr) continue;
+        float candidateT = *outT;
+        GmVec3 candidateNormal;
+        if (surface->ClipSegment2(
+                *rayPos, *rayDir, leaf.m_location,
+                candidateT, candidateNormal) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            *outNormal = candidateNormal;
+            hit = true;
+        }
+    }
+
+    for (uint32_t index = 0;
+         index < group.m_nonStaticCorpuses.GetCount(); ++index) {
+        CHmsCorpus* corpus = group.m_nonStaticCorpuses[index];
+        if (corpus == nullptr || corpus->m_item == nullptr ||
+            corpus->m_item->m_solid == nullptr ||
+            corpus->m_item->m_solid->m_tree == nullptr) {
+            continue;
+        }
+        float candidateT = *outT;
+        GmVec3 candidateNormal;
+        if (IntersectSegmentTree2(
+                rayPos, rayDir, flags,
+                corpus->m_item->m_solid->m_tree,
+                &corpus->m_location, &candidateT,
+                &candidateNormal) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            *outNormal = candidateNormal;
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
+
+int CHmsCollisionManager::SZone::IntersectSegment3(
+    int groupNumber,
+    GmVec3* rayPos,
+    GmVec3* rayDir,
+    float* outT,
+    uint16_t* outId) {
+    if (groupNumber < 1 || groupNumber > 5 || rayPos == nullptr ||
+        rayDir == nullptr || outT == nullptr || outId == nullptr) {
+        return 0;
+    }
+    *outT = std::numeric_limits<float>::max();
+    bool hit = false;
+    SGroup& group = m_groups[static_cast<uint32_t>(groupNumber - 1)];
+    const GmVec3 rayEnd = *rayPos + *rayDir;
+
+    for (uint32_t index = 0;
+         index < group.m_staticCollisionTreeData.GetCount(); ++index) {
+        SGroup::SStaticCollisionLeaf& leaf =
+            group.m_staticCollisionTreeData[index];
+        if (leaf.m_surface == nullptr || leaf.m_surface->m_geometry == nullptr ||
+            !leaf.m_worldBounds.TestInterSegment(*rayPos, rayEnd)) {
+            continue;
+        }
+        GmSurf* surface = leaf.m_surface->m_geometry->GetGmSurf();
+        if (surface == nullptr) continue;
+        float candidateT = *outT;
+        uint16_t candidateId = 0xffffu;
+        GmVec3 unusedNormal;
+        if (surface->ClipSegment3(
+                *rayPos, *rayDir, leaf.m_location,
+                candidateT, candidateId) != 0 && candidateT < *outT) {
+            if (candidateId < leaf.m_surface->m_materialIds.GetCount()) {
+                candidateId = leaf.m_surface->m_materialIds[candidateId];
+            }
+            *outT = candidateT;
+            *outId = candidateId;
+            hit = true;
+        }
+    }
+
+    for (uint32_t index = 0;
+         index < group.m_nonStaticCorpuses.GetCount(); ++index) {
+        CHmsCorpus* corpus = group.m_nonStaticCorpuses[index];
+        if (corpus == nullptr || corpus->m_item == nullptr ||
+            corpus->m_item->m_solid == nullptr ||
+            corpus->m_item->m_solid->m_tree == nullptr) {
+            continue;
+        }
+        float candidateT = *outT;
+        uint16_t candidateId = 0xffffu;
+        if (IntersectSegmentTree3(
+                rayPos, rayDir,
+                corpus->m_item->m_solid->m_tree,
+                &corpus->m_location, &candidateT,
+                &candidateId) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            *outId = candidateId;
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
+
+int CHmsCollisionManager::SZone::IntersectSegmentTree(
+    GmVec3* rayPos,
+    GmVec3* rayDir,
+    CPlugTree* tree,
+    GmIso4* parentToWorld,
+    float* outT) {
+    if (rayPos == nullptr || rayDir == nullptr || tree == nullptr ||
+        parentToWorld == nullptr || outT == nullptr ||
+        !tree->IsCollisionEnabled()) {
+        return 0;
+    }
+
+    if (!tree->m_boundingBox.IsNull()) {
+        GmBoxAligned worldBounds;
+        worldBounds.SetMult(tree->m_boundingBox, *parentToWorld);
+        if (!worldBounds.TestInterSegment(*rayPos, *rayPos + *rayDir)) {
+            return 0;
+        }
+    }
+
+    GmIso4 nodeToWorld = *parentToWorld;
+    if (tree->UsesLocation()) {
+        nodeToWorld.SetMult(tree->m_location, *parentToWorld);
+    }
+    bool hit = false;
+    if (tree->m_surface != nullptr &&
+        tree->m_surface->m_geometry != nullptr) {
+        GmSurf* surface = tree->m_surface->m_geometry->GetGmSurf();
+        if (surface != nullptr) {
+            float candidateT = *outT;
+            GmVec3 unusedNormal;
+            if (surface->ClipSegment(
+                    *rayPos, *rayDir, nodeToWorld,
+                    candidateT, unusedNormal) != 0 && candidateT < *outT) {
+                *outT = candidateT;
+                hit = true;
+            }
+        }
+    }
+    for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
+        float candidateT = *outT;
+        if (IntersectSegmentTree(
+                rayPos, rayDir, tree->GetChild(index),
+                &nodeToWorld, &candidateT) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
+
+int CHmsCollisionManager::SZone::IntersectSegmentTree2(
+    GmVec3* rayPos,
+    GmVec3* rayDir,
+    int flags,
+    CPlugTree* tree,
+    GmIso4* parentToWorld,
+    float* outT,
+    GmVec3* outNormal) {
+    if (rayPos == nullptr || rayDir == nullptr || tree == nullptr ||
+        parentToWorld == nullptr || outT == nullptr ||
+        outNormal == nullptr || !tree->IsCollisionEnabled()) {
+        return 0;
+    }
+
+    if (!tree->m_boundingBox.IsNull()) {
+        GmBoxAligned worldBounds;
+        worldBounds.SetMult(tree->m_boundingBox, *parentToWorld);
+        if (!worldBounds.TestInterSegment(*rayPos, *rayPos + *rayDir)) {
+            return 0;
+        }
+    }
+
+    GmIso4 nodeToWorld = *parentToWorld;
+    if (tree->UsesLocation()) {
+        nodeToWorld.SetMult(tree->m_location, *parentToWorld);
+    }
+    bool hit = false;
+    if (tree->m_surface != nullptr &&
+        tree->m_surface->m_geometry != nullptr) {
+        GmSurf* surface = tree->m_surface->m_geometry->GetGmSurf();
+        if (surface != nullptr) {
+            float candidateT = *outT;
+            GmVec3 candidateNormal;
+            if (surface->ClipSegment2(
+                    *rayPos, *rayDir, nodeToWorld,
+                    candidateT, candidateNormal) != 0 && candidateT < *outT) {
+                *outT = candidateT;
+                *outNormal = candidateNormal;
+                hit = true;
+            }
+        }
+    }
+    for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
+        float candidateT = *outT;
+        GmVec3 candidateNormal;
+        if (IntersectSegmentTree2(
+                rayPos, rayDir, flags, tree->GetChild(index),
+                &nodeToWorld, &candidateT,
+                &candidateNormal) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            *outNormal = candidateNormal;
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
+
+int CHmsCollisionManager::SZone::IntersectSegmentTree3(
+    GmVec3* rayPos,
+    GmVec3* rayDir,
+    CPlugTree* tree,
+    GmIso4* parentToWorld,
+    float* outT,
+    uint16_t* outId) {
+    if (rayPos == nullptr || rayDir == nullptr || tree == nullptr ||
+        parentToWorld == nullptr || outT == nullptr || outId == nullptr ||
+        !tree->IsCollisionEnabled()) {
+        return 0;
+    }
+
+    if (!tree->m_boundingBox.IsNull()) {
+        GmBoxAligned worldBounds;
+        worldBounds.SetMult(tree->m_boundingBox, *parentToWorld);
+        if (!worldBounds.TestInterSegment(*rayPos, *rayPos + *rayDir)) {
+            return 0;
+        }
+    }
+
+    GmIso4 nodeToWorld = *parentToWorld;
+    if (tree->UsesLocation()) {
+        nodeToWorld.SetMult(tree->m_location, *parentToWorld);
+    }
+    bool hit = false;
+    if (tree->m_surface != nullptr &&
+        tree->m_surface->m_geometry != nullptr) {
+        GmSurf* surface = tree->m_surface->m_geometry->GetGmSurf();
+        if (surface != nullptr) {
+            float candidateT = *outT;
+            uint16_t candidateId = 0xffffu;
+            if (surface->ClipSegment3(
+                    *rayPos, *rayDir, nodeToWorld,
+                    candidateT, candidateId) != 0 && candidateT < *outT) {
+                if (candidateId < tree->m_surface->m_materialIds.GetCount()) {
+                    candidateId = tree->m_surface->m_materialIds[candidateId];
+                }
+                *outT = candidateT;
+                *outId = candidateId;
+                hit = true;
+            }
+        }
+    }
+    for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
+        float candidateT = *outT;
+        uint16_t candidateId = 0xffffu;
+        if (IntersectSegmentTree3(
+                rayPos, rayDir, tree->GetChild(index),
+                &nodeToWorld, &candidateT,
+                &candidateId) != 0 && candidateT < *outT) {
+            *outT = candidateT;
+            *outId = candidateId;
+            hit = true;
+        }
+    }
+    return hit ? 1 : 0;
+}
 void CHmsCollisionManager::SZone::AddCorpus(CHmsCorpus* corpus) {
     if (corpus == nullptr || corpus->m_item == nullptr) return;
     const uint32_t group = (corpus->m_item->m_flags1 >> 13u) & 0xfu;
@@ -201,21 +706,43 @@ void CHmsCollisionManager::SZone::DetectCollisionBetween(
         return;
     }
 
+    // Native traversal starts from each item's CPlugSolid root on every
+    // query, combining the current corpus transform with node transforms.
+    // Refreshing here preserves that behavior while retaining the flattened
+    // typed leaf buffer used by the standalone collision dispatcher.
+    first->RefreshCollisionSurfacesFromSolid();
+    second->RefreshCollisionSurfacesFromSolid();
+
     for (uint32_t firstSurfaceIndex = 0;
          firstSurfaceIndex < first->m_collisionSurfaces.GetCount();
          ++firstSurfaceIndex) {
-        LocatedGmSurf& firstSurface =
+        CHmsCorpus::SCollisionSurface& firstSurface =
             first->m_collisionSurfaces[firstSurfaceIndex];
         for (uint32_t secondSurfaceIndex = 0;
              secondSurfaceIndex < second->m_collisionSurfaces.GetCount();
              ++secondSurfaceIndex) {
-            LocatedGmSurf& secondSurface =
+            CHmsCorpus::SCollisionSurface& secondSurface =
                 second->m_collisionSurfaces[secondSurfaceIndex];
             const uint32_t firstNewCollision =
                 m_activeCollisionBuffer->GetCount();
-            if (ComputeCollision(
-                    &firstSurface, &secondSurface,
-                    m_activeCollisionBuffer) == 0) {
+            int didCollide = 0;
+            if (firstSurface.m_plugSurface != nullptr &&
+                secondSurface.m_plugSurface != nullptr) {
+                LocatedPlugSurface firstPlug{
+                    firstSurface.m_plugSurface,
+                    firstSurface.m_gmSurface.m_location};
+                LocatedPlugSurface secondPlug{
+                    secondSurface.m_plugSurface,
+                    secondSurface.m_gmSurface.m_location};
+                didCollide = CPlugSurface::ComputeCollision(
+                    &firstPlug, &secondPlug, m_activeCollisionBuffer);
+            } else {
+                didCollide = ComputeCollision(
+                    &firstSurface.m_gmSurface,
+                    &secondSurface.m_gmSurface,
+                    m_activeCollisionBuffer);
+            }
+            if (didCollide == 0) {
                 continue;
             }
             const uint32_t collisionCount =
@@ -224,9 +751,11 @@ void CHmsCollisionManager::SZone::DetectCollisionBetween(
                  collisionIndex < collisionCount;
                  ++collisionIndex) {
                 SHmsPhysicalCollision& collision =
-                    m_activeCollisionBuffer->m_collisions[collisionIndex];
+                    m_activeCollisionBuffer->GetPhysicalCollision(
+                        collisionIndex);
                 collision.m_body1 = first;
                 collision.m_body2 = second;
+                collision.m_ptr48 = m_activeConfig;
             }
         }
     }
@@ -243,6 +772,7 @@ void CHmsCollisionManager::SZone::DetectCollisionsCorpus(
     SGroup& group = m_groups[groupNumber - 1u];
     const uint32_t corpusIndex = corpus->m_flags54;
     if (corpusIndex >= group.m_nonStaticCorpuses.GetCount()) return;
+    corpus->RefreshCollisionSurfacesFromSolid();
 
     CHmsCollisionBuffer* previousBuffer = m_activeCollisionBuffer;
     m_activeCollisionBuffer = buffer;
@@ -252,6 +782,7 @@ void CHmsCollisionManager::SZone::DetectCollisionsCorpus(
             against.m_against == nullptr) {
             continue;
         }
+        m_activeConfig = against.m_config;
         for (uint32_t targetIndex = 0;
              targetIndex < against.m_columnCount;
              ++targetIndex) {
@@ -260,8 +791,75 @@ void CHmsCollisionManager::SZone::DetectCollisionsCorpus(
                 corpus,
                 against.m_against->m_nonStaticCorpuses[targetIndex]);
         }
+
+        // Native stores fixed corpuses as located surface leaves in the
+        // against group's static collision octree. Iterate the equivalent
+        // typed leaves here; the flat scan changes performance, not results.
+        for (uint32_t staticIndex = 0;
+             staticIndex <
+                 against.m_against->m_staticCollisionTreeData.GetCount();
+             ++staticIndex) {
+            const SGroup::SStaticCollisionLeaf& staticLeaf =
+                against.m_against->m_staticCollisionTreeData[staticIndex];
+            if (staticLeaf.m_corpus == nullptr ||
+                staticLeaf.m_corpus == corpus ||
+                staticLeaf.m_surface == nullptr) {
+                continue;
+            }
+            for (uint32_t surfaceIndex = 0;
+                 surfaceIndex < corpus->m_collisionSurfaces.GetCount();
+                 ++surfaceIndex) {
+                CHmsCorpus::SCollisionSurface& movingSurface =
+                    corpus->m_collisionSurfaces[surfaceIndex];
+                if (movingSurface.m_gmSurface.m_surf == nullptr) continue;
+
+                GmBoxAligned movingLocalBounds;
+                movingLocalBounds.InitEmpty();
+                movingSurface.m_gmSurface.m_surf->GetBoundingBox(
+                    movingLocalBounds);
+                if (!movingLocalBounds.IsNull()) {
+                    GmBoxAligned movingWorldBounds;
+                    movingWorldBounds.SetMult(
+                        movingLocalBounds,
+                        movingSurface.m_gmSurface.m_location);
+                    if (!BoxesIntersect(
+                            movingWorldBounds, staticLeaf.m_worldBounds)) {
+                        continue;
+                    }
+                }
+
+                const uint32_t firstNewCollision = buffer->GetCount();
+                int didCollide = 0;
+                if (movingSurface.m_plugSurface != nullptr) {
+                    LocatedPlugSurface movingPlug{
+                        movingSurface.m_plugSurface,
+                        movingSurface.m_gmSurface.m_location};
+                    LocatedPlugSurface fixedPlug{
+                        staticLeaf.m_surface, staticLeaf.m_location};
+                    didCollide = CPlugSurface::ComputeCollision(
+                        &movingPlug, &fixedPlug, buffer);
+                } else {
+                    LocatedGmSurf fixedGm{
+                        staticLeaf.m_surface->m_geometry->GetGmSurf(),
+                        staticLeaf.m_location};
+                    didCollide = ComputeCollision(
+                        &movingSurface.m_gmSurface, &fixedGm, buffer);
+                }
+                if (didCollide == 0) continue;
+                for (uint32_t collisionIndex = firstNewCollision;
+                     collisionIndex < buffer->GetCount();
+                     ++collisionIndex) {
+                    SHmsPhysicalCollision& collision =
+                        buffer->GetPhysicalCollision(collisionIndex);
+                    collision.m_body1 = corpus;
+                    collision.m_body2 = staticLeaf.m_corpus;
+                    collision.m_ptr48 = m_activeConfig;
+                }
+            }
+        }
     }
     m_corpus18c = nullptr;
+    m_activeConfig = nullptr;
     m_activeCollisionBuffer = previousBuffer;
 }
 void CHmsCollisionManager::SZone::PrepareCollisions() {
@@ -285,6 +883,7 @@ void CHmsCollisionManager::SZone::UpdateStaticCollisionTrees(
     for (SGroup& group : m_groups) {
         group.UpdateStaticCollisionTrees(manager);
     }
+    RebuildPairTables();
 }
 
 // CHmsCollisionManager

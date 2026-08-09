@@ -5,11 +5,15 @@
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
 #include "GmMat3.hpp"
+#include "GmBoxAligned.hpp"
 #include "CFastBuffer.hpp"
 #include "StadiumVehicleMaterials.hpp"
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 class CHmsItem;
+class CHmsCorpus;
 class CSceneVehicleCarTuning;
 class CSceneSoundSource;
 class CPlugShaderGeneric;
@@ -53,41 +57,64 @@ public:
     };
 
     struct SEngine {
-        float m_throttle;           // 0x00 (+0x59C)
+        float m_maxRpm;             // 0x00 (+0x59C)
         float m_field_0x04;         // 0x04
         float m_field_0x08;         // 0x08
         float m_field_0x0c;         // 0x0C
         float m_field_0x10;         // 0x10
+        float m_field_0x14;         // 0x14
         float m_engineRpm;          // 0x18 (+0x5B4)
         float m_clutchRpm;          // 0x1C (+0x5B8)
         float m_clutchRatio;        // 0x20 (+0x5BC)
         float m_gearShiftTimer;     // 0x24 (+0x5C0)
-        int m_field_0x28;           // 0x28 (+0x5C4)
+        union {
+            int m_field_0x28;       // Original translated-code name.
+            int m_isReverse;        // 0x28 (+0x5C4)
+        };
         int m_currentGear;          // 0x2C (+0x5C8)
-        float m_field_0x30;
+        float m_field_0x30;         // 0x30 (+0x5CC)
 
-        virtual ~SEngine();
         void Reset();
     };
+
+    static_assert(std::is_standard_layout_v<SEngine>);
+    static_assert(sizeof(SEngine) == 0x34);
+    static_assert(offsetof(SEngine, m_maxRpm) == 0x00);
+    static_assert(offsetof(SEngine, m_field_0x14) == 0x14);
+    static_assert(offsetof(SEngine, m_engineRpm) == 0x18);
+    static_assert(offsetof(SEngine, m_clutchRpm) == 0x1C);
+    static_assert(offsetof(SEngine, m_clutchRatio) == 0x20);
+    static_assert(offsetof(SEngine, m_gearShiftTimer) == 0x24);
+    static_assert(offsetof(SEngine, m_isReverse) == 0x28);
+    static_assert(offsetof(SEngine, m_currentGear) == 0x2C);
 
     struct SSimulationWheel {
 
         struct SRealTimeState {
-            virtual ~SRealTimeState();
             float m_compression;         // 0x00 (Wheel + 0xB4)
             float m_velocity;            // 0x04 (Wheel + 0xB8)
             float m_absorbDelta;          // 0x08 (Wheel + 0xBC)
-            uint8_t m_padding[100];
+            uint8_t m_padding_0x0c[0x30 - 0x0C];
+            GmIso4 m_orientation;         // 0x30 (Wheel + 0xE4)
+            uint8_t m_padding_0x60[0x6C - 0x60];
             float m_angularVelocity;     // 0x6C (Wheel + 0x120)
-            uint8_t m_padding2[36];
-            float m_axisX;               // 0x94
-            float m_axisY;               // 0x98
+            uint8_t m_padding_0x70[0x90 - 0x70];
+            GmVec3 m_direction;           // 0x90 (Wheel + 0x144)
             float m_rotationAngle;       // 0x9C (Wheel + 0x150)
-            float m_field_0xa0;
-            float m_field_0xa4;
+            float m_steeringAngle;        // 0xA0 (Wheel + 0x154)
+            float m_targetSteeringAngle;  // 0xA4 (Wheel + 0x158)
             
             void Integrate(float dt);
         };
+
+        static_assert(std::is_standard_layout_v<SRealTimeState>);
+        static_assert(sizeof(SRealTimeState) == 0xA8);
+        static_assert(offsetof(SRealTimeState, m_compression) == 0x00);
+        static_assert(offsetof(SRealTimeState, m_orientation) == 0x30);
+        static_assert(offsetof(SRealTimeState, m_angularVelocity) == 0x6C);
+        static_assert(offsetof(SRealTimeState, m_direction) == 0x90);
+        static_assert(offsetof(SRealTimeState, m_rotationAngle) == 0x9C);
+        static_assert(offsetof(SRealTimeState, m_targetSteeringAngle) == 0xA4);
 
         struct SState {
             virtual ~SState();
@@ -129,17 +156,40 @@ public:
         
         SRealTimeState m_realTimeState; 
         
-        float m_suspensionForce;        // 0x158
-        float m_field_0x15c;
+        // Standalone observation of the most recently applied suspension
+        // scalar; native WheelAddForceToVehicle keeps this value temporary.
+        float m_suspensionForce;
+
+        // Semantic host views of the contact accumulators at native wheel
+        // +0x108, +0x140, +0x144, +0x15C, and +0x160. They live outside the
+        // raw 32-bit layout because host pointers make the enclosing wheel a
+        // different size in the standalone build.
+        GmVec3 m_absorbContactPoint;
+        uint32_t m_groundContactCount;
+        GmVec3 m_groundContactNormalSum;
+        int m_hasLateralContact;
+        GmVec3 m_lateralContactPoint;
+
+        // Semantic host views of native wheel +0x130..+0x13C. The direction
+        // is the contacted corpus's local +Z axis expressed in vehicle-local
+        // space; the corpus remains a packed native 32-bit token.
+        GmVec3 m_otherCorpusLocalDirection;
+        uint32_t m_otherCorpusToken;
+
+        // Semantic host view of the native force-application point at wheel
+        // +0xA8. It remains separate because the surrounding 64-bit wheel
+        // declaration does not claim the original outer-object layout.
+        GmVec3 m_localContactPosition;
 
         SSimulationWheel();
         virtual ~SSimulationWheel();
     };
 
     // Native 0x7C1810 helper. The executable has two stack arguments: the
-    // simulation wheel and the local point where its suspension force acts.
+    // simulation wheel and an unused force-model scalar. The force application
+    // point is the wheel's embedded native +0xA8 vector.
     void WheelAddForceToVehicle(
-        SSimulationWheel* wheel, const GmVec3* localContactPosition);
+        SSimulationWheel* wheel, float unusedForceModelScalar);
 
     struct SVehicleCarState {
         virtual ~SVehicleCarState();
@@ -191,6 +241,55 @@ public:
     // chassis up axis from its wheel contacts here.
     GmVec3 m_chassisUp;
 
+    // Typed standalone counterparts of the native car flags at +0x6A0 and
+    // +0x73C. When the former is enabled for a grounded wheel, the executable
+    // reads the angular speed from its loaded vehicle-struct resource. The
+    // standalone build retains that resolved scalar directly.
+    int m_useGroundedWheelSpeedOverride;
+    int m_wheelDriveDisabled;
+    float m_groundedWheelAngularSpeedOverride;
+
+    // Typed standalone counterparts of the engine-state fields consumed by
+    // native EngineIntegrate at +0x2E4, +0x628, +0x69C, +0x70C, +0x744, and
+    // +0x748. They are semantic host state, not claims about this 64-bit
+    // class's enclosing object offsets.
+    int m_engineState;
+    int m_engineClutchBoost;
+    int m_engineTakeoffMode;
+    GmVec3 m_engineLocalVelocity;
+    int m_engineOutsideTakeoffWindow;
+    int m_engineShiftDirection;
+
+    // Typed standalone counterparts of the friction/contact fields consumed
+    // by ApplyFrictionForces at native +0x5DC, +0x5E0, and +0x5E4. The fixed
+    // executable obtains the current millisecond tick from CMwTimerAdapter;
+    // the standalone callback advances the equivalent deterministic clock.
+    int m_hasBodyContact;
+    uint32_t m_lastBodyContactTick;
+    int m_hasWaterContact;
+    uint32_t m_frictionCurrentTick;
+    double m_frictionTickFraction;
+
+    // Semantic host views of native contact state +0x5D4/+0x5D8 and the
+    // impact/contact accumulators at +0x670..+0x698.
+    int m_hasAnyContact;
+    int m_hasChassisContact;
+    uint8_t m_chassisContactMaterial;
+    uint8_t m_wheelContactMaterial;
+    float m_frontWheelImpact;
+    float m_rearWheelImpact;
+    float m_chassisImpact;
+    uint32_t m_wheelContactCount;
+    uint32_t m_chassisContactCount;
+    GmVec3 m_chassisContactPointSum;
+    GmVec3 m_chassisContactNormalSum;
+    GmVec3 m_appliedImpulseSum;
+
+    // Semantic host views of native car +0x1DC and +0x824..+0x82C.
+    // The body box remains empty until vehicle geometry supplies it.
+    GmBoxAligned m_localBodyBounds;
+    GmVec3 m_appliedCentralImpulseSum;
+
     CSceneVehicleCar();
     virtual ~CSceneVehicleCar();
 
@@ -205,13 +304,51 @@ public:
     
     void ComputeForces(CCallbackSceneToyBroomStickComputeForces* param_1, CHmsItem* param_2, float dt);
     void IntegrateVehicle(CSceneVehicleCar* pilot, float dt);
-    void ApplyFrictionForces(CSceneVehicleCar* pilot, float dt);
-    void WheelUpdateSpeedFromVehicleSpeed(SSimulationWheel* wheel, CSceneVehicleCar* pilot, float dt, float param_3);
+    // TmForeverFixed.exe 0x7BED10 ends in `ret 0x04`; the sole stack argument
+    // is the local-space vehicle velocity acquired by ComputeForces.
+    void ApplyFrictionForces(const GmVec3* localLinearSpeed);
+    // TmForeverFixed.exe 0x7C2910 ends in `ret 0x04`; its sole argument is
+    // the local force already accumulated for the current model pass.
+    int ApplyWaterForces(const GmVec3* accumulatedLocalForce);
+    // Native virtual at 0x7C3410 has one stack argument (`ret 0x04`).
+    void AbsorbContact(CHmsPhysicalContact* contact) override;
+    // Native helpers at 0x7BD040 (`ret 0x04`) and 0x7C11D0 (`ret 0x08`).
+    uint32_t GetWheelFromSurfaceTree(uint32_t surfaceTreeToken) const;
+    void WheelAbsorbContact(
+        SSimulationWheel* wheel,
+        CHmsPhysicalContact* contact);
+    // Native 0x7BE390 has two stack arguments: a local impulse followed by
+    // its local application point (`ret 0x08`).
+    void AddVehicleImpulse(
+        const GmVec3* localImpulse,
+        const GmVec3* localPoint);
+    // Native 0x7BE690 is the central one-vector impulse helper (`ret 0x04`).
+    void AddVehicleCentralImpulse(const GmVec3* localImpulse);
+    // Native 0x7C0EC0 ends in `ret 0x0C`: wheel, local vehicle speed along Z,
+    // and timestep are its three stack arguments.
+    void WheelUpdateSpeedFromVehicleSpeed(
+        SSimulationWheel* wheel, float vehicleWheelSpeed, float dt);
     void WheelIntegrate(SSimulationWheel* wheel, float dt);
-    void EngineIntegrate(CSceneVehicleCar* pilot, float dt, float param_2);
+    // TmForeverFixed.exe 0x7BD700 ends in `ret 0x08`: input and timestep are
+    // the only two stack arguments.
+    void EngineIntegrate(float input, float dt);
     void VehicleFreeWheelingSet(int enabled);
     void ComputeForcesModel3(CSceneVehicleCar* pilot, float dt);
-    void ComputeForcesModel6(CSceneVehicleCar* pilot, float dt);
+    // TmForeverFixed.exe 0x7C3E80 ends in `ret 0x2c`. The fixed caller lays
+    // down these eleven arguments in this order after removing Ghidra's
+    // spurious leading CSceneVehicleCar* parameter.
+    void ComputeForcesModel6(
+        float dt,
+        GmVec3* accumulatedLocalForce,
+        float lateralSlopeAdherence,
+        float axialSlopeAdherence,
+        GmVec3* localLinearSpeed,
+        GmVec3* localAngularSpeed,
+        float processedSteer,
+        int hasGroundMaterial,
+        StadiumVehicleMaterials::GroundValues* groundMaterial,
+        int* hasSlippingWheel,
+        float* axialBrakeForce);
     // The fixed executable's implementation at 0x7FA770 ends in `ret 0x2c`,
     // proving that there are eleven 32-bit stack arguments. Ghidra had added a
     // spurious leading CSceneVehicleCar* parameter to this signature.
@@ -223,6 +360,12 @@ public:
         const GmVec3& force, float* lateralAdherence,
         float* axialAdherence) const;
     int IsGroundContact();
+    // Native 0x7BF620 has material, direction-out, and corpus-out arguments
+    // and ends in `ret 0x0C`.
+    int IsGroundContactId(
+        uint8_t materialId,
+        GmVec3* otherCorpusLocalDirection,
+        CHmsCorpus** otherCorpus) const;
 };
 
 #endif // CSCENEVEHICLECAR_HPP

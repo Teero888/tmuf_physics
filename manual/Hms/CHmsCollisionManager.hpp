@@ -5,6 +5,7 @@
 #include "CFastBuffer.hpp"
 #include "GmVec3.hpp"
 #include "GmIso4.hpp"
+#include "GmBoxAligned.hpp"
 #include <cstdint>
 #include <vector>
 
@@ -13,6 +14,7 @@ class CHmsCorpus;
 class CHmsZone;
 class CHmsCollisionBuffer;
 class CPlugTree;
+class CPlugSurface;
 class CHmsZoneOverlay;
 class CFuncSegment;
 class CMwCmdAffectParam;
@@ -24,9 +26,18 @@ class CSystemData;
 class CRpcCallInternal;
 class CVisionViewportDx9;
 struct GmBoxAligned;
-struct SPlugTreeLocatedPair;
 struct LocatedGmSurf;
 struct CGmCollisionBuffer;
+
+// Recovered native four-pointer pair passed through the recursive tree
+// collision helpers: tree 1, its parent/world transform, tree 2, and its
+// parent/world transform.
+struct SPlugTreeLocatedPair {
+    CPlugTree* m_tree1 = nullptr;
+    GmIso4* m_parentToWorld1 = nullptr;
+    CPlugTree* m_tree2 = nullptr;
+    GmIso4* m_parentToWorld2 = nullptr;
+};
 
 class CHmsCollisionManager : public CMwNod {
 public:
@@ -51,7 +62,19 @@ public:
         CFastBuffer<CHmsCorpus*> m_nonStaticCorpuses;
         CFastBuffer<float> m_squaredLinearSpeeds;
         std::vector<SAgainstGroup> m_againstGroups;
-        CFastBuffer<uint8_t> m_staticCollisionTreeData;
+        // Native SColOctreeCell stores the box inline at +0x04, transform at
+        // +0x1c, surface at +0x4c, corpus at +0x50, and tree at +0x54.
+        // The standalone build currently keeps the same leaves in a flat
+        // buffer; collision results are identical, with only broadphase
+        // acceleration still pending.
+        struct SStaticCollisionLeaf {
+            GmBoxAligned m_worldBounds;
+            GmIso4 m_location;
+            CPlugSurface* m_surface = nullptr;
+            CHmsCorpus* m_corpus = nullptr;
+            CPlugTree* m_tree = nullptr;
+        };
+        CFastBuffer<SStaticCollisionLeaf> m_staticCollisionTreeData;
         uint32_t m_groupId = 0;
         uint32_t m_skipDynamicPairPreparation = 0;
 
@@ -60,7 +83,11 @@ public:
 
         void AddCorpus(CHmsZone* param_1, CHmsCorpus* param_2);
         void AddNonStaticCorpus(CHmsCorpus* param_2);
-        void AddStaticSurfacesFromTree(CHmsCorpus* param_2, CPlugTree* param_3, GmIso4* param_4, void* param_5);
+        void AddStaticSurfacesFromTree(
+            CHmsCorpus* corpus,
+            CPlugTree* tree,
+            const GmIso4* parentToWorld,
+            void* unused);
         void ClearAllStatic();
         void ComputeIsToPerformCollisions();
         void ComputeNonStaticCorpusInfos();
@@ -76,6 +103,7 @@ public:
         CHmsCorpus* m_corpus18c = nullptr;
         LocatedGmSurf* m_surf190 = nullptr;
         CHmsCollisionBuffer* m_activeCollisionBuffer = nullptr;
+        uint32_t* m_activeConfig = nullptr;
 
         SZone(uint32_t zoneId, CHmsCollisionManager* manager);
         ~SZone() = default;

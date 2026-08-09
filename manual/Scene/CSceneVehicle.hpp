@@ -3,11 +3,14 @@
 
 #include "CSceneMobil.hpp"
 #include "CFastArray.hpp"
+#include "GmIso4.hpp"
+#include "GmVec3.hpp"
 #include <cstdint>
 
 class CFuncSegment;
 class CClassicArchive;
 class CHmsItem;
+class CPlugTree;
 struct CPfmHeap;
 
 class CSceneVehicle : public CSceneMobil {
@@ -17,7 +20,13 @@ public:
     };
 
     struct SSurfaceHandler {
-        virtual ~SSurfaceHandler();
+        CPlugTree* m_tree;
+        GmIso4 m_baseLocation;
+        GmIso4 m_surfaceLocation;
+
+        SSurfaceHandler();
+        void Reset();
+        void UpdateSurface();
     };
 
     struct SVehicleState {
@@ -74,6 +83,11 @@ public:
     uint32_t m_field_68;       // 0x68
     CFastArray<void*> m_manoeuvres; // 0x6C
 
+    // Semantic host views of native WaterSplash state (+0xB8 and
+    // +0x204..+0x20C). They live outside the declared 32-bit vehicle body.
+    uint32_t m_waterSplashCount;
+    GmVec3 m_lastWaterSplashSpeed;
+
     CSceneVehicle();
     virtual ~CSceneVehicle();
 
@@ -90,6 +104,8 @@ public:
     void VehicleInputBrakeSet(float brake);
     void VehicleInputSteerSet(float steer);
     float VehicleInputSteerGet() const;
+    // Native 0x7C97A0 has one vector argument (`ret 0x04`).
+    void WaterSplash(const GmVec3* worldSpeed);
 };
 
 #endif // CSCENEVEHICLE_HPP

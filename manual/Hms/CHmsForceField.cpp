@@ -1,7 +1,15 @@
 #include "CHmsForceField.hpp"
 
-CHmsForceField::CHmsForceField() : CMwNod(), m_zone(nullptr) {}
+CHmsForceField::CHmsForceField()
+    : CMwNod(), m_zone(nullptr), m_isActive(0), m_field_0x58(0u) {}
 CHmsForceField::~CHmsForceField() {}
+
+bool CHmsForceField::GetValue(
+    const GmVec3& position, GmVec3& value) const {
+    (void)position;
+    (void)value;
+    return false;
+}
 
 CMwClassInfo* CHmsForceField::MwGetClassInfo(CFuncSegment* param_1) { return nullptr; }
 CMwNod* CHmsForceField::MwNewCHmsForceField() { return new CHmsForceField(); }

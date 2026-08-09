@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <limits>
 #include "Scene/CSceneVehicleCar.hpp"
+#include "Scene/CCallbackSceneVehicleCarComputeForces.hpp"
+#include "Scene/CSceneMobilAbsorbContact.hpp"
 
 #include "CHmsCorpus.hpp"
 #include "CHmsDyna.hpp"
@@ -26,6 +28,8 @@
 #include "Game/CGameCtnReplayRecord.hpp"
 #include "Classic/CClassicArchive.hpp"
 #include "Plug/CPlugSolid.hpp"
+#include "Plug/CPlugPhysicalObject.hpp"
+#include "Hms/CHmsForceFieldUniform.hpp"
 
 class CSceneVehicleCarTuning;
 CSceneVehicleCarTuning* g_tuning = nullptr;
@@ -181,6 +185,13 @@ int main(int argc, char* argv[]) {
     CHmsDyna* dyna = new CHmsDyna();
 
     car->m_hmsItem = item;
+    item->m_sceneMobil = car;
+    item->CallbackSet(
+        CB_PHYSICS,
+        CCallbackSceneVehicleCarComputeForces::Instance());
+    item->CallbackSet(
+        CB_ABSORB_CONTACT,
+        CSceneMobilAbsorbContact::Instance());
     item->m_corpuses.Add(corpus);
     corpus->m_dyna = dyna;
     corpus->m_item = item;
@@ -189,8 +200,8 @@ int main(int argc, char* argv[]) {
     GmVec3 startPos(ghostSamples[0].x, ghostSamples[0].y, ghostSamples[0].z);
     GmVec3 vel(0.0f, 0.0f, 0.0f);
 
-    dyna->m_position = startPos;
-    dyna->m_yaw = 1.57079632679f; // PI/2, facing +X
+    dyna->Position() = startPos;
+    dyna->SetYaw(1.57079632679f); // PI/2, facing +X
     item->SetLinearSpeed(item, &vel);
     car->SetTranslation(nullptr, &startPos);
 
@@ -203,8 +214,27 @@ int main(int argc, char* argv[]) {
     InitTuningData(tuning);
     g_tuning = tuning;
 
+    // The game obtains this value from the car's CPlugSolid. The standalone
+    // harness builds the item manually, so provide the same physical boundary
+    // explicitly instead of falling back to a scalar yaw inertia.
+    CPlugPhysicalObject vehiclePhysicalObject;
+    vehiclePhysicalObject.m_mass = tuning->m_mass;
+    vehiclePhysicalObject.m_forceFieldCoef = tuning->m_gravityCoef;
+    vehiclePhysicalObject.SetInertiaMatrixBox(
+        tuning->m_inertiaMass,
+        GmVec3(tuning->m_inertiaHalfDiagX,
+               tuning->m_inertiaHalfDiagY,
+               tuning->m_inertiaHalfDiagZ));
+    dyna->m_field_0x108 = &vehiclePhysicalObject;
+    dyna->m_dynamicType = 1;
+    dyna->UpdateWorldInverseInertia();
+    item->m_flags1 = (item->m_flags1 & ~0x1800u) | (2u << 11u);
+
     CHmsZoneDynamic* zoneDyn = new CHmsZoneDynamic();
-    zoneDyn->m_dynamicItems.Add(item);
+    zoneDyn->m_dynamicCorpuses.Add(corpus);
+    CHmsForceFieldUniform uniformGravity;
+    uniformGravity.m_isActive = 1;
+    zoneDyn->AddForceField(&uniformGravity);
 
     // Determine initial car orientation from first two ghost samples
     // The car faces from sample[0] to sample[1]
@@ -212,9 +242,9 @@ int main(int argc, char* argv[]) {
         float dx = ghostSamples[9].x - ghostSamples[0].x;
         float dz = ghostSamples[9].z - ghostSamples[0].z;
         if (std::abs(dx) > 0.01f || std::abs(dz) > 0.01f) {
-            dyna->m_yaw = std::atan2(dx, dz); // atan2(sin, cos) = atan2(fwdX, fwdZ)
-            std::cout << "Initial yaw from ghost trajectory: " << dyna->m_yaw << " rad ("
-                      << (dyna->m_yaw * 180.0f / 3.14159265f) << " deg)" << std::endl;
+            dyna->SetYaw(std::atan2(dx, dz)); // atan2(sin, cos) = atan2(fwdX, fwdZ)
+            std::cout << "Initial yaw from ghost trajectory: " << dyna->GetYaw() << " rad ("
+                      << (dyna->GetYaw() * 180.0f / 3.14159265f) << " deg)" << std::endl;
         }
     }
 
@@ -260,19 +290,19 @@ int main(int argc, char* argv[]) {
         if (ghostSamples[ghostSampleIdx].time_ms != raceTimeMs) return;
 
         const GhostSample& gs = ghostSamples[ghostSampleIdx];
-        const float errX = dyna->m_position.x - gs.x;
-        const float errY = dyna->m_position.y - gs.y;
-        const float errZ = dyna->m_position.z - gs.z;
+        const float errX = dyna->Position().x - gs.x;
+        const float errY = dyna->Position().y - gs.y;
+        const float errZ = dyna->Position().z - gs.z;
         const float errTotal = std::sqrt(errX * errX + errY * errY + errZ * errZ);
 
         GmVec3 simVel;
-        item->GetLinearSpeed(item, &simVel);
+        dyna->GetLinearSpeed(nullptr, &simVel);
         const float simSpeed = std::sqrt(
             simVel.x * simVel.x + simVel.y * simVel.y + simVel.z * simVel.z) * 3.6f;
 
         logFile << raceTimeMs << ","
                 << gs.x << "," << gs.y << "," << gs.z << "," << gs.speed_kmh << ","
-                << dyna->m_position.x << "," << dyna->m_position.y << "," << dyna->m_position.z << "," << simSpeed << ","
+                << dyna->Position().x << "," << dyna->Position().y << "," << dyna->Position().z << "," << simSpeed << ","
                 << errX << "," << errY << "," << errZ << "," << errTotal << std::endl;
 
         if (errTotal > maxError) maxError = errTotal;
@@ -284,7 +314,7 @@ int main(int argc, char* argv[]) {
             std::cout << std::fixed << std::setprecision(3)
                       << "T=" << std::setw(6) << raceTimeMs << "ms"
                       << " | Ghost=(" << std::setw(8) << gs.x << "," << std::setw(8) << gs.y << "," << std::setw(8) << gs.z << ")"
-                      << " | Sim=(" << std::setw(8) << dyna->m_position.x << "," << std::setw(8) << dyna->m_position.y << "," << std::setw(8) << dyna->m_position.z << ")"
+                      << " | Sim=(" << std::setw(8) << dyna->Position().x << "," << std::setw(8) << dyna->Position().y << "," << std::setw(8) << dyna->Position().z << ")"
                       << " | Err=" << std::setw(8) << errTotal << "m"
                       << " | Spd G=" << std::setw(6) << gs.speed_kmh << " S=" << std::setw(6) << simSpeed;
 
@@ -300,7 +330,7 @@ int main(int argc, char* argv[]) {
         dr.error_x = errX; dr.error_y = errY; dr.error_z = errZ;
         dr.error_total = errTotal;
         dr.ghost_x = gs.x; dr.ghost_y = gs.y; dr.ghost_z = gs.z;
-        dr.sim_x = dyna->m_position.x; dr.sim_y = dyna->m_position.y; dr.sim_z = dyna->m_position.z;
+        dr.sim_x = dyna->Position().x; dr.sim_y = dyna->Position().y; dr.sim_z = dyna->Position().z;
         dr.ghost_speed = gs.speed_kmh; dr.sim_speed = simSpeed;
         desyncLog.push_back(dr);
     };
@@ -314,8 +344,8 @@ int main(int argc, char* argv[]) {
         compareWithGhost(raceTimeMs);
 
         // CLEAR FORCES from previous frame!
-        dyna->m_force = GmVec3(0, 0, 0);
-        dyna->m_torque = GmVec3(0, 0, 0);
+        dyna->Force() = GmVec3(0, 0, 0);
+        dyna->Torque() = GmVec3(0, 0, 0);
 
         // 1. Process Input events
         while (currentEventIdx < replay->m_events.size()) {
@@ -346,7 +376,7 @@ int main(int argc, char* argv[]) {
         // contact system works at these solid-node transforms; a center ray
         // incorrectly gave all four wheels the same contact and material.
         const VehicleChassisBasis queryBasis =
-            BuildVehicleChassisBasis(car->m_chassisUp, dyna->m_yaw);
+            BuildVehicleChassisBasis(car->m_chassisUp, dyna->GetYaw());
         GmVec3 groundNormal(0.0f, 0.0f, 0.0f);
         float supportedRootY = -std::numeric_limits<float>::infinity();
         int groundedWheelCount = 0;
@@ -369,7 +399,7 @@ int main(int argc, char* argv[]) {
             const GmVec3 wheelOffset =
                 queryBasis.right * localX + queryBasis.up * localY +
                 queryBasis.forward * localZ;
-            const GmVec3 wheelCenter = dyna->m_position + wheelOffset;
+            const GmVec3 wheelCenter = dyna->Position() + wheelOffset;
 
             const GmVec3 rayPosition = wheelCenter + GmVec3(0.0f, 0.25f, 0.0f);
             const GmVec3 rayDirection(
@@ -419,7 +449,7 @@ int main(int argc, char* argv[]) {
         if (onGround) groundNormal.Normalize();
         else groundNormal = GmVec3(0.0f, 1.0f, 0.0f);
         const VehicleGroundSupportResult support = ComputeVehicleGroundSupport(
-            supportSamples, wheelCount, dyna->m_yaw);
+            supportSamples, wheelCount, dyna->GetYaw());
         if (onGround && support.valid) {
             // This semantic support reconstruction lets the chassis pitch and
             // roll across axle transitions while the native ellipsoid-contact
@@ -439,15 +469,15 @@ int main(int argc, char* argv[]) {
         GmVec3 groundReaction(0.0f, 0.0f, 0.0f);
         if (onGround) {
             GmVec3 currentVelTmp;
-            item->GetLinearSpeed(item, &currentVelTmp);
-            dyna->m_position.y = supportedRootY;
+            dyna->GetLinearSpeed(nullptr, &currentVelTmp);
+            dyna->Position().y = supportedRootY;
             const GmVec3 resolvedVelocity =
                 RemoveInwardSupportVelocity(currentVelTmp, groundNormal);
             if (resolvedVelocity.x != currentVelTmp.x ||
                 resolvedVelocity.y != currentVelTmp.y ||
                 resolvedVelocity.z != currentVelTmp.z) {
                 currentVelTmp = resolvedVelocity;
-                item->SetLinearSpeed(item, &currentVelTmp);
+                dyna->SetLinearSpeed(nullptr, &currentVelTmp);
             }
 
             // Keep full gravity visible to the vehicle callback. Native
@@ -457,26 +487,21 @@ int main(int argc, char* argv[]) {
             const float normalGravity = GmVec3::Dot(gravityForce, groundNormal);
             groundReaction = groundNormal * -normalGravity;
         }
-        item->AddForce(item, &gravityForce, nullptr);
-
-        // Contact state and the frame's pre-existing environment force must
-        // be available when the vehicle callback runs. ComputeForces in the
-        // fixed executable consumes both to select Model6 ground branches and
-        // to derive slope adherence; dispatching before this query left every
-        // wheel one frame stale in the standalone harness.
-        car->IntegrateVehicle(nullptr, dt);
-        // PhysicsStep2 performs the frame's single velocity integration and
-        // move after all vehicle and environment forces are accumulated.
-        // Calling Integrate here used to apply angular fluid damping twice.
-        item->AddForce(item, &groundReaction, nullptr);
+        // Native ComputeCorpusForces resets the frame accumulators, adds the
+        // uniform force field and damping, then invokes the item's physics
+        // callback. Contact state is therefore populated before this call.
+        zoneDyn->PrepareForPhysicsStep(dt);
+        // The raycast support adapter stands in for the not-yet-connected
+        // wheel/chassis contact response and is applied after the callback.
+        dyna->AddForce(nullptr, &groundReaction, nullptr);
 
         if (traceForces && raceTimeMs % 100 == 0) {
             GmVec3 traceVelocity;
-            item->GetLinearSpeed(item, &traceVelocity);
+            dyna->GetLinearSpeed(nullptr, &traceVelocity);
             std::cout << "ForceTrace t=" << raceTimeMs
-                      << " pos=(" << dyna->m_position.x << ',' << dyna->m_position.y << ',' << dyna->m_position.z << ')'
+                      << " pos=(" << dyna->Position().x << ',' << dyna->Position().y << ',' << dyna->Position().z << ')'
                       << " vel=(" << traceVelocity.x << ',' << traceVelocity.y << ',' << traceVelocity.z << ')'
-                      << " force=(" << dyna->m_force.x << ',' << dyna->m_force.y << ',' << dyna->m_force.z << ')'
+                      << " force=(" << dyna->Force().x << ',' << dyna->Force().y << ',' << dyna->Force().z << ')'
                       << " normal=(" << groundNormal.x << ',' << groundNormal.y << ',' << groundNormal.z << ')'
                       << " groundedWheels=" << groundedWheelCount
                       << " materials=[";
@@ -501,7 +526,7 @@ int main(int argc, char* argv[]) {
             std::cout << "]\n";
         }
 
-        zoneDyn->PhysicsStep2();
+        zoneDyn->PhysicsStep2(dt);
     }
 
     logFile.close();

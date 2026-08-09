@@ -1,15 +1,20 @@
 #include "CHmsForceFieldUniform.hpp"
 
 CHmsForceFieldUniform::CHmsForceFieldUniform() : CHmsForceField() {
-    m_force[0] = 0;
-    m_force[1] = 0;
-    m_force[2] = 0;
+    // Exact constructor values at 0x55F360.
+    m_force[0] = 0.0f;
+    m_force[1] = -9.81000041961669921875f;
+    m_force[2] = 0.0f;
 }
 
 CHmsForceFieldUniform::~CHmsForceFieldUniform() {}
 
-GmVec3 CHmsForceFieldUniform::GetValue(CFuncColorGradient* param_1, float param_2) {
-    return GmVec3(m_force[0], m_force[1], m_force[2]);
+bool CHmsForceFieldUniform::GetValue(
+    const GmVec3& position, GmVec3& value) const {
+    (void)position;
+    if (m_isActive == 0) return false;
+    value = GmVec3(m_force[0], m_force[1], m_force[2]);
+    return true;
 }
 
 CMwClassInfo* CHmsForceFieldUniform::MwGetClassInfo(CFuncSegment* param_1) { return nullptr; }

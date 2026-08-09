@@ -9,6 +9,7 @@
 
 class CHmsZone;
 class CHmsCorpus;
+class CHmsForceField;
 class CClassicBufferMemory;
 
 class CHmsZoneDynamic : public CMwNod {
@@ -20,12 +21,17 @@ public:
     int* m_ptr134;
     int* m_ptr138;
     uint8_t m_padding_13c[4];
-    CFastBuffer<class CHmsItem*> m_dynamicItems; // 0x140
+    CFastBuffer<CHmsCorpus*> m_dynamicCorpuses; // native +0x140
     uint8_t m_padding_14c[12];
     void* m_manager158; // 0x158
     CFastBuffer<SHmsPhysicalCollision> m_collisions; // 0x15C
     void* m_ptr168;
     uint8_t m_final_padding[12];
+
+    // Host-side storage for the CHmsZone +0x7C buffer represented by the
+    // native-layout padding above.
+    CFastBuffer<CHmsForceField*> m_forceFields;
+    bool m_forcesPrepared;
 
     CHmsZoneDynamic();
     virtual ~CHmsZoneDynamic();
@@ -35,7 +41,11 @@ public:
     static CMwNod* MwNewCHmsZoneDynamic();
     uint32_t GetMwClassId();
 
-    void PhysicsStep2();
+    void AddForceField(CHmsForceField* field);
+    void RemoveForceField(CHmsForceField* field);
+    void ComputeCorpusForces(CHmsCorpus* corpus, float dt);
+    void PrepareForPhysicsStep(float dt = 0.01f);
+    void PhysicsStep2(float dt = 0.01f);
     void ComputeCollisionResponse();
     void SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysicalContact* contact1, CHmsPhysicalContact* contact2);
     void SolveImpulse(SHmsPhysicalCollision* collision, SHmsPhysicalCollision* col2, CHmsCorpus* param_3);

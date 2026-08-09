@@ -126,6 +126,8 @@ inline constexpr float StadiumInertiaHalfDiagZ = 1.0f;
 inline constexpr float StadiumGravityCoef = 3.0f;
 inline constexpr float StadiumGravityCoefAir = 2.5f;
 inline constexpr float StadiumAngularFluidFrictionCoef1 = 0.4f;
+inline constexpr float StadiumGroundSlowDownBase = 1.0f;
+inline constexpr float StadiumLinearFluidFrictionCoef = 0.03f;
 inline constexpr float StadiumSteerSpeed = 20.0f;
 inline constexpr int StadiumSteerModel = 5; // Steer06
 inline constexpr float StadiumSteerLowSpeed = 30.0f;
@@ -136,15 +138,57 @@ inline constexpr float MaxSideFrictionSliding = 0.35f;
 inline constexpr float StadiumSideFriction1 = 40.0f;
 inline constexpr float StadiumMaxSideFrictionOverLimitBlend = 1.0f;
 inline constexpr float StadiumM5AccelSlipCoefMax = 1.0f;
+inline constexpr uint32_t StadiumM5LateralConstantSlowDownDuration = 500u;
 inline constexpr int StadiumShockModel = 2; // Demo03
 inline constexpr float StadiumAbsorbingValKi = 40.0f;
 inline constexpr float StadiumAbsorbingValKa = 1.0f;
+inline constexpr float StadiumAbsorbingValMin = 0.0f;
 inline constexpr float StadiumAbsorbingValRest = 0.2f;
 inline constexpr float StadiumAbsorbTension = 5.0f;
+inline constexpr float StadiumBodyFrictionCoef = 0.3f;
+inline constexpr float StadiumBodyFrictionCoefMetal = 0.2f;
+inline constexpr float StadiumBodyRestCoefMetal = -0.5f;
+inline constexpr float StadiumBodyRestCoef = -0.5f;
+inline constexpr float StadiumWheelFrictionCoefConcrete = 0.0f;
+inline constexpr float StadiumWheelRestCoefConcrete = -0.8f;
+inline constexpr float StadiumWheelFrictionCoefMetal = 0.0f;
+inline constexpr float StadiumWheelRestCoefMetal = -0.8f;
+inline constexpr float StadiumAngularSpeedYImpulseScale = 0.55f;
+inline constexpr float StadiumAngularImpulseScale = 1.0f;
+inline constexpr float StadiumAngularSpeedClamp = 100.0f;
+inline constexpr float StadiumLinearSpeedSquaredPositiveDeltaMax = 10000.0f;
 inline constexpr float StadiumLateralSlopeAdherenceMin = 0.3f;
 inline constexpr float StadiumLateralSlopeAdherenceMax = 0.7f;
 inline constexpr float StadiumAxialSlopeAdherenceMin = 0.4f;
 inline constexpr float StadiumAxialSlopeAdherenceMax = 0.7f;
+inline constexpr float StadiumWaterGravity = 1.0f;
+inline constexpr float StadiumWaterReboundMinHorizontalSpeed =
+    55.5555572509765625f;
+inline constexpr float StadiumWaterBumpMinSpeed = 50.0f;
+inline constexpr float StadiumWaterAngularFriction =
+    0.100000001490116119140625f;
+inline constexpr float StadiumWaterAngularFrictionSq =
+    0.20000000298023223876953125f;
+inline constexpr float StadiumM6MaxRpm = 11000.0f;
+inline constexpr std::array<float, 6> StadiumM6GearRatios = {
+    400.0f, 370.0f, 220.0f, 160.0f, 110.0f, 85.0f};
+inline constexpr std::array<float, 6> StadiumM6MaxRpmRatios = {
+    0.0f, 0.95f, 0.9f, 0.95f, 0.95f, 1.0f};
+inline constexpr std::array<float, 6> StadiumM6MinRpmRatios = {
+    0.0f, 0.0f, 0.5f, 0.57f, 0.55f, 0.6f};
+inline constexpr std::array<float, 6> StadiumM6RpmWantedOnGearUp = {
+    0.0f, 0.0f, 0.628f, 0.7f, 0.7f, 0.72f};
+inline constexpr float StadiumM6BurnoutRpmAcceleration = 6000.0f;
+inline constexpr float StadiumM6AirRpmAcceleration = 6000.0f;
+inline constexpr float StadiumM6AirRpmDeadening = 3000.0f;
+inline constexpr float StadiumM6RpmLossOnGearUp = 17000.0f;
+inline constexpr float StadiumM6RpmGainOnGearDown = 11500.0f;
+inline constexpr float StadiumM6RpmGainOnTakeoff = 10000.0f;
+inline constexpr float StadiumM6RpmLossOnTakeoffFinished = 4000.0f;
+inline constexpr float StadiumM6PositiveTakeoffFrontSpeed = 3.0f;
+inline constexpr float StadiumM6PositiveTakeoffRearSpeed = 2.0f;
+inline constexpr float StadiumM6NegativeTakeoffFrontSpeed = -2.0f;
+inline constexpr float StadiumM6NegativeTakeoffRearSpeed = -3.0f;
 
 static float g_dummy_wheel_tuning[256];
 
@@ -189,6 +233,8 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_gravityCoef = StadiumGravityCoef;
     tuning->m_gravityCoefAir = StadiumGravityCoefAir;
     tuning->m_angularFluidFrictionCoef1 = StadiumAngularFluidFrictionCoef1;
+    tuning->m_groundSlowDownBase = StadiumGroundSlowDownBase;
+    tuning->m_linearFluidFrictionCoef = StadiumLinearFluidFrictionCoef;
     tuning->m_steerSpeed = StadiumSteerSpeed;
     tuning->m_steerModel = StadiumSteerModel;
     tuning->m_steerLowSpeed = StadiumSteerLowSpeed;
@@ -199,15 +245,59 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_sideFriction1 = StadiumSideFriction1;
     tuning->m_maxSideFrictionOverLimitBlend = StadiumMaxSideFrictionOverLimitBlend;
     tuning->m_m5AccelSlipCoefMax = StadiumM5AccelSlipCoefMax;
+    tuning->m_m5LateralConstantSlowDownDuration =
+        StadiumM5LateralConstantSlowDownDuration;
     tuning->m_shockModel = StadiumShockModel;
     tuning->m_absorbingValKi = StadiumAbsorbingValKi;
     tuning->m_absorbingValKa = StadiumAbsorbingValKa;
+    tuning->m_absorbingValMin = StadiumAbsorbingValMin;
     tuning->m_absorbingValRest = StadiumAbsorbingValRest;
     tuning->m_absorbTension = StadiumAbsorbTension;
+    tuning->m_bodyFrictionCoef = StadiumBodyFrictionCoef;
+    tuning->m_bodyFrictionCoefMetal = StadiumBodyFrictionCoefMetal;
+    tuning->m_bodyRestCoefMetal = StadiumBodyRestCoefMetal;
+    tuning->m_bodyRestCoef = StadiumBodyRestCoef;
+    tuning->m_wheelFrictionCoefConcrete = StadiumWheelFrictionCoefConcrete;
+    tuning->m_wheelRestCoefConcrete = StadiumWheelRestCoefConcrete;
+    tuning->m_wheelFrictionCoefMetal = StadiumWheelFrictionCoefMetal;
+    tuning->m_wheelRestCoefMetal = StadiumWheelRestCoefMetal;
+    tuning->m_angularSpeedYImpulseScale =
+        StadiumAngularSpeedYImpulseScale;
+    tuning->m_angularImpulseScale = StadiumAngularImpulseScale;
+    tuning->m_angularSpeedClamp = StadiumAngularSpeedClamp;
+    tuning->m_linearSpeedSquaredPositiveDeltaMax =
+        StadiumLinearSpeedSquaredPositiveDeltaMax;
     tuning->m_lateralSlopeAdherenceMin = StadiumLateralSlopeAdherenceMin;
     tuning->m_lateralSlopeAdherenceMax = StadiumLateralSlopeAdherenceMax;
     tuning->m_axialSlopeAdherenceMin = StadiumAxialSlopeAdherenceMin;
     tuning->m_axialSlopeAdherenceMax = StadiumAxialSlopeAdherenceMax;
+    tuning->m_waterGravity = StadiumWaterGravity;
+    tuning->m_waterReboundMinHorizontalSpeed =
+        StadiumWaterReboundMinHorizontalSpeed;
+    tuning->m_waterBumpMinSpeed = StadiumWaterBumpMinSpeed;
+    tuning->m_waterBumpSlowDownFromSpeedRatio =
+        &WaterBumpSlowDownFromSpeedRatio;
+    tuning->m_waterReboundFromSpeedRatio = &WaterReboundFromSpeedRatio;
+    tuning->m_waterFrictionFromSpeed = &WaterFrictionFromSpeed;
+    tuning->m_waterAngularFriction = StadiumWaterAngularFriction;
+    tuning->m_waterAngularFrictionSq = StadiumWaterAngularFrictionSq;
+    tuning->m_m6MaxRpm = StadiumM6MaxRpm;
+    tuning->m_m6GearRatios = StadiumM6GearRatios;
+    tuning->m_m6MaxRpmRatios = StadiumM6MaxRpmRatios;
+    tuning->m_m6MinRpmRatios = StadiumM6MinRpmRatios;
+    tuning->m_m6RpmWantedOnGearUp = StadiumM6RpmWantedOnGearUp;
+    tuning->m_m6BurnoutRpmAcceleration = StadiumM6BurnoutRpmAcceleration;
+    tuning->m_m6AirRpmAcceleration = StadiumM6AirRpmAcceleration;
+    tuning->m_m6AirRpmDeadening = StadiumM6AirRpmDeadening;
+    tuning->m_m6RpmLossOnGearUp = StadiumM6RpmLossOnGearUp;
+    tuning->m_m6RpmGainOnGearDown = StadiumM6RpmGainOnGearDown;
+    tuning->m_m6RpmGainOnTakeoff = StadiumM6RpmGainOnTakeoff;
+    tuning->m_m6RpmLossOnTakeoffFinished = StadiumM6RpmLossOnTakeoffFinished;
+    tuning->m_m6PositiveTakeoffFrontSpeed = StadiumM6PositiveTakeoffFrontSpeed;
+    tuning->m_m6PositiveTakeoffRearSpeed = StadiumM6PositiveTakeoffRearSpeed;
+    tuning->m_m6NegativeTakeoffFrontSpeed = StadiumM6NegativeTakeoffFrontSpeed;
+    tuning->m_m6NegativeTakeoffRearSpeed = StadiumM6NegativeTakeoffRearSpeed;
+    tuning->M6InitRpmDeltas();
 
     // Fill dummy wheel tuning with 100.0f
     for (int i = 0; i < 256; ++i) g_dummy_wheel_tuning[i] = 100.0f;

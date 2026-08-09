@@ -1,15 +1,16 @@
 #ifndef CCALLBACKCOMPUTEFORCES_HPP
 #define CCALLBACKCOMPUTEFORCES_HPP
 
-#include <cstdint>
+#include "CHmsItem.hpp"
 
 class CCallbackSceneToyBroomStickComputeForces;
 class CHmsItem;
 
-class CCallbackComputeForces {
+class CCallbackComputeForces : public CHmsItem::CCallback {
 public:
     virtual ~CCallbackComputeForces();
-    virtual void ComputeForces(CCallbackSceneToyBroomStickComputeForces* param_1, CHmsItem* param_2, float param_3) = 0;
+    ECallback GetType() const override { return CB_PHYSICS; }
+    virtual void ComputeForces(CHmsItem* item, float dt) override = 0;
 };
 
 #endif // CCALLBACKCOMPUTEFORCES_HPP

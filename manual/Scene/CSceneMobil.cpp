@@ -35,3 +35,7 @@ void CSceneMobil::SetTranslation(GmIso4* location, GmVec3* translation) {
         }
     }
 }
+
+void CSceneMobil::AbsorbContact(CHmsPhysicalContact* contact) {
+    (void)contact;
+}

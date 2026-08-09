@@ -5,6 +5,7 @@
 #include <cstdint>
 
 class CHmsItem;
+class CHmsPhysicalContact;
 class CPlugSolid;
 class CPlugTree;
 class CSceneSector;
@@ -36,6 +37,7 @@ public:
 
     void SetLocation(CPlugTree* tree, GmIso4* location);
     void SetTranslation(GmIso4* location, GmVec3* translation);
+    virtual void AbsorbContact(CHmsPhysicalContact* contact);
 };
 
 #endif // CSCENEMOBIL_HPP

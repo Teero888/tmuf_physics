@@ -1,7 +1,9 @@
 #include "CPlugSurface.hpp"
+#include "CPlugSurfaceGeom.hpp"
 #include "GmSurf.hpp"
+#include "GmCollision.hpp"
 
-CPlugSurface::CPlugSurface() : CMwNod(), m_nod14(nullptr) {}
+CPlugSurface::CPlugSurface() : CMwNod(), m_geometry(nullptr) {}
 CPlugSurface::~CPlugSurface() {}
 
 CMwClassInfo* CPlugSurface::MwGetClassInfo(CFuncSegment* param_1) { return nullptr; }
@@ -9,6 +11,45 @@ CMwNod* CPlugSurface::MwNewCPlugSurface() { return new CPlugSurface(); }
 
 int CPlugSurface::ComputeCollision(LocatedGmSurf* param_1, LocatedGmSurf* param_2, CGmCollisionBuffer* param_3) {
     return GmSurf::ComputeCollision(param_1, param_2, param_3);
+}
+
+int CPlugSurface::ComputeCollision(
+    LocatedPlugSurface* first,
+    LocatedPlugSurface* second,
+    CGmCollisionBuffer* buffer) {
+    if (first == nullptr || second == nullptr || buffer == nullptr ||
+        first->m_surface == nullptr || second->m_surface == nullptr ||
+        first->m_surface->m_geometry == nullptr ||
+        second->m_surface->m_geometry == nullptr) {
+        return 0;
+    }
+    GmSurf* firstGmSurf = first->m_surface->m_geometry->GetGmSurf();
+    GmSurf* secondGmSurf = second->m_surface->m_geometry->GetGmSurf();
+    if (firstGmSurf == nullptr || secondGmSurf == nullptr) return 0;
+
+    LocatedGmSurf locatedFirst{firstGmSurf, first->m_location};
+    LocatedGmSurf locatedSecond{secondGmSurf, second->m_location};
+    const uint32_t firstNewCollision = buffer->GetCount();
+    if (GmSurf::ComputeCollision(
+            &locatedFirst, &locatedSecond, buffer) == 0) {
+        return 0;
+    }
+
+    // This is the typed equivalent of native CPlugSurface::ComputeCollision
+    // remapping collision IDs through each surface's material-ref buffer.
+    for (uint32_t index = firstNewCollision;
+         index < buffer->GetCount(); ++index) {
+        GmCollision* collision = buffer->GetCollision(index);
+        if (collision->m_id1 < first->m_surface->m_materialIds.GetCount()) {
+            collision->m_id1 =
+                first->m_surface->m_materialIds[collision->m_id1];
+        }
+        if (collision->m_id2 < second->m_surface->m_materialIds.GetCount()) {
+            collision->m_id2 =
+                second->m_surface->m_materialIds[collision->m_id2];
+        }
+    }
+    return 1;
 }
 
 int CPlugSurface::MwIsKindOf(uint32_t classId) { return 0; }

@@ -63,6 +63,18 @@ if [ $FAIL -eq 0 ]; then
         exit 1
     fi
 
+    echo -n "Compiling surface material regression ... "
+    if g++ tests/unit/surface_material_test.cpp $OBJECTS -o build/surface_material_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/surface_material_test; then
+        exit 1
+    fi
+
     echo -n "Compiling original executable constants regression ... "
     if g++ tests/unit/original_constants_test.cpp -o build/original_constants_test $INCLUDES -fpermissive -w -g; then
         echo "SUCCESS"
@@ -96,6 +108,30 @@ if [ $FAIL -eq 0 ]; then
     fi
 
     if ! ./build/vehicle_state_test; then
+        exit 1
+    fi
+
+    echo -n "Compiling zone dynamic force lifecycle regression ... "
+    if g++ tests/unit/zone_dynamic_forces_test.cpp $OBJECTS -o build/zone_dynamic_forces_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/zone_dynamic_forces_test; then
+        exit 1
+    fi
+
+    echo -n "Compiling Gm archive regression ... "
+    if g++ tests/unit/gm_archive_test.cpp $OBJECTS -o build/gm_archive_test $INCLUDES $LIBS -fpermissive -w -g; then
+        echo "SUCCESS"
+    else
+        echo "FAILED"
+        exit 1
+    fi
+
+    if ! ./build/gm_archive_test; then
         exit 1
     fi
 

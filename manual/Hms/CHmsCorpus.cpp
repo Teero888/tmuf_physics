@@ -2,6 +2,9 @@
 #include "CHmsDyna.hpp"
 #include "CHmsItem.hpp"
 #include "CPlugTree.hpp"
+#include "CPlugSolid.hpp"
+#include "CPlugSurface.hpp"
+#include "CPlugSurfaceGeom.hpp"
 #include "CPlugShader.hpp"
 #include "CPlugBitmapRender.hpp"
 #include "CMwClassInfo.hpp"
@@ -9,11 +12,78 @@
 #include "CFastString.hpp"
 #include "CClassicBufferMemory.hpp"
 #include "CRpcCallInternal.hpp"
+#include <algorithm>
+#include <cmath>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
 // Engine Globals
 extern CMwClassInfo DAT_00d6764c;
 extern CSystemCrashDump DAT_00d5546c;
 extern float DAT_00b56ec0;
+
+namespace {
+
+struct SCorpusTokenRegistry {
+    std::mutex mutex;
+    std::unordered_map<uint32_t, std::vector<CHmsCorpus*>> corpuses;
+};
+
+SCorpusTokenRegistry& CorpusTokenRegistry() {
+    // Deliberately retain the registry until process exit so corpus teardown
+    // during static destruction never observes a destroyed registry.
+    static SCorpusTokenRegistry* registry = new SCorpusTokenRegistry();
+    return *registry;
+}
+
+void RegisterCorpus(CHmsCorpus* corpus) {
+    SCorpusTokenRegistry& registry = CorpusTokenRegistry();
+    std::lock_guard<std::mutex> lock(registry.mutex);
+    std::vector<CHmsCorpus*>& matches =
+        registry.corpuses[CHmsCorpus::PointerToken(corpus)];
+    if (std::find(matches.begin(), matches.end(), corpus) == matches.end()) {
+        matches.push_back(corpus);
+    }
+}
+
+void UnregisterCorpus(CHmsCorpus* corpus) {
+    SCorpusTokenRegistry& registry = CorpusTokenRegistry();
+    std::lock_guard<std::mutex> lock(registry.mutex);
+    const uint32_t token = CHmsCorpus::PointerToken(corpus);
+    auto bucket = registry.corpuses.find(token);
+    if (bucket == registry.corpuses.end()) return;
+
+    std::vector<CHmsCorpus*>& matches = bucket->second;
+    matches.erase(std::remove(matches.begin(), matches.end(), corpus),
+                  matches.end());
+    if (matches.empty()) registry.corpuses.erase(bucket);
+}
+
+void CollectCollisionSurfaces(
+    CHmsCorpus& corpus,
+    CPlugTree* tree,
+    const GmIso4& parentToWorld) {
+    if (tree == nullptr || !tree->IsCollisionEnabled()) return;
+
+    GmIso4 nodeToWorld = parentToWorld;
+    if (tree->UsesLocation()) {
+        nodeToWorld.SetMult(tree->m_location, parentToWorld);
+    }
+
+    if (tree->m_surface != nullptr &&
+        tree->m_surface->m_geometry != nullptr &&
+        tree->m_surface->m_geometry->GetGmSurf() != nullptr) {
+        corpus.AddCollisionSurface(tree->m_surface, nodeToWorld);
+    }
+
+    for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
+        CollectCollisionSurfaces(
+            corpus, tree->GetChild(index), nodeToWorld);
+    }
+}
+
+} // namespace
 
 // Sub-Structures Mocks
 CHmsZoneElem::CHmsZoneElem() : CMwNod() { m_zone = nullptr; }
@@ -23,14 +93,18 @@ CHmsZoneElem::~CHmsZoneElem() {}
 // Constructor & Destructor
 // =================================================
 CHmsCorpus::CHmsCorpus() : CHmsZoneElem() {
+    m_location.SetIdentity();
     m_item = nullptr;
     m_ptr50 = 0;
     m_dyna = nullptr;
     m_ptr4C = nullptr;
     m_flags54 = 0xFFFFFFFF;
+    RegisterCorpus(this);
 }
 
 CHmsCorpus::~CHmsCorpus() {
+    UnregisterCorpus(this);
+
     if (m_ptr4C != nullptr) {
         // Internal rendering buffers cleanup mocked from offset 0x0C
         typedef void (*BufDel)(void*);
@@ -50,17 +124,73 @@ CHmsCorpus::~CHmsCorpus() {
     }
 }
 
+uint32_t CHmsCorpus::PointerToken(const CHmsCorpus* corpus) {
+    return static_cast<uint32_t>(reinterpret_cast<uintptr_t>(corpus));
+}
+
+CHmsCorpus* CHmsCorpus::ResolvePointerToken(uint32_t token) {
+    if (token == 0u) return nullptr;
+
+    SCorpusTokenRegistry& registry = CorpusTokenRegistry();
+    std::lock_guard<std::mutex> lock(registry.mutex);
+    const auto bucket = registry.corpuses.find(token);
+    if (bucket == registry.corpuses.end() || bucket->second.size() != 1u) {
+        return nullptr;
+    }
+    return bucket->second.front();
+}
+
+const GmMat3& CHmsCorpus::CurrentRotation() const {
+    return m_dyna != nullptr
+        ? m_dyna->CurrentState().m_rotationMatrix
+        : m_location.rot;
+}
+
 void CHmsCorpus::AddCollisionSurface(
     GmSurf* surface, const GmIso4& location) {
     if (surface == nullptr) return;
-    LocatedGmSurf located{};
-    located.m_surf = surface;
-    located.m_location = location;
+    SCollisionSurface located{};
+    located.m_gmSurface.m_surf = surface;
+    located.m_gmSurface.m_location = location;
+    located.m_plugSurface = nullptr;
+    m_collisionSurfaces.Add(located);
+}
+
+void CHmsCorpus::AddCollisionSurface(
+    CPlugSurface* surface, const GmIso4& location) {
+    if (surface == nullptr || surface->m_geometry == nullptr) return;
+    GmSurf* gmSurface = surface->m_geometry->GetGmSurf();
+    if (gmSurface == nullptr) return;
+    SCollisionSurface located{};
+    located.m_gmSurface.m_surf = gmSurface;
+    located.m_gmSurface.m_location = location;
+    located.m_plugSurface = surface;
     m_collisionSurfaces.Add(located);
 }
 
 void CHmsCorpus::ClearCollisionSurfaces() {
     m_collisionSurfaces.m_count = 0;
+}
+
+bool CHmsCorpus::RefreshCollisionSurfacesFromTree(CPlugTree* root) {
+    if (root == nullptr) return false;
+    ClearCollisionSurfaces();
+    GmIso4 corpusToWorld = m_location;
+    if (m_dyna != nullptr) {
+        corpusToWorld.rot = m_dyna->CurrentState().m_rotationMatrix;
+        corpusToWorld.SetTranslation(
+            m_dyna->CurrentState().m_position);
+    }
+    CollectCollisionSurfaces(*this, root, corpusToWorld);
+    return true;
+}
+
+bool CHmsCorpus::RefreshCollisionSurfacesFromSolid() {
+    if (m_item == nullptr || m_item->m_solid == nullptr ||
+        m_item->m_solid->m_tree == nullptr) {
+        return false;
+    }
+    return RefreshCollisionSurfacesFromTree(m_item->m_solid->m_tree);
 }
 
 void* CHmsCorpus::_vector_deleting_destructor_(CRpcCallInternal* param_1, uint32_t param_2) {
@@ -133,39 +263,36 @@ int CHmsCorpus::OnCrashDump(CMwNod* param_1, CFastString* param_2) {
 // Physics & Dynamics Forwarding
 // =================================================
 void CHmsCorpus::GetLocation(GmLocFreeVal* param_1, GmIso4* param_2) {
-    if (m_dyna == nullptr) {
-        return;
+    if (param_2 != nullptr) *param_2 = m_location;
+}
+
+void CHmsCorpus::SetLocation(const GmIso4& location) {
+    m_location = location;
+    if (m_dyna != nullptr) {
+        m_dyna->SetLocation(nullptr, &m_location);
     }
-    // Abstract virtual forwarding
 }
 
 void CHmsCorpus::SetLocation(CPlugTree* param_1, GmIso4* param_2) {
-    // Array copy of the 12 words (48 bytes / GmIso4)
-    uint32_t* dest = reinterpret_cast<uint32_t*>(&m_zone); // Start at 0x14
-    uint32_t* src = reinterpret_cast<uint32_t*>(param_1);
-    
-    for (int i = 0; i < 12; ++i) {
-        *dest = *src;
-        dest++;
-        src++;
-    }
-    
+    const GmIso4* location = param_2 != nullptr
+        ? param_2
+        : reinterpret_cast<const GmIso4*>(param_1);
+    if (location != nullptr) SetLocation(*location);
+}
+
+void CHmsCorpus::SetTranslation(const GmVec3& translation) {
+    m_location.SetTranslation(translation);
     if (m_dyna != nullptr) {
-        m_dyna->SetLocation(param_1, param_2);
+        GmVec3 value = translation;
+        m_dyna->SetTranslation(nullptr, &value);
     }
 }
 
 void CHmsCorpus::SetTranslation(GmIso4* param_1, GmVec3* param_2) {
-    uint32_t* src = reinterpret_cast<uint32_t*>(param_1);
-    uint32_t* dest = reinterpret_cast<uint32_t*>(&m_translation);
-    
-    dest[0] = src[0];
-    dest[1] = src[1];
-    dest[2] = src[2];
-    
-    if (m_dyna != nullptr) {
-        m_dyna->SetTranslation(param_1, param_2);
-    }
+    const GmVec3* translation = param_2 != nullptr
+        ? param_2
+        : reinterpret_cast<const GmVec3*>(param_1);
+    if (translation != nullptr) SetTranslation(*translation);
 }
 
 void CHmsCorpus::SetItem(CHmsCorpus* param_1, CHmsItem* param_2) {
@@ -173,8 +300,11 @@ void CHmsCorpus::SetItem(CHmsCorpus* param_1, CHmsItem* param_2) {
         delete m_dyna;
     }
     
-    m_item = reinterpret_cast<CHmsItem*>(param_1);
+    m_item = param_2 != nullptr
+        ? param_2
+        : reinterpret_cast<CHmsItem*>(param_1);
     m_dyna = nullptr;
+    if (m_item == nullptr) return;
     
     // Check if the item is dynamic (flags1 >> 11 & 3)
     uint32_t dynamicType = (m_item->m_flags1 >> 11) & 3;
@@ -191,49 +321,37 @@ void CHmsCorpus::RotateOf(CHmsCorpus* param_1, GmMat3* param_2) {
         return;
     }
     
-    GmMat3 localMat;
-    localMat.Set(GmQuat());
-    
-    // Virtual getter for Iso3
-    typedef GmIso3* (*LocFunc)(CHmsCorpus*);
-    LocFunc f = (LocFunc)*((void**)((char*)this + 0x78));
-    GmIso3* pIso1 = f(this);
-    
-    // Abstracting matrix and iso math
-    GmMat3 matTemp;
-    GmMat3::Mult(&matTemp, pIso1);
-    
-    GmIso4 ortho;
-    matTemp.OrthoNormalize(); // TODO
-    
-    SetLocation(nullptr, &ortho);
+    const GmMat3* rotation = param_2 != nullptr
+        ? param_2
+        : reinterpret_cast<const GmMat3*>(param_1);
+    if (rotation == nullptr) return;
+    GmIso4 rotated = m_location;
+    rotated.rot.SetMult(*rotation, m_location.rot);
+    rotated.rot.OrthoNormalize();
+    SetLocation(rotated);
 }
 
 void CHmsCorpus::ComputeCurrentState(CHmsCorpus* param_1, float param_2) {
-    if (m_dyna != nullptr) {
-        GmIso4 blendOut;
-        GmIso4::SetBlend(&blendOut, nullptr, nullptr, nullptr, 0.0f);
-            
-        // Copy blended state back
-        uint32_t* dest = reinterpret_cast<uint32_t*>(&m_zone); // Start at 0x14
-        uint32_t* src = reinterpret_cast<uint32_t*>(&blendOut);
-        for (int i = 0; i < 12; ++i) {
-            *dest = *src;
-            dest++;
-            src++;
-        }
-    }
+    if (m_dyna == nullptr) return;
+    GmIso4 validatedLocation;
+    validatedLocation.rot = m_dyna->ValidatedState().m_rotationMatrix;
+    validatedLocation.SetTranslation(
+        m_dyna->ValidatedState().m_position);
+    GmIso4 currentLocation;
+    currentLocation.rot = m_dyna->CurrentState().m_rotationMatrix;
+    currentLocation.SetTranslation(m_dyna->CurrentState().m_position);
+    m_location.SetBlend(validatedLocation, currentLocation, param_2);
 }
 
 // =================================================
 // Dynamic State Saving & Rendering Integration
 // =================================================
 void CHmsCorpus::RefreshFromSolid(CHmsCorpus* param_1) {
-    if (m_dyna != nullptr) {
-        // Re-align internal physical buffer if solid bounds changed
-        uintptr_t itemPtr = reinterpret_cast<uintptr_t>(m_item);
-        uintptr_t solidPtr = *reinterpret_cast<uintptr_t*>(itemPtr + 0x14);
-        *reinterpret_cast<uintptr_t*>(reinterpret_cast<char*>(m_dyna) + 0x108) = solidPtr + 0x18;
+    if (m_dyna != nullptr && m_item != nullptr &&
+        m_item->m_solid != nullptr) {
+        // Native points at CPlugSolid's embedded CPlugPhysicalObject (+0x18).
+        m_dyna->m_field_0x108 = &m_item->m_solid->m_physicalObject;
+        m_dyna->UpdateWorldInverseInertia();
     }
 }
 
@@ -274,7 +392,8 @@ int CHmsCorpus::WaterGetPlaneEqInZone(CHmsCorpus* param_1, GmVec4* param_2) {
                 
                 if (render != nullptr) {
                     GmIso4 transfo;
-                    CPlugTree::GetThisToRootTransfo(&transfo, nullptr, reinterpret_cast<GmIso4*>(1), 0, reinterpret_cast<CPlugTree*>(treePtr));
+                    reinterpret_cast<CPlugTree*>(treePtr)
+                        ->GetThisToRootTransfo(transfo);
                     
                     typedef GmIso3* (*LocFunc)(CHmsCorpus*);
                     LocFunc f = (LocFunc)*((void**)((char*)this + 0x78));
