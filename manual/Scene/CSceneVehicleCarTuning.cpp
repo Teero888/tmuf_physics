@@ -79,7 +79,7 @@ float CSceneVehicleCarTuning::M5GetLateralContactSlowDownFromSpeed(float speed) 
 }
 
 float CSceneVehicleCarTuning::M5GetSlippingAccelFromSpeed(float speed) {
-    return m_m5AccelSlipCoefMax *
+    return m_m5SlippingAccelCurveCoef *
            EvaluateCurve(&M5SlippingAccelCurve,
                          speed * static_cast<float>(TmForeverPhysicsConstants::kSpeedCurveScale));
 }
@@ -145,6 +145,147 @@ void CSceneVehicleCarTuning::M6InitRpmDeltas() {
     }
 }
 
+float CSceneVehicleCarTuning::M6GetModulationFromDamperAbsorbVal(
+    float absorbValue) {
+    // TmForeverFixed.exe 0x7F3F80 normalizes the damper value so AbsorbingValMax
+    // maps to zero and AbsorbingValMin maps to one before evaluating tuning
+    // +0x224 (ModulationFromWheelCompression).
+    float ratio = 0.0f;
+    if (m_absorbingValMax != m_absorbingValMin) {
+        ratio = (absorbValue - m_absorbingValMax) /
+                (m_absorbingValMin - m_absorbingValMax);
+    }
+    return EvaluateCurve(
+        SelectCurve(m_modulationFromWheelCompression,
+                    ModulationFromWheelCompression),
+        ratio);
+}
+
+float CSceneVehicleCarTuning::GetModel6ProcessedSteer(
+    float smoothedSteer, float forwardSpeed) const {
+    // TmForeverFixed.exe 0x7C6CB2..0x7C6D33. The local-speed vector begins at
+    // stack +0x3C, so +0x44 is its forward (Z) component. Native x87 code
+    // rounds the denominator to float before the comparison and square root.
+    const float absoluteForwardSpeed = std::abs(forwardSpeed);
+    const float denominator =
+        m_steerRadiusMin + absoluteForwardSpeed * m_steerRadiusCoef;
+
+    // `test ah, 5; jp` selects the reciprocal-square-root path for values at
+    // or above epsilon and for unordered comparisons. Consequently only an
+    // ordered value strictly below epsilon produces zero; NaNs propagate.
+    if (denominator < TmForeverPhysicsConstants::kWheelInputEpsilon) {
+        return 0.0f;
+    }
+    return -smoothedSteer * std::sqrt(1.0f / denominator);
+}
+
+float CSceneVehicleCarTuning::GetModel6WheelSideForce(
+    float rawForce, float maxForce) const {
+    // TmForeverFixed.exe 0x7C4F5F..0x7C4FD1: a wheel enters the slipping state
+    // only above its per-wheel limit. Above the limit, tuning +0xB4 blends the
+    // signed limit with the uncapped force.
+    if (std::abs(rawForce) <= maxForce) return rawForce;
+    const float signedLimit = std::signbit(rawForce) ? -maxForce : maxForce;
+    return signedLimit * (1.0f - m_maxSideFrictionBlendCoef) +
+           rawForce * m_maxSideFrictionBlendCoef;
+}
+
+float CSceneVehicleCarTuning::GetModel6SpeedLimitedAxialForce(
+    float axialForce, float forwardSpeed, float materialSpeed) const {
+    // TmForeverFixed.exe 0x7C667C..0x7C6737. Both terminal-speed comparisons
+    // are strict. Once the forward limit is exceeded, a nonnegative force is
+    // replaced by the negative correction; an already-negative force receives
+    // an additional correction. The reverse branch is the sign mirror.
+    if (m_maxSpeed * materialSpeed < forwardSpeed) {
+        axialForce = axialForce < 0.0f
+            ? axialForce - m_limitToMaxSpeedForce
+            : -m_limitToMaxSpeedForce;
+    }
+
+    if (forwardSpeed < -m_reverseMaxSpeed * materialSpeed) {
+        axialForce = axialForce > 0.0f
+            ? axialForce + m_limitToMaxSpeedForce
+            : m_limitToMaxSpeedForce;
+    }
+    return axialForce;
+}
+
+float CSceneVehicleCarTuning::GetModel6ForwardAxialBrakeForce(
+    float forwardSpeed, float brakeInput, float materialBrakeCoef,
+    float slippingModulation, bool hasSlippingWheel,
+    bool* saturated) const {
+    if (saturated != nullptr) *saturated = false;
+
+    // TmForeverFixed.exe 0x7C6321..0x7C6461. Forward braking exists only for
+    // an ordered speed above zero. Tuning +0x40/+0x44 forms the requested
+    // speed-dependent force; +0x48/+0x4C selects the material-scaled cap from
+    // the pre-braking slipping output. Saturation is strict and marks every
+    // simulation wheel as slipping in the caller.
+    if (!(0.0f < forwardSpeed)) return 0.0f;
+
+    const float requestedForce =
+        (m_brakeBase + m_brakeCoef * forwardSpeed) *
+        brakeInput * slippingModulation;
+    const float maximumForce =
+        (hasSlippingWheel ? m_brakeMax : m_brakeMaxDynamic) *
+        materialBrakeCoef;
+    if (maximumForce < requestedForce) {
+        if (saturated != nullptr) *saturated = true;
+        return maximumForce;
+    }
+    return requestedForce;
+}
+
+float CSceneVehicleCarTuning::GetModel6AccelerationBlendFromLateralOverLimit(
+    float appliedForceSum, float maximumForceSum) const {
+    // TmForeverFixed.exe 0x7C5F36..0x7C5FB4. Tuning +0x200 scales the
+    // relative excess above the accumulated side-force limit. Native code
+    // clamps that excess to [0, 1] and subtracts it from the normal-curve
+    // weight; a zero/near-zero maximum bypasses this block in the caller.
+    const float excessRatio =
+        ((appliedForceSum - maximumForceSum) / maximumForceSum) /
+        m_m5AccelSlipCoefMax;
+    return 1.0f - std::clamp(excessRatio, 0.0f, 1.0f);
+}
+
+float CSceneVehicleCarTuning::GetModel6EngineStateAccelerationModulation(
+    int engineState, uint32_t elapsedMilliseconds) const {
+    // TmForeverFixed.exe 0x7C60A5..0x7C61E0. Both timed phases store the
+    // millisecond ratio as float before evaluating sin(pi * ratio), then
+    // interpolate from one to the phase's configured acceleration factor.
+    uint32_t duration = 0u;
+    float modulation = 1.0f;
+    if (engineState == 1) {
+        duration = m_m6BurnoutDuration;
+        modulation = m_m6BurnoutAccelerationModulation;
+    } else if (engineState == 3) {
+        duration = m_m6AfterBurnoutDuration;
+        modulation = m_m6AfterBurnoutAccelerationModulation;
+    } else {
+        return 1.0f;
+    }
+    if (duration == 0u) return 1.0f;
+
+    constexpr double kNativePhasePi = 3.1415927410125732421875;
+    const float phase = static_cast<float>(
+        static_cast<double>(elapsedMilliseconds) * kNativePhasePi /
+        static_cast<double>(duration));
+    return 1.0f + (modulation - 1.0f) * std::sin(phase);
+}
+
+float CSceneVehicleCarTuning::GetModel6EngineStateAxialImpulse(
+    int engineState, uint32_t elapsedMilliseconds) const {
+    // 0x7C61E9..0x7C623A performs an unsigned integer cycle division, shifts
+    // the quotient by one, squares it, and scales +0x2B8. The state-3
+    // lifetime gate normally keeps the quotient at zero, yielding the loaded
+    // after-burnout impulse throughout that phase.
+    if (engineState != 3 || m_m6AfterBurnoutDuration == 0u) return 0.0f;
+    const uint32_t cycle =
+        elapsedMilliseconds / m_m6AfterBurnoutDuration;
+    const float centeredCycle = static_cast<float>(cycle) - 1.0f;
+    return centeredCycle * centeredCycle * m_m6AfterBurnoutImpulse;
+}
+
 float CSceneVehicleCarTuning::GetModel6SteerSpeedFactor(float speed) const {
     // TmForeverFixed.exe 0x7C5C68..0x7C5CB8: the steering contribution ramps
     // as sin(pi/2 * speed/SteerLowSpeed), then remains one above that speed.
@@ -197,6 +338,20 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     // Native constructor offsets +0x58, +0x5C, and +0x1E8.
     m_groundSlowDownBase = 1.0f;
     m_linearFluidFrictionCoef = 0.0f;
+    // Native constructor 0x7F1C88: +0x2C/+0x30 use the base forward/reverse
+    // speeds, while +0x60 is initialized from .rdata 0x00B36194 (10.0f).
+    m_maxSpeed =
+        TmForeverPhysicsConstants::kDefaultOldEngineSpeedDivisorBase;
+    m_reverseMaxSpeed = 13.888889312744140625f;
+    m_limitToMaxSpeedForce = 10.0f;
+    // Native constructor values at +0x40..+0x4C.
+    m_brakeBase = 20.0f;
+    m_brakeCoef = 0.0f;
+    m_brakeMax = 500.0f;
+    m_brakeMaxDynamic = 500.0f;
+    // Exact native constructor writes at tuning +0x6C and +0x70.
+    m_steerRadiusMin = 1.0f;
+    m_steerRadiusCoef = 0.5f;
     m_steerSpeed = 0.0f;
     m_steerModel = 0;
     m_steerLowSpeed = 0.0f;
@@ -206,12 +361,16 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_maxSideFrictionSliding = 1.0f;
     m_sideFriction1 = 0.0f;
     m_maxSideFrictionOverLimitBlend = 1.0f;
+    // +0x1E4 scales M5SlippingAccelCurve; +0x200 controls Model6's
+    // over-limit interpolation back toward that slipping curve.
+    m_m5SlippingAccelCurveCoef = 1.0f;
     m_m5AccelSlipCoefMax = 1.0f;
     m_m5LateralConstantSlowDownDuration = 500u;
     m_shockModel = 0;
     m_absorbingValKi = 0.0f;
     m_absorbingValKa = 0.0f;
     m_absorbingValMin = 0.0f;
+    m_absorbingValMax = 0.0f;
     m_absorbingValRest = 0.0f;
     m_shockModel0ForceFactor =
         TmForeverPhysicsConstants::kDefaultShockModel0ForceFactor;
@@ -234,6 +393,19 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_lateralSlopeAdherenceMax = 0.0f;
     m_axialSlopeAdherenceMin = 0.0f;
     m_axialSlopeAdherenceMax = 0.0f;
+    m_modulationFromWheelCompression = nullptr;
+    // Native Model6 brake block defaults at +0x240/+0x244/+0x248/+0x24C.
+    m_m6BrakeModulationWhenSlipping = 0.5f;
+    m_m6FrictionModulationWhenSlipAndBrake = 1.0f;
+    m_m6BrakeMaxRear = 100.0f;
+    m_m6BrakeMaxDynamicRear = 50.0f;
+    // Native +0x298/+0x29C/+0x2A8/+0x2AC/+0x2B8 defaults. These are also
+    // the values present in the older generic vehicle tunings.
+    m_m6BurnoutDuration = 1000u;
+    m_m6BurnoutAccelerationModulation = 0.5f;
+    m_m6AfterBurnoutDuration = 500u;
+    m_m6AfterBurnoutAccelerationModulation = 4.0f;
+    m_m6AfterBurnoutImpulse = 10.0f;
     // Exact constructor writes at native tuning +0x204..+0x220.
     m_waterGravity = 1.0f;
     m_waterReboundMinHorizontalSpeed =

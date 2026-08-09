@@ -412,6 +412,27 @@ void CHmsDyna::AddLocalForce(GmVec3* param_2) {
         m_currentState->m_rotationMatrix, *param_2);
 }
 
+void CHmsDyna::AddLocalForceAtPoint(
+    const GmVec3* localForce, const GmVec3* localPoint) {
+    if (localForce == nullptr || localPoint == nullptr) return;
+
+    // Native 0x533F60 rotates a local force as a vector, rotates/translates
+    // its application point, and forwards both world values to 0x533A70.
+    const GmVec3 worldForce = TransformVector(
+        m_currentState->m_rotationMatrix, *localForce);
+    const GmVec3 worldPoint =
+        m_currentState->m_position + TransformVector(
+            m_currentState->m_rotationMatrix, *localPoint);
+    m_currentState->m_force += worldForce;
+
+    // A native point-force body always owns a CPlugPhysicalObject. Preserve a
+    // safe standalone fallback while matching its COM-relative moment when
+    // the physical object is present.
+    if (m_field_0x108 == nullptr) return;
+    const GmVec3 lever = worldPoint - GetCenterOfMassWorld();
+    m_currentState->m_torque += GmVec3::Cross(lever, worldForce);
+}
+
 void CHmsDyna::GetLocalForce(GmVec3* param_2) {
     if (param_2 != nullptr) {
         *param_2 = TransformVectorTranspose(

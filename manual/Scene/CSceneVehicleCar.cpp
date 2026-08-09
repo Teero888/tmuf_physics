@@ -155,6 +155,11 @@ CSceneVehicleCar::CSceneVehicleCar()
       m_hasWaterContact(0),
       m_frictionCurrentTick(0),
       m_frictionTickFraction(0.0),
+      m_model6LastLateralOverLimitTick(0),
+      m_model6LateralOverLimitStartTick(0),
+      m_model6LateralOverLimitDuration(0),
+      m_model6EngineState1StartTick(0),
+      m_model6EngineState3StartTick(0),
       m_hasAnyContact(0),
       m_hasChassisContact(0),
       m_chassisContactMaterial(0),
@@ -207,6 +212,10 @@ CSceneVehicleCar::CSceneVehicleCar()
         wheel.m_realTimeState.m_velocity = 0.0f;
         wheel.m_realTimeState.m_compression = 0.0f;
         wheel.m_realTimeState.m_absorbDelta = 0.0f;
+        wheel.m_localContactPosition = GmVec3(
+            TmForeverPhysicsConstants::kStadiumWheelLocalX[i],
+            TmForeverPhysicsConstants::kStadiumWheelLocalY[i],
+            TmForeverPhysicsConstants::kStadiumWheelLocalZ[i]);
         m_wheels.Add(wheel);
     }
 
@@ -584,11 +593,16 @@ void CSceneVehicleCar::ComputeForces(CCallbackSceneToyBroomStickComputeForces* p
 
         int hasSlippingWheel = 0;
         float axialBrakeForce = 0.0f;
+        const float processedSteer =
+            g_tuning != nullptr
+                ? g_tuning->GetModel6ProcessedSteer(
+                      m_smoothedSteer, localLinearSpeed.z)
+                : 0.0f;
         ComputeForcesModel6(
             dt, &accumulatedLocalForce,
             lateralSlopeAdherence, axialSlopeAdherence,
             &localLinearSpeed, &localAngularSpeed,
-            m_smoothedSteer, hasGroundMaterial, &groundMaterial,
+            processedSteer, hasGroundMaterial, &groundMaterial,
             &hasSlippingWheel, &axialBrakeForce);
     }
 
@@ -758,6 +772,14 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
 
     if (g_tuning == nullptr) return;
 
+    // Native +0x2E4 is the RPM/transmission synchronizer state. It is
+    // separate from the burnout force state at +0x69C, which ComputeForces
+    // owns. Conflating the two makes an ordinary straight launch enter the
+    // force model's state-two burnout branch.
+    const auto setTakeoffMode = [this](int state) {
+        m_engineTakeoffMode = state;
+    };
+
     const bool inputActive = input > static_cast<float>(kInputThreshold);
     bool airborne = true;
     for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
@@ -855,12 +877,15 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
         return;
     }
 
-    const bool takeoffMode =
-        m_engineTakeoffMode == 1 || m_engineTakeoffMode == 2;
-    if (takeoffMode) {
-        if (m_engine.m_currentGear != 0) m_engineState = 4;
-    } else if (m_engineState == 4) {
-        m_engineState = 0;
+    // 0x7BD825 reads +0x69C only to couple force states one/two into the
+    // engine's state four. Every state dispatch and write after 0x7BD83D is
+    // against the independent +0x2E4 field.
+    const bool burnoutForceState =
+        m_engineState == 1 || m_engineState == 2;
+    if (burnoutForceState) {
+        if (m_engine.m_currentGear != 0) setTakeoffMode(4);
+    } else if (m_engineTakeoffMode == 4) {
+        setTakeoffMode(0);
     }
 
     const float speed = m_engineLocalVelocity.z;
@@ -868,8 +893,8 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
         return g_tuning->m_m6GearRatios[std::clamp(gear, 0, 5)];
     };
 
-    if (m_engineState == 2 || m_engineState == 3) {
-        const bool forwardTakeoff = m_engineState == 2;
+    if (m_engineTakeoffMode == 2 || m_engineTakeoffMode == 3) {
+        const bool forwardTakeoff = m_engineTakeoffMode == 2;
         const float lowSpeed = forwardTakeoff
             ? g_tuning->m_m6PositiveTakeoffRearSpeed
             : g_tuning->m_m6NegativeTakeoffRearSpeed;
@@ -893,10 +918,10 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
         }
         if (m_engine.m_engineRpm <= m_engine.m_clutchRpm) {
             m_engine.m_engineRpm = m_engine.m_clutchRpm;
-            m_engineState = 0;
+            setTakeoffMode(0);
             m_engineOutsideTakeoffWindow = 0;
         }
-    } else if (m_engineState == 4) {
+    } else if (m_engineTakeoffMode == 4) {
         m_engine.m_clutchRpm = m_engine.m_maxRpm;
         m_engine.m_clutchRatio = kM6ClutchRatioTarget;
         if (m_engine.m_engineRpm < m_engine.m_maxRpm) {
@@ -931,18 +956,18 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
             m_engine.m_engineRpm +=
                 g_tuning->m_m6RpmGainOnGearDown * dt;
             if (m_engine.m_engineRpm > m_engine.m_clutchRpm) {
-                m_engineState = 0;
+                setTakeoffMode(0);
             }
         } else {
             float loss = g_tuning->m_m6RpmLossOnTakeoffFinished;
             if (inputActive) {
-                loss = (m_engineClutchBoost != 0 && !takeoffMode)
+                loss = (m_engineClutchBoost != 0 && !burnoutForceState)
                     ? g_tuning->m_m6AirRpmDeadening
                     : g_tuning->m_m6RpmLossOnGearUp;
             }
             m_engine.m_engineRpm -= loss * dt;
             if (m_engine.m_engineRpm < m_engine.m_clutchRpm) {
-                m_engineState = 0;
+                setTakeoffMode(0);
             }
         }
     }
@@ -950,8 +975,9 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
     // Narrow speed windows initiate the forward/reverse takeoff synchronizers.
     if (speed > g_tuning->m_m6PositiveTakeoffRearSpeed &&
         speed < g_tuning->m_m6PositiveTakeoffFrontSpeed &&
-        inputActive && m_engine.m_isReverse == 0 && m_engineState == 0) {
-        m_engineState = 2;
+        inputActive && m_engine.m_isReverse == 0 &&
+        m_engineTakeoffMode == 0) {
+        setTakeoffMode(2);
         m_engineOutsideTakeoffWindow = 0;
         if (m_engine.m_currentGear == 0) {
             m_engine.m_gearShiftTimer = kM6ShiftDuration;
@@ -960,8 +986,8 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
     } else if (speed < g_tuning->m_m6NegativeTakeoffFrontSpeed &&
                speed > g_tuning->m_m6NegativeTakeoffRearSpeed &&
                inputActive && m_engine.m_isReverse != 0 &&
-               m_engineState == 0) {
-        m_engineState = 3;
+               m_engineTakeoffMode == 0) {
+        setTakeoffMode(3);
         m_engineOutsideTakeoffWindow = 0;
         if (m_engine.m_currentGear != 0) {
             m_engine.m_currentGear = 0;
@@ -969,11 +995,11 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
         }
     }
 
-    if (m_engineState == 0 || m_engineState == 1) {
+    if (m_engineTakeoffMode == 0 || m_engineTakeoffMode == 1) {
         int gear = std::clamp(m_engine.m_currentGear, 0, 5);
         if (m_engine.m_isReverse == 0) {
             if (gear == 0) {
-                m_engineState = 1;
+                setTakeoffMode(1);
                 m_engineShiftDirection = 0;
                 if (m_engine.m_engineRpm < static_cast<float>(kEngineIdleRpm)) {
                     m_engine.m_gearShiftTimer = kM6ShiftDuration;
@@ -985,7 +1011,7 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
                        gear < 5) {
                 m_engine.m_gearShiftTimer = kM6ShiftDuration;
                 m_engine.m_currentGear = gear + 1;
-                m_engineState = 1;
+                setTakeoffMode(1);
                 m_engineShiftDirection = 0;
             } else if (m_engine.m_clutchRpm <
                            g_tuning->m_m6MinRpmRatios[gear] *
@@ -993,15 +1019,15 @@ void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
                        gear > 1) {
                 m_engine.m_gearShiftTimer = kM6ShiftDuration;
                 m_engine.m_currentGear = gear - 1;
-                m_engineState = 1;
+                setTakeoffMode(1);
                 m_engineShiftDirection = 1;
             }
         } else if (gear != 0) {
-            m_engineState = 1;
+            setTakeoffMode(1);
             m_engineShiftDirection = 1;
             if (m_engine.m_engineRpm < static_cast<float>(kEngineIdleRpm)) {
                 m_engine.m_currentGear = 0;
-                m_engine.m_gearShiftTimer = takeoffMode
+                m_engine.m_gearShiftTimer = burnoutForceState
                     ? kM6ReverseTakeoffShiftDuration
                     : kM6ShiftDuration;
             }
@@ -1397,12 +1423,92 @@ void CSceneVehicleCar::ComputeForcesModel6(
     // entry, before suspension and the grounded/airborne branch split.
     m_hasWaterContact = ApplyWaterForces(accumulatedLocalForce);
 
+    const uint32_t currentTick = m_frictionCurrentTick;
+    bool engineStateKeepsClutchBoost = false;
+
+    // 0x7C4839..0x7C48E9 advances the two timed engine-force phases before
+    // suspension. State one remains active for +0x298 milliseconds and then
+    // enters state three; state three marks every wheel as slipping until its
+    // +0x2A8 lifetime expires.
+    if (m_engineState == 1) {
+        const bool tickPrecedesStart =
+            currentTick < m_model6EngineState1StartTick;
+        const uint32_t elapsed =
+            currentTick - m_model6EngineState1StartTick;
+        if (tickPrecedesStart || elapsed >= g_tuning->m_m6BurnoutDuration) {
+            m_model6EngineState3StartTick = currentTick;
+            m_engineState = 3;
+        } else {
+            engineStateKeepsClutchBoost = true;
+        }
+    }
+    if (m_engineState == 3) {
+        const bool tickPrecedesStart =
+            currentTick < m_model6EngineState3StartTick;
+        const uint32_t elapsed =
+            currentTick - m_model6EngineState3StartTick;
+        if (tickPrecedesStart ||
+            elapsed >= g_tuning->m_m6AfterBurnoutDuration) {
+            m_engineState = 0;
+        } else {
+            for (uint32_t index = 0u;
+                 index < m_wheels.GetCount(); ++index) {
+                m_wheels[index].m_isSlipping = 1;
+            }
+        }
+    }
+
     // 0x7C48F6..0x7C4932 visits every wheel before the force-model tail. The
     // helper itself rejects uncontacted wheels. Engine state two is the sole
     // native bypass for this suspension-force pass.
     if (m_engineState != 2) {
         for (uint32_t index = 0u; index < m_wheels.GetCount(); ++index) {
             WheelAddForceToVehicle(&m_wheels[index], 0.0f);
+        }
+    }
+
+    // 0x7C4962..0x7C5018 constructs each contacted wheel's lateral axis from
+    // its accumulated ground normal, rotates the front pair by processed
+    // steering, projects local speed onto that axis, and applies the baseline
+    // tire reaction. Burnout/state-specific inertial terms remain separate.
+    if (m_engineState == 0) {
+        for (uint32_t index = 0u; index < m_wheels.GetCount(); ++index) {
+            SSimulationWheel& wheel = m_wheels[index];
+            if (wheel.m_hasGroundContact == 0) continue;
+
+            const GmVec3 lateralDirection =
+                GetModel6WheelLateralDirection(&wheel, processedSteer);
+            const float lateralSpeed =
+                GmVec3::Dot(*localLinearSpeed, lateralDirection);
+            const float damperModulation =
+                g_tuning->M6GetModulationFromDamperAbsorbVal(
+                    wheel.m_realTimeState.m_compression);
+            const float slidingModulation =
+                wheel.m_isSlipping != 0
+                    ? g_tuning->m_maxSideFrictionSliding
+                    : 1.0f;
+            const float slippingBrakeModulation =
+                wheel.m_isSlipping != 0 && m_inputBrake > 0.0f
+                    ? g_tuning->m_m6FrictionModulationWhenSlipAndBrake
+                    : 1.0f;
+            const float maxSideForce =
+                g_tuning->GetMaxSideFrictionFromSpeed(localLinearSpeed->z) *
+                groundMaterial->grip * lateralSlopeAdherence *
+                slidingModulation * slippingBrakeModulation *
+                damperModulation;
+            const float rawSideForce =
+                -0.5f * g_tuning->m_sideFriction1 * lateralSpeed;
+            const bool isSlipping =
+                std::abs(rawSideForce) > maxSideForce;
+            wheel.m_isSlipping = isSlipping ? 1 : 0;
+            const float sideForce =
+                g_tuning->GetModel6WheelSideForce(
+                    rawSideForce, maxSideForce);
+            GmVec3 localTireForce = lateralDirection * sideForce;
+            AddVehicleCentralForce(
+                this,
+                reinterpret_cast<CSceneVehicleCar*>(&localTireForce),
+                nullptr);
         }
     }
 
@@ -1424,45 +1530,23 @@ void CSceneVehicleCar::ComputeForcesModel6(
 
     const float localLateralSpeed = localLinearSpeed->x;
     const float localForwardSpeed = localLinearSpeed->z;
-    (void)lateralSlopeAdherence;
-    (void)processedSteer;
-
-    // This is the currently ported ordinary-drive subset of the Model6 tail.
-    // Its curve, material coefficient, gas multiplier, and axial slope input
-    // now match the fixed executable; the other drive states remain below.
-    const bool isOrdinaryForwardDrive =
-        m_engine.m_field_0x28 == 0 &&
-        m_inputBrake == 0.0f &&
-        m_freeWheeling == 0 &&
-        m_field_0x600 == 0 &&
-        !anySlippingWheel &&
-        localForwardSpeed >= 0.0f;
-
-    if (isOrdinaryForwardDrive) {
-        const float longitudinalForce =
-            g_tuning->M5GetAccelFromSpeed(localForwardSpeed) *
-            m_inputGas * groundMaterial->accelerationCoef *
-            axialSlopeAdherence;
-        GmVec3 localDriveForce(0.0f, 0.0f, longitudinalForce);
-        AddVehicleCentralForce(
-            this, reinterpret_cast<CSceneVehicleCar*>(&localDriveForce), nullptr);
-    } else {
-        // Reverse selection, braking, freewheeling, wheel-slip blending, and
-        // special burnout states still use the translated fallback.
-        ComputeForcesModel3(this, dt);
-    }
 
     // Exact normal-ground subset at 0x7C5BE5..0x7C5EF0. Model6 evaluates the
     // lateral velocity at each axle, including yaw velocity, and applies half
     // of SideFriction1 per wheel. The over-limit force blend is exact; its
     // aggregate state bookkeeping after the wheel loop remains to be ported.
     const float halfWheelbase = 0.5f * m_field_0x840;
-    const float maxSideForce = g_tuning->GetMaxSideFrictionFromSpeed(localForwardSpeed);
+    const float maxSideForce =
+        g_tuning->GetMaxSideFrictionFromSpeed(localForwardSpeed) *
+        groundMaterial->grip;
     const float steerSpeedFactor = g_tuning->GetModel6SteerSpeedFactor(localForwardSpeed);
     const float driveTorque = g_tuning->GetSteerDriveTorqueFromSpeed(localForwardSpeed);
     const float reverseSign = m_engine.m_field_0x28 != 0 ? -1.0f : 1.0f;
     float lateralForceSum = 0.0f;
     float yawTorque = 0.0f;
+    float overLimitAppliedForceSum = 0.0f;
+    float overLimitMaximumForceSum = 0.0f;
+    bool hasLateralOverLimit = false;
 
     for (uint32_t i = 0; i < m_wheels.GetCount(); ++i) {
         const SSimulationWheel& wheel = m_wheels[i];
@@ -1473,6 +1557,11 @@ void CSceneVehicleCar::ComputeForcesModel6(
             -g_tuning->m_sideFriction1 * 0.5f * axleLateralSpeed;
         const float lateralForce =
             g_tuning->GetModel6SideForce(rawLateralForce, maxSideForce);
+        if (maxSideForce < std::abs(rawLateralForce)) {
+            hasLateralOverLimit = true;
+            overLimitAppliedForceSum += std::abs(lateralForce);
+            overLimitMaximumForceSum += maxSideForce;
+        }
         lateralForceSum += lateralForce;
 
         float axleTorqueForce = g_tuning->m_steerGroundTorque * lateralForce;
@@ -1495,6 +1584,135 @@ void CSceneVehicleCar::ComputeForcesModel6(
     AddVehicleCentralForce(this, reinterpret_cast<CSceneVehicleCar*>(&localSideForce), nullptr);
     GmVec3 localTorque(0.0f, yawTorque, 0.0f);
     AddVehicleTorque(this, reinterpret_cast<CSceneVehicleCar*>(&localTorque), nullptr);
+
+    if (hasLateralOverLimit) {
+        m_model6LastLateralOverLimitTick = currentTick;
+        if (m_engineClutchBoost == 0) {
+            m_model6LateralOverLimitStartTick = currentTick;
+        }
+        m_model6LateralOverLimitDuration =
+            currentTick - m_model6LateralOverLimitStartTick;
+    }
+
+    float normalAccelerationWeight = 1.0f;
+    if (currentTick == m_model6LastLateralOverLimitTick &&
+        TmForeverPhysicsConstants::kWheelInputEpsilon <
+            overLimitMaximumForceSum) {
+        normalAccelerationWeight =
+            g_tuning->GetModel6AccelerationBlendFromLateralOverLimit(
+                overLimitAppliedForceSum,
+                overLimitMaximumForceSum);
+    }
+
+    // This is the currently ported ordinary-drive subset of the Model6 tail,
+    // which natively follows the normal-ground lateral/yaw block above. Its
+    // curve, forward braking, material coefficients, terminal-speed
+    // correction, and axial slope input now match the fixed executable.
+    const bool isOrdinaryForwardDrive =
+        m_engine.m_field_0x28 == 0 &&
+        m_freeWheeling == 0 &&
+        m_field_0x600 == 0 &&
+        localForwardSpeed >= 0.0f;
+
+    if (isOrdinaryForwardDrive) {
+        bool brakeSaturated = false;
+        float slippingBrakeModulation = 1.0f;
+        for (uint32_t index = 0u;
+             index < m_wheels.GetCount(); ++index) {
+            if (m_wheels[index].m_isSlipping != 0) {
+                slippingBrakeModulation *=
+                    g_tuning->m_m6BrakeModulationWhenSlipping;
+            }
+        }
+        const float forwardBrakeForce =
+            g_tuning->GetModel6ForwardAxialBrakeForce(
+                localForwardSpeed, m_inputBrake,
+                groundMaterial->brakeCoef,
+                slippingBrakeModulation, anySlippingWheel,
+                &brakeSaturated);
+        if (axialBrakeForce != nullptr) {
+            *axialBrakeForce = forwardBrakeForce;
+        }
+        if (brakeSaturated) {
+            for (uint32_t index = 0u;
+                 index < m_wheels.GetCount(); ++index) {
+                m_wheels[index].m_isSlipping = 1;
+            }
+        }
+
+        const float slippingAcceleration =
+            g_tuning->M5GetSlippingAccelFromSpeed(localForwardSpeed);
+        const float normalAcceleration =
+            g_tuning->M5GetAccelFromSpeed(localForwardSpeed);
+        const float acceleration =
+            slippingAcceleration * (1.0f - normalAccelerationWeight) +
+            normalAcceleration * normalAccelerationWeight;
+        uint32_t engineStateElapsed = 0u;
+        if (m_engineState == 1) {
+            engineStateElapsed =
+                currentTick - m_model6EngineState1StartTick;
+        } else if (m_engineState == 3) {
+            engineStateElapsed =
+                currentTick - m_model6EngineState3StartTick;
+        }
+        const float engineStateAccelerationModulation =
+            g_tuning->GetModel6EngineStateAccelerationModulation(
+                m_engineState, engineStateElapsed);
+        const float engineStateAxialImpulse =
+            g_tuning->GetModel6EngineStateAxialImpulse(
+                m_engineState, engineStateElapsed);
+        float longitudinalForce =
+            acceleration *
+                m_inputGas * groundMaterial->accelerationCoef *
+                engineStateAccelerationModulation -
+            forwardBrakeForce + engineStateAxialImpulse;
+        longitudinalForce =
+            g_tuning->GetModel6SpeedLimitedAxialForce(
+                longitudinalForce, localForwardSpeed,
+                groundMaterial->speed);
+        longitudinalForce *= axialSlopeAdherence;
+        GmVec3 localDriveForce(0.0f, 0.0f, longitudinalForce);
+        AddVehicleCentralForce(
+            this, reinterpret_cast<CSceneVehicleCar*>(&localDriveForce), nullptr);
+    } else {
+        // Reverse selection, freewheeling, pre-existing wheel-slip blending,
+        // state two, and the remaining special contacts still use the
+        // translated fallback.
+        ComputeForcesModel3(this, dt);
+    }
+    m_engineClutchBoost =
+        engineStateKeepsClutchBoost || hasLateralOverLimit ? 1 : 0;
+}
+
+GmVec3 CSceneVehicleCar::GetModel6WheelLateralDirection(
+    const SSimulationWheel* wheel, float processedSteer) const {
+    if (wheel == nullptr) return GmVec3(1.0f, 0.0f, 0.0f);
+
+    // 0x7C49E3 starts with groundNormal x +Z. With +Z fixed at (0,0,1),
+    // this is (normal.y, -normal.x, 0). The native small-vector fallback is
+    // +X; otherwise it normalizes using the shared wheel-direction epsilon.
+    GmVec3 lateralDirection(
+        wheel->m_groundContactNormalSum.y,
+        -wheel->m_groundContactNormalSum.x,
+        0.0f);
+    const float squaredLength = GmVec3::Dot(
+        lateralDirection, lateralDirection);
+    if (squaredLength <=
+        TmForeverPhysicsConstants::kWheelDirectionSquaredEpsilon) {
+        lateralDirection = GmVec3(1.0f, 0.0f, 0.0f);
+    } else {
+        lateralDirection *= 1.0f / std::sqrt(squaredLength);
+    }
+
+    if (wheel->m_isSteerable != 0) {
+        const float cosine = std::cos(processedSteer);
+        const float negativeSine = -std::sin(processedSteer);
+        lateralDirection.x *= cosine;
+        lateralDirection.y *= cosine;
+        lateralDirection.z =
+            lateralDirection.z * cosine + negativeSine;
+    }
+    return lateralDirection;
 }
 
 

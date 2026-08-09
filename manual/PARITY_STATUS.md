@@ -99,8 +99,14 @@ gaps are below in dependency order.
   translated, including airborne/shift response, clutch synchronization,
   forward/reverse takeoff windows, burnout state, automatic gear changes,
   timers, and final RPM clamp. Stadium tuning 29's six gear/max/min/wanted-RPM
-  arrays, eleven engine scalars, and native derived RPM-delta loops are typed
-  and regression-covered against the GBX and executable.
+  arrays, the recovered engine scalars, and native derived RPM-delta loops are typed
+  and regression-covered against the GBX and executable. The native
+  transmission/RPM state at car `+0x2E4` is now kept separate from the
+  burnout force state at `+0x69C`: `EngineIntegrate` reads the latter only to
+  select `+0x2E4` state four, while takeoff synchronization and automatic
+  shifts write only `+0x2E4`. Exact read/dispatch instruction anchors and
+  behavior regressions cover the distinction. This removes the erroneous
+  state-two force interval previously produced by a straight launch.
 - `ApplyFrictionForces` now has the native one-pointer ABI and is called by
   `ComputeForces`, after `IntegrateVehicle`, with the already acquired local
   linear velocity. Its constant ground slowdown, linear fluid friction,
@@ -133,6 +139,52 @@ gaps are below in dependency order.
   wheel call sites, grounded suspension force, output initialization, and
   engine-state skip are regression-covered. The remaining Model-6 per-wheel
   tire/drive/brake math is still only partially translated.
+- The processed-steering producer at `0x7C6CB2..0x7C6D33` is translated before
+  Model-6 dispatch. It uses the car-local forward speed and the native
+  `SteerRadiusMin`/`SteerRadiusCoef` fields (`+0x6C/+0x70`) to compute
+  `-smoothedSteer / sqrt(min + abs(speed) * coef)`. The executable's strict
+  ordered epsilon branch—including equality and NaN behavior—constructor
+  defaults, Stadium values, field descriptors, and instruction sequence are
+  regression-covered.
+- The ordinary Model-6 contacted-wheel consumer at
+  `0x7C4962..0x7C5018` now constructs the native lateral direction from the
+  accumulated ground normal, rotates steerable/front wheels with
+  `cos(processedSteer)` and `-sin(processedSteer)`, projects local velocity,
+  and applies the resulting side force in that direction. Its normalized
+  damper-compression curve (`+0x224`), `AbsorbingValMin/Max`, material grip,
+  lateral slope adherence, sliding/braking modulation, `SideFriction1`,
+  per-wheel `+0xB4` limit blend, and slipping output are wired. Native field,
+  helper, trigonometric call, coefficient, and slip-store bytes plus focused
+  behavior are regression-covered.
+- The bounded ordinary forward axial path at `0x7C5FB8..0x7C6767` now applies
+  the acceleration curve, gas and material acceleration coefficient, forward
+  brake request/cap, strict `MaxSpeed * material.speed` correction, and final
+  axial slope adherence. The brake request uses `BrakeBase/BrakeCoef`, the
+  no-prior-slip `BrakeMaxDynamic * material.brakeCoef` cap, publishes the
+  separate axial-brake output, and marks every simulation wheel slipping when
+  strictly capped. The semantic speed fields (`+0x2C/+0x30/+0x60`), brake
+  fields (`+0x40..+0x4C`), Model-6 brake modulation/rear caps
+  (`+0x240/+0x248/+0x24C`), constructor and Stadium values, strict helpers,
+  native bytes/descriptors, and end-to-end force/slip behavior are
+  regression-covered. Pre-existing wheel slip now stays in the Model-6
+  forward branch: every slipping wheel contributes the native `+0x240` brake
+  modulation product and selects `BrakeMax`; the normal-ground tail aggregates
+  over-limit lateral force and interpolates the slipping (`+0x1E0/+0x1E4`) and
+  normal acceleration curves using the distinct `M5AccelSlipCoefMax` field at
+  `+0x200`. Native transition state `+0x628..+0x634`, strict aggregate gating,
+  field descriptors/instructions, curve weights, brake modulation, and timing
+  behavior are regression-covered. Timed engine-force states one and three
+  now advance through the native `+0x6F4/+0x6F8` millisecond origins and
+  `+0x298/+0x2A8` durations. Their sine-shaped `+0x29C/+0x2AC`
+  acceleration modulation is applied before braking; state three marks every
+  wheel slipping and adds the native cycle-squared `+0x2B8` axial impulse.
+  Constructor/Stadium values, property names and descriptors, lifecycle and
+  x87 instruction anchors, pure phase helpers, transition boundaries, and
+  end-to-end axial forces are regression-covered. Reverse/freewheel, state-two
+  burnout/takeoff inertial force and torque, and special-contact branches are
+  pending. A two-second A01 trace confirms that state two is not active during
+  the initial straight launch once the native `+0x2E4`/`+0x69C` separation is
+  preserved.
 - The generic `CSceneMobilAbsorbContact` callback and the car's one-contact
   virtual are typed and registered by both executable front ends. Vehicle
   absorb handling now has the recovered material 13/23 veto, surface-tree
@@ -291,8 +343,12 @@ order proves observable; collision response can now consume the typed working
   continuous-force branches. Real resource loading for its collision-zone
   mask/heights and car AABB remains pending. The exact eleven-argument Model-6
   boundary and its water-first/per-wheel suspension dispatch are connected;
-  processed-steering preparation and the remaining per-wheel tire, drive, and
-  brake-force pipeline still contain missing logic or harness approximations.
+  processed-steering preparation, the ordinary contacted-wheel side reaction,
+  and the ordinary forward terminal-speed correction are connected. The
+  ordinary forward brake request/saturation, and the pre-existing-slip
+  acceleration/brake blend are connected. The remaining reverse/freewheel and
+  special-state pipeline still contains missing logic or harness
+  approximations.
 - Closed-loop ghost comparison becomes meaningful only after collision
   traversal, body state, and the fixed-step solver are real; until then it
   mainly measures the scaffolding.

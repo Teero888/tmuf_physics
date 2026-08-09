@@ -1,7 +1,9 @@
 #include "../../../TuningData.hpp"
+#include "../../Scene/TmForeverPhysicsConstants.hpp"
 
 #include <cmath>
 #include <cstdio>
+#include <limits>
 
 // The current harness keeps these two process-wide integration values in
 // main.cpp. Define inert versions for a library-only regression executable.
@@ -17,13 +19,61 @@ bool ExpectNear(const char* name, float actual, float expected,
     return false;
 }
 
+bool ExpectNan(const char* name, float actual) {
+    if (std::isnan(actual)) return true;
+
+    std::fprintf(stderr, "%s: expected NaN, got %.9g\n", name, actual);
+    return false;
+}
+
 } // namespace
 
 int main() {
     CSceneVehicleCarTuning tuning;
+    bool passed = true;
+    passed &= ExpectNear("default minimum steering radius",
+                         tuning.m_steerRadiusMin, 1.0f);
+    passed &= ExpectNear("default steering radius coefficient",
+                         tuning.m_steerRadiusCoef, 0.5f);
+    passed &= ExpectNear("default maximum speed", tuning.m_maxSpeed,
+                         TmForeverPhysicsConstants::
+                             kDefaultOldEngineSpeedDivisorBase);
+    passed &= ExpectNear("default reverse maximum speed",
+                         tuning.m_reverseMaxSpeed,
+                         13.888889312744140625f);
+    passed &= ExpectNear("default maximum-speed correction",
+                         tuning.m_limitToMaxSpeedForce, 10.0f);
+    passed &= ExpectNear("default brake base", tuning.m_brakeBase, 20.0f);
+    passed &= ExpectNear("default brake coefficient", tuning.m_brakeCoef, 0.0f);
+    passed &= ExpectNear("default brake maximum", tuning.m_brakeMax, 500.0f);
+    passed &= ExpectNear("default dynamic brake maximum",
+                         tuning.m_brakeMaxDynamic, 500.0f);
+    passed &= ExpectNear("default Model6 slipping brake modulation",
+                         tuning.m_m6BrakeModulationWhenSlipping, 0.5f);
+    passed &= ExpectNear("default Model6 rear brake maximum",
+                         tuning.m_m6BrakeMaxRear, 100.0f);
+    passed &= ExpectNear("default Model6 dynamic rear brake maximum",
+                         tuning.m_m6BrakeMaxDynamicRear, 50.0f);
+    passed &= ExpectNear("default Model6 burnout duration",
+                         static_cast<float>(tuning.m_m6BurnoutDuration),
+                         1000.0f);
+    passed &= ExpectNear("default Model6 burnout acceleration modulation",
+                         tuning.m_m6BurnoutAccelerationModulation, 0.5f);
+    passed &= ExpectNear("default Model6 after-burnout duration",
+                         static_cast<float>(
+                             tuning.m_m6AfterBurnoutDuration),
+                         500.0f);
+    passed &= ExpectNear(
+        "default Model6 after-burnout acceleration modulation",
+        tuning.m_m6AfterBurnoutAccelerationModulation, 4.0f);
+    passed &= ExpectNear("default Model6 after-burnout impulse",
+                         tuning.m_m6AfterBurnoutImpulse, 10.0f);
+    passed &= ExpectNear("default slipping acceleration curve coefficient",
+                         tuning.m_m5SlippingAccelCurveCoef, 1.0f);
+    passed &= ExpectNear("default acceleration slip excess scale",
+                         tuning.m_m5AccelSlipCoefMax, 1.0f);
     InitTuningData(&tuning);
 
-    bool passed = true;
     passed &= ExpectNear("Stadium ground gravity coefficient",
                          tuning.m_gravityCoef, StadiumGravityCoef);
     passed &= ExpectNear("Stadium air gravity coefficient",
@@ -34,6 +84,62 @@ int main() {
     passed &= ExpectNear("Stadium linear fluid friction",
                          tuning.m_linearFluidFrictionCoef,
                          StadiumLinearFluidFrictionCoef);
+    passed &= ExpectNear("Stadium maximum speed", tuning.m_maxSpeed,
+                         StadiumMaxSpeed);
+    passed &= ExpectNear("Stadium reverse maximum speed",
+                         tuning.m_reverseMaxSpeed,
+                         StadiumReverseMaxSpeed);
+    passed &= ExpectNear("Stadium maximum-speed correction",
+                         tuning.m_limitToMaxSpeedForce,
+                         StadiumLimitToMaxSpeedForce);
+    passed &= ExpectNear("Stadium brake base", tuning.m_brakeBase,
+                         StadiumBrakeBase);
+    passed &= ExpectNear("Stadium brake coefficient", tuning.m_brakeCoef,
+                         StadiumBrakeCoef);
+    passed &= ExpectNear("Stadium brake maximum", tuning.m_brakeMax,
+                         StadiumBrakeMax);
+    passed &= ExpectNear("Stadium dynamic brake maximum",
+                         tuning.m_brakeMaxDynamic,
+                         StadiumBrakeMaxDynamic);
+    passed &= ExpectNear("Stadium Model6 slipping brake modulation",
+                         tuning.m_m6BrakeModulationWhenSlipping,
+                         StadiumM6BrakeModulationWhenSlipping);
+    passed &= ExpectNear("Stadium Model6 rear brake maximum",
+                         tuning.m_m6BrakeMaxRear,
+                         StadiumM6BrakeMaxRear);
+    passed &= ExpectNear("Stadium Model6 dynamic rear brake maximum",
+                         tuning.m_m6BrakeMaxDynamicRear,
+                         StadiumM6BrakeMaxDynamicRear);
+    passed &= ExpectNear("Stadium Model6 burnout duration",
+                         static_cast<float>(tuning.m_m6BurnoutDuration),
+                         static_cast<float>(StadiumM6BurnoutDuration));
+    passed &= ExpectNear("Stadium Model6 burnout acceleration modulation",
+                         tuning.m_m6BurnoutAccelerationModulation,
+                         StadiumM6BurnoutAccelerationModulation);
+    passed &= ExpectNear("Stadium Model6 after-burnout duration",
+                         static_cast<float>(
+                             tuning.m_m6AfterBurnoutDuration),
+                         static_cast<float>(
+                             StadiumM6AfterBurnoutDuration));
+    passed &= ExpectNear(
+        "Stadium Model6 after-burnout acceleration modulation",
+        tuning.m_m6AfterBurnoutAccelerationModulation,
+        StadiumM6AfterBurnoutAccelerationModulation);
+    passed &= ExpectNear("Stadium Model6 after-burnout impulse",
+                         tuning.m_m6AfterBurnoutImpulse,
+                         StadiumM6AfterBurnoutImpulse);
+    passed &= ExpectNear("Stadium slipping acceleration curve coefficient",
+                         tuning.m_m5SlippingAccelCurveCoef,
+                         StadiumM5SlippingAccelCurveCoef);
+    passed &= ExpectNear("Stadium acceleration slip excess scale",
+                         tuning.m_m5AccelSlipCoefMax,
+                         StadiumM5AccelSlipCoefMax);
+    passed &= ExpectNear("Stadium minimum steering radius",
+                         tuning.m_steerRadiusMin,
+                         StadiumSteerRadiusMin);
+    passed &= ExpectNear("Stadium steering radius coefficient",
+                         tuning.m_steerRadiusCoef,
+                         StadiumSteerRadiusCoef);
     passed &= ExpectNear("Stadium M5 contact slowdown duration",
                          static_cast<float>(
                              tuning.m_m5LateralConstantSlowDownDuration),
@@ -42,6 +148,9 @@ int main() {
     passed &= ExpectNear("Stadium minimum absorbed replacement",
                          tuning.m_absorbingValMin,
                          StadiumAbsorbingValMin);
+    passed &= ExpectNear("Stadium maximum absorbed replacement",
+                         tuning.m_absorbingValMax,
+                         StadiumAbsorbingValMax);
     passed &= ExpectNear("Stadium body contact friction",
                          tuning.m_bodyFrictionCoef,
                          StadiumBodyFrictionCoef);
@@ -92,6 +201,15 @@ int main() {
     passed &= ExpectNear("water friction at one metre per second",
                          tuning.GetWaterFrictionFromSpeed(1.0f),
                          0.2f + (1.6f / 48.0f) * 0.8f);
+    passed &= ExpectNear("Model6 damper modulation at maximum absorption",
+                         tuning.M6GetModulationFromDamperAbsorbVal(0.7f),
+                         0.1f);
+    passed &= ExpectNear("Model6 damper modulation at ratio 0.6",
+                         tuning.M6GetModulationFromDamperAbsorbVal(0.28f),
+                         0.3f);
+    passed &= ExpectNear("Model6 damper modulation at minimum absorption",
+                         tuning.M6GetModulationFromDamperAbsorbVal(0.0f),
+                         1.0f);
     passed &= ExpectNear("accel at 100 km/h",
                          tuning.GetAccelFromSpeed(100.0f / 3.6f),
                          16.0f + (100.0f / 101.0f) * (11.0f - 16.0f));
@@ -117,6 +235,32 @@ int main() {
     passed &= ExpectNear("Model6 steering ramp at half low speed",
                          tuning.GetModel6SteerSpeedFactor(15.0f),
                          std::sqrt(0.5f));
+    passed &= ExpectNear("Model6 processed steering at rest",
+                         tuning.GetModel6ProcessedSteer(0.5f, 0.0f),
+                         -0.5f / std::sqrt(2.0f));
+    passed &= ExpectNear("Model6 processed steering at forward speed",
+                         tuning.GetModel6ProcessedSteer(0.5f, 100.0f),
+                         -0.5f / std::sqrt(87.0f));
+    passed &= ExpectNear("Model6 processed steering uses absolute speed",
+                         tuning.GetModel6ProcessedSteer(0.5f, -100.0f),
+                         -0.5f / std::sqrt(87.0f));
+    tuning.m_steerRadiusMin = 0.0f;
+    tuning.m_steerRadiusCoef = 0.0f;
+    passed &= ExpectNear("Model6 processed steering below epsilon",
+                         tuning.GetModel6ProcessedSteer(0.5f, 10.0f),
+                         0.0f);
+    tuning.m_steerRadiusMin =
+        TmForeverPhysicsConstants::kWheelInputEpsilon;
+    passed &= ExpectNear("Model6 processed steering at epsilon",
+                         tuning.GetModel6ProcessedSteer(0.5f, 0.0f),
+                         -0.5f / std::sqrt(
+                                     TmForeverPhysicsConstants::kWheelInputEpsilon),
+                         0.001f);
+    tuning.m_steerRadiusMin = std::numeric_limits<float>::quiet_NaN();
+    passed &= ExpectNan("Model6 processed steering propagates NaN",
+                        tuning.GetModel6ProcessedSteer(0.5f, 0.0f));
+    tuning.m_steerRadiusMin = StadiumSteerRadiusMin;
+    tuning.m_steerRadiusCoef = StadiumSteerRadiusCoef;
     passed &= ExpectNear("Stadium Model6 over-limit side force",
                          tuning.GetModel6SideForce(-100.0f, 60.0f),
                          -100.0f);
@@ -124,6 +268,125 @@ int main() {
     passed &= ExpectNear("Model6 fractional over-limit blend",
                          tuning.GetModel6SideForce(100.0f, 60.0f),
                          70.0f);
+    tuning.m_maxSideFrictionBlendCoef = 0.25f;
+    passed &= ExpectNear("Model6 wheel side-force positive blend",
+                         tuning.GetModel6WheelSideForce(100.0f, 60.0f),
+                         70.0f);
+    passed &= ExpectNear("Model6 wheel side-force negative blend",
+                         tuning.GetModel6WheelSideForce(-100.0f, 60.0f),
+                         -70.0f);
+    tuning.m_maxSideFrictionBlendCoef = StadiumMaxSideFrictionBlendCoef;
+    tuning.m_maxSpeed = 10.0f;
+    tuning.m_reverseMaxSpeed = 5.0f;
+    tuning.m_limitToMaxSpeedForce = 3.0f;
+    passed &= ExpectNear("Model6 forward speed limit is strict",
+                         tuning.GetModel6SpeedLimitedAxialForce(
+                             7.0f, 20.0f, 2.0f),
+                         7.0f);
+    passed &= ExpectNear("Model6 forward limit replaces positive force",
+                         tuning.GetModel6SpeedLimitedAxialForce(
+                             7.0f, 20.01f, 2.0f),
+                         -3.0f);
+    passed &= ExpectNear("Model6 forward limit extends negative force",
+                         tuning.GetModel6SpeedLimitedAxialForce(
+                             -7.0f, 20.01f, 2.0f),
+                         -10.0f);
+    passed &= ExpectNear("Model6 reverse speed limit is strict",
+                         tuning.GetModel6SpeedLimitedAxialForce(
+                             -7.0f, -10.0f, 2.0f),
+                         -7.0f);
+    passed &= ExpectNear("Model6 reverse limit replaces negative force",
+                         tuning.GetModel6SpeedLimitedAxialForce(
+                             -7.0f, -10.01f, 2.0f),
+                         3.0f);
+    passed &= ExpectNear("Model6 reverse limit extends positive force",
+                         tuning.GetModel6SpeedLimitedAxialForce(
+                             7.0f, -10.01f, 2.0f),
+                         10.0f);
+    tuning.m_maxSpeed = StadiumMaxSpeed;
+    tuning.m_reverseMaxSpeed = StadiumReverseMaxSpeed;
+    tuning.m_limitToMaxSpeedForce = StadiumLimitToMaxSpeedForce;
+    tuning.m_brakeBase = 1.0f;
+    tuning.m_brakeCoef = 2.0f;
+    tuning.m_brakeMax = 6.0f;
+    tuning.m_brakeMaxDynamic = 4.0f;
+    bool brakeSaturated = true;
+    passed &= ExpectNear("Model6 forward brake rejects zero speed",
+                         tuning.GetModel6ForwardAxialBrakeForce(
+                             0.0f, 1.0f, 1.0f, 1.0f, false,
+                             &brakeSaturated),
+                         0.0f);
+    passed &= ExpectNear("Model6 forward brake request",
+                         tuning.GetModel6ForwardAxialBrakeForce(
+                             2.0f, 0.5f, 1.0f, 1.0f, false,
+                             &brakeSaturated),
+                         2.5f);
+    passed &= ExpectNear("Model6 forward dynamic brake cap",
+                         tuning.GetModel6ForwardAxialBrakeForce(
+                             2.0f, 1.0f, 1.0f, 1.0f, false,
+                             &brakeSaturated),
+                         4.0f);
+    passed &= ExpectNear("Model6 forward slipping brake cap",
+                         tuning.GetModel6ForwardAxialBrakeForce(
+                             10.0f, 1.0f, 1.0f, 0.5f, true,
+                             &brakeSaturated),
+                         6.0f);
+    passed &= ExpectNear("Model6 forward brake saturation flag",
+                         brakeSaturated ? 1.0f : 0.0f, 1.0f);
+    tuning.m_brakeBase = StadiumBrakeBase;
+    tuning.m_brakeCoef = StadiumBrakeCoef;
+    tuning.m_brakeMax = StadiumBrakeMax;
+    tuning.m_brakeMaxDynamic = StadiumBrakeMaxDynamic;
+    tuning.m_m5AccelSlipCoefMax = 0.5f;
+    passed &= ExpectNear("Model6 lateral excess keeps normal acceleration",
+                         tuning.GetModel6AccelerationBlendFromLateralOverLimit(
+                             60.0f, 60.0f),
+                         1.0f);
+    passed &= ExpectNear("Model6 lateral excess blends acceleration curves",
+                         tuning.GetModel6AccelerationBlendFromLateralOverLimit(
+                             75.0f, 60.0f),
+                         0.5f);
+    passed &= ExpectNear("Model6 lateral excess clamps slipping acceleration",
+                         tuning.GetModel6AccelerationBlendFromLateralOverLimit(
+                             120.0f, 60.0f),
+                         0.0f);
+    tuning.m_m5AccelSlipCoefMax = StadiumM5AccelSlipCoefMax;
+    tuning.m_m6BurnoutDuration = 1000u;
+    tuning.m_m6BurnoutAccelerationModulation = 0.5f;
+    tuning.m_m6AfterBurnoutDuration = 500u;
+    tuning.m_m6AfterBurnoutAccelerationModulation = 4.0f;
+    tuning.m_m6AfterBurnoutImpulse = 10.0f;
+    passed &= ExpectNear("Model6 state-one midpoint acceleration modulation",
+                         tuning.GetModel6EngineStateAccelerationModulation(
+                             1, 500u),
+                         0.5f);
+    passed &= ExpectNear(
+        "Model6 state-three midpoint acceleration modulation",
+        tuning.GetModel6EngineStateAccelerationModulation(3, 250u),
+        4.0f);
+    passed &= ExpectNear("Model6 state-three active axial impulse",
+                         tuning.GetModel6EngineStateAxialImpulse(3, 250u),
+                         10.0f);
+    passed &= ExpectNear("Model6 ordinary state acceleration modulation",
+                         tuning.GetModel6EngineStateAccelerationModulation(
+                             0, 250u),
+                         1.0f);
+    passed &= ExpectNear("Model6 ordinary state axial impulse",
+                         tuning.GetModel6EngineStateAxialImpulse(0, 250u),
+                         0.0f);
+    tuning.m_m6BurnoutDuration = StadiumM6BurnoutDuration;
+    tuning.m_m6BurnoutAccelerationModulation =
+        StadiumM6BurnoutAccelerationModulation;
+    tuning.m_m6AfterBurnoutDuration = StadiumM6AfterBurnoutDuration;
+    tuning.m_m6AfterBurnoutAccelerationModulation =
+        StadiumM6AfterBurnoutAccelerationModulation;
+    tuning.m_m6AfterBurnoutImpulse = StadiumM6AfterBurnoutImpulse;
+    tuning.m_m5SlippingAccelCurveCoef = 0.5f;
+    passed &= ExpectNear("M5 slipping curve uses its distinct coefficient",
+                         tuning.M5GetSlippingAccelFromSpeed(100.0f),
+                         5.0f);
+    tuning.m_m5SlippingAccelCurveCoef =
+        StadiumM5SlippingAccelCurveCoef;
     passed &= ExpectNear("Stadium yaw inertia",
                          tuning.GetYawInertia(),
                          25.0f / 12.0f);

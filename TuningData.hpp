@@ -128,6 +128,15 @@ inline constexpr float StadiumGravityCoefAir = 2.5f;
 inline constexpr float StadiumAngularFluidFrictionCoef1 = 0.4f;
 inline constexpr float StadiumGroundSlowDownBase = 1.0f;
 inline constexpr float StadiumLinearFluidFrictionCoef = 0.03f;
+inline constexpr float StadiumMaxSpeed = 277.777801513671875f;
+inline constexpr float StadiumReverseMaxSpeed = 138.611114501953125f;
+inline constexpr float StadiumLimitToMaxSpeedForce = 10.0f;
+inline constexpr float StadiumBrakeBase = 1.0f;
+inline constexpr float StadiumBrakeCoef = 1.75f;
+inline constexpr float StadiumBrakeMax = 60.0f;
+inline constexpr float StadiumBrakeMaxDynamic = 30.0f;
+inline constexpr float StadiumSteerRadiusMin = 2.0f;
+inline constexpr float StadiumSteerRadiusCoef = 0.85f;
 inline constexpr float StadiumSteerSpeed = 20.0f;
 inline constexpr int StadiumSteerModel = 5; // Steer06
 inline constexpr float StadiumSteerLowSpeed = 30.0f;
@@ -137,12 +146,14 @@ inline constexpr float StadiumMaxSideFrictionBlendCoef = 0.018f;
 inline constexpr float MaxSideFrictionSliding = 0.35f;
 inline constexpr float StadiumSideFriction1 = 40.0f;
 inline constexpr float StadiumMaxSideFrictionOverLimitBlend = 1.0f;
+inline constexpr float StadiumM5SlippingAccelCurveCoef = 1.0f;
 inline constexpr float StadiumM5AccelSlipCoefMax = 1.0f;
 inline constexpr uint32_t StadiumM5LateralConstantSlowDownDuration = 500u;
 inline constexpr int StadiumShockModel = 2; // Demo03
 inline constexpr float StadiumAbsorbingValKi = 40.0f;
 inline constexpr float StadiumAbsorbingValKa = 1.0f;
 inline constexpr float StadiumAbsorbingValMin = 0.0f;
+inline constexpr float StadiumAbsorbingValMax = 0.7f;
 inline constexpr float StadiumAbsorbingValRest = 0.2f;
 inline constexpr float StadiumAbsorbTension = 5.0f;
 inline constexpr float StadiumBodyFrictionCoef = 0.3f;
@@ -161,6 +172,15 @@ inline constexpr float StadiumLateralSlopeAdherenceMin = 0.3f;
 inline constexpr float StadiumLateralSlopeAdherenceMax = 0.7f;
 inline constexpr float StadiumAxialSlopeAdherenceMin = 0.4f;
 inline constexpr float StadiumAxialSlopeAdherenceMax = 0.7f;
+inline constexpr float StadiumM6FrictionModulationWhenSlipAndBrake = 0.2f;
+inline constexpr float StadiumM6BrakeModulationWhenSlipping = 0.5f;
+inline constexpr float StadiumM6BrakeMaxRear = 100.0f;
+inline constexpr float StadiumM6BrakeMaxDynamicRear = 50.0f;
+inline constexpr uint32_t StadiumM6BurnoutDuration = 500u;
+inline constexpr float StadiumM6BurnoutAccelerationModulation = 0.5f;
+inline constexpr uint32_t StadiumM6AfterBurnoutDuration = 150u;
+inline constexpr float StadiumM6AfterBurnoutAccelerationModulation = 1.0f;
+inline constexpr float StadiumM6AfterBurnoutImpulse = 0.0f;
 inline constexpr float StadiumWaterGravity = 1.0f;
 inline constexpr float StadiumWaterReboundMinHorizontalSpeed =
     55.5555572509765625f;
@@ -235,6 +255,15 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_angularFluidFrictionCoef1 = StadiumAngularFluidFrictionCoef1;
     tuning->m_groundSlowDownBase = StadiumGroundSlowDownBase;
     tuning->m_linearFluidFrictionCoef = StadiumLinearFluidFrictionCoef;
+    tuning->m_maxSpeed = StadiumMaxSpeed;
+    tuning->m_reverseMaxSpeed = StadiumReverseMaxSpeed;
+    tuning->m_limitToMaxSpeedForce = StadiumLimitToMaxSpeedForce;
+    tuning->m_brakeBase = StadiumBrakeBase;
+    tuning->m_brakeCoef = StadiumBrakeCoef;
+    tuning->m_brakeMax = StadiumBrakeMax;
+    tuning->m_brakeMaxDynamic = StadiumBrakeMaxDynamic;
+    tuning->m_steerRadiusMin = StadiumSteerRadiusMin;
+    tuning->m_steerRadiusCoef = StadiumSteerRadiusCoef;
     tuning->m_steerSpeed = StadiumSteerSpeed;
     tuning->m_steerModel = StadiumSteerModel;
     tuning->m_steerLowSpeed = StadiumSteerLowSpeed;
@@ -244,6 +273,8 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_maxSideFrictionSliding = MaxSideFrictionSliding;
     tuning->m_sideFriction1 = StadiumSideFriction1;
     tuning->m_maxSideFrictionOverLimitBlend = StadiumMaxSideFrictionOverLimitBlend;
+    tuning->m_m5SlippingAccelCurveCoef =
+        StadiumM5SlippingAccelCurveCoef;
     tuning->m_m5AccelSlipCoefMax = StadiumM5AccelSlipCoefMax;
     tuning->m_m5LateralConstantSlowDownDuration =
         StadiumM5LateralConstantSlowDownDuration;
@@ -251,6 +282,7 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_absorbingValKi = StadiumAbsorbingValKi;
     tuning->m_absorbingValKa = StadiumAbsorbingValKa;
     tuning->m_absorbingValMin = StadiumAbsorbingValMin;
+    tuning->m_absorbingValMax = StadiumAbsorbingValMax;
     tuning->m_absorbingValRest = StadiumAbsorbingValRest;
     tuning->m_absorbTension = StadiumAbsorbTension;
     tuning->m_bodyFrictionCoef = StadiumBodyFrictionCoef;
@@ -271,6 +303,21 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_lateralSlopeAdherenceMax = StadiumLateralSlopeAdherenceMax;
     tuning->m_axialSlopeAdherenceMin = StadiumAxialSlopeAdherenceMin;
     tuning->m_axialSlopeAdherenceMax = StadiumAxialSlopeAdherenceMax;
+    tuning->m_modulationFromWheelCompression =
+        &ModulationFromWheelCompression;
+    tuning->m_m6BrakeModulationWhenSlipping =
+        StadiumM6BrakeModulationWhenSlipping;
+    tuning->m_m6FrictionModulationWhenSlipAndBrake =
+        StadiumM6FrictionModulationWhenSlipAndBrake;
+    tuning->m_m6BrakeMaxRear = StadiumM6BrakeMaxRear;
+    tuning->m_m6BrakeMaxDynamicRear = StadiumM6BrakeMaxDynamicRear;
+    tuning->m_m6BurnoutDuration = StadiumM6BurnoutDuration;
+    tuning->m_m6BurnoutAccelerationModulation =
+        StadiumM6BurnoutAccelerationModulation;
+    tuning->m_m6AfterBurnoutDuration = StadiumM6AfterBurnoutDuration;
+    tuning->m_m6AfterBurnoutAccelerationModulation =
+        StadiumM6AfterBurnoutAccelerationModulation;
+    tuning->m_m6AfterBurnoutImpulse = StadiumM6AfterBurnoutImpulse;
     tuning->m_waterGravity = StadiumWaterGravity;
     tuning->m_waterReboundMinHorizontalSpeed =
         StadiumWaterReboundMinHorizontalSpeed;

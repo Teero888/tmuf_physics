@@ -45,6 +45,18 @@ public:
     float m_angularFluidFrictionCoef1;
     float m_groundSlowDownBase;
     float m_linearFluidFrictionCoef;
+    // Native scalar offsets +0x2C, +0x30, and +0x60. The legacy layout view
+    // above keeps its historical names; translated Model6 code uses these
+    // semantic host fields.
+    float m_maxSpeed;
+    float m_reverseMaxSpeed;
+    float m_limitToMaxSpeedForce;
+    float m_brakeBase;
+    float m_brakeCoef;
+    float m_brakeMax;
+    float m_brakeMaxDynamic;
+    float m_steerRadiusMin;
+    float m_steerRadiusCoef;
     float m_steerSpeed;
     int m_steerModel;
     float m_steerLowSpeed;
@@ -54,12 +66,14 @@ public:
     float m_maxSideFrictionSliding;
     float m_sideFriction1;
     float m_maxSideFrictionOverLimitBlend;
+    float m_m5SlippingAccelCurveCoef;
     float m_m5AccelSlipCoefMax;
     uint32_t m_m5LateralConstantSlowDownDuration;
     int m_shockModel;
     float m_absorbingValKi;
     float m_absorbingValKa;
     float m_absorbingValMin;
+    float m_absorbingValMax;
     float m_absorbingValRest;
     float m_shockModel0ForceFactor;
     float m_absorbTension;
@@ -79,6 +93,21 @@ public:
     float m_lateralSlopeAdherenceMax;
     float m_axialSlopeAdherenceMin;
     float m_axialSlopeAdherenceMax;
+    CFuncKeysReal* m_modulationFromWheelCompression;
+    float m_m6BrakeModulationWhenSlipping;
+    float m_m6FrictionModulationWhenSlipAndBrake;
+    float m_m6BrakeMaxRear;
+    float m_m6BrakeMaxDynamicRear;
+
+    // Semantic host view of the native Model-6 burnout/after-burnout block.
+    // The executable stores the phase durations at +0x298/+0x2A8, their
+    // acceleration multipliers at +0x29C/+0x2AC, and the after-phase axial
+    // impulse at +0x2B8.
+    uint32_t m_m6BurnoutDuration;
+    float m_m6BurnoutAccelerationModulation;
+    uint32_t m_m6AfterBurnoutDuration;
+    float m_m6AfterBurnoutAccelerationModulation;
+    float m_m6AfterBurnoutImpulse;
 
     // Semantic host view of the native water block at +0x204..+0x220.
     float m_waterGravity;
@@ -140,6 +169,25 @@ public:
     float GetWaterReboundFromSpeedRatio(float ratio);
     float GetWaterFrictionFromSpeed(float speed);
     void M6InitRpmDeltas();
+    float M6GetModulationFromDamperAbsorbVal(float absorbValue);
+    float GetModel6ProcessedSteer(float smoothedSteer,
+                                  float forwardSpeed) const;
+    float GetModel6WheelSideForce(float rawForce, float maxForce) const;
+    float GetModel6SpeedLimitedAxialForce(float axialForce,
+                                          float forwardSpeed,
+                                          float materialSpeed) const;
+    float GetModel6ForwardAxialBrakeForce(float forwardSpeed,
+                                          float brakeInput,
+                                          float materialBrakeCoef,
+                                          float slippingModulation,
+                                          bool hasSlippingWheel,
+                                          bool* saturated) const;
+    float GetModel6AccelerationBlendFromLateralOverLimit(
+        float appliedForceSum, float maximumForceSum) const;
+    float GetModel6EngineStateAccelerationModulation(
+        int engineState, uint32_t elapsedMilliseconds) const;
+    float GetModel6EngineStateAxialImpulse(
+        int engineState, uint32_t elapsedMilliseconds) const;
     float GetModel6SteerSpeedFactor(float speed) const;
     float GetModel6SideForce(float rawForce, float maxForce) const;
     float GetYawInertia() const;

@@ -174,10 +174,21 @@ int main() {
         WaterReboundFromSpeedRatio, 4,
         WaterReboundFromSpeedRatio_times,
         WaterReboundFromSpeedRatio_values);
+    InitCurve(
+        MaxSideFriction, 6,
+        MaxSideFriction_times,
+        MaxSideFriction_values);
+    InitCurve(
+        ModulationFromWheelCompression, 4,
+        ModulationFromWheelCompression_times,
+        ModulationFromWheelCompression_values);
     tuning.m_waterBumpSlowDownFromSpeedRatio =
         &WaterBumpSlowDownFromSpeedRatio;
     tuning.m_waterFrictionFromSpeed = &WaterFrictionFromSpeed;
     tuning.m_waterReboundFromSpeedRatio = &WaterReboundFromSpeedRatio;
+    tuning.m_maxSideFriction = &MaxSideFriction;
+    tuning.m_modulationFromWheelCompression =
+        &ModulationFromWheelCompression;
     g_tuning = &tuning;
 
     bool passed = true;
@@ -213,6 +224,25 @@ int main() {
     passed &= Expect("front-right wheel steerable", car.m_wheels[1].m_isSteerable == 1);
     passed &= Expect("rear-right wheel fixed", car.m_wheels[2].m_isSteerable == 0);
     passed &= Expect("rear-left wheel fixed", car.m_wheels[3].m_isSteerable == 0);
+    car.m_wheels[0].m_groundContactNormalSum = GmVec3(0.0f, 2.0f, 0.0f);
+    const GmVec3 steeredLateralDirection =
+        car.GetModel6WheelLateralDirection(&car.m_wheels[0], 0.5f);
+    passed &= Expect(
+        "Model6 rotates front-wheel lateral direction by processed steering",
+        VecNear(steeredLateralDirection,
+                GmVec3(std::cos(0.5f), 0.0f, -std::sin(0.5f))));
+    car.m_wheels[2].m_groundContactNormalSum = GmVec3(0.0f, 2.0f, 0.0f);
+    passed &= Expect(
+        "Model6 leaves rear-wheel lateral direction unsteered",
+        VecNear(car.GetModel6WheelLateralDirection(
+                    &car.m_wheels[2], 0.5f),
+                GmVec3(1.0f, 0.0f, 0.0f)));
+    car.m_wheels[0].m_groundContactNormalSum = GmVec3(0.0f, 0.0f, 0.0f);
+    passed &= Expect(
+        "Model6 wheel direction has native small-normal fallback",
+        VecNear(car.GetModel6WheelLateralDirection(
+                    &car.m_wheels[0], 0.0f),
+                GmVec3(1.0f, 0.0f, 0.0f)));
     for (uint32_t i = 0; i < car.m_wheels.GetCount(); ++i) {
         passed &= Expect("Stadium wheel enabled", car.m_wheels[i].m_field_0x00 == 1);
         passed &= Expect("Stadium wheel radius",
@@ -223,6 +253,14 @@ int main() {
                          TmForeverPhysicsConstants::kStadiumWheelLocalZ[i] ==
                              (i < 2 ? TmForeverPhysicsConstants::kStadiumWheelFrontZ
                                     : TmForeverPhysicsConstants::kStadiumWheelRearZ));
+        passed &= Expect(
+            "Stadium wheel force application point",
+            VecNear(
+                car.m_wheels[i].m_localContactPosition,
+                GmVec3(
+                    TmForeverPhysicsConstants::kStadiumWheelLocalX[i],
+                    TmForeverPhysicsConstants::kStadiumWheelLocalY[i],
+                    TmForeverPhysicsConstants::kStadiumWheelLocalZ[i])));
     }
 
     // Stadium tuning 29's exact Model-6 engine block.
@@ -264,6 +302,7 @@ int main() {
     engineCar.m_engine.m_engineRpm = 3000.0f;
     engineCar.m_engine.m_currentGear = 1;
     engineCar.m_engineState = 0;
+    engineCar.m_engineTakeoffMode = 0;
     engineCar.m_engineLocalVelocity = GmVec3(0.0f, 0.0f, 10.0f);
     engineCar.EngineIntegrate(0.5f, 0.1f);
     passed &= Expect("grounded Model6 catches engine up to clutch RPM",
@@ -273,25 +312,30 @@ int main() {
     engineCar.m_engine.m_engineRpm = 925.0f;
     engineCar.m_engine.m_currentGear = 1;
     engineCar.m_engineState = 0;
+    engineCar.m_engineTakeoffMode = 0;
     engineCar.m_engineLocalVelocity.z = 2.5f;
     engineCar.EngineIntegrate(0.5f, 0.01f);
     passed &= Expect("positive speed window enters takeoff synchronizer",
-                     engineCar.m_engineState == 2);
+                     engineCar.m_engineTakeoffMode == 2 &&
+                     engineCar.m_engineState == 0);
     engineCar.m_engine.m_engineRpm = 0.0f;
     engineCar.EngineIntegrate(0.5f, 0.05f);
     passed &= Expect("takeoff synchronizer clamps to clutch RPM",
                      Near(engineCar.m_engine.m_engineRpm, 925.0f) &&
-                     engineCar.m_engineState == 2);
+                     engineCar.m_engineTakeoffMode == 2 &&
+                     engineCar.m_engineState == 0);
 
     engineCar.m_engine.m_engineRpm = 0.0f;
     engineCar.m_engine.m_currentGear = 1;
     engineCar.m_engine.m_gearShiftTimer = 0.0f;
     engineCar.m_engineState = 0;
+    engineCar.m_engineTakeoffMode = 0;
     engineCar.m_engineLocalVelocity.z = 30.0f;
     engineCar.EngineIntegrate(0.5f, 0.1f);
     passed &= Expect("Model6 automatic upshift uses clutch RPM table",
                      engineCar.m_engine.m_currentGear == 2 &&
-                     engineCar.m_engineState == 1 &&
+                     engineCar.m_engineTakeoffMode == 1 &&
+                     engineCar.m_engineState == 0 &&
                      Near(engineCar.m_engine.m_gearShiftTimer,
                           TmForeverPhysicsConstants::kM6ShiftDuration));
 
@@ -300,10 +344,12 @@ int main() {
     engineCar.m_engine.m_gearShiftTimer = 0.0f;
     engineCar.m_engine.m_isReverse = 1;
     engineCar.m_engineState = 0;
+    engineCar.m_engineTakeoffMode = 0;
     engineCar.m_engineLocalVelocity.z = -2.5f;
     engineCar.EngineIntegrate(0.5f, 0.01f);
     passed &= Expect("negative speed window enters reverse synchronizer",
-                     engineCar.m_engineState == 3 &&
+                     engineCar.m_engineTakeoffMode == 3 &&
+                     engineCar.m_engineState == 0 &&
                      engineCar.m_engine.m_currentGear == 0 &&
                      Near(engineCar.m_engine.m_gearShiftTimer,
                           TmForeverPhysicsConstants::kM6ShiftDuration));
@@ -312,12 +358,13 @@ int main() {
     engineCar.m_engine.m_currentGear = 1;
     engineCar.m_engine.m_gearShiftTimer = 0.0f;
     engineCar.m_engine.m_engineRpm = 0.0f;
-    engineCar.m_engineState = 0;
-    engineCar.m_engineTakeoffMode = 1;
+    engineCar.m_engineState = 1;
+    engineCar.m_engineTakeoffMode = 0;
     engineCar.m_engineLocalVelocity.z = 0.0f;
     engineCar.EngineIntegrate(0.5f, 0.1f);
-    passed &= Expect("takeoff mode enters native engine state four",
-                     engineCar.m_engineState == 4 &&
+    passed &= Expect("burnout force state selects RPM state four",
+                     engineCar.m_engineState == 1 &&
+                     engineCar.m_engineTakeoffMode == 4 &&
                      Near(engineCar.m_engine.m_engineRpm, 600.0f) &&
                      Near(engineCar.m_engine.m_clutchRpm, 11000.0f) &&
                      Near(engineCar.m_engine.m_clutchRatio,
@@ -579,6 +626,37 @@ int main() {
                      VecNear(suspensionDyna->Force(),
                              GmVec3(3.0f, 1.0f, 2.0f)) &&
                      VecNear(itemRecovered, itemLocalForce));
+
+    CHmsItem pointForceItem;
+    CHmsCorpus* pointForceCorpus = new CHmsCorpus();
+    pointForceCorpus->m_dyna = new CHmsDyna();
+    pointForceCorpus->m_item = &pointForceItem;
+    pointForceItem.m_corpuses.Add(pointForceCorpus);
+    CPlugPhysicalObject pointForcePhysical;
+    pointForcePhysical.m_centerOfMass = GmVec3(0.0f, 1.0f, 0.0f);
+    CHmsDyna* pointForceDyna = pointForceCorpus->m_dyna;
+    pointForceDyna->m_field_0x108 = &pointForcePhysical;
+    pointForceDyna->CurrentState().m_position = GmVec3(4.0f, 5.0f, 6.0f);
+    pointForceDyna->CurrentState().m_rotation =
+        GmQuat{0.5f, 0.5f, 0.5f, 0.5f};
+    pointForceDyna->CurrentState().m_rotationMatrix.Set(
+        pointForceDyna->CurrentState().m_rotation);
+    GmVec3 pointLocalForce(0.0f, 2.0f, 0.0f);
+    GmVec3 pointLocalPosition(0.0f, 0.0f, 3.0f);
+    pointForceItem.AddForce(
+        &pointForceItem, &pointLocalForce, &pointLocalPosition);
+    passed &= Expect(
+        "item point force rotates force and accumulates COM-relative torque",
+        VecNear(pointForceDyna->Force(), GmVec3(0.0f, 0.0f, 2.0f)) &&
+        VecNear(pointForceDyna->Torque(), GmVec3(0.0f, -6.0f, 0.0f)));
+    pointForceDyna->Force() = GmVec3(0.0f, 0.0f, 0.0f);
+    pointForceDyna->Torque() = GmVec3(0.0f, 0.0f, 0.0f);
+    pointForceItem.AddForce(
+        &pointForceItem, &pointLocalForce, nullptr);
+    passed &= Expect(
+        "item central force does not accumulate a moment",
+        VecNear(pointForceDyna->Force(), GmVec3(0.0f, 0.0f, 2.0f)) &&
+        VecNear(pointForceDyna->Torque(), GmVec3(0.0f, 0.0f, 0.0f)));
 
     suspensionDyna->Torque() = GmVec3(0.0f, 0.0f, 0.0f);
     GmVec3 itemLocalTorque(-1.0f, 4.0f, 2.0f);
@@ -1487,6 +1565,239 @@ int main() {
     passed &= Expect(
         "Model6 engine state two bypasses wheel suspension",
         VecNear(waterState.m_force, GmVec3(0.0f, 0.0f, 0.0f)));
+
+    // The ordinary state-0 axial path applies the native terminal-speed
+    // correction after the acceleration curve/material product and before
+    // axial slope adherence.
+    impulseCar.m_engineState = 0;
+    model6SuspensionWheel.m_hasGroundContact = 0;
+    impulseCar.m_inputGas = 1.0f;
+    tuning.m_sideFriction1 = 0.0f;
+    tuning.m_maxSpeed = 10.0f;
+    tuning.m_reverseMaxSpeed = 5.0f;
+    tuning.m_limitToMaxSpeedForce = 3.0f;
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 11.0f);
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 0.5f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 ordinary drive applies terminal-speed correction",
+        VecNear(waterState.m_force, GmVec3(0.0f, 0.0f, -1.5f)) &&
+        model6HasSlippingWheel == 0 &&
+        Near(model6AxialBrakeForce, 0.0f));
+    tuning.m_maxSpeed = StadiumMaxSpeed;
+    tuning.m_reverseMaxSpeed = StadiumReverseMaxSpeed;
+    tuning.m_limitToMaxSpeedForce = StadiumLimitToMaxSpeedForce;
+    impulseCar.m_inputGas = 0.0f;
+
+    // Native engine-force states one and three are timed before suspension.
+    // Their sine modulation scales propulsion before braking, while state
+    // three adds its +0x2B8 axial impulse and forces every wheel into slip.
+    float model6StateAccelTimes[] = {0.0f};
+    float model6StateAccelValues[] = {16.0f};
+    InitCurve(AccelCurve, 1, model6StateAccelTimes,
+              model6StateAccelValues);
+    tuning.m_m6BurnoutDuration = 500u;
+    tuning.m_m6BurnoutAccelerationModulation = 0.5f;
+    tuning.m_m6AfterBurnoutDuration = 150u;
+    tuning.m_m6AfterBurnoutAccelerationModulation = 3.0f;
+    tuning.m_m6AfterBurnoutImpulse = 7.0f;
+    impulseCar.m_inputGas = 1.0f;
+    impulseCar.m_frictionCurrentTick = 250u;
+    impulseCar.m_model6EngineState1StartTick = 0u;
+    impulseCar.m_engineState = 1;
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 state one modulates ordinary propulsion",
+        Near(waterState.m_force.z, 8.0f) &&
+        impulseCar.m_engineState == 1 &&
+        impulseCar.m_engineClutchBoost == 1);
+
+    impulseCar.m_frictionCurrentTick = 500u;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 state one transitions into state three at its boundary",
+        Near(waterState.m_force.z, 23.0f) &&
+        impulseCar.m_engineState == 3 &&
+        impulseCar.m_model6EngineState3StartTick == 500u &&
+        model6HasSlippingWheel == 1);
+
+    impulseCar.m_frictionCurrentTick = 575u;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 state three applies modulation and axial impulse",
+        Near(waterState.m_force.z, 55.0f) &&
+        impulseCar.m_engineState == 3);
+
+    impulseCar.m_frictionCurrentTick = 650u;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect("Model6 state three expires into ordinary state",
+                     impulseCar.m_engineState == 0 &&
+                     Near(waterState.m_force.z, 16.0f));
+    tuning.m_m6BurnoutDuration = StadiumM6BurnoutDuration;
+    tuning.m_m6BurnoutAccelerationModulation =
+        StadiumM6BurnoutAccelerationModulation;
+    tuning.m_m6AfterBurnoutDuration = StadiumM6AfterBurnoutDuration;
+    tuning.m_m6AfterBurnoutAccelerationModulation =
+        StadiumM6AfterBurnoutAccelerationModulation;
+    tuning.m_m6AfterBurnoutImpulse = StadiumM6AfterBurnoutImpulse;
+    AccelCurve.m_keys.SetCount(0u);
+    AccelCurve.m_values.SetCount(0u);
+    impulseCar.m_inputGas = 0.0f;
+    impulseCar.m_engineState = 0;
+    impulseCar.m_engineClutchBoost = 0;
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        impulseCar.m_wheels[index].m_isSlipping = 0;
+    }
+
+    // Forward braking uses the speed-dependent request and the dynamic cap.
+    // A strict cap hit records the capped axial output and marks every wheel
+    // slipping after the native normal-ground block has already run.
+    impulseCar.m_inputBrake = 1.0f;
+    tuning.m_brakeBase = 1.0f;
+    tuning.m_brakeCoef = 2.0f;
+    tuning.m_brakeMax = 6.0f;
+    tuning.m_brakeMaxDynamic = 4.0f;
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 2.0f);
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 0.5f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    bool allModel6WheelsSlipping = true;
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        allModel6WheelsSlipping &=
+            impulseCar.m_wheels[index].m_isSlipping != 0;
+    }
+    passed &= Expect(
+        "Model6 ordinary braking caps force and marks wheel slip",
+        VecNear(waterState.m_force, GmVec3(0.0f, 0.0f, -2.0f)) &&
+        Near(model6AxialBrakeForce, 4.0f) &&
+        model6HasSlippingWheel == 0 && allModel6WheelsSlipping);
+    tuning.m_brakeBase = StadiumBrakeBase;
+    tuning.m_brakeCoef = StadiumBrakeCoef;
+    tuning.m_brakeMax = StadiumBrakeMax;
+    tuning.m_brakeMaxDynamic = StadiumBrakeMaxDynamic;
+    impulseCar.m_inputBrake = 0.0f;
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        impulseCar.m_wheels[index].m_isSlipping = 0;
+    }
+
+    // The normal-ground tail aggregates only over-limit lateral forces. Its
+    // relative excess selects between the normal and slipping acceleration
+    // curves and maintains the native +0x628..+0x634 transition clock.
+    model6SuspensionWheel.m_hasGroundContact = 0;
+    impulseCar.m_inputGas = 1.0f;
+    tuning.m_sideFriction1 = 40.0f;
+    tuning.m_maxSideFrictionOverLimitBlend = 1.0f;
+    tuning.m_m5AccelSlipCoefMax = 1.0f;
+    model6LinearSpeed = GmVec3(10.0f, 0.0f, 10.0f);
+    impulseCar.m_frictionCurrentTick = 100u;
+    impulseCar.m_engineClutchBoost = 0;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 lateral excess selects slipping acceleration",
+        Near(waterState.m_force.z,
+             tuning.M5GetSlippingAccelFromSpeed(10.0f)) &&
+        impulseCar.m_engineClutchBoost == 1 &&
+        impulseCar.m_model6LastLateralOverLimitTick == 100u &&
+        impulseCar.m_model6LateralOverLimitStartTick == 100u &&
+        impulseCar.m_model6LateralOverLimitDuration == 0u);
+    impulseCar.m_frictionCurrentTick = 120u;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 lateral excess advances transition duration",
+        impulseCar.m_model6LastLateralOverLimitTick == 120u &&
+        impulseCar.m_model6LateralOverLimitStartTick == 100u &&
+        impulseCar.m_model6LateralOverLimitDuration == 20u);
+    impulseCar.m_inputGas = 0.0f;
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+    tuning.m_sideFriction1 = 0.0f;
+    impulseCar.m_engineClutchBoost = 0;
+    model6SuspensionWheel.m_hasGroundContact = 1;
+
+    // The ordinary contacted-wheel block rotates the lateral axis by the
+    // already processed steering angle, projects local velocity onto it, and
+    // applies the resulting side force in that same direction.
+    impulseCar.m_engineState = 0;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    model6SuspensionWheel.m_groundContactNormalSum =
+        GmVec3(0.0f, 1.0f, 0.0f);
+    model6SuspensionWheel.m_realTimeState.m_compression = 0.2f;
+    model6SuspensionWheel.m_realTimeState.m_velocity = 0.0f;
+    tuning.m_absorbingValKi = 0.0f;
+    tuning.m_absorbingValKa = 0.0f;
+    tuning.m_absorbingValMin = 0.0f;
+    tuning.m_absorbingValMax = 0.7f;
+    tuning.m_sideFriction1 = 40.0f;
+    tuning.m_maxSideFrictionBlendCoef = 1.0f;
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 10.0f);
+    constexpr float kProcessedSteer = 0.5f;
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, kProcessedSteer, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    const GmVec3 expectedTireDirection(
+        std::cos(kProcessedSteer), 0.0f,
+        -std::sin(kProcessedSteer));
+    const float expectedRawSideForce =
+        -0.5f * tuning.m_sideFriction1 *
+        GmVec3::Dot(model6LinearSpeed, expectedTireDirection);
+    passed &= Expect(
+        "Model6 processed steering drives contacted-wheel side force",
+        VecNear(waterState.m_force,
+                expectedTireDirection * expectedRawSideForce) &&
+        model6SuspensionWheel.m_isSlipping == 1 &&
+        model6HasSlippingWheel == 1);
+
+    tuning.m_absorbingValKi = 40.0f;
+    tuning.m_absorbingValKa = 1.0f;
+    tuning.m_absorbingValMax = 0.0f;
+    tuning.m_sideFriction1 = 0.0f;
+    tuning.m_maxSideFrictionBlendCoef = 0.0f;
+    model6SuspensionWheel.m_isSlipping = 0;
+    model6SuspensionWheel.m_groundContactNormalSum =
+        GmVec3(0.0f, 0.0f, 0.0f);
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 0.0f);
     impulseCar.m_engineState = 0;
     model6SuspensionWheel.m_hasGroundContact = 0;
 

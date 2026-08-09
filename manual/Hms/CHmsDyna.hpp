@@ -182,6 +182,8 @@ public:
     void AddForce(CHmsItem* param_1, GmVec3* param_2, GmVec3* param_3);
     void AddImpulse(CHmsItem* param_1, GmVec3* param_2);
     void AddLocalForce(GmVec3* param_2);
+    void AddLocalForceAtPoint(
+        const GmVec3* localForce, const GmVec3* localPoint);
     void AddLocalImpulse(GmVec3* param_2);
     void AddLocalTorque(GmVec3* param_2);
     void AddReplacement(GmVec3* param_2);

@@ -263,7 +263,11 @@ void CHmsItem::AddForce(CHmsItem* param_1, GmVec3* param_2, GmVec3* param_3) {
     for (uint32_t i = 0; i < m_corpuses.GetCount(); ++i) {
         CHmsDyna* dyna = m_corpuses[i]->m_dyna;
         if (dyna != nullptr) {
-            dyna->AddLocalForce(param_2);
+            if (param_3 != nullptr) {
+                dyna->AddLocalForceAtPoint(param_2, param_3);
+            } else {
+                dyna->AddLocalForce(param_2);
+            }
         }
     }
 }

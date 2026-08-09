@@ -190,6 +190,8 @@ public:
     // point is the wheel's embedded native +0xA8 vector.
     void WheelAddForceToVehicle(
         SSimulationWheel* wheel, float unusedForceModelScalar);
+    GmVec3 GetModel6WheelLateralDirection(
+        const SSimulationWheel* wheel, float processedSteer) const;
 
     struct SVehicleCarState {
         virtual ~SVehicleCarState();
@@ -250,12 +252,15 @@ public:
     float m_groundedWheelAngularSpeedOverride;
 
     // Typed standalone counterparts of the engine-state fields consumed by
-    // native EngineIntegrate at +0x2E4, +0x628, +0x69C, +0x70C, +0x744, and
-    // +0x748. They are semantic host state, not claims about this 64-bit
-    // class's enclosing object offsets.
-    int m_engineState;
+    // native EngineIntegrate. The burnout force state at +0x69C and the
+    // transmission/RPM synchronizer state at +0x2E4 are deliberately
+    // distinct; EngineIntegrate only reads +0x69C to select its +0x2E4 state
+    // four. The remaining fields map +0x628, +0x70C, +0x744, and +0x748.
+    // They are semantic host state, not claims about this 64-bit class's
+    // enclosing object offsets.
+    int m_engineState;          // native +0x69C burnout-force state
     int m_engineClutchBoost;
-    int m_engineTakeoffMode;
+    int m_engineTakeoffMode;    // native +0x2E4 RPM/transmission state
     GmVec3 m_engineLocalVelocity;
     int m_engineOutsideTakeoffWindow;
     int m_engineShiftDirection;
@@ -269,6 +274,19 @@ public:
     int m_hasWaterContact;
     uint32_t m_frictionCurrentTick;
     double m_frictionTickFraction;
+
+    // Native Model6 lateral-over-limit transition ticks at
+    // +0x62C/+0x630/+0x634. The preceding +0x628 flag is the shared
+    // m_engineClutchBoost field above, matching the executable's reuse.
+    uint32_t m_model6LastLateralOverLimitTick;
+    uint32_t m_model6LateralOverLimitStartTick;
+    uint32_t m_model6LateralOverLimitDuration;
+
+    // Native Model6 timed engine-force phase origins at +0x6F4/+0x6F8.
+    // State one consumes the first tick and transitions into state three,
+    // which consumes the second tick.
+    uint32_t m_model6EngineState1StartTick;
+    uint32_t m_model6EngineState3StartTick;
 
     // Semantic host views of native contact state +0x5D4/+0x5D8 and the
     // impact/contact accumulators at +0x670..+0x698.
