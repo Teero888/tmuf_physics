@@ -1807,6 +1807,33 @@ int main() {
     passed &= Expect("Model6 state three expires into ordinary state",
                      impulseCar.m_engineState == 0 &&
                      Near(waterState.m_force.z, 16.0f));
+
+    // 0x7C6020: while the transmission is mid-shift (native +0x2E4 state one)
+    // the drive curve is replaced by zero outright, so the whole propulsion
+    // product vanishes for the duration of the gear change even though the
+    // pedal, material, and slope inputs are unchanged. Every other
+    // transmission state leaves the curve alone.
+    impulseCar.m_engineTakeoffMode = 1;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect("Model6 cuts drive while a gear change is in progress",
+                     Near(waterState.m_force.z, 0.0f));
+
+    impulseCar.m_engineTakeoffMode = 4;
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect("Model6 restores drive outside a gear change",
+                     Near(waterState.m_force.z, 16.0f));
+    impulseCar.m_engineTakeoffMode = 0;
+
     tuning.m_m6BurnoutDuration = StadiumM6BurnoutDuration;
     tuning.m_m6BurnoutAccelerationModulation =
         StadiumM6BurnoutAccelerationModulation;

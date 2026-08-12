@@ -1870,9 +1870,16 @@ void CSceneVehicleCar::ComputeForcesModel6(
             m_engine.m_isReverse != 0
                 ? g_tuning->M6GetRearGearAccelFromSpeed(localForwardSpeed)
                 : g_tuning->M5GetAccelFromSpeed(localForwardSpeed);
+        // 0x7C6020 tests the transmission/RPM state before the blend: while a
+        // gear change is in progress (native +0x2E4 state one) the drive curve
+        // is replaced by an outright zero rather than scaled, so neither the
+        // slipping nor the normal curve contributes for the duration of the
+        // shift.
         const float acceleration =
-            slippingAcceleration * (1.0f - normalAccelerationWeight) +
-            normalAcceleration * normalAccelerationWeight;
+            m_engineTakeoffMode == 1
+                ? 0.0f
+                : slippingAcceleration * (1.0f - normalAccelerationWeight) +
+                      normalAcceleration * normalAccelerationWeight;
         uint32_t engineStateElapsed = 0u;
         if (m_engineState == 1) {
             engineStateElapsed =
@@ -1900,9 +1907,36 @@ void CSceneVehicleCar::ComputeForcesModel6(
             brakeDriveDirection * groundMaterial->accelerationCoef *
                 m_inputBrake +
             m_inputGas * groundMaterial->accelerationCoef;
+        // 0x7C62AA..0x7C62D8 assembles the drive term on its own: the pedal
+        // sum drives the acceleration curve, the engine-state modulation
+        // scales that product, and the state-three impulse is added last. The
+        // native also subtracts a steering-slowdown term here
+        // (0x7C608F: SteerSlowDownCoef * |car+0x5E8| * SteerSlowDown(speed.z),
+        // times the reverse sign). Stadium's SteerSlowDown curve is zero for
+        // every non-negative speed, so that term is left unwired rather than
+        // guessed; see PARITY_STATUS.md.
+        float driveTerm =
+            driveInput * acceleration * engineStateAccelerationModulation +
+            engineStateAxialImpulse;
+
+        // 0x7C62DC..0x7C62E8. Water contact halves the assembled drive term
+        // through a double-typed multiply, before braking is applied.
+        if (m_hasWaterContact != 0) {
+            driveTerm = static_cast<float>(
+                static_cast<double>(driveTerm) *
+                TmForeverPhysicsConstants::kHalf);
+        }
+
+        // 0x7C663E..0x7C6671. The braking force is subtracted only at the end,
+        // signed by the raw sign bit of the forward speed rather than by an
+        // ordered comparison, so a negative zero selects the reverse sign.
+        const float forwardSpeedSign =
+            std::signbit(localForwardSpeed) ? -1.0f : 1.0f;
         float longitudinalForce =
-            driveInput * acceleration * engineStateAccelerationModulation -
-            forwardBrakeForce + engineStateAxialImpulse;
+            driveTerm - forwardBrakeForce * forwardSpeedSign;
+
+        // 0x7C667C..0x7C6737, then 0x7C6755's slope multiply. The terminal
+        // speed correction runs on the braked force, not on the drive term.
         longitudinalForce =
             g_tuning->GetModel6SpeedLimitedAxialForce(
                 longitudinalForce, localForwardSpeed,

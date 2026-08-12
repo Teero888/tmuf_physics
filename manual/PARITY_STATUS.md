@@ -7,6 +7,35 @@ built visualization adds one helper unit), but a successful build is
 not yet evidence of a closed physics simulation. The highest-impact remaining
 gaps are below in dependency order.
 
+## Reverse-engineering sources
+
+`manual/tools/` now carries three sources that supersede guessing against
+`scripts/dump.cpp`, documented in `tools/README.md`:
+
+- `tools/symbols.txt`, 55,778 named function addresses recovered from
+  `exe/TmForeverFixed.pdb`'s public-symbol stream (`llvm-pdbutil dump
+  -publics`; the `pretty` mode needs DIA and fails on Linux). Regenerate with
+  `tools/extract_symbols.py`. Class type records in the PDB are forward
+  declarations only, so member layouts still have to come from code.
+- `tools/disasm.py`, `objdump` disassembly of the PE with call targets named.
+  The Ghidra pseudocode in `tmnf_dump` reuses one C variable across unrelated
+  stack slots and loses x87 operand order; both have already produced wrong
+  readings, so instruction-level claims should be re-derived here.
+- `tools/tuning_chunk_offsets.py`, which recovers
+  `CSceneVehicleCarTuning`'s chunk-id to member-offset mapping from the
+  archive dispatch at `0x7F5EB0`. Aligning it against GBX.NET's
+  `CPlugVehicleCarPhyTuning.chunkl` names each offset, and the reflection table
+  `SMwParamInfos_CSceneVehicleCarTuning::s_Params` at `.data 0x00D093C0` stores
+  the same offsets independently. This independently confirmed the tuning
+  offsets this file already relied on: `+0x2C` MaxSpeed, `+0x30`
+  ReverseMaxSpeed, `+0x34` AccelCurve, `+0x40..+0x4C` the brake block,
+  `+0x6C/+0x70` SteerRadiusMin/Coef, `+0xA4` SideFriction1, `+0xAC`
+  MaxSideFriction, `+0x114..+0x124` the AbsorbingVal block, `+0x160`
+  GravityCoef, `+0x1E0/+0x1E4` the M5 slipping accel curve and coefficient,
+  `+0x200` M5AccelSlipCoefMax, and `+0x350` ShockModel. It also names two
+  fields the force path reads but nothing consumes yet: `+0x60`
+  LimitToMaxSpeedForce and `+0x64` SlopeSpeedGainLimit.
+
 ## Verified slices
 
 - Stadium tuning curves and selected Model 6 dispatch/layout facts are checked
@@ -306,6 +335,39 @@ gaps are below in dependency order.
   pending. A two-second A01 trace confirms that state two is not active during
   the initial straight launch once the native `+0x2E4`/`+0x69C` separation is
   preserved.
+- The ordinary axial tail was re-derived instruction by instruction from
+  `tools/disasm.py` and three deviations from the Ghidra-derived translation
+  were corrected. The pseudocode's `if (fVar23 != 0.0)` guard before the
+  drive-force halving is really `cmp DWORD PTR [esp+0x10],0` at `0x7C6288`,
+  and that slot holds the *integer* `ApplyWaterForces` returned at function
+  entry (`0x7C3ED4`, also stored to car `+0x5E4`): water contact halves the
+  assembled drive term through the `kHalf` double at `.rdata 0x00B313B8`
+  (`0x7C62E2`, a QWORD `fmul`). `0x7C6020` cuts the drive curve to zero
+  outright while the transmission is mid-shift (`+0x2E4` state one), rather
+  than blending it. And braking is subtracted only at `0x7C666D`, after the
+  water halving, signed by the raw sign bit of the forward speed
+  (`0x7C6645`: `not`/`test`/`jns` on the reloaded float bits, so a negative
+  zero selects the reverse sign) — the slot the earlier translation used for
+  it is the steering-slowdown term instead. The terminal-speed correction runs
+  on the braked force, then axial slope adherence, then the central force.
+  All four instruction anchors and the gear-shift behavior are regression-
+  covered. The steering-slowdown term itself (`0x7C608F`:
+  `SteerSlowDownCoef` at tuning `+0x7C`, times `|car+0x5E8|`, times
+  `M5GetSteerSlowDownFromSpeed(speed.z)`, times the reverse sign) is left
+  unwired: Stadium's SteerSlowDown curve is zero at every non-negative speed,
+  and `car+0x5E8` has no identified counterpart yet.
+- The forward brake block at `0x7C638B..0x7C6461` is confirmed correct as
+  translated: `(BrakeBase + BrakeCoef * speed.z) * brake * slipModulation`,
+  capped by `material.brakeCoef * (BrakeMax | BrakeMaxDynamic)`. The
+  structurally similar block at `0x7C64FF..0x7C65F6` that reads
+  `(BrakeBase - BrakeCoef * speed.z) * gas` and caps with the Model-6 rear
+  values `+0x248/+0x24C` is the *backward-rolling* branch, reached only when
+  the forward speed is strictly negative, and is still unimplemented.
+- `WheelAddForceToVehicle` is confirmed complete against `0x7C1810`: the
+  shock-model selector reads tuning `+0x350`, models 1 and 2 produce
+  `(AbsorbingValRest - compression) * AbsorbingValKi - AbsorbingValKa *
+  velocity`, and the result is applied as a purely vertical local force at the
+  wheel contact point. There is no hidden longitudinal term in the wheel loop.
 - The generic `CSceneMobilAbsorbContact` callback and the car's one-contact
   virtual are typed and registered by both executable front ends. Vehicle
   absorb handling now has the recovered material 13/23 veto, surface-tree
@@ -508,6 +570,64 @@ order proves observable; collision response can now consume the typed working
   spin source, but the growing longitudinal/contact discrepancy is still real.
   Ride height, contact depth/order, reverse/freewheel behavior, and special-
   contact branches are the next useful closed-loop targets.
+
+## Open question: the A01 launch accelerates too slowly
+
+This is currently the largest measured parity gap, and it is not explained by
+any branch audited so far. Differentiating the original A01 replay's recorded
+velocities (`a01_ghost_velocity.csv`, confirmed against the position samples in
+`a01_ghost_full.csv`) gives a tangential acceleration that sits *above*
+Stadium's `AccelCurve` everywhere, by an amount that grows with speed and then
+saturates:
+
+| speed (m/s) | `AccelCurve` (m/s²) | replay d\|v\|/dt (m/s²) | excess |
+| --- | --- | --- | --- |
+| 5.4 | 15.04 | 15.87 | +0.83 |
+| 10.1 | 14.20 | 15.73 | +1.53 |
+| 13.4 | 13.62 | 16.93 | +3.31 |
+| 15.1 | 13.31 | 17.94 | +4.63 |
+| 18.6 | 12.68 | 17.51 | +4.83 |
+| 22.1 | 12.07 | 16.76 | +4.69 |
+| 26.9 | 11.20 | 15.88 | +4.68 |
+
+The curve values use the extracted Stadium `AccelCurve` (keys in km/h, `0 ->
+16`, `101 -> 11`) with the `kSpeedCurveScale` 3.6 that `M5GetAccelFromSpeed`
+applies at `0x7F3E48`. The manual simulation tracks its own curve closely, so
+it reproduces the left column and reaches 14.81 m/s at 1.0 s against the
+replay's 15.99 m/s, and 127.5 km/h at 3.0 s against 144.9 km/h.
+
+Terrain does not account for it: A01 descends only 0.13 m over the first
+7.6 m of the launch, worth about 0.5 m/s² of tangential gravity at 1.0 s. The
+following have been checked and ruled out as the source:
+
+- The axial assembly at `0x7C623E..0x7C6767` — every operand is now accounted
+  for, and the only unwired term (steering slowdown) is zero for Stadium at
+  non-negative speed and is subtracted, not added.
+- `WheelAddForceToVehicle` (`0x7C1810`), which adds no longitudinal force.
+- The terminal-speed correction, which never fires (`MaxSpeed` is 277.8).
+- `GetSlopeAdherence`, which returns 1.0 on level ground.
+- The curve evaluator (`0x585E70`), which is plain linear interpolation
+  between adjacent keys, and `kSpeedCurveScale`, which is the 3.6 double at
+  `.rdata 0x00B3D2A8`.
+- `ComputeForces`' two `SetVehicleLinearSpeed` calls: the first is the
+  `car+0x2E0` top-speed clamp, the second only fires when `SideFriction1 <= 0`.
+- The `1/tuning[+0x228]` scaling at `0x7C7428`, which divides a *copy* of the
+  force into `car+0x6D4` for telemetry and does not touch the accumulator.
+
+The shape of the excess — small at low speed, saturating near 15 m/s — looks
+like a speed- or RPM-dependent multiplier rather than a constant. The engine
+state machine (`EngineIntegrate`, gear ratios, `+0x2E4`) is the obvious next
+place to look, together with `ComputeVehicleGroundMaterialVals` (`0x7C2800`),
+whose `accelerationCoef` at `SBlendableVals +0x4` multiplies the pedal term
+and is currently supplied by a hardcoded standalone material table.
+
+Note that translating the `0x7C6020` gear-shift cut moved the 3-second A01
+speed from 136.99 to 127.5 km/h, further from the replay's 144.9. That is
+expected while the excess above is unexplained: the cut is a verified
+instruction, and it makes our shift timing observable for the first time. The
+replay's own shift plateau is at 1.8–2.0 s (speed 28.45 -> 28.62 m/s) while the
+simulation's now lands near 2.2–2.4 s, which is a concrete, measurable target
+for the engine state machine.
 
 ## Static-data recovery rule
 

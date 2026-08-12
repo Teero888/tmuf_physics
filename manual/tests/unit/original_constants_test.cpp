@@ -183,6 +183,23 @@ int main() {
         executable, "reverse selector engine ceiling load", 0x3c5a3f,
         0x05cc83d9u);
 
+    // ComputeForcesModel6's ordinary axial tail. The water halving multiplies
+    // by the kHalf double already checked above; these anchors pin the frame
+    // slot ApplyWaterForces' result is stored into at function entry, the gate
+    // that consumes it, the QWORD multiply itself, the transmission-state test
+    // that zeroes the drive curve during a shift, and the integer reload the
+    // braking sign is taken from.
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "Model6 water result store", 0x3c3ed4, 0x10244489u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "Model6 water axial gate", 0x3c6288, 0x10247c83u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "Model6 water axial halving", 0x3c62e2, 0x13b80ddcu);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "Model6 gear-shift drive cut", 0x3c6020, 0x02e4bb83u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "Model6 forward speed sign bits", 0x3c6645, 0x3824548bu);
+
     if (!passed) return 1;
     std::puts("original executable constants regression: PASS");
     return 0;

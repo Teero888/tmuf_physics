@@ -248,4 +248,11 @@ inline constexpr float kStadiumWheelLocalZ[kStadiumWheelCount] = {
     kStadiumWheelRearZ,
 };
 
+// ComputeForcesModel6 halves its assembled axial drive term whenever the car
+// is in water. The gate at 0x7C6288 tests the dword ApplyWaterForces returned
+// into the frame slot at function entry (0x7C3ED4, also stored to car +0x5E4),
+// and 0x7C62E2 multiplies the term by the double at .rdata 0x00B313B8 with a
+// QWORD fmul. That address is the same 0.5 this file already carries as
+// kHalf, so the axial halving reuses it rather than introducing a duplicate.
+
 } // namespace TmForeverPhysicsConstants
