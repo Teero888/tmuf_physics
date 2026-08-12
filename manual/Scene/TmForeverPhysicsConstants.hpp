@@ -248,6 +248,12 @@ inline constexpr float kStadiumWheelLocalZ[kStadiumWheelCount] = {
     kStadiumWheelRearZ,
 };
 
+// ComputeAirControl scales its angular drag direction by the double at
+// .rdata 0x00B3D2C0 whenever the steering opposes the retained yaw hard
+// enough. The multiply at 0x7BF405 is a QWORD fmul, so the scale is
+// double-typed.
+inline constexpr double kAirControlDampingScale = 3.0;
+
 // ComputeForcesModel6 halves its assembled axial drive term whenever the car
 // is in water. The gate at 0x7C6288 tests the dword ApplyWaterForces returned
 // into the frame slot at function entry (0x7C3ED4, also stored to car +0x5E4),

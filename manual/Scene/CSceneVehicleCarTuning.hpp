@@ -50,7 +50,13 @@ public:
     float m_maxDistancePerStep;
     float m_gravityCoefAir;
     float m_angularFluidFrictionCoef1;
+    // Native tuning +0x15C. ComputeAirControl's angular drag is
+    // quadratic: coef2 * |w|^2 + coef1 * |w|.
+    float m_angularFluidFrictionCoef2;
     float m_groundSlowDownBase;
+    // Native tuning +0x5C. ApplyFrictionForces' speed-proportional coasting
+    // slowdown; distinct from the fluid friction the physical object owns.
+    float m_groundSlowDownCoef;
     float m_linearFluidFrictionCoef;
     // Native scalar offsets +0x2C, +0x30, and +0x60. The legacy layout view
     // above keeps its historical names; translated Model6 code uses these
@@ -105,6 +111,11 @@ public:
     float m_m6FrictionModulationWhenSlipAndBrake;
     float m_m6BrakeMaxRear;
     float m_m6BrakeMaxDynamicRear;
+
+    // Native air-control block at tuning +0x364..+0x36C.
+    uint32_t m_airControlDuration;
+    float m_maxAngularSpeedYAirControl;
+    CFuncKeysReal* m_airControlZCoefFromAngularSpeed;
 
     // Semantic host view of the native Model-6 burnout/after-burnout block.
     // The executable stores the phase durations at +0x298/+0x2A8, their
@@ -189,6 +200,15 @@ public:
                                           float slippingModulation,
                                           bool hasSlippingWheel,
                                           bool* saturated) const;
+    // Native 0x7BF463 evaluates this curve on the raw absolute angular
+    // speed; unlike the speed curves it applies no km/h conversion.
+    float GetAirControlZCoefFromAngularSpeed(float angularSpeed);
+    float GetModel6BackwardAxialBrakeForce(float forwardSpeed,
+                                           float gasInput,
+                                           float materialBrakeCoef,
+                                           float slippingModulation,
+                                           bool hasSlippingWheel,
+                                           bool* saturated) const;
     float GetModel6AccelerationBlendFromLateralOverLimit(
         float appliedForceSum, float maximumForceSum) const;
     float GetModel6EngineStateAccelerationModulation(

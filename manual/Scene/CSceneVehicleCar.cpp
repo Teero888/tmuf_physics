@@ -637,6 +637,27 @@ void CSceneVehicleCar::ComputeForces(CCallbackSceneToyBroomStickComputeForces* p
             elapsedMilliseconds - static_cast<double>(wholeMilliseconds);
     }
 
+    // 0x7C6AB7..0x7C6B32. Ground contact re-selects two physical-object
+    // properties every step, before the force models run. The gravity
+    // coefficient at CPlugPhysicalObject +0x34 switches between the tuning's
+    // grounded and airborne values, and the linear damping at +0x28 is zero on
+    // the ground but becomes the tuning's fluid friction in the air. Neither is
+    // a one-time constructor value, which is how the standalone build had been
+    // treating them.
+    if (g_tuning != nullptr) {
+        CHmsDyna* dyna = GetVehicleDyna(m_hmsItem);
+        if (dyna != nullptr && dyna->m_field_0x108 != nullptr) {
+            const bool grounded = IsGroundContact() != 0;
+            CPlugPhysicalObject& physical = *dyna->m_field_0x108;
+            physical.m_forceFieldCoef = grounded
+                ? g_tuning->m_gravityCoef
+                : g_tuning->m_gravityCoefAir;
+            physical.m_linearDamping = grounded
+                ? 0.0f
+                : g_tuning->m_linearFluidFrictionCoef;
+        }
+    }
+
     // Native ComputeForces 0x7C6B7A..0x7C6E77 owns friction and force-model
     // dispatch. IntegrateVehicle ends after updating steering state.
     if (m_hmsItem != nullptr && (m_simulationFlags & 2u) != 0u &&
@@ -677,6 +698,27 @@ void CSceneVehicleCar::ComputeForces(CCallbackSceneToyBroomStickComputeForces* p
             &localLinearSpeed, &localAngularSpeed,
             processedSteer, hasGroundMaterial, &groundMaterial,
             &hasSlippingWheel, &axialBrakeForce);
+    }
+
+    // 0x7C6ECC..0x7C6F9F. The wheel loop that follows the force model builds
+    // the flag ComputeAirControl treats as "really on the ground": a wheel
+    // with contact whose +0x00 field is also set. That field has no identified
+    // producer in the standalone build, so the flag is currently always false
+    // and the air-control window is measured from the last reset rather than
+    // the last ground contact. The `m_hasAnyContact` case below still ends air
+    // control on any contact, which is what keeps this honest for a normal lap.
+    if (m_hmsItem != nullptr) {
+        int airControlContactFlag = 0;
+        for (uint32_t index = 0u; index < m_wheels.GetCount(); ++index) {
+            const SSimulationWheel& wheel = m_wheels[index];
+            if (wheel.m_hasGroundContact != 0 && wheel.m_field_0x00 != 0) {
+                airControlContactFlag = 1;
+            }
+        }
+        GmVec3 localAngularSpeed(0.0f, 0.0f, 0.0f);
+        m_hmsItem->GetAngularSpeed(m_hmsItem, &localAngularSpeed);
+        ComputeAirControl(&localAngularSpeed, m_frictionCurrentTick,
+                          IsGroundContact(), airControlContactFlag);
     }
 
     // 0x7C786E..0x7C78AD clears the per-pass contact observations after every
@@ -931,6 +973,10 @@ void CSceneVehicleCar::VehicleReset() {
     m_field_0x5f8 = 0.0f;
     m_field_0x5fc = 0.0f;
     m_field_0x600 = 0;
+    // 0x7C03B6..0x7C03CB clears the air-control origin and retained angular
+    // speed alongside the rest of the control state.
+    m_airControlReferenceTick = 0u;
+    m_airControlAngularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
     m_freeWheeling = 0;
     m_chassisUp = GmVec3(0.0f, 1.0f, 0.0f);
 
@@ -1366,6 +1412,128 @@ void CSceneVehicleCar::GetSlopeAdherence(
         g_tuning->m_axialSlopeAdherenceMax);
 }
 
+void CSceneVehicleCar::ComputeAirControl(
+    const GmVec3* localAngularSpeed, uint32_t tick, int grounded,
+    int contactFlag) {
+    using namespace TmForeverPhysicsConstants;
+
+    if (localAngularSpeed == nullptr || m_hmsItem == nullptr ||
+        g_tuning == nullptr) {
+        return;
+    }
+
+    // 0x7BF1E8..0x7BF20F. Model 4/5 in water leaves the whole routine.
+    const int steerModel = g_tuning->m_steerModel;
+    if ((steerModel == 4 || steerModel == 5) && m_hasWaterContact != 0) {
+        return;
+    }
+
+    // 0x7BF21F. Everything below works on the negated angular speed, which is
+    // what makes the tail's torque oppose the rotation.
+    GmVec3 negated(-localAngularSpeed->x,
+                   -localAngularSpeed->y,
+                   -localAngularSpeed->z);
+
+    // 0x7BF239 and 0x7BF264. While the car is on the ground the routine only
+    // records state; only the third case actually steers in the air. The two
+    // recording cases differ in that the first also restarts the window.
+    if (contactFlag != 0) {
+        m_airControlReferenceTick = tick;
+        m_airControlAngularSpeed = *localAngularSpeed;
+    } else if (m_hasAnyContact != 0) {
+        m_airControlAngularSpeed = *localAngularSpeed;
+    } else if (tick - m_airControlReferenceTick <
+               g_tuning->m_airControlDuration) {
+        // 0x7BF29C's window test is an unsigned compare, so a tick that has
+        // wrapped behind the origin reads as an enormous elapsed time and ends
+        // air control rather than extending it.
+        GmVec3 target = *localAngularSpeed;
+        const float steer = m_inputSteer;
+        const float retainedYaw = m_airControlAngularSpeed.y;
+
+        // 0x7BF2C7..0x7BF386 classifies the steering against the retained yaw
+        // rate. Both epsilon comparisons are ordered and the negative epsilon
+        // is its own float at .rdata 0x00B574FC.
+        const bool steersPositive = kWheelInputEpsilon < steer;
+        const bool steersNegative = -kWheelInputEpsilon > steer;
+        const bool opposesRetainedYaw =
+            (steersPositive && 0.0f > retainedYaw) ||
+            (steersNegative && 0.0f < retainedYaw);
+
+        bool applyDamping = false;
+        if (opposesRetainedYaw) {
+            // 0x7BF309. Counter-steering only damps once the yaw rate is
+            // already past the tuning ceiling, and only then is the retained
+            // value refreshed. Below the ceiling the retained yaw is held, so
+            // the assignment below pulls the car back to it.
+            applyDamping = g_tuning->m_maxAngularSpeedYAirControl <
+                           std::abs(localAngularSpeed->y);
+            if (applyDamping) {
+                m_airControlAngularSpeed.y = localAngularSpeed->y;
+            }
+        } else {
+            // 0x7BF342. Steering with the rotation always damps; a steering
+            // input inside the dead zone does not. Either way the retained yaw
+            // follows the current one.
+            applyDamping =
+                (steersPositive && 0.0f < retainedYaw) ||
+                (steersNegative && 0.0f > retainedYaw);
+            m_airControlAngularSpeed.y = localAngularSpeed->y;
+        }
+        target.y = m_airControlAngularSpeed.y;
+
+        // 0x7BF3A9..0x7BF3F8. Model 4/5 additionally retains roll, and braking
+        // while the retained roll is positive zeroes it instead of following.
+        if (steerModel == 4 || steerModel == 5) {
+            m_airControlAngularSpeed.x =
+                (kWheelInputEpsilon < m_inputBrake &&
+                 0.0f < m_airControlAngularSpeed.x)
+                    ? 0.0f
+                    : localAngularSpeed->x;
+            target.x = m_airControlAngularSpeed.x;
+        }
+
+        // 0x7BF401 scales the drag direction, not the target.
+        if (applyDamping) {
+            negated.x = static_cast<float>(
+                static_cast<double>(negated.x) * kAirControlDampingScale);
+            negated.y = static_cast<float>(
+                static_cast<double>(negated.y) * kAirControlDampingScale);
+            negated.z = static_cast<float>(
+                static_cast<double>(negated.z) * kAirControlDampingScale);
+        }
+
+        // 0x7BF425. The curve at tuning +0x36C consumes the raw absolute
+        // angular speed with no km/h conversion.
+        if (grounded == 0) {
+            negated.z *= g_tuning->GetAirControlZCoefFromAngularSpeed(
+                std::abs(localAngularSpeed->z));
+        }
+
+        SetVehicleAngularSpeed(&target);
+    }
+
+    // 0x7BF480. The quadratic angular drag is airborne-only and runs on every
+    // path, including the two that only recorded state.
+    if (grounded != 0) return;
+
+    const float squaredLength = negated.x * negated.x +
+                                negated.y * negated.y +
+                                negated.z * negated.z;
+    const float length = std::sqrt(squaredLength);
+    if (length < kWheelInputEpsilon) return;
+
+    const float inverseLength = 1.0f / length;
+    const float scale =
+        g_tuning->m_angularFluidFrictionCoef2 * length * length +
+        g_tuning->m_angularFluidFrictionCoef1 * length;
+    GmVec3 localTorque(negated.x * inverseLength * scale,
+                       negated.y * inverseLength * scale,
+                       negated.z * inverseLength * scale);
+    AddVehicleTorque(
+        this, reinterpret_cast<CSceneVehicleCar*>(&localTorque), nullptr);
+}
+
 void CSceneVehicleCar::ApplyFrictionForces(
     const GmVec3* localLinearSpeed) {
     using namespace TmForeverPhysicsConstants;
@@ -1381,9 +1549,13 @@ void CSceneVehicleCar::ApplyFrictionForces(
         return;
     }
 
+    // 0x7BED65..0x7BEDA5. The throttle pedal is the gas while driving forwards
+    // and the brake while reversing. Its comparison against the epsilon is the
+    // strict ordered one the executable spells: an input exactly equal to the
+    // epsilon leaves the coasting slowdown switched off.
     const float selectedInput =
         m_engine.m_isReverse == 0 ? m_inputGas : m_inputBrake;
-    if (!(kWheelInputEpsilon < selectedInput) || m_freeWheeling != 0) {
+    if (selectedInput < kWheelInputEpsilon || m_freeWheeling != 0) {
         const float squaredLength =
             localLinearSpeed->x * localLinearSpeed->x +
             localLinearSpeed->y * localLinearSpeed->y +
@@ -1398,8 +1570,12 @@ void CSceneVehicleCar::ApplyFrictionForces(
                 localLinearSpeed->y * constantScale,
                 localLinearSpeed->z * constantScale);
             if (m_freeWheeling == 0) {
+                // 0x7BEE75 reads tuning +0x5C, GroundSlowDownCoef, not the
+                // fluid friction at +0x154. Fluid friction is not a force here
+                // at all: ComputeForces installs it as the body's linear
+                // damping, and only while airborne.
                 const float linearScale =
-                    -g_tuning->m_linearFluidFrictionCoef;
+                    -g_tuning->m_groundSlowDownCoef;
                 localForce.x += localLinearSpeed->x * linearScale;
                 localForce.y += localLinearSpeed->y * linearScale;
                 localForce.z += localLinearSpeed->z * linearScale;
@@ -1831,10 +2007,16 @@ void CSceneVehicleCar::ComputeForcesModel6(
     const bool isOrdinaryForwardDrive =
         m_engine.m_field_0x28 == 0 &&
         m_freeWheeling == 0 &&
-        m_field_0x600 == 0 &&
-        localForwardSpeed >= 0.0f;
+        m_field_0x600 == 0;
 
     if (isOrdinaryForwardDrive) {
+        // 0x7C6325 and 0x7C6463 split the braking source on the sign of the
+        // forward speed alone: a strictly positive speed runs the forward
+        // block off the brake pedal, a strictly negative one runs the mirrored
+        // rolling-backwards block off the gas pedal, and an exactly zero speed
+        // leaves the force at the zero both branches start from. The slipping
+        // modulation loop is duplicated identically in the executable, so it is
+        // shared here.
         bool brakeSaturated = false;
         float slippingBrakeModulation = 1.0f;
         for (uint32_t index = 0u;
@@ -1845,11 +2027,17 @@ void CSceneVehicleCar::ComputeForcesModel6(
             }
         }
         const float forwardBrakeForce =
-            g_tuning->GetModel6ForwardAxialBrakeForce(
-                localForwardSpeed, m_inputBrake,
-                groundMaterial->brakeCoef,
-                slippingBrakeModulation, anySlippingWheel,
-                &brakeSaturated);
+            localForwardSpeed < 0.0f
+                ? g_tuning->GetModel6BackwardAxialBrakeForce(
+                      localForwardSpeed, m_inputGas,
+                      groundMaterial->brakeCoef,
+                      slippingBrakeModulation, anySlippingWheel,
+                      &brakeSaturated)
+                : g_tuning->GetModel6ForwardAxialBrakeForce(
+                      localForwardSpeed, m_inputBrake,
+                      groundMaterial->brakeCoef,
+                      slippingBrakeModulation, anySlippingWheel,
+                      &brakeSaturated);
         if (axialBrakeForce != nullptr) {
             *axialBrakeForce = forwardBrakeForce;
         }
@@ -2076,6 +2264,11 @@ void CSceneVehicleCar::AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicle
     if (this->m_hmsItem) {
         this->m_hmsItem->AddTorque(
             this->m_hmsItem, reinterpret_cast<GmVec3*>(param_2));
+    }
+}
+void CSceneVehicleCar::SetVehicleAngularSpeed(GmVec3* localAngularSpeed) {
+    if (this->m_hmsItem) {
+        this->m_hmsItem->SetAngularSpeed(this->m_hmsItem, localAngularSpeed);
     }
 }
 void CSceneVehicleCar::AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3) {

@@ -54,6 +54,26 @@ Prints, per GBX chunk id, the ordered archive reads and their member offsets in
 offset. The reflection table `SMwParamInfos_CSceneVehicleCarTuning::s_Params` at
 `.data 0x00D093C0` stores the same offsets independently and agrees.
 
+## `DumpTuning` — the authoritative Stadium tuning values
+
+```sh
+cd tools/DumpTuning
+dotnet run --project DumpTuning.csproj ../../../StadiumCar.VehicleTunings.Gbx
+```
+
+Prints every property of every tuning in the file, including the gear/RPM
+arrays and the chunk ids present. **The Stadium car is `tuning[29]`** —
+`tuning[0]` is a different car with, for example, an `AccelCurve` that peaks at
+35 instead of 16, so reading the wrong index silently swaps in the wrong
+physics. Use this to check any value in `../../TuningData.hpp` rather than
+trusting a transcription; a diff of all 73 scalars and 26 curves against it
+passes today.
+
+Note that a value only comes from the file if its chunk id is listed under
+"chunks present". Anything else keeps the default that
+`CSceneVehicleCarTuning::CSceneVehicleCarTuning` (0x7F43B0) writes, and those
+defaults have to be read out of the constructor's x87 stream.
+
 ## Reading a constant
 
 `.text`, `.rdata`, and `.data` are all loaded at `virtual_address - 0x00400000`

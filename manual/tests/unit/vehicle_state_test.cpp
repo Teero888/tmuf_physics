@@ -853,6 +853,11 @@ int main() {
               LateralContactSlowDown_values);
     tuning.m_lateralContactSlowDown = &LateralContactSlowDown;
     tuning.m_groundSlowDownBase = 1.0f;
+    // 0x7BEE75 reads GroundSlowDownCoef at tuning +0x5C for the speed
+    // proportional half of the coasting slowdown. LinearFluidFrictionCoef is
+    // deliberately left at a value that would be visible if it leaked back in:
+    // it is the body's airborne linear damping, never a force here.
+    tuning.m_groundSlowDownCoef = 0.3f;
     tuning.m_linearFluidFrictionCoef = 0.03f;
     tuning.m_m5LateralConstantSlowDownDuration = 500u;
     car.m_inputGas = 0.0f;
@@ -871,7 +876,18 @@ int main() {
     car.ApplyFrictionForces(&frictionSpeed);
     passed &= Expect("friction combines constant and linear slowdown",
                      VecNear(suspensionDyna->Force(),
-                             GmVec3(-0.69f, -0.92f, 0.0f)));
+                             GmVec3(-1.5f, -2.0f, 0.0f)));
+
+    // The throttle comparison is strictly ordered: an input exactly at the
+    // epsilon still counts as coasting for the native, while anything above it
+    // switches the whole block off.
+    car.m_inputGas = TmForeverPhysicsConstants::kWheelInputEpsilon;
+    suspensionDyna->Force() = GmVec3(0.0f, 0.0f, 0.0f);
+    car.ApplyFrictionForces(&frictionSpeed);
+    passed &= Expect("friction epsilon comparison is strict",
+                     VecNear(suspensionDyna->Force(),
+                             GmVec3(0.0f, 0.0f, 0.0f)));
+    car.m_inputGas = 0.0f;
 
     car.m_freeWheeling = 1;
     car.m_inputGas = 1.0f;
@@ -1834,6 +1850,65 @@ int main() {
                      Near(waterState.m_force.z, 16.0f));
     impulseCar.m_engineTakeoffMode = 0;
 
+    // 0x7C64FF..0x7C662F. Rolling backwards swaps the braking source: the gas
+    // pedal supplies it, BrakeCoef is subtracted rather than added so the term
+    // grows with the backward speed, and the cap comes from the Model-6 rear
+    // pair. The result is subtracted with the speed's sign, so on a negative
+    // speed it adds to the drive term instead of opposing it.
+    tuning.m_brakeBase = StadiumBrakeBase;
+    tuning.m_brakeCoef = StadiumBrakeCoef;
+    tuning.m_m6BrakeMaxRear = StadiumM6BrakeMaxRear;
+    tuning.m_m6BrakeMaxDynamicRear = StadiumM6BrakeMaxDynamicRear;
+    impulseCar.m_inputGas = 1.0f;
+    impulseCar.m_inputBrake = 0.0f;
+    // The state-three case above left every wheel slipping, which would fold
+    // four copies of M6BrakeModulationWhenSlipping into the request.
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        impulseCar.m_wheels[index].m_isSlipping = 0;
+    }
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, -4.0f);
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    passed &= Expect(
+        "Model6 brakes a backwards roll off the gas pedal",
+        Near(model6AxialBrakeForce, 8.0f) &&
+        Near(waterState.m_force.z, 24.0f));
+
+    // The rear cap saturates against M6BrakeMaxDynamicRear while no wheel is
+    // already slipping, and saturation marks every simulation wheel slipping.
+    tuning.m_m6BrakeMaxDynamicRear = 5.0f;
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        impulseCar.m_wheels[index].m_isSlipping = 0;
+    }
+    waterState.m_force = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.ComputeForcesModel6(
+        0.01f, &model6Snapshot, 1.0f, 1.0f,
+        &model6LinearSpeed, &model6AngularSpeed, 0.0f, 1,
+        &model6Ground, &model6HasSlippingWheel,
+        &model6AxialBrakeForce);
+    bool everyWheelSlipping = impulseCar.m_wheels.GetCount() != 0u;
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        everyWheelSlipping &= impulseCar.m_wheels[index].m_isSlipping != 0;
+    }
+    passed &= Expect(
+        "Model6 backwards braking saturates on the rear cap",
+        Near(model6AxialBrakeForce, 5.0f) &&
+        Near(waterState.m_force.z, 21.0f) && everyWheelSlipping);
+    tuning.m_m6BrakeMaxDynamicRear = StadiumM6BrakeMaxDynamicRear;
+    for (uint32_t index = 0u;
+         index < impulseCar.m_wheels.GetCount(); ++index) {
+        impulseCar.m_wheels[index].m_isSlipping = 0;
+    }
+    model6LinearSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+    impulseCar.m_inputGas = 1.0f;
+
     tuning.m_m6BurnoutDuration = StadiumM6BurnoutDuration;
     tuning.m_m6BurnoutAccelerationModulation =
         StadiumM6BurnoutAccelerationModulation;
@@ -2357,6 +2432,109 @@ int main() {
         passed &= Expect(
             "unordered forward speed follows the native reverse branch",
             selectReverse(0.0f, 0.0f, notANumber, 0.0f, 0) == 1);
+    }
+
+    // ComputeAirControl, TmForeverFixed.exe 0x7BF1D0.
+    {
+        CSceneVehicleCar& airCar = impulseCar;
+        tuning.m_steerModel = 5;
+        tuning.m_airControlDuration = StadiumAirControlDuration;
+        tuning.m_maxAngularSpeedYAirControl =
+            StadiumMaxAngularSpeedYAirControl;
+        tuning.m_airControlZCoefFromAngularSpeed =
+            &AirControlZCoefFromAngularSpeed;
+        tuning.m_angularFluidFrictionCoef1 = 0.4f;
+        tuning.m_angularFluidFrictionCoef2 = 0.2f;
+        airCar.m_hasWaterContact = 0;
+        airCar.m_inputBrake = 0.0f;
+        // ComputeAirControl works in the body's local frame, so pin the
+        // chassis orientation before comparing against world-frame state.
+        waterState.m_rotation.SetIdentity();
+        waterState.m_rotationMatrix.SetIdentity();
+
+        // Contact records the angular speed and restarts the window, and the
+        // grounded tail applies no drag torque at all.
+        const GmVec3 grounded(0.0f, 1.0f, 0.0f);
+        airCar.m_airControlReferenceTick = 0u;
+        waterState.m_angularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+        waterState.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
+        airCar.m_hasAnyContact = 1;
+        airCar.ComputeAirControl(&grounded, 1234u, 1, 1);
+        passed &= Expect(
+            "air control records state and applies no drag on the ground",
+            airCar.m_airControlReferenceTick == 1234u &&
+            VecNear(airCar.m_airControlAngularSpeed, grounded) &&
+            VecNear(waterState.m_torque, GmVec3(0.0f, 0.0f, 0.0f)));
+
+        // Airborne with no steering input: the retained yaw follows the
+        // current one, no damping applies, and the drag torque opposes the
+        // rotation with magnitude coef2 * |w|^2 + coef1 * |w|. For a pure
+        // 2 rad/s yaw that is 0.2 * 4 + 0.4 * 2 = 1.6, directed along -Y.
+        airCar.m_hasAnyContact = 0;
+        airCar.m_inputSteer = 0.0f;
+        airCar.m_airControlAngularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+        const GmVec3 yawing(0.0f, 2.0f, 0.0f);
+        waterState.m_angularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+        waterState.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
+        airCar.ComputeAirControl(&yawing, 1234u, 0, 0);
+        passed &= Expect(
+            "air control drag opposes rotation quadratically",
+            VecNear(waterState.m_torque, GmVec3(0.0f, -1.6f, 0.0f)) &&
+            Near(airCar.m_airControlAngularSpeed.y, 2.0f) &&
+            VecNear(waterState.m_angularSpeed, yawing));
+
+        // Steering with the rotation triples the drag direction *before* the
+        // magnitude is taken, so the quadratic sees 6 rad/s rather than 2:
+        // 0.2 * 36 + 0.4 * 6 = 9.6.
+        airCar.m_inputSteer = 1.0f;
+        airCar.m_airControlAngularSpeed = GmVec3(0.0f, 1.0f, 0.0f);
+        waterState.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
+        airCar.ComputeAirControl(&yawing, 1234u, 0, 0);
+        passed &= Expect(
+            "air control damps steering that follows the retained yaw",
+            VecNear(waterState.m_torque, GmVec3(0.0f, -9.6f, 0.0f)));
+
+        // Counter-steering below MaxAngularSpeedYAirControl neither damps nor
+        // refreshes the retained yaw, and the angular speed is pulled back to
+        // the retained value instead of the current one.
+        airCar.m_inputSteer = -1.0f;
+        airCar.m_airControlAngularSpeed = GmVec3(0.0f, 1.0f, 0.0f);
+        waterState.m_angularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+        waterState.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
+        airCar.ComputeAirControl(&yawing, 1234u, 0, 0);
+        passed &= Expect(
+            "air control holds the retained yaw against counter-steering",
+            Near(airCar.m_airControlAngularSpeed.y, 1.0f) &&
+            Near(waterState.m_angularSpeed.y, 1.0f) &&
+            VecNear(waterState.m_torque, GmVec3(0.0f, -1.6f, 0.0f)));
+
+        // Past the ceiling the same counter-steering does damp, and the
+        // retained yaw follows again.
+        const GmVec3 spinning(0.0f, 4.0f, 0.0f);
+        airCar.m_airControlAngularSpeed = GmVec3(0.0f, 1.0f, 0.0f);
+        waterState.m_angularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+        waterState.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
+        airCar.ComputeAirControl(&spinning, 1234u, 0, 0);
+        passed &= Expect(
+            "air control damps counter-steering past the yaw ceiling",
+            Near(airCar.m_airControlAngularSpeed.y, 4.0f) &&
+            Near(waterState.m_angularSpeed.y, 4.0f) &&
+            VecNear(waterState.m_torque,
+                    GmVec3(0.0f, -(0.2f * 144.0f + 0.4f * 12.0f), 0.0f)));
+
+        // An expired window skips the steering block entirely but still drags.
+        airCar.m_airControlReferenceTick = 0u;
+        airCar.m_airControlAngularSpeed = GmVec3(0.0f, 9.0f, 0.0f);
+        waterState.m_angularSpeed = GmVec3(0.0f, 0.0f, 0.0f);
+        waterState.m_torque = GmVec3(0.0f, 0.0f, 0.0f);
+        airCar.ComputeAirControl(&yawing, StadiumAirControlDuration, 0, 0);
+        passed &= Expect(
+            "an expired air-control window keeps only the drag",
+            Near(airCar.m_airControlAngularSpeed.y, 9.0f) &&
+            VecNear(waterState.m_angularSpeed, GmVec3(0.0f, 0.0f, 0.0f)) &&
+            VecNear(waterState.m_torque, GmVec3(0.0f, -1.6f, 0.0f)));
+
+        airCar.m_inputSteer = 0.0f;
     }
 
     if (!passed) return 1;

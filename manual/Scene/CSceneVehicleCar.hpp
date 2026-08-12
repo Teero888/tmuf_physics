@@ -46,6 +46,9 @@ enum EVehicleEvent {
 class CSceneVehicleCar : public CSceneVehicle {
 public:
     void AddVehicleTorque(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3);
+    // TmForeverFixed.exe 0x7BE380, a thin forward to the item's local
+    // angular-speed setter.
+    void SetVehicleAngularSpeed(GmVec3* localAngularSpeed);
     void AddVehicleCentralForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3);
     void AddVehicleForce(CSceneVehicleCar *param_1, CSceneVehicleCar *param_2, GmVec3 *param_3, GmVec3 *param_4);
 
@@ -290,6 +293,12 @@ public:
     uint32_t m_model6LateralOverLimitStartTick;
     uint32_t m_model6LateralOverLimitDuration;
 
+    // Native air-control state at car +0x614..+0x620. The tick is the origin
+    // ComputeAirControl measures its window from, and the vector retains the
+    // local angular speed the car had while it still had contact.
+    uint32_t m_airControlReferenceTick;
+    GmVec3 m_airControlAngularSpeed;
+
     // Native Model6 timed engine-force phase origins at +0x6F4/+0x6F8.
     // State one consumes the first tick and transitions into state three,
     // which consumes the second tick.
@@ -371,6 +380,13 @@ public:
     // the only two stack arguments.
     void EngineIntegrate(float input, float dt);
     void VehicleFreeWheelingSet(int enabled);
+    // TmForeverFixed.exe 0x7BF1D0, called from ComputeForces at 0x7C6F9F on
+    // every step. `contactFlag` is the wheel-loop result at 0x7C6EF0.
+    void ComputeAirControl(const GmVec3* localAngularSpeed,
+                           uint32_t tick,
+                           int grounded,
+                           int contactFlag);
+
     void ComputeForcesModel3(CSceneVehicleCar* pilot, float dt);
     // TmForeverFixed.exe 0x7C3E80 ends in `ret 0x2c`. The fixed caller lays
     // down these eleven arguments in this order after removing Ghidra's

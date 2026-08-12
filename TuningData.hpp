@@ -134,7 +134,14 @@ inline constexpr float StadiumMaxDistancePerStep =
     TmForeverPhysicsConstants::kDefaultVehicleMaxDistancePerStep;
 inline constexpr float StadiumGravityCoefAir = 2.5f;
 inline constexpr float StadiumAngularFluidFrictionCoef1 = 0.4f;
+inline constexpr float StadiumAngularFluidFrictionCoef2 =
+    0.20000000298023223876953125f;
+inline constexpr uint32_t StadiumAirControlDuration = 30000u;
+inline constexpr float StadiumMaxAngularSpeedYAirControl =
+    3.1400001049041748046875f;
 inline constexpr float StadiumGroundSlowDownBase = 1.0f;
+inline constexpr float StadiumGroundSlowDownCoef =
+    0.300000011920928955078125f;
 inline constexpr float StadiumLinearFluidFrictionCoef = 0.03f;
 inline constexpr float StadiumMaxSpeed = 277.777801513671875f;
 inline constexpr float StadiumReverseMaxSpeed = 138.611114501953125f;
@@ -265,7 +272,14 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_maxDistancePerStep = StadiumMaxDistancePerStep;
     tuning->m_gravityCoefAir = StadiumGravityCoefAir;
     tuning->m_angularFluidFrictionCoef1 = StadiumAngularFluidFrictionCoef1;
+    tuning->m_angularFluidFrictionCoef2 = StadiumAngularFluidFrictionCoef2;
+    tuning->m_airControlDuration = StadiumAirControlDuration;
+    tuning->m_maxAngularSpeedYAirControl =
+        StadiumMaxAngularSpeedYAirControl;
+    tuning->m_airControlZCoefFromAngularSpeed =
+        &AirControlZCoefFromAngularSpeed;
     tuning->m_groundSlowDownBase = StadiumGroundSlowDownBase;
+    tuning->m_groundSlowDownCoef = StadiumGroundSlowDownCoef;
     tuning->m_linearFluidFrictionCoef = StadiumLinearFluidFrictionCoef;
     tuning->m_maxSpeed = StadiumMaxSpeed;
     tuning->m_reverseMaxSpeed = StadiumReverseMaxSpeed;

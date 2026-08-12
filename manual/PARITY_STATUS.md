@@ -21,6 +21,13 @@ gaps are below in dependency order.
   The Ghidra pseudocode in `tmnf_dump` reuses one C variable across unrelated
   stack slots and loses x87 operand order; both have already produced wrong
   readings, so instruction-level claims should be re-derived here.
+- `tools/DumpTuning`, a GBX.NET program that prints every property of every
+  tuning in `StadiumCar.VehicleTunings.Gbx`, including the gear/RPM arrays and
+  the chunk ids actually present. The Stadium car is `tuning[29]`; `tuning[0]`
+  is a different car entirely, so an index mistake here silently swaps in the
+  wrong physics. All 73 scalar constants and all 26 curves in `TuningData.hpp`
+  were diffed against it this session and match exactly. The one field that was
+  missing entirely, `GroundSlowDownCoef`, has been added.
 - `tools/tuning_chunk_offsets.py`, which recovers
   `CSceneVehicleCarTuning`'s chunk-id to member-offset mapping from the
   archive dispatch at `0x7F5EB0`. Aligning it against GBX.NET's
@@ -358,11 +365,76 @@ gaps are below in dependency order.
   and `car+0x5E8` has no identified counterpart yet.
 - The forward brake block at `0x7C638B..0x7C6461` is confirmed correct as
   translated: `(BrakeBase + BrakeCoef * speed.z) * brake * slipModulation`,
-  capped by `material.brakeCoef * (BrakeMax | BrakeMaxDynamic)`. The
-  structurally similar block at `0x7C64FF..0x7C65F6` that reads
-  `(BrakeBase - BrakeCoef * speed.z) * gas` and caps with the Model-6 rear
-  values `+0x248/+0x24C` is the *backward-rolling* branch, reached only when
-  the forward speed is strictly negative, and is still unimplemented.
+  capped by `material.brakeCoef * (BrakeMax | BrakeMaxDynamic)`.
+- The backward-rolling brake block at `0x7C64FF..0x7C662F` is now translated as
+  `GetModel6BackwardAxialBrakeForce`. `0x7C6325` and `0x7C6463` split the
+  braking source on the sign of the forward speed alone, and the two blocks
+  join at `0x7C6631`, so the ordinary drive path no longer falls back to
+  Model 3 when the car rolls backwards. While rolling backwards the gas pedal
+  supplies the braking: `0x7C6590` multiplies by car `+0x50`, `0x7C658E`
+  subtracts `BrakeCoef * speed.z` from `BrakeBase` so the term grows with the
+  backward speed, and the cap comes from the Model-6 rear pair at tuning
+  `+0x248/+0x24C` rather than `+0x48/+0x4C`. The final subtraction is signed by
+  the speed, so on a negative speed the braking force adds to the drive term.
+  Both the ordinary result and the rear-cap saturation, including its marking
+  of every simulation wheel as slipping, are regression-covered. The burnout
+  trigger sharing this branch (`0x7C6485..0x7C64F9`, which needs tuning
+  `+0x228`/`+0x22C` and the copied block at car `+0x6B4`) is still pending.
+- `ComputeForces` re-selects two physical-object properties every step from
+  ground contact, which the standalone build had been treating as one-time
+  constructor values. `0x7C6AC4..0x7C6B0A` writes the gravity coefficient at
+  `CPlugPhysicalObject +0x34` from tuning `+0x160` GravityCoef when grounded
+  and `+0x164` GravityCoefAir when airborne (Stadium: 3.0 versus 2.5), and
+  `0x7C6B0D..0x7C6B32` writes the linear damping at `+0x28` as zero when
+  grounded and tuning `+0x154` LinearFluidFrictionCoef when airborne. This is
+  now translated. It also settles what fluid friction is: a damping property of
+  the body that only applies in the air, never a force.
+- `ApplyFrictionForces` had two defects, both now fixed. `0x7BEE75` reads
+  GroundSlowDownCoef at tuning `+0x5C` for the speed-proportional half of the
+  coasting slowdown; the translation had been reading LinearFluidFrictionCoef,
+  which is a different field and ten times smaller for Stadium (0.3 versus
+  0.03). And the throttle test at `0x7BED7A`/`0x7BED88` is the strictly ordered
+  `pedal < epsilon`, not `pedal <= epsilon`. The rest of the routine is
+  confirmed correct: the Model 4/5 water-without-ground gate, the reverse-aware
+  pedal selection, the constant slowdown applied along the unit velocity while
+  the linear term is applied to the raw velocity, the free-wheeling suppression
+  of the linear term, and both the legacy and the Model-5 timed lateral-contact
+  windows.
+- `ComputeVehicleGroundMaterialVals` (`0x7C2800`) and the ground-material
+  layout are confirmed exactly. The routine averages four floats from
+  `CSceneVehicleMaterial +0x14..+0x20` over the contacting wheels, indexing the
+  car's material remap at `+0x6C` by the wheel's `+0x128` material id.
+  `CSceneVehicleMaterial::Chunk` case `0x0A031005` archives them in the order
+  `+0x14, +0x20, +0x18, +0x1C`, which against GBX.NET's chunk `0x005`
+  (`Speed, Grip, AccelerationCoef, BrakeCoef`) fixes the runtime
+  `SBlendableVals` as `{speed, accelerationCoef, brakeCoef, grip}` — the layout
+  `StadiumVehicleMaterials::GroundValues` already asserted.
+- `GetSlopeAdherence` (`0x7BEB40`) is confirmed correct, including the
+  degenerate-force early return that leaves the caller's defaults of one
+  untouched, the `|force.y| / |force|` ratio, the two independent
+  minimum/maximum pairs at tuning `+0xD4/+0xD8` and `+0xDC/+0xE0`, the
+  below-minimum zero and above-maximum one, and the `1 - cos(t * pi / 2)`
+  interior.
+- `AddVehicleForce` and `AddVehicleCentralForce` (`0x7BE2C0`, `0x7BE310`) reach
+  `CHmsDyna::AddLocalForce`, so every force in the vehicle model is local-frame
+  and unscaled by mass; `CHmsDyna::AddForce` merely accumulates. Both also add
+  the force into a per-step diagnostic accumulator at car `+0x818..+0x820`
+  (impulses into `+0x824..+0x82C`), which `ComputeForces` snapshots and clears
+  at entry. Nothing in the physics reads it back, so it is not translated.
+- `CFuncKeysReal::GetValue` (`0x586200` through `0x585E70` and
+  `CFuncKeys::GetBoundingIndices` at `0x5914C0`) is plain linear interpolation
+  between adjacent keys, with `t = 0` when the bounding indices coincide. The
+  km/h scale `M5GetAccelFromSpeed` applies at `0x7F3E48` is the double 3.6 at
+  `.rdata 0x00B3D2A8`. `EvaluateCurve` matches.
+- `ComputeForces`' `car +0x74C` block at `0x7C6FB8..0x7C7108` is identified and
+  deliberately not translated. It is an action dispatch — mode 1 applies an
+  impulse of tuning `+0x104` along the negated unit pre-friction force with a
+  100 ms cooldown, mode 2 overwrites the body's gravity coefficient with tuning
+  `+0x108`, mode 3 raises the turbo flag — and TMUnlimiter's parameter list
+  names `+0x104` `JumpImpulseVal`. The whole block is gated at `0x7C6FA4` on
+  `car +0x5C` exceeding the wheel-input epsilon, an input stock gameplay leaves
+  at zero, so none of it runs in an ordinary race even though `+0x74C` is
+  permanently 1.
 - `WheelAddForceToVehicle` is confirmed complete against `0x7C1810`: the
   shock-model selector reads tuning `+0x350`, models 1 and 2 produce
   `(AbsorbingValRest - compression) * AbsorbingValKi - AbsorbingValKa *
@@ -529,8 +601,9 @@ order proves observable; collision response can now consume the typed working
 
 ### 4. Complete the vehicle force pipeline
 
-- Only partial Stadium Model 3/6 behavior is connected. Native Model 4, Model
-  5, and `ComputeAirControl` are absent from the manual implementation.
+- Only partial Stadium Model 3/6 behavior is connected. Native Model 4 and
+  Model 5 are absent from the manual implementation; `ComputeAirControl` is
+  now translated and connected.
 - `WheelUpdateSpeedFromVehicleSpeed` now has its exact three-argument ABI and
   recovered grounded/airborne drive, brake, freewheel, disable, clamp, and
   decay branches. Its caller passes the native local-speed Z component, and
@@ -613,13 +686,34 @@ following have been checked and ruled out as the source:
   `car+0x2E0` top-speed clamp, the second only fires when `SideFriction1 <= 0`.
 - The `1/tuning[+0x228]` scaling at `0x7C7428`, which divides a *copy* of the
   force into `car+0x6D4` for telemetry and does not touch the accumulator.
+- The tuning data itself. Every scalar and curve the drive path reads is now
+  diffed against `StadiumCar.VehicleTunings.Gbx` via `tools/DumpTuning`.
+- `ComputeVehicleGroundMaterialVals`, whose `accelerationCoef` is 1.0 for the
+  A01 road material (id 16) in both the standalone table and the game's own
+  ordering, now that the `SBlendableVals` layout is confirmed.
+- The curve evaluator and its km/h scale, which are exactly what
+  `EvaluateCurve` does.
+- Every remaining force producer `ComputeForces` reaches: the `car +0x74C`
+  action block (gated off by `car +0x5C`), `AfterContacts` (`0x7C0670`, which
+  reads the linear speed and smooths visual values but applies nothing), and
+  the wheel loop.
+- The engine RPM. `ComputeForcesModel6` never reads car `+0x59C..+0x5C0`; the
+  only engine state it consumes is the reverse flag at `+0x5C4`, the ceiling at
+  `+0x5CC`, and the transmission state at `+0x2E4`.
 
-The shape of the excess — small at low speed, saturating near 15 m/s — looks
-like a speed- or RPM-dependent multiplier rather than a constant. The engine
-state machine (`EngineIntegrate`, gear ratios, `+0x2E4`) is the obvious next
-place to look, together with `ComputeVehicleGroundMaterialVals` (`0x7C2800`),
-whose `accelerationCoef` at `SBlendableVals +0x4` multiplies the pedal term
-and is currently supplied by a hardcoded standalone material table.
+What the replay's acceleration actually looks like, once plotted against the
+curve's own key points, is a *step*: roughly 16 m/s² everywhere from 19 to
+97 km/h, then roughly 11 from 125 to 145 km/h. Those are exactly the
+`AccelCurve` values at keys 0 and 101 — as if the curve were sampled at the
+lower bounding key instead of interpolated. The executable's evaluator
+demonstrably interpolates, so this is more likely a coincidence of the terrain
+than a real clue, but it is the sharpest characterisation of the gap so far and
+worth ruling in or out first.
+
+The next places to look are the fixed-step integrator and the collision
+substepping (whether a force computed once per tick is applied once per
+substep), and `IntegrateVehicle`/`EngineIntegrate`, which are the only large
+routines on the launch path not yet re-derived from the disassembly.
 
 Note that translating the `0x7C6020` gear-shift cut moved the 3-second A01
 speed from 136.99 to 127.5 km/h, further from the replay's 144.9. That is
@@ -628,6 +722,60 @@ instruction, and it makes our shift timing observable for the first time. The
 replay's own shift plateau is at 1.8–2.0 s (speed 28.45 -> 28.62 m/s) while the
 simulation's now lands near 2.2–2.4 s, which is a concrete, measurable target
 for the engine state machine.
+
+## ComputeAirControl (0x7BF1D0)
+
+`ComputeForces` calls this at `0x7C6F9F` on every step and the manual
+implementation had no counterpart, so airborne rotation was entirely
+unmodelled. It is now translated. Its four arguments come from the pushes at
+`0x7C6F95..0x7C6F9C`: the local angular speed, the tick, the ground-contact
+flag, and the wheel-loop flag built at `0x7C6EF0`.
+
+- `0x7BF1E8`: Model 4/5 in water leaves the routine.
+- `0x7BF21F`: everything downstream works on the *negated* angular speed, which
+  is what makes the tail's torque oppose the rotation.
+- `0x7BF239`/`0x7BF264`: on the ground the routine only records state. The
+  wheel-flag case also restarts the window at car `+0x614`; the
+  `car +0x5D4` case records only the retained angular speed.
+- `0x7BF29C`: the window test `tick - car[+0x614] >= AirControlDuration` is an
+  unsigned compare, so a tick behind the origin reads as an enormous elapsed
+  time and ends air control rather than extending it.
+- `0x7BF2C7..0x7BF386`: the steering input at car `+0x58` is classified against
+  the retained yaw using `±kWheelInputEpsilon` (the negative one is its own
+  float at `.rdata 0x00B574FC`). Steering *with* the rotation always damps and
+  refreshes the retained yaw; steering *against* it damps only once
+  `|angularSpeed.y|` passes `MaxAngularSpeedYAirControl`, and below that
+  ceiling the retained yaw is held — which is what pulls the car back toward
+  it. A steering input inside the dead zone refreshes without damping.
+- `0x7BF3A9`: Model 4/5 additionally retains roll at car `+0x618`, and braking
+  while that retained roll is positive zeroes it instead of following.
+- `0x7BF401`: damping scales the drag *direction* by the double 3.0 at
+  `.rdata 0x00B3D2C0`, before its magnitude is taken. The quadratic below
+  therefore sees three times the angular speed, not three times the torque.
+- `0x7BF425`: airborne, the Z component is scaled by the
+  `AirControlZCoefFromAngularSpeed` curve at tuning `+0x36C`, evaluated on the
+  raw absolute angular speed with no km/h conversion. Stadium's curve is the
+  constant 1.
+- `0x7BF47B`: `SetVehicleAngularSpeed` with the retained target.
+- `0x7BF480..0x7BF569`: airborne only, and on every path including the two that
+  merely recorded state, a quadratic angular drag torque of
+  `AngularFluidFrictionCoef2 * |w|^2 + AngularFluidFrictionCoef1 * |w|` along
+  the normalized negated direction, rejected below the wheel-input epsilon.
+
+Six behavior cases are regression-covered: grounded recording, the plain
+quadratic drag, damping with and against the retained yaw, the retained-yaw
+hold below the ceiling, and an expired window. The A01 grounded trace is
+byte-identical with this connected, which is the expected result — the routine
+only acts when no wheel has contact.
+
+One honest gap: the wheel-loop flag at `0x7C6F01` requires a contacting wheel
+whose `+0x00` field is also nonzero, and that field has no identified producer
+in the standalone build, so the flag is always false today. The consequence is
+that the window is measured from the last `VehicleReset` rather than the last
+real ground contact. The `car +0x5D4` case still ends air control on any
+contact, which keeps behavior right for a normal lap; identifying wheel `+0x00`
+would close it properly.
+
 
 ## Static-data recovery rule
 

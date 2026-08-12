@@ -237,6 +237,42 @@ float CSceneVehicleCarTuning::GetModel6ForwardAxialBrakeForce(
     return requestedForce;
 }
 
+float CSceneVehicleCarTuning::GetAirControlZCoefFromAngularSpeed(
+    float angularSpeed) {
+    return EvaluateCurve(
+        SelectCurve(m_airControlZCoefFromAngularSpeed,
+                    AirControlZCoefFromAngularSpeed),
+        angularSpeed);
+}
+
+float CSceneVehicleCarTuning::GetModel6BackwardAxialBrakeForce(
+    float forwardSpeed, float gasInput, float materialBrakeCoef,
+    float slippingModulation, bool hasSlippingWheel,
+    bool* saturated) const {
+    if (saturated != nullptr) *saturated = false;
+
+    // TmForeverFixed.exe 0x7C64FF..0x7C662F, the mirror of the forward block
+    // at 0x7C638B. While the car rolls backwards the *gas* pedal is what slows
+    // it, so 0x7C6590 multiplies by car +0x50 rather than +0x54, and the sign
+    // of the speed term flips: 0x7C658E subtracts BrakeCoef * speed.z from
+    // BrakeBase, which grows with the backward speed because that speed is
+    // negative. The saturation cap also changes, to the Model-6 rear values at
+    // tuning +0x248/+0x24C instead of the +0x48/+0x4C pair.
+    if (!(forwardSpeed < 0.0f)) return 0.0f;
+
+    const float requestedForce =
+        (m_brakeBase - m_brakeCoef * forwardSpeed) *
+        gasInput * slippingModulation;
+    const float maximumForce =
+        materialBrakeCoef *
+        (hasSlippingWheel ? m_m6BrakeMaxRear : m_m6BrakeMaxDynamicRear);
+    if (maximumForce < requestedForce) {
+        if (saturated != nullptr) *saturated = true;
+        return maximumForce;
+    }
+    return requestedForce;
+}
+
 float CSceneVehicleCarTuning::GetModel6AccelerationBlendFromLateralOverLimit(
     float appliedForceSum, float maximumForceSum) const {
     // TmForeverFixed.exe 0x7C5F36..0x7C5FB4. Tuning +0x200 scales the
@@ -342,6 +378,11 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_angularFluidFrictionCoef1 = 0.4f;
     // Native constructor offsets +0x58, +0x5C, and +0x1E8.
     m_groundSlowDownBase = 1.0f;
+    m_groundSlowDownCoef = 0.0f;
+    m_angularFluidFrictionCoef2 = 0.0f;
+    m_airControlDuration = 0u;
+    m_maxAngularSpeedYAirControl = 0.0f;
+    m_airControlZCoefFromAngularSpeed = nullptr;
     m_linearFluidFrictionCoef = 0.0f;
     // Native constructor 0x7F1C88: +0x2C/+0x30 use the base forward/reverse
     // speeds, while +0x60 is initialized from .rdata 0x00B36194 (10.0f).
