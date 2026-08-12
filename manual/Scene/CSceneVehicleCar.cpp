@@ -767,6 +767,40 @@ void CSceneVehicleCar::WheelIntegrate(SSimulationWheel* wheel, float dt) {
     wheel->m_surfaceHandler.UpdateSurface();
 }
 
+void CSceneVehicleCar::WheelReset(SSimulationWheel* wheel) {
+    if (wheel == nullptr || g_tuning == nullptr) return;
+
+    // TmForeverFixed.exe 0x7BD1B0..0x7BD2BF. VehicleReset invokes this for
+    // every wheel after the loaded solid and tuning are installed. In
+    // particular, the native reset value is AbsorbingValRest, not zero.
+    wheel->m_realTimeState.m_absorbDelta = 0.0f;
+    wheel->m_realTimeState.m_velocity = 0.0f;
+    wheel->m_realTimeState.m_compression =
+        g_tuning->m_absorbingValRest;
+
+    wheel->m_surfaceHandler.Reset();
+    wheel->m_surfaceHandler.m_surfaceLocation.tY -=
+        wheel->m_realTimeState.m_compression;
+    wheel->m_surfaceHandler.UpdateSurface();
+
+    wheel->m_hasGroundContact = 0;
+    wheel->m_groundMaterial = 0;
+    wheel->m_isSlipping = 0;
+    wheel->m_suspensionForce = 0.0f;
+    wheel->m_absorbContactPoint = GmVec3(0.0f, 0.0f, 0.0f);
+    wheel->m_groundContactCount = 0u;
+    wheel->m_groundContactNormalSum = GmVec3(0.0f, 0.0f, 0.0f);
+    wheel->m_hasLateralContact = 0;
+    wheel->m_lateralContactPoint = GmVec3(0.0f, 0.0f, 0.0f);
+
+    wheel->m_realTimeState.m_orientation.SetIdentity();
+    wheel->m_realTimeState.m_angularVelocity = 0.0f;
+    wheel->m_realTimeState.m_direction = GmVec3(0.0f, 0.0f, 0.0f);
+    wheel->m_realTimeState.m_rotationAngle = 0.0f;
+    wheel->m_realTimeState.m_steeringAngle = 0.0f;
+    wheel->m_realTimeState.m_targetSteeringAngle = 0.0f;
+}
+
 void CSceneVehicleCar::EngineIntegrate(float input, float dt) {
     using namespace TmForeverPhysicsConstants;
 

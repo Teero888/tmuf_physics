@@ -74,7 +74,7 @@ void CollectCollisionSurfaces(
     if (tree->m_surface != nullptr &&
         tree->m_surface->m_geometry != nullptr &&
         tree->m_surface->m_geometry->GetGmSurf() != nullptr) {
-        corpus.AddCollisionSurface(tree->m_surface, nodeToWorld);
+        corpus.AddCollisionSurface(tree->m_surface, nodeToWorld, tree);
     }
 
     for (uint32_t index = 0; index < tree->GetChildCount(); ++index) {
@@ -153,11 +153,12 @@ void CHmsCorpus::AddCollisionSurface(
     located.m_gmSurface.m_surf = surface;
     located.m_gmSurface.m_location = location;
     located.m_plugSurface = nullptr;
+    located.m_tree = nullptr;
     m_collisionSurfaces.Add(located);
 }
 
 void CHmsCorpus::AddCollisionSurface(
-    CPlugSurface* surface, const GmIso4& location) {
+    CPlugSurface* surface, const GmIso4& location, CPlugTree* tree) {
     if (surface == nullptr || surface->m_geometry == nullptr) return;
     GmSurf* gmSurface = surface->m_geometry->GetGmSurf();
     if (gmSurface == nullptr) return;
@@ -165,6 +166,7 @@ void CHmsCorpus::AddCollisionSurface(
     located.m_gmSurface.m_surf = gmSurface;
     located.m_gmSurface.m_location = location;
     located.m_plugSurface = surface;
+    located.m_tree = tree;
     m_collisionSurfaces.Add(located);
 }
 

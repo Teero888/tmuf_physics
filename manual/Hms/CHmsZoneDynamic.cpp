@@ -169,32 +169,30 @@ ReplacementShares ComputeReplacementShares(
 }
 
 void RewritePhysicalContact(
-    CHmsCorpus* target,
-    CHmsCorpus* receiver,
+    CHmsCorpus* corpus,
     CHmsPhysicalContact* contact,
-    const GmVec3& targetSpeed,
-    const GmVec3& receiverSpeed,
-    GmVec3& targetReplacement) {
-    if (contact == nullptr || receiver == nullptr) return;
+    const GmVec3& corpusSpeed,
+    const GmVec3& otherSpeed,
+    GmVec3& corpusReplacement) {
+    if (contact == nullptr || corpus == nullptr) return;
 
-    // Native SolveImpulse presents a target-body contact to the opposite
-    // body's callback. Replacement and relative speed use the receiver's
-    // current local frame; the possibly rewritten replacement is transformed
-    // back before it is queued on the target dynamics.
+    // Native SolveImpulse presents each body with the contact record built
+    // from that same body's tree/material token. Replacement and relative
+    // speed use its local frame; the callback may rewrite or veto them.
     contact->m_isActive = 1u;
-    const GmMat3& receiverRotation = GetCorpusRotation(*receiver);
-    contact->m_replacement = targetReplacement;
-    contact->m_replacement.MultTranspose(receiverRotation);
-    contact->m_relativeSpeed = targetSpeed - receiverSpeed;
-    contact->m_relativeSpeed.MultTranspose(receiverRotation);
+    const GmMat3& corpusRotation = GetCorpusRotation(*corpus);
+    contact->m_replacement = corpusReplacement;
+    contact->m_replacement.MultTranspose(corpusRotation);
+    contact->m_relativeSpeed = corpusSpeed - otherSpeed;
+    contact->m_relativeSpeed.MultTranspose(corpusRotation);
 
     CHmsItem::CCallback* callback =
-        GetAbsorbContactCallback(receiver);
+        GetAbsorbContactCallback(corpus);
     if (callback != nullptr) {
-        callback->AbsorbContact(receiver->m_item, contact);
+        callback->AbsorbContact(corpus->m_item, contact);
     }
-    targetReplacement =
-        TransformVector(receiverRotation, contact->m_replacement);
+    corpusReplacement =
+        TransformVector(corpusRotation, contact->m_replacement);
 }
 
 void ApplyCollisionImpulse(
@@ -475,21 +473,21 @@ void CHmsZoneDynamic::ComputeCollisionResponse() {
         CHmsPhysicalContact* body1ContactPtr = nullptr;
         if (buildBody2Contact) {
             body2Contact = BuildPhysicalContact(
-                col, *body2, col.m_value04, col.m_matId1,
-                *body1, col.m_value0C, col.m_matId2);
+                col, *body2, col.m_value0C, col.m_matId2,
+                *body1, col.m_value04, col.m_matId1);
             body2ContactPtr = &body2Contact;
         }
         if (buildBody1Contact) {
             body1Contact = BuildPhysicalContact(
-                col, *body1, col.m_value0C, col.m_matId2,
-                *body2, col.m_value04, col.m_matId1);
+                col, *body1, col.m_value04, col.m_matId1,
+                *body2, col.m_value0C, col.m_matId2);
             body1ContactPtr = &body1Contact;
         }
 
         // The executable tests config[2] at 0x549B00: nonzero dispatches the
         // physical solver; zero computes relative speed and calls slot 2.
         if (col.m_ptr48[2] != 0u) {
-            SolveImpulse(&col, body2ContactPtr, body1ContactPtr);
+            SolveImpulse(&col, body1ContactPtr, body2ContactPtr);
             continue;
         }
 
@@ -524,7 +522,10 @@ void CHmsZoneDynamic::ComputeCollisionResponse() {
     m_collisions.m_count = 0; // Clear for next frame
 }
 
-void CHmsZoneDynamic::SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysicalContact* contact1, CHmsPhysicalContact* contact2) {
+void CHmsZoneDynamic::SolveImpulse(
+    SHmsPhysicalCollision* collision,
+    CHmsPhysicalContact* body1Contact,
+    CHmsPhysicalContact* body2Contact) {
     if (collision == nullptr || collision->m_body1 == nullptr ||
         collision->m_body2 == nullptr) return;
 
@@ -550,20 +551,8 @@ void CHmsZoneDynamic::SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysica
     }
 
     RewritePhysicalContact(
-        collision->m_body2,
         collision->m_body1,
-        contact1,
-        body2Speed,
-        body1Speed,
-        shares.body2);
-    if (collision->m_body2->m_dyna != nullptr) {
-        collision->m_body2->m_dyna->AddReplacement(&shares.body2);
-    }
-
-    RewritePhysicalContact(
-        collision->m_body1,
-        collision->m_body2,
-        contact2,
+        body1Contact,
         body1Speed,
         body2Speed,
         shares.body1);
@@ -571,10 +560,20 @@ void CHmsZoneDynamic::SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysica
         collision->m_body1->m_dyna->AddReplacement(&shares.body1);
     }
 
+    RewritePhysicalContact(
+        collision->m_body2,
+        body2Contact,
+        body2Speed,
+        body1Speed,
+        shares.body2);
+    if (collision->m_body2->m_dyna != nullptr) {
+        collision->m_body2->m_dyna->AddReplacement(&shares.body2);
+    }
+
     // Either receiver may veto the shared impulse while retaining its
     // replacement rewrite. This branch precedes GmCollision::Neg natively.
-    if ((contact1 != nullptr && contact1->m_isActive == 0u) ||
-        (contact2 != nullptr && contact2->m_isActive == 0u)) {
+    if ((body1Contact != nullptr && body1Contact->m_isActive == 0u) ||
+        (body2Contact != nullptr && body2Contact->m_isActive == 0u)) {
         return;
     }
 

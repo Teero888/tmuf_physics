@@ -506,6 +506,29 @@ int main() {
     wheel.m_surfaceHandler.m_baseLocation.SetIdentity();
     wheel.m_surfaceHandler.m_baseLocation.SetTranslation(
         GmVec3(1.0f, 2.0f, 3.0f));
+    wheel.m_surfaceHandler.m_surfaceLocation =
+        wheel.m_surfaceHandler.m_baseLocation;
+    wheel.m_hasGroundContact = 1;
+    wheel.m_groundMaterial = 4;
+    wheel.m_isSlipping = 1;
+    wheel.m_realTimeState.m_compression = 0.6f;
+    wheel.m_realTimeState.m_absorbDelta = 0.1f;
+    wheel.m_realTimeState.m_velocity = 2.0f;
+    tuning.m_absorbingValRest = 0.2f;
+    car.WheelReset(&wheel);
+    passed &= Expect("wheel reset uses native rest compression",
+                     Near(wheel.m_realTimeState.m_compression, 0.2f) &&
+                     wheel.m_realTimeState.m_velocity == 0.0f &&
+                     wheel.m_realTimeState.m_absorbDelta == 0.0f);
+    passed &= Expect("wheel reset displaces collision surface by rest value",
+                     Near(wheelSurfaceTree.m_location.tX, 1.0f) &&
+                     Near(wheelSurfaceTree.m_location.tY, 1.8f) &&
+                     Near(wheelSurfaceTree.m_location.tZ, 3.0f));
+    passed &= Expect("wheel reset clears transient contact state",
+                     wheel.m_hasGroundContact == 0 &&
+                     wheel.m_groundMaterial == 0 &&
+                     wheel.m_isSlipping == 0);
+
     wheel.m_realTimeState.m_compression = 0.15f;
     wheel.m_realTimeState.m_absorbDelta = 0.05f;
     wheel.m_realTimeState.m_velocity = 0.5f;

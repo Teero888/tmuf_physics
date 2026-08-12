@@ -8,6 +8,7 @@
 #include "CFastArray.hpp"
 #include <cstdint>
 #include <string>
+#include <vector>
 
 class CCrystal;
 class CGmCollisionBuffer;
@@ -135,6 +136,12 @@ public:
     
     // void Archive(...)
     void BuildOctree();
+    // Standalone broadphase equivalent used while the native serialized
+    // GmOctree cell layout is still being reconstructed. A true return means
+    // the side index exists; an empty output then means the box is off-mesh.
+    bool GetAabbCandidates(
+        float minX, float minZ, float maxX, float maxZ,
+        std::vector<uint32_t>& outCandidates) const;
     void GetMeshBoundingBox(GmBoxAligned& outBox) const;
     void TransformByNOMat(const GmIso4& transform);
     bool LoadFromObj(const std::string& filename);

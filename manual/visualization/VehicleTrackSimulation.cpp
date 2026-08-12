@@ -49,9 +49,16 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
             TmForeverPhysicsConstants::kStadiumWheelLocalY[wheelIndex];
         const float localZ =
             TmForeverPhysicsConstants::kStadiumWheelLocalZ[wheelIndex];
-        const GmVec3 localWheelCenter(localX, localY, localZ);
+        // WheelIntegrate moves the collision subtree downward by the current
+        // suspension compression. Query the same transformed center here;
+        // using the uncompressed base location makes a correctly resting
+        // wheel appear about 0.2 m airborne and clears the previous frame's
+        // native contact before ComputeForces can consume it.
+        const float surfaceLocalY =
+            localY - wheel.m_realTimeState.m_compression;
+        const GmVec3 localWheelCenter(localX, surfaceLocalY, localZ);
         const GmVec3 wheelOffset =
-            queryBasis.right * localX + queryBasis.up * localY +
+            queryBasis.right * localX + queryBasis.up * surfaceLocalY +
             queryBasis.forward * localZ;
         const GmVec3 wheelCenter = dyna.Position() + wheelOffset;
 
@@ -91,15 +98,23 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
                 rayPosition, rayDirection, worldMeshTransform,
                 materialHitT, material);
         }
-        wheel.m_hasGroundContact = wheelOnGround ? 1 : 0;
-        wheel.m_groundMaterial = material;
+        // The ray fit is retained for diagnostics and for the old standalone
+        // path. A collision-manager simulation must get wheel state only from
+        // CSceneVehicleCar::WheelAbsorbContact; writing ray results here made
+        // the force callback observe contacts the native collision pass had
+        // not produced.
+        if (dynamicZone.m_ptr168 == nullptr) {
+            wheel.m_hasGroundContact = wheelOnGround ? 1 : 0;
+            wheel.m_groundMaterial = material;
+        }
         diagnostics.wheelMaterial[wheelIndex] = material;
 
         if (wheelOnGround) {
             ++diagnostics.groundedWheelCount;
             groundNormal += wheelGroundNormal;
             supportedRootY = std::max(
-                supportedRootY, groundY + wheel.m_radius - localY);
+                supportedRootY,
+                groundY + wheel.m_radius - surfaceLocalY);
         }
     }
 
@@ -124,7 +139,11 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
             tuning.m_gravityCoef * tuning.m_mass,
         0.0f);
     GmVec3 groundReaction(0.0f, 0.0f, 0.0f);
-    if (diagnostics.onGround) {
+    // The legacy viewer path had no chassis solid, so it teleported the root
+    // onto the fitted wheel plane and cancelled gravity by hand. Once a real
+    // collision-manager zone is attached, the native StadiumCar ellipsoids
+    // and track surface own penetration correction and support impulses.
+    if (diagnostics.onGround && dynamicZone.m_ptr168 == nullptr) {
         GmVec3 velocity;
         dyna.GetLinearSpeed(nullptr, &velocity);
         dyna.Position().y = supportedRootY;
@@ -149,5 +168,17 @@ VehicleTrackStepDiagnostics StepVehicleOnTrack(
     dyna.GetLinearSpeed(nullptr, &diagnostics.velocity);
     diagnostics.accumulatedForce = dyna.Force();
     dynamicZone.PhysicsStep2(dt);
+    if (dynamicZone.m_ptr168 != nullptr) {
+        diagnostics.groundedWheelCount = 0;
+        for (int wheelIndex = 0; wheelIndex < wheelCount; ++wheelIndex) {
+            const CSceneVehicleCar::SSimulationWheel& wheel =
+                car.m_wheels[wheelIndex];
+            diagnostics.wheelMaterial[wheelIndex] = wheel.m_groundMaterial;
+            if (wheel.m_hasGroundContact != 0) {
+                ++diagnostics.groundedWheelCount;
+            }
+        }
+        diagnostics.onGround = diagnostics.groundedWheelCount != 0;
+    }
     return diagnostics;
 }

@@ -25,6 +25,7 @@ public:
         GmIso4 m_surfaceLocation;
 
         SSurfaceHandler();
+        void Init(CPlugTree* tree);
         void Reset();
         void UpdateSurface();
     };

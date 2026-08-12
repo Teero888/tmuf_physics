@@ -339,6 +339,48 @@ void GmSurfMesh::BuildOctree() {
 
     g_gmSurfMeshSpatialIndices.emplace(this, std::move(index));
 }
+
+bool GmSurfMesh::GetAabbCandidates(
+    float minX, float minZ, float maxX, float maxZ,
+    std::vector<uint32_t>& outCandidates) const {
+    outCandidates.clear();
+    const auto found = g_gmSurfMeshSpatialIndices.find(this);
+    if (found == g_gmSurfMeshSpatialIndices.end()) return false;
+    const GmSurfMeshSpatialIndex& index = *found->second;
+    if (index.sizeX == 0u || index.sizeZ == 0u) return true;
+    if (minX > maxX) std::swap(minX, maxX);
+    if (minZ > maxZ) std::swap(minZ, maxZ);
+    int firstX = static_cast<int>(std::floor(
+        (minX - index.minX) / GmSurfMeshSpatialIndex::kCellSize));
+    int lastX = static_cast<int>(std::floor(
+        (maxX - index.minX) / GmSurfMeshSpatialIndex::kCellSize));
+    int firstZ = static_cast<int>(std::floor(
+        (minZ - index.minZ) / GmSurfMeshSpatialIndex::kCellSize));
+    int lastZ = static_cast<int>(std::floor(
+        (maxZ - index.minZ) / GmSurfMeshSpatialIndex::kCellSize));
+    if (lastX < 0 || lastZ < 0 || firstX >= static_cast<int>(index.sizeX) ||
+        firstZ >= static_cast<int>(index.sizeZ)) {
+        return true;
+    }
+    firstX = std::max(firstX, 0);
+    firstZ = std::max(firstZ, 0);
+    lastX = std::min(lastX, static_cast<int>(index.sizeX) - 1);
+    lastZ = std::min(lastZ, static_cast<int>(index.sizeZ) - 1);
+    for (int z = firstZ; z <= lastZ; ++z) {
+        for (int x = firstX; x <= lastX; ++x) {
+            const std::vector<uint32_t>& cell = index.cells[
+                static_cast<uint32_t>(z) * index.sizeX +
+                static_cast<uint32_t>(x)];
+            outCandidates.insert(
+                outCandidates.end(), cell.begin(), cell.end());
+        }
+    }
+    std::sort(outCandidates.begin(), outCandidates.end());
+    outCandidates.erase(
+        std::unique(outCandidates.begin(), outCandidates.end()),
+        outCandidates.end());
+    return true;
+}
 void GmSurfMesh::TransformByNOMat(const GmIso4& transform) {
     // Native 0x008f3ea0 first bakes the affine transform into every vertex.
     // It only rebuilds triangle planes when the transform changes handedness;

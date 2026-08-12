@@ -1,12 +1,19 @@
 #include "Gm/GmSurf.hpp"
+#include "Plug/CPlugSolid.hpp"
+#include "Plug/CPlugSurface.hpp"
+#include "Plug/CPlugSurfaceGeom.hpp"
+#include "Plug/CPlugTree.hpp"
 #include "Track/TrackMapLoader.hpp"
+#include "Track/VehicleAssetLoader.hpp"
 
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 class CSceneVehicleCarTuning;
 CSceneVehicleCarTuning* g_tuning = nullptr;
@@ -17,6 +24,21 @@ bool Near(float actual, float expected, float tolerance = 1e-6f) {
     if (std::abs(actual - expected) <= tolerance) return true;
     std::cerr << "expected " << expected << ", got " << actual << '\n';
     return false;
+}
+
+uint64_t HashMeshVertices(const GmSurfMesh& mesh) {
+    // FNV-1a over the exact IEEE-754 coordinate bytes written by the
+    // extractor. Counts alone cannot detect a whole rotated block footprint
+    // being translated by one or more 32 m cells.
+    uint64_t hash = 14695981039346656037ull;
+    for (uint32_t index = 0; index < mesh.m_vertices.GetCount(); ++index) {
+        const auto* bytes = reinterpret_cast<const uint8_t*>(&mesh.m_vertices[index]);
+        for (std::size_t byte = 0; byte < sizeof(GmVec3); ++byte) {
+            hash ^= bytes[byte];
+            hash *= 1099511628211ull;
+        }
+    }
+    return hash;
 }
 
 template <typename T>
@@ -64,6 +86,31 @@ bool WriteFixture(const std::string& path) {
     return static_cast<bool>(file);
 }
 
+bool WriteVehicleFixture(const std::string& path) {
+    std::ofstream file(path, std::ios::binary);
+    if (!file.is_open()) return false;
+    file.write("TMNFVEH1", 8);
+    const uint32_t primitiveCount = 1u;
+    const uint32_t reserved = 0u;
+    const uint32_t type = 1u;
+    const uint16_t material = 16u;
+    const uint16_t flags = 0u;
+    const GmVec3 radii(0.5f, 0.75f, 1.25f);
+    GmIso4 location;
+    location.SetIdentity();
+    location.tX = 1.0f;
+    location.tY = 2.0f;
+    location.tZ = 3.0f;
+    Write(file, primitiveCount);
+    Write(file, reserved);
+    Write(file, type);
+    Write(file, material);
+    Write(file, flags);
+    Write(file, radii);
+    Write(file, location);
+    return static_cast<bool>(file);
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -101,6 +148,44 @@ int main(int argc, char** argv) {
     passed &= mesh.ClipSegment3(
         rayPosition, rayDirection, identity, hitT, material) != 0;
     passed &= material == 16;
+    std::vector<uint32_t> candidates;
+    passed &= mesh.GetAabbCandidates(
+        0.2f, 0.2f, 0.3f, 0.3f, candidates);
+    passed &= candidates.size() == 1u && candidates[0] == 0u;
+    passed &= mesh.GetAabbCandidates(
+        100.0f, 100.0f, 101.0f, 101.0f, candidates);
+    passed &= candidates.empty();
+
+    const std::string vehicleFixturePath =
+        "/tmp/tmnf_vehicle_collision_test.tmnfveh";
+    passed &= WriteVehicleFixture(vehicleFixturePath);
+    StadiumVehicleAsset vehicleFixture;
+    std::string vehicleFixtureError;
+    passed &= vehicleFixture.LoadCollision(
+        vehicleFixturePath, &vehicleFixtureError);
+    std::remove(vehicleFixturePath.c_str());
+    CPlugSolid* fixtureSolid = vehicleFixture.CollisionSolid();
+    CPlugTree* fixtureRoot = fixtureSolid != nullptr
+        ? fixtureSolid->m_tree : nullptr;
+    passed &= fixtureRoot != nullptr && fixtureRoot->GetChildCount() == 1u;
+    CPlugTree* fixturePrimitive = fixtureRoot != nullptr
+        ? fixtureRoot->GetChild(0u) : nullptr;
+    GmSurf* fixtureSurface = fixturePrimitive != nullptr &&
+        fixturePrimitive->m_surface != nullptr &&
+        fixturePrimitive->m_surface->m_geometry != nullptr
+        ? fixturePrimitive->m_surface->m_geometry->GetGmSurf() : nullptr;
+    passed &= fixtureSurface != nullptr && fixtureSurface->m_type == 1u;
+    if (fixtureSurface != nullptr && fixtureSurface->m_type == 1u) {
+        const auto* ellipsoid =
+            static_cast<const GmSurfEllipsoid*>(fixtureSurface);
+        passed &= Near(ellipsoid->m_radii.x, 0.5f);
+        passed &= Near(ellipsoid->m_radii.y, 0.75f);
+        passed &= Near(ellipsoid->m_radii.z, 1.25f);
+    }
+    passed &= fixturePrimitive != nullptr &&
+        Near(fixturePrimitive->m_location.tX, 1.0f) &&
+        Near(fixturePrimitive->m_location.tY, 2.0f) &&
+        Near(fixturePrimitive->m_location.tZ, 3.0f);
 
     if (argc != 1 && argc != 4) {
         std::cerr << "Usage: " << argv[0]
@@ -111,18 +196,32 @@ int main(int argc, char** argv) {
 
     if (argc == 4) {
         GmSurfMesh a01;
+        GmSurfMesh stadiumDecoration;
         TrackMapLoadOptions options;
         options.packsDirectory = argv[2];
         options.extractorProject = argv[3];
         TrackMapLoadResult a01Result;
-        passed &= LoadTrackMapCollision(a01, argv[1], options, &a01Result);
+        passed &= LoadTrackMapCollision(
+            a01, argv[1], options, &a01Result, &stadiumDecoration);
         passed &= a01Result.sourceWasChallengeGbx;
         passed &= a01Result.mapName == "A01-Race";
         passed &= a01Result.mapAuthor == "Nadeo";
         passed &= a01Result.environment == "Stadium";
         passed &= a01Result.blockCount == 397;
-        passed &= a01.m_vertices.GetCount() == 98089;
-        passed &= a01.m_triangles.GetCount() == 176184;
+        passed &= a01.m_vertices.GetCount() == 143845u;
+        passed &= a01.m_triangles.GetCount() == 246803u;
+        passed &= stadiumDecoration.m_vertices.GetCount() == 44182u;
+        passed &= stadiumDecoration.m_triangles.GetCount() == 73051u;
+        // CGameCtnBlock::GetMobilLoc at 0x0060ACB0 rotates around the full
+        // ground/air block-info footprint. This coordinate fingerprint rejects
+        // the former fixed-one-cell pivot and includes the map-selected
+        // Square32 Stadium decoration collision solid.
+        const uint64_t geometryHash = HashMeshVertices(a01);
+        if (geometryHash != 0x7ED0BFA1FEABD5C3ull) {
+            std::cerr << "A01 geometry fingerprint: 0x" << std::hex
+                      << geometryHash << std::dec << '\n';
+        }
+        passed &= geometryHash == 0x7ED0BFA1FEABD5C3ull;
         const GmVec3 spawnRayPosition(171.199997f, 90.209999f, 688.0f);
         const GmVec3 spawnRayDirection(0.0f, -2.0f, 0.0f);
         hitT = 1.0f;
@@ -140,15 +239,34 @@ int main(int argc, char** argv) {
         // A second load must reuse the fingerprinted cache and produce the
         // same mesh without invoking the extractor again.
         GmSurfMesh cachedA01;
+        GmSurfMesh cachedDecoration;
         TrackMapLoadResult cachedResult;
         passed &= LoadTrackMapCollision(
-            cachedA01, argv[1], options, &cachedResult);
+            cachedA01, argv[1], options, &cachedResult,
+            &cachedDecoration);
         passed &= cachedResult.cacheHit;
         passed &= cachedResult.collisionCachePath ==
             a01Result.collisionCachePath;
         passed &= cachedA01.m_vertices.GetCount() == a01.m_vertices.GetCount();
         passed &= cachedA01.m_triangles.GetCount() ==
             a01.m_triangles.GetCount();
+        passed &= cachedDecoration.m_vertices.GetCount() ==
+            stadiumDecoration.m_vertices.GetCount();
+
+        StadiumVehicleAsset stadiumVehicle;
+        StadiumVehicleLoadOptions vehicleOptions;
+        vehicleOptions.packsDirectory = argv[2];
+        vehicleOptions.extractorProject = argv[3];
+        StadiumVehicleLoadResult vehicleResult;
+        passed &= LoadStadiumVehicleAsset(
+            stadiumVehicle, vehicleOptions, &vehicleResult);
+        CPlugSolid* stadiumSolid = stadiumVehicle.CollisionSolid();
+        passed &= stadiumSolid != nullptr && stadiumSolid->m_tree != nullptr;
+        passed &= stadiumSolid != nullptr && stadiumSolid->m_tree != nullptr &&
+            stadiumSolid->m_tree->GetChildCount() == 8u;
+        passed &= stadiumVehicle.VisualMesh() != nullptr &&
+            stadiumVehicle.VisualMesh()->m_vertices.GetCount() == 35199u &&
+            stadiumVehicle.VisualMesh()->m_triangles.GetCount() == 69948u;
     }
 
     if (!passed) return 1;

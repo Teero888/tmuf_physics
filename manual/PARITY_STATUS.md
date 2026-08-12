@@ -1,8 +1,8 @@
 # TMNF physics parity status
 
-Last audited: 2026-08-09
+Last audited: 2026-08-12
 
-The physics library builds all 86 current translation units (the separately
+The physics library builds all 87 current translation units (the separately
 built visualization adds one helper unit), but a successful build is
 not yet evidence of a closed physics simulation. The highest-impact remaining
 gaps are below in dependency order.
@@ -14,9 +14,17 @@ gaps are below in dependency order.
 - Exact gravity, wheel geometry, normalization, plane, and coincident-contact
   constants are checked against their executable bytes.
 - `TrackMapLoader` accepts the original `Challenge.Gbx`, parses A01's metadata
-  and 397 placed blocks natively, resolves its Stadium collision into a
-  fingerprinted cache, and regression-checks the resulting 98,089 vertices and
-  176,184 triangles. The current mesh raycast also has focused coverage.
+  and 397 placed blocks natively, and resolves its Stadium resources into a
+  fingerprinted cache. Block rotation now uses the native ground/air footprint
+  from `CGameCtnBlockInfo`, rather than a one-cell pivot. The resulting collision
+  has 143,845 vertices and 246,803 triangles, including the map-selected
+  `Square32.Solid.Gbx` decoration; its 44,182-vertex visual Stadium mesh is also
+  loaded by the interactive viewer. The current mesh raycast has focused
+  coverage.
+- The original Stadium car construction graph is resolved to
+  `StadiumCar.Solid.Gbx`. Its 35,199-vertex visual mesh and eight collidable
+  ellipsoids are loaded into native-shaped plug trees, with the four wheel
+  surface trees retained for contact classification.
 - `GmVec4::PolygonClip` now follows the native six-plane, double-precision
   clipping path.
 - `GmSurf::ComputeCollision` now applies the native type ordering and reverses
@@ -26,12 +34,13 @@ gaps are below in dependency order.
   and mesh/mesh collision generation plus
   `CHmsCollisionBuffer` are translated from the native routines and covered by
   regression tests. The ellipsoid/polygon tests preserve the executable's
-  unusual polygon-local output frame. Sphere/mesh, ellipsoid/mesh, and box/mesh
-  currently scan faces in buffer order, while mesh/mesh scans triangle pairs
-  in buffer order, because the standalone octree is not yet the game's
-  broadphase structure. Their translated narrowphase and contact payloads are
-  independent of that acceleration structure; first-hit selection can differ
-  when more than one candidate collides.
+  unusual polygon-local output frame. Ellipsoid/mesh now uses a conservative
+  XZ-grid candidate side table; sphere/mesh and box/mesh still scan faces in
+  buffer order, while mesh/mesh scans triangle pairs in buffer order, because
+  the standalone broadphase is not yet the game's octree. Their translated
+  narrowphase and contact payloads are independent of that acceleration
+  structure; first-hit selection can differ when more than one candidate
+  collides.
 - Native affine point/vector transforms, `GmMat3` composition/line access, and
   the typed `GmIso4` inverse/composition/blend operations have focused tests.
 - `GmSurfMesh::TransformByNOMat` now follows the native vertex transform,
@@ -87,7 +96,11 @@ gaps are below in dependency order.
   records with the executable's corpus/data/material ownership, response-
   category local point and normal, signed local relative point speed, and
   group-side callback gates. The final 12 bytes retain the opposite corpus,
-  collision data, and material used by vehicle callbacks. The native pair-mode polarity is preserved:
+  collision data, and material used by vehicle callbacks. Plug-tree identity
+  is preserved through collision generation so the car callback can distinguish
+  all four wheel surfaces. Each record is now dispatched to its same-side
+  corpus, and callback replacement is interpreted in that body's local frame.
+  The native pair-mode polarity is preserved:
   `config[2] == 0` dispatches absorb-contact callbacks, while nonzero invokes
   the physical solver.
 - `CSceneVehicleCar::SEngine` is now the native standard-layout 0x34-byte
@@ -222,12 +235,17 @@ gaps are below in dependency order.
   `CGameCtnBlockInfo`, `CSceneMobil`, `CPlugSolid`, `CPlugTree`,
   `CPlugSurface`, and `CPlugMaterial` chunks. The extractor documents the exact
   node graph and selection rules to port.
+- Decoration selection is currently recovered through the map mood and the
+  Stadium construction graph. It should ultimately be driven by the complete
+  challenge decoration identifier for every map size and collection. The
+  unresolved `StadiumGrassClip` block also still needs its native resource path.
 
 ### 1. Finish collision generation and traversal
 
 - Every pair handler registered by the native `GmSurf` dispatch matrix now has
   a translated narrowphase and contact path. Native octree traversal order is
-  still substituted with deterministic face-buffer order for mesh candidates.
+  still substituted with deterministic face-buffer order or the conservative
+  XZ-grid side table for mesh candidates.
 - The native 9x9 registration matrix is now covered exhaustively. In
   particular, the executable does not register ellipsoid/ellipsoid or
   ellipsoid/box handlers; earlier manual declarations for those inferred pairs
@@ -352,6 +370,12 @@ order proves observable; collision response can now consume the typed working
 - Closed-loop ghost comparison becomes meaningful only after collision
   traversal, body state, and the fixed-step solver are real; until then it
   mainly measures the scaffolding.
+- The interactive A01 path now exercises the real track, Stadium, car solid,
+  wheel contacts, collision manager, and vehicle callback. A one-second full-gas
+  smoke run reaches about 49.9 km/h with all four wheels classified as grounded,
+  replacing the previous runaway-spin failure. Ride height, pitch/contact depth,
+  reverse/freewheel behavior, and special-contact branches still visibly diverge
+  and are the next useful closed-loop targets.
 
 ## Static-data recovery rule
 

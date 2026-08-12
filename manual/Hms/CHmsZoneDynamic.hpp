@@ -47,7 +47,10 @@ public:
     void PrepareForPhysicsStep(float dt = 0.01f);
     void PhysicsStep2(float dt = 0.01f);
     void ComputeCollisionResponse();
-    void SolveImpulse(SHmsPhysicalCollision* collision, CHmsPhysicalContact* contact1, CHmsPhysicalContact* contact2);
+    void SolveImpulse(
+        SHmsPhysicalCollision* collision,
+        CHmsPhysicalContact* body1Contact,
+        CHmsPhysicalContact* body2Contact);
     void SolveImpulse(SHmsPhysicalCollision* collision, SHmsPhysicalCollision* col2, CHmsCorpus* param_3);
 };
 

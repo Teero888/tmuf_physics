@@ -207,6 +207,7 @@ bool BuildCachePath(
     const fs::path& challengePath,
     const TrackMapLoadOptions& options,
     fs::path& outputPath,
+    fs::path& decorationVisualPath,
     TrackMapLoadResult& result) {
     if (options.packsDirectory.empty()) {
         SetError(result, "A Packs directory is required to load Challenge.Gbx");
@@ -255,7 +256,10 @@ bool BuildCachePath(
     filename << SafeStem(challengePath) << '-' << std::hex << std::setfill('0')
              << std::setw(16) << hash << ".tmnfcol";
     outputPath = cacheDirectory / filename.str();
+    decorationVisualPath = outputPath;
+    decorationVisualPath.replace_extension(".stadium.obj");
     result.collisionCachePath = outputPath.string();
+    result.decorationVisualCachePath = decorationVisualPath.string();
     return true;
 }
 
@@ -263,6 +267,7 @@ bool ExtractChallengeCollision(
     const fs::path& challengePath,
     const TrackMapLoadOptions& options,
     const fs::path& outputPath,
+    const fs::path& decorationVisualPath,
     TrackMapLoadResult& result) {
     std::ostringstream temporarySuffix;
 #ifdef _WIN32
@@ -271,8 +276,11 @@ bool ExtractChallengeCollision(
     temporarySuffix << ".tmp." << getpid();
 #endif
     const fs::path temporaryPath = outputPath.string() + temporarySuffix.str();
+    const fs::path temporaryVisualPath =
+        decorationVisualPath.string() + temporarySuffix.str() + ".obj";
     std::error_code ignored;
     fs::remove(temporaryPath, ignored);
+    fs::remove(temporaryVisualPath, ignored);
 
     const std::vector<std::string> arguments = {
         "dotnet", "run", "--no-restore", "--project",
@@ -280,20 +288,27 @@ bool ExtractChallengeCollision(
         ExistingAbsolutePath(challengePath),
         ExistingAbsolutePath(options.packsDirectory),
         temporaryPath.string(),
+        "--decoration-visual=" + temporaryVisualPath.string(),
     };
     const int exitCode = RunProcess(arguments);
     if (exitCode != 0) {
         fs::remove(temporaryPath, ignored);
+        fs::remove(temporaryVisualPath, ignored);
         SetError(result, "Track collision extractor failed with exit code " +
             std::to_string(exitCode));
         return false;
     }
 
     GmSurfMesh validationMesh;
-    if (!validationMesh.LoadFromTmnfCollision(temporaryPath.string())) {
+    GmSurfMesh validationVisual;
+    if (!validationMesh.LoadFromTmnfCollision(temporaryPath.string()) ||
+        !validationVisual.LoadFromObj(temporaryVisualPath.string()) ||
+        validationVisual.m_vertices.GetCount() == 0u ||
+        validationVisual.m_triangles.GetCount() == 0u) {
         fs::remove(temporaryPath, ignored);
-        SetError(result, "Extractor produced an invalid collision cache: " +
-            temporaryPath.string());
+        fs::remove(temporaryVisualPath, ignored);
+        SetError(result,
+            "Extractor produced invalid collision/decoration caches");
         return false;
     }
 
@@ -308,8 +323,18 @@ bool ExtractChallengeCollision(
     }
     if (ignored) {
         fs::remove(temporaryPath, ignored);
+        fs::remove(temporaryVisualPath, ignored);
         SetError(result, "Could not publish collision cache: " +
             outputPath.string());
+        return false;
+    }
+    fs::remove(decorationVisualPath, ignored);
+    ignored.clear();
+    fs::rename(temporaryVisualPath, decorationVisualPath, ignored);
+    if (ignored) {
+        fs::remove(temporaryVisualPath, ignored);
+        SetError(result, "Could not publish decoration visual cache: " +
+            decorationVisualPath.string());
         return false;
     }
     return true;
@@ -321,7 +346,8 @@ bool LoadTrackMapCollision(
     GmSurfMesh& mesh,
     const std::string& mapOrCollisionPath,
     const TrackMapLoadOptions& options,
-    TrackMapLoadResult* outputResult) {
+    TrackMapLoadResult* outputResult,
+    GmSurfMesh* decorationVisual) {
     TrackMapLoadResult localResult;
     TrackMapLoadResult& result = outputResult != nullptr
         ? *outputResult
@@ -351,17 +377,32 @@ bool LoadTrackMapCollision(
     if (!ParseChallenge(challengePath, result)) return false;
 
     fs::path cachePath;
-    if (!BuildCachePath(challengePath, options, cachePath, result)) return false;
+    fs::path decorationVisualPath;
+    if (!BuildCachePath(
+            challengePath, options, cachePath, decorationVisualPath, result)) {
+        return false;
+    }
 
-    if (!options.forceCacheRebuild && mesh.LoadFromTmnfCollision(cachePath.string())) {
+    const bool cachedCollision = !options.forceCacheRebuild &&
+        mesh.LoadFromTmnfCollision(cachePath.string());
+    const bool cachedDecoration = decorationVisual == nullptr ||
+        decorationVisual->LoadFromObj(decorationVisualPath.string());
+    if (cachedCollision && cachedDecoration) {
         result.cacheHit = true;
         return true;
     }
-    if (!ExtractChallengeCollision(challengePath, options, cachePath, result))
+    if (!ExtractChallengeCollision(
+            challengePath, options, cachePath, decorationVisualPath, result))
         return false;
     if (!mesh.LoadFromTmnfCollision(cachePath.string())) {
         SetError(result, "Could not load generated collision cache: " +
             cachePath.string());
+        return false;
+    }
+    if (decorationVisual != nullptr &&
+        !decorationVisual->LoadFromObj(decorationVisualPath.string())) {
+        SetError(result, "Could not load generated Stadium decoration visual: " +
+            decorationVisualPath.string());
         return false;
     }
     result.cacheHit = false;

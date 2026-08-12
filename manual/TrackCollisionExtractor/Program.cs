@@ -7,6 +7,21 @@ using GBX.NET.Engines.Scene;
 using GBX.NET.LZO;
 using GBX.NET.PAK;
 
+if (args.Length >= 1 && args[0] == "--vehicle")
+{
+    if (args.Length != 4)
+    {
+        Console.Error.WriteLine(
+            "Usage: TrackCollisionExtractor --vehicle <Packs directory> " +
+            "<collision.tmnfveh> <visual.obj>");
+        return 2;
+    }
+    return await ExtractStadiumVehicleAsync(
+        Path.GetFullPath(args[1]),
+        Path.GetFullPath(args[2]),
+        Path.GetFullPath(args[3]));
+}
+
 if (args.Length < 3)
 {
     Console.Error.WriteLine(
@@ -19,6 +34,7 @@ var mapPath = Path.GetFullPath(args[0]);
 var packsPath = Path.GetFullPath(args[1]);
 var outputPath = Path.GetFullPath(args[2]);
 var selectedIndices = ParseSelectedIndices(args.Skip(3));
+var decorationVisualPath = ParseOption(args.Skip(3), "--decoration-visual=");
 
 Gbx.LZO = new Lzo();
 var challenge = Gbx.ParseNode(mapPath) as CGameCtnChallenge
@@ -49,8 +65,28 @@ foreach (var (block, index) in challengeBlocks.Select((value, index) => (value, 
     }
 
     foreach (var mesh in localMeshes)
-        output.AppendBlock(mesh, block);
+        output.AppendBlock(mesh.Mesh, block, mesh.BlockSize);
     exportedBlocks++;
+}
+
+var decorationSolid = await extractor.ResolveDecorationSolidAsync(
+    challenge.Decoration.Id.ToString());
+if (decorationSolid is not null)
+{
+    output.AppendLocal(await extractor.ExtractSolidCollisionAsync(decorationSolid));
+    if (decorationVisualPath is not null)
+    {
+        var fullVisualPath = Path.GetFullPath(decorationVisualPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullVisualPath)!);
+        decorationSolid.ExportToObj(
+            fullVisualPath, Path.ChangeExtension(fullVisualPath, ".mtl"),
+            mergeVerticesDigitThreshold: 5, lod: 1);
+    }
+}
+else
+{
+    Console.Error.WriteLine(
+        $"Could not resolve the {challenge.Decoration.Id} Stadium decoration solid");
 }
 
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -68,6 +104,47 @@ if (unresolvedBlocks.Count != 0)
 
 return 0;
 
+static async Task<int> ExtractStadiumVehicleAsync(
+    string packsPath, string collisionPath, string visualPath)
+{
+    Gbx.LZO = new Lzo();
+    var pakList = await PakList.ParseAsync(
+        Path.Combine(packsPath, "packlist.dat"), PakListGame.TM);
+    var keys = pakList.ToKeyInfoDictionary();
+    await using var stadiumPak = await Pak.ParseAsync(
+        Path.Combine(packsPath, "Stadium.pak"), keys["Stadium"]);
+    var extractor = new CollisionExtractor(stadiumPak);
+    // CGameItemModel's VehicleFile points to StadiumCar.Car.Vehicle.Gbx. Its
+    // native reference table selects this exact CPlugSolid for both the HMS
+    // item and the visible car; reading the solid directly avoids an old
+    // CHmsSoundSource chunk that GBX.NET cannot decode.
+    var vehicleSolid = await extractor.OpenNodeByLogicalPathAsync<CPlugSolid>(
+        "Media/Solid/StadiumCar.Solid.Gbx");
+    if (vehicleSolid is null)
+    {
+        Console.Error.WriteLine("Could not resolve Media/Solid/StadiumCar.Solid.Gbx");
+        return 1;
+    }
+
+    var collision = await extractor.ExtractVehiclePrimitivesAsync(vehicleSolid);
+    if (collision.Primitives.Count == 0)
+    {
+        Console.Error.WriteLine("The Stadium car solid contains no collision primitives");
+        return 1;
+    }
+    Directory.CreateDirectory(Path.GetDirectoryName(collisionPath)!);
+    collision.Write(collisionPath);
+
+    Directory.CreateDirectory(Path.GetDirectoryName(visualPath)!);
+    vehicleSolid.ExportToObj(
+        visualPath, Path.ChangeExtension(visualPath, ".mtl"),
+        mergeVerticesDigitThreshold: 6, lod: 0);
+    Console.WriteLine(
+        $"Exported Stadium car collision ({collision.Primitives.Count} primitives) " +
+        $"and visual model to {visualPath}");
+    return 0;
+}
+
 static HashSet<int>? ParseSelectedIndices(IEnumerable<string> options)
 {
     const string prefix = "--indices=";
@@ -79,6 +156,10 @@ static HashSet<int>? ParseSelectedIndices(IEnumerable<string> options)
         .Select(int.Parse)
         .ToHashSet();
 }
+
+static string? ParseOption(IEnumerable<string> options, string prefix) =>
+    options.SingleOrDefault(x => x.StartsWith(prefix, StringComparison.Ordinal))
+        ?[prefix.Length..];
 
 internal sealed class CollisionExtractor
 {
@@ -104,11 +185,12 @@ internal sealed class CollisionExtractor
                           StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task<IReadOnlyList<LocalCollisionMesh>> GetBlockMeshesAsync(CGameCtnBlock block)
+    public async Task<IReadOnlyList<ResolvedBlockCollision>> GetBlockMeshesAsync(
+        CGameCtnBlock block)
     {
         var blockInfoFile = ResolveBlockInfo(block.Name);
         if (blockInfoFile is null)
-            return Array.Empty<LocalCollisionMesh>();
+            return Array.Empty<ResolvedBlockCollision>();
 
         Gbx gbx;
         try
@@ -118,11 +200,11 @@ internal sealed class CollisionExtractor
         catch (Exception exception)
         {
             Console.Error.WriteLine($"Could not parse block info {block.Name}: {exception.Message}");
-            return Array.Empty<LocalCollisionMesh>();
+            return Array.Empty<ResolvedBlockCollision>();
         }
 
         if (gbx.Node is not CGameCtnBlockInfo info)
-            return Array.Empty<LocalCollisionMesh>();
+            return Array.Empty<ResolvedBlockCollision>();
 
         var meshes = new List<LocalCollisionMesh>();
         var mobilGroups = block.IsGround ? info.GroundMobils : info.AirMobils;
@@ -154,7 +236,152 @@ internal sealed class CollisionExtractor
             }
         }
 
-        return meshes.Where(mesh => mesh.Triangles.Count != 0).ToArray();
+        var blockSize = GetBlockSize(info, block.IsGround);
+        return meshes
+            .Where(mesh => mesh.Triangles.Count != 0)
+            .Select(mesh => new ResolvedBlockCollision(mesh, blockSize))
+            .ToArray();
+    }
+
+    public Task<T?> OpenNodeByLogicalPathAsync<T>(
+        string logicalPath, bool tolerateBodyErrors = false)
+        where T : class => OpenNodeAsync<T>(logicalPath, tolerateBodyErrors);
+
+    public async Task<Gbx?> OpenGbxByLogicalPathAsync(
+        string logicalPath, bool tolerateBodyErrors = false)
+    {
+        var file = ResolveFile(logicalPath);
+        if (file is null)
+            return null;
+        var settings = tolerateBodyErrors
+            ? new GbxReadSettings { IgnoreExceptionsInBody = true }
+            : default;
+        return await pak.OpenGbxFileAsync(file, settings);
+    }
+
+    public Task<LocalCollisionMesh> ExtractSolidCollisionAsync(CPlugSolid solid) =>
+        ExtractSolidAsync(solid);
+
+    public async Task<CPlugSolid?> ResolveDecorationSolidAsync(string mood)
+    {
+        var decorationFile = pak.Files.Values.FirstOrDefault(file =>
+            file.Name.Contains("ConstructionDecoration",
+                               StringComparison.OrdinalIgnoreCase) &&
+            file.Name.EndsWith(mood + ".TMDecoration.Gbx",
+                               StringComparison.OrdinalIgnoreCase));
+        if (decorationFile is null)
+            return null;
+        CGameCtnDecoration? decoration;
+        try
+        {
+            decoration = (await pak.OpenGbxFileAsync(decorationFile)).Node
+                as CGameCtnDecoration;
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine(
+                $"Could not parse decoration {mood}: {exception.Message}");
+            return null;
+        }
+        var scenePath = decoration?.DecoSize?.SceneFile?.FilePath;
+        if (string.IsNullOrEmpty(scenePath))
+            return null;
+        var scene = await OpenGbxByLogicalPathAsync(scenePath,
+                                                    tolerateBodyErrors: true);
+        var solidPath = scene?.RefTable?.Files
+            .Select(file => file.FilePath.Replace('\\', '/'))
+            .FirstOrDefault(path =>
+                path.Contains("/Media/Solid/Zone/",
+                              StringComparison.OrdinalIgnoreCase) &&
+                path.EndsWith(".Solid.Gbx",
+                              StringComparison.OrdinalIgnoreCase));
+        return solidPath is null
+            ? null
+            : await OpenNodeAsync<CPlugSolid>(solidPath);
+    }
+
+    public async Task<LocalCollisionMesh> ExtractSolidResourceCollisionAsync(
+        CPlugSolid solid)
+    {
+        if (solid.Tree is null &&
+            solid.TreeFile?.FilePath is { Length: > 0 } treePath)
+        {
+            solid.Tree = await OpenNodeAsync<CPlugTree>(treePath);
+        }
+        return await ExtractSolidAsync(solid);
+    }
+
+    public async Task<VehicleCollisionAsset> ExtractVehiclePrimitivesAsync(
+        CPlugSolid solid)
+    {
+        if (solid.Tree is null &&
+            solid.TreeFile?.FilePath is { Length: > 0 } treePath)
+        {
+            solid.Tree = await OpenNodeAsync<CPlugTree>(treePath);
+        }
+        var output = new VehicleCollisionAsset();
+        if (solid.Tree is CPlugTree tree)
+            await ExtractVehicleTreeAsync(tree, Transform.Identity, output,
+                                          new HashSet<int>());
+        return output;
+    }
+
+    private async Task ExtractVehicleTreeAsync(
+        CPlugTree tree,
+        Transform parentTransform,
+        VehicleCollisionAsset output,
+        HashSet<int> visitedTrees)
+    {
+        if (!visitedTrees.Add(RuntimeHelpers.GetHashCode(tree)))
+            return;
+        var transform = tree.Location is { } location
+            ? parentTransform.Compose(Transform.FromIso4(location))
+            : parentTransform;
+        if (tree.IsCollidable && tree.Surface is CPlugSurface surface &&
+            (surface.Surf ?? surface.Geom?.Surf) is
+                CPlugSurface.Ellipsoid ellipsoid)
+        {
+            var surfaceIndex = ellipsoid.SurfaceIndex;
+            var material = surfaceIndex >= 0 && surfaceIndex < surface.Materials.Length
+                ? await ResolveMaterialIdAsync(surface.Materials[surfaceIndex])
+                : ushort.MaxValue;
+            output.Primitives.Add(new VehicleCollisionPrimitive(
+                (Vec3)ellipsoid.Size, transform, material,
+                GetVehiclePrimitiveRole(tree.Name)));
+        }
+        foreach (var child in tree.Children)
+            await ExtractVehicleTreeAsync(
+                child, transform, output, visitedTrees);
+    }
+
+    private static ushort GetVehiclePrimitiveRole(string name) => name switch
+    {
+        "FLSurf" => 1,
+        "FRSurf" => 2,
+        "RLSurf" => 3,
+        "RRSurf" => 4,
+        _ => 0
+    };
+
+    private static Int3 GetBlockSize(CGameCtnBlockInfo info, bool isGround)
+    {
+        // CGameCtnBlock::GetMobilLoc (TmForeverFixed.exe 0x0060ACB0 and
+        // wrapper 0x0060B320) rotates around the block-info footprint at
+        // native +0x58 for ground blocks or +0x64 for air blocks. Those
+        // GmNat3 values are built from the unit-info RelativeOffset values.
+        // A fixed one-cell pivot moves every rotated multi-cell block by one
+        // or more complete 32 m tiles.
+        var size = new Int3(1, 1, 1);
+        foreach (var unit in isGround
+                     ? info.GroundBlockUnitInfos ?? Array.Empty<CGameCtnBlockUnitInfo>()
+                     : info.AirBlockUnitInfos ?? Array.Empty<CGameCtnBlockUnitInfo>())
+        {
+            size = new Int3(
+                Math.Max(size.X, unit.RelativeOffset.X + 1),
+                Math.Max(size.Y, unit.RelativeOffset.Y + 1),
+                Math.Max(size.Z, unit.RelativeOffset.Z + 1));
+        }
+        return size;
     }
 
     private PakFile? ResolveBlockInfo(string name)
@@ -246,14 +473,18 @@ internal sealed class CollisionExtractor
         return await ExtractSolidAsync(solid);
     }
 
-    private async Task<T?> OpenNodeAsync<T>(string logicalPath) where T : class
+    private async Task<T?> OpenNodeAsync<T>(
+        string logicalPath, bool tolerateBodyErrors = false) where T : class
     {
         var file = ResolveFile(logicalPath);
         if (file is null)
             return null;
         try
         {
-            return (await pak.OpenGbxFileAsync(file)).Node as T;
+            var settings = tolerateBodyErrors
+                ? new GbxReadSettings { IgnoreExceptionsInBody = true }
+                : default;
+            return (await pak.OpenGbxFileAsync(file, settings)).Node as T;
         }
         catch (Exception exception)
         {
@@ -407,19 +638,67 @@ internal sealed class LocalCollisionMesh
     public List<LocalTriangle> Triangles { get; } = new();
 }
 
+internal readonly record struct ResolvedBlockCollision(
+    LocalCollisionMesh Mesh, Int3 BlockSize);
 internal readonly record struct LocalTriangle(int A, int B, int C, ushort MaterialId);
 internal readonly record struct WorldTriangle(
     uint A, uint B, uint C, Vec3 Normal, float PlaneDistance, ushort MaterialId);
+
+internal readonly record struct VehicleCollisionPrimitive(
+    Vec3 Radii, Transform Location, ushort MaterialId, ushort Role);
+
+internal sealed class VehicleCollisionAsset
+{
+    public List<VehicleCollisionPrimitive> Primitives { get; } = new();
+
+    public void Write(string path)
+    {
+        using var stream = File.Create(path);
+        using var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: false);
+        writer.Write(Encoding.ASCII.GetBytes("TMNFVEH1"));
+        writer.Write((uint)Primitives.Count);
+        writer.Write(0u);
+        foreach (var primitive in Primitives)
+        {
+            writer.Write(1u); // Native GmSurf type: ellipsoid.
+            writer.Write(primitive.MaterialId);
+            writer.Write(primitive.Role);
+            primitive.Radii.Write(writer);
+            primitive.Location.Write(writer);
+        }
+    }
+}
 
 internal sealed class CollisionMesh
 {
     public List<Vec3> Vertices { get; } = new();
     public List<WorldTriangle> Triangles { get; } = new();
 
-    public void AppendBlock(LocalCollisionMesh localMesh, CGameCtnBlock block)
+    public void AppendLocal(LocalCollisionMesh localMesh)
     {
         var vertexBase = Vertices.Count;
-        Vertices.AddRange(localMesh.Vertices.Select(vertex => TransformBlock(vertex, block)));
+        Vertices.AddRange(localMesh.Vertices);
+        foreach (var triangle in localMesh.Triangles)
+        {
+            var a = (uint)(vertexBase + triangle.A);
+            var b = (uint)(vertexBase + triangle.B);
+            var c = (uint)(vertexBase + triangle.C);
+            var normal = Vec3.Cross(Vertices[(int)b] - Vertices[(int)a],
+                                    Vertices[(int)c] - Vertices[(int)a]).Normalized();
+            if (normal.LengthSquared < 1e-12f)
+                continue;
+            Triangles.Add(new WorldTriangle(
+                a, b, c, normal, -Vec3.Dot(normal, Vertices[(int)a]),
+                triangle.MaterialId));
+        }
+    }
+
+    public void AppendBlock(
+        LocalCollisionMesh localMesh, CGameCtnBlock block, Int3 blockSize)
+    {
+        var vertexBase = Vertices.Count;
+        Vertices.AddRange(localMesh.Vertices.Select(
+            vertex => TransformBlock(vertex, block, blockSize)));
         foreach (var triangle in localMesh.Triangles)
         {
             var a = (uint)(vertexBase + triangle.A);
@@ -464,7 +743,8 @@ internal sealed class CollisionMesh
         }
     }
 
-    private static Vec3 TransformBlock(Vec3 vertex, CGameCtnBlock block)
+    private static Vec3 TransformBlock(
+        Vec3 vertex, CGameCtnBlock block, Int3 blockSize)
     {
         var baseX = block.Coord.X * 32.0f;
         var baseY = block.Coord.Y * 8.0f;
@@ -473,12 +753,14 @@ internal sealed class CollisionMesh
         {
             Direction.North => new Vec3(baseX + vertex.X, baseY + vertex.Y,
                                         baseZ + vertex.Z),
-            Direction.East => new Vec3(baseX + 32.0f - vertex.Z, baseY + vertex.Y,
+            Direction.East => new Vec3(baseX + blockSize.Z * 32.0f - vertex.Z,
+                                       baseY + vertex.Y,
                                        baseZ + vertex.X),
-            Direction.South => new Vec3(baseX + 32.0f - vertex.X, baseY + vertex.Y,
-                                        baseZ + 32.0f - vertex.Z),
+            Direction.South => new Vec3(baseX + blockSize.X * 32.0f - vertex.X,
+                                        baseY + vertex.Y,
+                                        baseZ + blockSize.Z * 32.0f - vertex.Z),
             Direction.West => new Vec3(baseX + vertex.Z, baseY + vertex.Y,
-                                       baseZ + 32.0f - vertex.X),
+                                       baseZ + blockSize.X * 32.0f - vertex.X),
             _ => throw new InvalidDataException($"Unsupported block direction {block.Direction}")
         };
     }
@@ -504,6 +786,13 @@ internal readonly record struct Vec3(float X, float Y, float Z)
 
     public static implicit operator Vec3(GBX.NET.Vec3 value) =>
         new(value.X, value.Y, value.Z);
+
+    public void Write(BinaryWriter writer)
+    {
+        writer.Write(X);
+        writer.Write(Y);
+        writer.Write(Z);
+    }
 }
 
 internal readonly record struct Transform(
@@ -543,4 +832,12 @@ internal readonly record struct Transform(
         XX * local.TX + XY * local.TY + XZ * local.TZ + TX,
         YX * local.TX + YY * local.TY + YZ * local.TZ + TY,
         ZX * local.TX + ZY * local.TY + ZZ * local.TZ + TZ);
+
+    public void Write(BinaryWriter writer)
+    {
+        writer.Write(XX); writer.Write(XY); writer.Write(XZ);
+        writer.Write(YX); writer.Write(YY); writer.Write(YZ);
+        writer.Write(ZX); writer.Write(ZY); writer.Write(ZZ);
+        writer.Write(TX); writer.Write(TY); writer.Write(TZ);
+    }
 }

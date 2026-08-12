@@ -346,6 +346,9 @@ public:
     // and timestep are its three stack arguments.
     void WheelUpdateSpeedFromVehicleSpeed(
         SSimulationWheel* wheel, float vehicleWheelSpeed, float dt);
+    // Native 0x7BD1B0 initializes the suspension at AbsorbingValRest and
+    // applies that displacement to the wheel collision subtree.
+    void WheelReset(SSimulationWheel* wheel);
     void WheelIntegrate(SSimulationWheel* wheel, float dt);
     // TmForeverFixed.exe 0x7BD700 ends in `ret 0x08`: input and timestep are
     // the only two stack arguments.

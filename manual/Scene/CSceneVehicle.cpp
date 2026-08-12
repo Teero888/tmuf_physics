@@ -10,6 +10,16 @@ CSceneVehicle::SSurfaceHandler::SSurfaceHandler() : m_tree(nullptr) {
     m_surfaceLocation.SetIdentity();
 }
 
+void CSceneVehicle::SSurfaceHandler::Init(CPlugTree* tree) {
+    m_tree = tree;
+    if (tree != nullptr) {
+        m_baseLocation = *tree->GetLocation();
+    } else {
+        m_baseLocation.SetIdentity();
+    }
+    m_surfaceLocation = m_baseLocation;
+}
+
 void CSceneVehicle::SSurfaceHandler::Reset() {
     m_surfaceLocation = m_baseLocation;
 }

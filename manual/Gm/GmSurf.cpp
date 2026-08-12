@@ -1189,12 +1189,32 @@ int GmCollision_Ellipsoid_Mesh(
     const uint32_t firstNewCollision = buffer->GetCount();
     bool foundCollision = false;
 
+    GmIso4 ellipsoidToMesh = locatedEllipsoid->m_location;
+    ellipsoidToMesh.MultInverse(locatedMesh->m_location);
+    GmBoxAligned ellipsoidLocalBounds;
+    ellipsoid->GetEllipsoidBoundingBox(ellipsoidLocalBounds);
+    GmBoxAligned meshLocalQueryBounds;
+    meshLocalQueryBounds.SetMult(ellipsoidLocalBounds, ellipsoidToMesh);
+    GmVec3 queryMinimum;
+    GmVec3 queryMaximum;
+    meshLocalQueryBounds.GetMinMax(queryMinimum, queryMaximum);
+    std::vector<uint32_t> broadphaseCandidates;
+    const bool hasBroadphase = mesh->GetAabbCandidates(
+        queryMinimum.x, queryMinimum.z,
+        queryMaximum.x, queryMaximum.z,
+        broadphaseCandidates);
+
     // The native routine gets candidates from its mesh octree. The standalone
-    // octree is not layout-compatible, so preserve deterministic face-buffer
-    // order just as the translated sphere/mesh path does.
-    for (uint32_t triangleIndex = 0;
-         triangleIndex < mesh->m_triangles.m_count;
-         ++triangleIndex) {
+    // grid returns a conservative subset in deterministic face-buffer order.
+    // It changes broadphase cost only; every overlapping XZ cell is included.
+    const uint32_t candidateCount = hasBroadphase
+        ? static_cast<uint32_t>(broadphaseCandidates.size())
+        : mesh->m_triangles.m_count;
+    for (uint32_t candidateIndex = 0u;
+         candidateIndex < candidateCount; ++candidateIndex) {
+        const uint32_t triangleIndex = hasBroadphase
+            ? broadphaseCandidates[candidateIndex]
+            : candidateIndex;
         const GmSurfTriangle& triangle = mesh->m_triangles[triangleIndex];
         if (triangle.indices[0] >= mesh->m_vertices.m_count ||
             triangle.indices[1] >= mesh->m_vertices.m_count ||

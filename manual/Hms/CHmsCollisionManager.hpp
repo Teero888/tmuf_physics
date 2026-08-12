@@ -104,6 +104,7 @@ public:
         LocatedGmSurf* m_surf190 = nullptr;
         CHmsCollisionBuffer* m_activeCollisionBuffer = nullptr;
         uint32_t* m_activeConfig = nullptr;
+        SGroup* m_activeStaticGroup = nullptr;
 
         SZone(uint32_t zoneId, CHmsCollisionManager* manager);
         ~SZone() = default;

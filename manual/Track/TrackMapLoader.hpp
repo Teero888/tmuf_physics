@@ -27,6 +27,7 @@ struct TrackMapLoadResult {
     std::string mapAuthor;
     std::string environment;
     std::string collisionCachePath;
+    std::string decorationVisualCachePath;
     std::string error;
     std::size_t blockCount = 0;
     bool sourceWasChallengeGbx = false;
@@ -41,6 +42,7 @@ bool LoadTrackMapCollision(
     GmSurfMesh& mesh,
     const std::string& mapOrCollisionPath,
     const TrackMapLoadOptions& options,
-    TrackMapLoadResult* result = nullptr);
+    TrackMapLoadResult* result = nullptr,
+    GmSurfMesh* decorationVisual = nullptr);
 
 #endif // TRACKMAPLOADER_HPP

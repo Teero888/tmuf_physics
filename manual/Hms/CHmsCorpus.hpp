@@ -61,6 +61,7 @@ public:
     struct SCollisionSurface {
         LocatedGmSurf m_gmSurface;
         CPlugSurface* m_plugSurface;
+        CPlugTree* m_tree;
     };
 
     // Typed standalone collision leaves. They are refreshed from the solid
@@ -93,7 +94,9 @@ public:
     
     void ComputeCurrentState(CHmsCorpus* param_1, float param_2);
     void AddCollisionSurface(GmSurf* surface, const GmIso4& location);
-    void AddCollisionSurface(CPlugSurface* surface, const GmIso4& location);
+    void AddCollisionSurface(
+        CPlugSurface* surface, const GmIso4& location,
+        CPlugTree* tree = nullptr);
     void ClearCollisionSurfaces();
     bool RefreshCollisionSurfacesFromTree(CPlugTree* root);
     bool RefreshCollisionSurfacesFromSolid();

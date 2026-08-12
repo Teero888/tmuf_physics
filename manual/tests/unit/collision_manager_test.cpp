@@ -762,11 +762,11 @@ bool TestNativeContactCallbackConstruction() {
            CHmsCorpus::ResolvePointerToken(body2Token) == &body2 &&
            body1Callback.lastItem == &body1Item &&
            body1Callback.contact.m_corpus32 == body1Token &&
-           body1Callback.contact.m_collisionData == 0x9abcdef0u &&
-           body1Callback.contact.m_materialId == 202u &&
+           body1Callback.contact.m_collisionData == 0x12345678u &&
+           body1Callback.contact.m_materialId == 101u &&
            body1Callback.contact.m_otherCorpus32 == body2Token &&
-           body1Callback.contact.m_otherCollisionData == 0x12345678u &&
-           body1Callback.contact.m_otherMaterialId == 101u &&
+           body1Callback.contact.m_otherCollisionData == 0x9abcdef0u &&
+           body1Callback.contact.m_otherMaterialId == 202u &&
            VecNear(
                body1Callback.contact.m_localNormal,
                GmVec3(1.0f, 0.0f, 0.0f)) &&
@@ -780,11 +780,11 @@ bool TestNativeContactCallbackConstruction() {
            body2Callback.calls == 1u &&
            body2Callback.lastItem == &body2Item &&
            body2Callback.contact.m_corpus32 == body2Token &&
-           body2Callback.contact.m_collisionData == 0x12345678u &&
-           body2Callback.contact.m_materialId == 101u &&
+           body2Callback.contact.m_collisionData == 0x9abcdef0u &&
+           body2Callback.contact.m_materialId == 202u &&
            body2Callback.contact.m_otherCorpus32 == body1Token &&
-           body2Callback.contact.m_otherCollisionData == 0x9abcdef0u &&
-           body2Callback.contact.m_otherMaterialId == 202u &&
+           body2Callback.contact.m_otherCollisionData == 0x12345678u &&
+           body2Callback.contact.m_otherMaterialId == 101u &&
            VecNear(
                body2Callback.contact.m_localNormal,
                GmVec3(0.0f, 1.0f, 0.0f)) &&
@@ -887,13 +887,13 @@ bool TestNativePhysicalContactRewriteAndVeto() {
            body1Callback.received.m_isActive == 1u &&
            VecNear(
                body1Callback.received.m_relativeSpeed,
-               GmVec3(-3.0f, 0.0f, 0.0f)) &&
+               GmVec3(3.0f, 0.0f, 0.0f)) &&
            body2Callback.calls == 1u &&
            body2Callback.lastItem == &body2Item &&
            body2Callback.received.m_isActive == 1u &&
            VecNear(
                body2Callback.received.m_relativeSpeed,
-               GmVec3(3.0f, 0.0f, 0.0f)) &&
+               GmVec3(-3.0f, 0.0f, 0.0f)) &&
            VecNear(
                body1.m_dyna->CurrentState().m_linearSpeed,
                GmVec3(2.0f, 0.0f, 0.0f)) &&
