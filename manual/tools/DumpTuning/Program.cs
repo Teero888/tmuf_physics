@@ -21,7 +21,10 @@ class Program {
             var xs = ((IEnumerable)curve.Xs)?.Cast<float>().ToArray();
             var ys = ((IEnumerable)curve.Ys)?.Cast<float>().ToArray();
             if (xs == null || ys == null) return "curve(empty)";
-            return "curve{ x=[" + string.Join(", ", xs.Select(v => v.ToString("R", System.Globalization.CultureInfo.InvariantCulture)))
+            object interp = null;
+            try { interp = curve.RealInterp; } catch { }
+            return "curve{ interp=" + (interp?.ToString() ?? "?")
+                 + " x=[" + string.Join(", ", xs.Select(v => v.ToString("R", System.Globalization.CultureInfo.InvariantCulture)))
                  + "] y=[" + string.Join(", ", ys.Select(v => v.ToString("R", System.Globalization.CultureInfo.InvariantCulture))) + "] }";
         }
         if (value is float[] fa) return "[" + string.Join(", ", fa.Select(v => v.ToString("R", System.Globalization.CultureInfo.InvariantCulture))) + "]";

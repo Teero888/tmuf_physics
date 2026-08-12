@@ -69,6 +69,13 @@ physics. Use this to check any value in `../../TuningData.hpp` rather than
 trusting a transcription; a diff of all 73 scalars and 26 curves against it
 passes today.
 
+Each curve prints its `RealInterp` mode, which matters: mode 1 makes the
+executable evaluate the curve as a **step** (`0x585EE8` returns the value of
+the greatest key at or below x) while every other mode interpolates
+(`0x585EBE`). GBX.NET names mode 1 "Linear", which is the opposite of what this
+executable does with it — trust the disassembly. Stadium's `AccelCurve` is
+stepped, and getting that wrong cost roughly 12% of the car's acceleration.
+
 Note that a value only comes from the file if its chunk id is listed under
 "chunks present". Anything else keeps the default that
 `CSceneVehicleCarTuning::CSceneVehicleCarTuning` (0x7F43B0) writes, and those

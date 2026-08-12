@@ -27,7 +27,8 @@ gaps are below in dependency order.
   is a different car entirely, so an index mistake here silently swaps in the
   wrong physics. All 73 scalar constants and all 26 curves in `TuningData.hpp`
   were diffed against it this session and match exactly. The one field that was
-  missing entirely, `GroundSlowDownCoef`, has been added.
+  missing entirely, `GroundSlowDownCoef`, has been added. It also prints each
+  curve's `RealInterp` mode, which is what exposed the stepped `AccelCurve`.
 - `tools/tuning_chunk_offsets.py`, which recovers
   `CSceneVehicleCarTuning`'s chunk-id to member-offset mapping from the
   archive dispatch at `0x7F5EB0`. Aligning it against GBX.NET's
@@ -422,10 +423,12 @@ gaps are below in dependency order.
   (impulses into `+0x824..+0x82C`), which `ComputeForces` snapshots and clears
   at entry. Nothing in the physics reads it back, so it is not translated.
 - `CFuncKeysReal::GetValue` (`0x586200` through `0x585E70` and
-  `CFuncKeys::GetBoundingIndices` at `0x5914C0`) is plain linear interpolation
-  between adjacent keys, with `t = 0` when the bounding indices coincide. The
-  km/h scale `M5GetAccelFromSpeed` applies at `0x7F3E48` is the double 3.6 at
-  `.rdata 0x00B3D2A8`. `EvaluateCurve` matches.
+  `CFuncKeys::GetBoundingIndices` at `0x5914C0`) has **two** evaluators,
+  selected by the curve's own `RealInterp` mode at `+0x28`: mode 1 steps and
+  every other mode interpolates linearly. `EvaluateCurve` now models both; see
+  the resolved-deficit section below, which is what this changed. The km/h
+  scale `M5GetAccelFromSpeed` applies at `0x7F3E48` is the double 3.6 at
+  `.rdata 0x00B3D2A8`.
 - `ComputeForces`' `car +0x74C` block at `0x7C6FB8..0x7C7108` is identified and
   deliberately not translated. It is an action dispatch — mode 1 applies an
   impulse of tuning `+0x104` along the negated unit pre-friction force with a
@@ -635,93 +638,53 @@ order proves observable; collision response can now consume the typed working
   `--replay PATH`), including the A01 launch's intentionally idle first 10 ms,
   so its trace uses the recorded controls rather than synthetic constant gas.
 - The interactive A01 path now exercises the real track, Stadium, car solid,
-  wheel contacts, collision manager, and vehicle callback. With native physical
-  initialization and replay-timed inputs, the 0.9-second state is `x=177.135`,
-  `vx=13.293 m/s`, and pitch rate `-0.376 rad/s`, compared with the original
-  replay's `x=177.365`, `vx=14.192 m/s`, and `-0.381 rad/s`; all four wheels are
-  classified as grounded. This removes the generic damping loss and zero-COM
-  spin source, but the growing longitudinal/contact discrepancy is still real.
-  Ride height, contact depth/order, reverse/freewheel behavior, and special-
-  contact branches are the next useful closed-loop targets.
+  wheel contacts, collision manager, and vehicle callback, and with the stepped
+  acceleration curve in place it tracks the original replay closely through the
+  launch and the first corner. Sampled against the recorded ghost every 100 ms,
+  the mean 3D position error over the first three seconds is **0.116 m**, with a
+  maximum of 0.39 m and speed within 0.34 m/s; it had been metres. The gear
+  shift now lands in the same 1.8–2.0 s window as the replay's own speed
+  plateau. The match holds to about 4.5 s (1.4 m), after which the simulation
+  loses speed through the first corner — 47.7 m/s against the replay's 58.3 at
+  5 s — and eventually wedges to a stop near 9.5 s.
+  That corner is now the frontier. The suspects are the cornering side-force
+  path and collision response, not the drive force: a car that stops entirely is
+  stuck on geometry, which points at contact generation and impulse handling
+  rather than anything in the vehicle model.
 
-## Open question: the A01 launch accelerates too slowly
+## Resolved: the A01 launch acceleration deficit
 
-This is currently the largest measured parity gap, and it is not explained by
-any branch audited so far. Differentiating the original A01 replay's recorded
-velocities (`a01_ghost_velocity.csv`, confirmed against the position samples in
-`a01_ghost_full.csv`) gives a tangential acceleration that sits *above*
-Stadium's `AccelCurve` everywhere, by an amount that grows with speed and then
-saturates:
+The launch used to reach 14.81 m/s at 1.0 s against the replay's 15.99, with
+the gap growing to roughly 12% by 3 s. The cause was `CFuncKeysReal`'s
+interpolation mode, which the standalone build did not model at all.
 
-| speed (m/s) | `AccelCurve` (m/s²) | replay d\|v\|/dt (m/s²) | excess |
-| --- | --- | --- | --- |
-| 5.4 | 15.04 | 15.87 | +0.83 |
-| 10.1 | 14.20 | 15.73 | +1.53 |
-| 13.4 | 13.62 | 16.93 | +3.31 |
-| 15.1 | 13.31 | 17.94 | +4.63 |
-| 18.6 | 12.68 | 17.51 | +4.83 |
-| 22.1 | 12.07 | 16.76 | +4.69 |
-| 26.9 | 11.20 | 15.88 | +4.68 |
+`CFuncKeysReal::Chunk` archives a natural at `+0x28` immediately after the
+value array (`0x5861D7`, GBX chunk `0x0501A001`, GBX.NET's `RealInterp`).
+`0x585E70` reads it as its sixth argument and branches on it *before* touching
+the keys: mode 1 goes to `0x585EE8`, which loads `values[i0]` for the greatest
+key at or below x and stores it unblended, while every other mode falls through
+to `0x585EBE` and forms `(1 - t) * values[i0] + t * values[i1]`. Stadium's
+`AccelCurve` carries mode 1. It is a **step**, not a ramp: a flat 16 m/s² from
+0 to 101 km/h, 11 from 101 to 201, 7 from 201 to 401, 5.5 from 401 to 801.
 
-The curve values use the extracted Stadium `AccelCurve` (keys in km/h, `0 ->
-16`, `101 -> 11`) with the `kSpeedCurveScale` 3.6 that `M5GetAccelFromSpeed`
-applies at `0x7F3E48`. The manual simulation tracks its own curve closely, so
-it reproduces the left column and reaches 14.81 m/s at 1.0 s against the
-replay's 15.99 m/s, and 127.5 km/h at 3.0 s against 144.9 km/h.
+Beware the name. GBX.NET calls mode 1 "Linear", which is exactly backwards from
+what this executable does with it; the disassembly is unambiguous and is what
+`tools/DumpTuning` now prints alongside each curve. Of the 26 curves in Stadium
+tuning 29, three are mode 1 — `AccelCurve`, `LateralContactSlowDown` and
+`SteerSlowDown` — and the rest interpolate.
 
-Terrain does not account for it: A01 descends only 0.13 m over the first
-7.6 m of the launch, worth about 0.5 m/s² of tangential gravity at 1.0 s. The
-following have been checked and ruled out as the source:
+`EvaluateCurve` also had an exact-key bug this exposed. `GetBoundingIndices`
+(`0x5914C0`) collapses both indices onto the same key when x lands on one, so
+the lower index is the *greatest* key at or below x, not the first bracket a
+forward scan accepts. The two differ precisely at key points, which is
+invisible for an interpolated curve (t is zero either way) and wrong by a whole
+span for a stepped one.
 
-- The axial assembly at `0x7C623E..0x7C6767` — every operand is now accounted
-  for, and the only unwired term (steering slowdown) is zero for Stadium at
-  non-negative speed and is subtracted, not added.
-- `WheelAddForceToVehicle` (`0x7C1810`), which adds no longitudinal force.
-- The terminal-speed correction, which never fires (`MaxSpeed` is 277.8).
-- `GetSlopeAdherence`, which returns 1.0 on level ground.
-- The curve evaluator (`0x585E70`), which is plain linear interpolation
-  between adjacent keys, and `kSpeedCurveScale`, which is the 3.6 double at
-  `.rdata 0x00B3D2A8`.
-- `ComputeForces`' two `SetVehicleLinearSpeed` calls: the first is the
-  `car+0x2E0` top-speed clamp, the second only fires when `SideFriction1 <= 0`.
-- The `1/tuning[+0x228]` scaling at `0x7C7428`, which divides a *copy* of the
-  force into `car+0x6D4` for telemetry and does not touch the accumulator.
-- The tuning data itself. Every scalar and curve the drive path reads is now
-  diffed against `StadiumCar.VehicleTunings.Gbx` via `tools/DumpTuning`.
-- `ComputeVehicleGroundMaterialVals`, whose `accelerationCoef` is 1.0 for the
-  A01 road material (id 16) in both the standalone table and the game's own
-  ordering, now that the `SBlendableVals` layout is confirmed.
-- The curve evaluator and its km/h scale, which are exactly what
-  `EvaluateCurve` does.
-- Every remaining force producer `ComputeForces` reaches: the `car +0x74C`
-  action block (gated off by `car +0x5C`), `AfterContacts` (`0x7C0670`, which
-  reads the linear speed and smooths visual values but applies nothing), and
-  the wheel loop.
-- The engine RPM. `ComputeForcesModel6` never reads car `+0x59C..+0x5C0`; the
-  only engine state it consumes is the reverse flag at `+0x5C4`, the ceiling at
-  `+0x5CC`, and the transmission state at `+0x2E4`.
+The A01 replay measurement that pointed here is worth keeping: differentiating
+the recorded ghost gives an acceleration of roughly 16 m/s² flat from 19 to
+97 km/h and roughly 11 from 125 to 145 km/h — the `AccelCurve` values at keys 0
+and 101, which is what a stepped curve produces and no interpolated curve can.
 
-What the replay's acceleration actually looks like, once plotted against the
-curve's own key points, is a *step*: roughly 16 m/s² everywhere from 19 to
-97 km/h, then roughly 11 from 125 to 145 km/h. Those are exactly the
-`AccelCurve` values at keys 0 and 101 — as if the curve were sampled at the
-lower bounding key instead of interpolated. The executable's evaluator
-demonstrably interpolates, so this is more likely a coincidence of the terrain
-than a real clue, but it is the sharpest characterisation of the gap so far and
-worth ruling in or out first.
-
-The next places to look are the fixed-step integrator and the collision
-substepping (whether a force computed once per tick is applied once per
-substep), and `IntegrateVehicle`/`EngineIntegrate`, which are the only large
-routines on the launch path not yet re-derived from the disassembly.
-
-Note that translating the `0x7C6020` gear-shift cut moved the 3-second A01
-speed from 136.99 to 127.5 km/h, further from the replay's 144.9. That is
-expected while the excess above is unexplained: the cut is a verified
-instruction, and it makes our shift timing observable for the first time. The
-replay's own shift plateau is at 1.8–2.0 s (speed 28.45 -> 28.62 m/s) while the
-simulation's now lands near 2.2–2.4 s, which is a concrete, measurable target
-for the engine state machine.
 
 ## ComputeAirControl (0x7BF1D0)
 

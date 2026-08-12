@@ -219,12 +219,24 @@ int main() {
     passed &= ExpectNear("Model6 damper modulation at minimum absorption",
                          tuning.M6GetModulationFromDamperAbsorbVal(0.0f),
                          1.0f);
+    // Stadium's AccelCurve carries RealInterp mode 1, which TmForeverFixed.exe
+    // evaluates as a step at 0x585EE8: the value of the greatest key at or
+    // below the speed, with no blending. These two speeds sit inside the
+    // 0..101 and 101..201 km/h spans, so they return those spans' lower keys
+    // rather than anything interpolated. This is what makes the launch pull a
+    // flat 16 m/s^2 up to 101 km/h.
     passed &= ExpectNear("accel at 100 km/h",
-                         tuning.GetAccelFromSpeed(100.0f / 3.6f),
-                         16.0f + (100.0f / 101.0f) * (11.0f - 16.0f));
+                         tuning.GetAccelFromSpeed(100.0f / 3.6f), 16.0f);
     passed &= ExpectNear("accel at 200 km/h",
-                         tuning.GetAccelFromSpeed(200.0f / 3.6f),
-                         11.0f + (99.0f / 100.0f) * (7.0f - 11.0f));
+                         tuning.GetAccelFromSpeed(200.0f / 3.6f), 11.0f);
+    // Landing exactly on a key collapses both bounding indices onto it, so a
+    // stepped curve returns that key's own value, not the previous span's.
+    passed &= ExpectNear("accel exactly at the 101 km/h key",
+                         tuning.GetAccelFromSpeed(101.0f / 3.6f), 11.0f);
+    // An interpolated curve is unaffected by any of this.
+    passed &= ExpectNear("rear-gear accel interpolates at -25 km/h",
+                         tuning.M6GetRearGearAccelFromSpeed(-25.0f / 3.6f),
+                         8.0f + 0.5f * (30.0f - 8.0f));
     passed &= ExpectNear("lateral slowdown at 100 km/h",
                          tuning.GetLateralContactSlowDownFromSpeed(100.0f / 3.6f),
                          24.0f);

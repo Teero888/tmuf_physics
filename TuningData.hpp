@@ -4,13 +4,21 @@
 #include "Plug/CFuncKeysReal.hpp"
 
 // We use CFastArray directly.
-inline void InitCurve(CFuncKeysReal& curve, int count, float* times, float* values) {
+// `realInterp` is the curve's own RealInterp mode, archived by GBX chunk
+// 0x0501A001. Mode 1 makes the executable evaluate the curve as a step; every
+// other mode interpolates. See CFuncKeysReal for why the GBX.NET name for
+// mode 1 ("Linear") is misleading. The values below come from
+// tools/DumpTuning, which prints the mode alongside each curve.
+inline void InitCurve(CFuncKeysReal& curve, int count, float* times,
+                      float* values,
+                      uint32_t realInterp = CFuncKeysReal::kInterpolated) {
     curve.m_keys.SetCount(count);
     curve.m_values.SetCount(count);
     for (int i = 0; i < count; ++i) {
         curve.m_keys.m_data[i] = times[i];
         curve.m_values.m_data[i] = values[i];
     }
+    curve.m_realInterp = realInterp;
 }
 
 inline float AccelCurve_times[] = { -1000.0f, -102.0f, -80.0f, -35.0f, 0.0f, 101.0f, 201.0f, 401.0f, 801.0f };
@@ -228,11 +236,14 @@ inline constexpr float StadiumM6NegativeTakeoffRearSpeed = -3.0f;
 static float g_dummy_wheel_tuning[256];
 
 inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
-    InitCurve(AccelCurve, 9, AccelCurve_times, AccelCurve_values);
+    InitCurve(AccelCurve, 9, AccelCurve_times, AccelCurve_values,
+              CFuncKeysReal::kStepped);
     InitCurve(MaxSideFriction, 6, MaxSideFriction_times, MaxSideFriction_values);
     InitCurve(RolloverLateral, 1, RolloverLateral_times, RolloverLateral_values);
-    InitCurve(LateralContactSlowDown, 5, LateralContactSlowDown_times, LateralContactSlowDown_values);
-    InitCurve(SteerSlowDown, 6, SteerSlowDown_times, SteerSlowDown_values);
+    InitCurve(LateralContactSlowDown, 5, LateralContactSlowDown_times, LateralContactSlowDown_values,
+              CFuncKeysReal::kStepped);
+    InitCurve(SteerSlowDown, 6, SteerSlowDown_times, SteerSlowDown_values,
+              CFuncKeysReal::kStepped);
     InitCurve(RolloverLateralFromAngle, 4, RolloverLateralFromAngle_times, RolloverLateralFromAngle_values);
     InitCurve(SteerDriveTorque, 10, SteerDriveTorque_times, SteerDriveTorque_values);
     InitCurve(M4SteerRadiusFromSpeed, 2, M4SteerRadiusFromSpeed_times, M4SteerRadiusFromSpeed_values);

@@ -22,13 +22,31 @@ float CSceneVehicleCarTuning::EvaluateCurve(struct CFuncKeysReal* curve, float x
     if (count == 0) return 0.0f;
     if (x <= curve->m_keys.m_data[0]) return curve->m_values.m_data[0];
     if (x >= curve->m_keys.m_data[count - 1]) return curve->m_values.m_data[count - 1];
-    for (uint32_t i = 0; i < count - 1; ++i) {
-        if (x >= curve->m_keys.m_data[i] && x <= curve->m_keys.m_data[i+1]) {
-            float t = (x - curve->m_keys.m_data[i]) / (curve->m_keys.m_data[i+1] - curve->m_keys.m_data[i]);
-            return curve->m_values.m_data[i] + t * (curve->m_values.m_data[i+1] - curve->m_values.m_data[i]);
-        }
+    // CFuncKeys::GetBoundingIndices (0x5914C0) returns the bracketing pair, and
+    // collapses both indices onto the same key when x lands exactly on one. So
+    // the lower index is the greatest key at or below x, not the first bracket
+    // a scan happens to accept: at an exact key the two differ.
+    uint32_t lower = 0;
+    for (uint32_t i = 0; i + 1 < count; ++i) {
+        if (curve->m_keys.m_data[i] <= x) lower = i;
     }
-    return 0.0f;
+
+    // 0x585E70 picks its evaluator from the curve's own RealInterp mode before
+    // touching the keys. Mode 1 is the stepped one: 0x585EE8 loads
+    // values[lower] and stores it unblended. Only the other modes reach the
+    // interpolating tail at 0x585EBE. Stadium's AccelCurve is the stepped
+    // kind, which is why the car pulls a flat 16 m/s^2 all the way to
+    // 101 km/h instead of decaying toward 11.
+    if (curve->m_realInterp == CFuncKeysReal::kStepped) {
+        return curve->m_values.m_data[lower];
+    }
+
+    const float span =
+        curve->m_keys.m_data[lower + 1] - curve->m_keys.m_data[lower];
+    const float t = (x - curve->m_keys.m_data[lower]) / span;
+    return curve->m_values.m_data[lower] +
+           t * (curve->m_values.m_data[lower + 1] -
+                curve->m_values.m_data[lower]);
 }
 
 float CSceneVehicleCarTuning::GetLateralContactSlowDownFromSpeed(float speed) {
