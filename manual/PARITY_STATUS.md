@@ -25,6 +25,24 @@ gaps are below in dependency order.
   `StadiumCar.Solid.Gbx`. Its 35,199-vertex visual mesh and eight collidable
   ellipsoids are loaded into native-shaped plug trees, with the four wheel
   surface trees retained for contact classification.
+- World handedness and the steering sign are pinned against the original A01
+  replay. Correlating its recorded `SteerRight`/`SteerLeft` events with the
+  recorded ghost heading over 41 steering samples gives
+  `sum(steer * dYaw) = -1.37`: positive (right) steering *decreases* yaw, where
+  yaw is the engine's `forward = (sin yaw, 0, cos yaw)`. An observer facing
+  `forward` with `+Y` up therefore has their right hand along
+  `Cross(forward, up)`, not `Cross(up, forward)`. The manual simulation
+  reproduces this sign: from the A01 spawn at yaw 90 degrees, `--steer 1` curves
+  the car toward `+Z`, matching the ghost. Consistently,
+  `VehicleChassisBasis::right` is the native car-local `+X` axis, which points
+  to the car's *left* — `kStadiumWheelLocalX` places `FLSurf` at `+0.863` and
+  `FRSurf` at `-0.863`, so `right * localX` lands the wheels correctly only
+  because both carry that convention. Screen-space code must derive its own
+  right vector; using this field mirrors the view.
+- The extracted A01 collision is confirmed unmirrored against the same ghost:
+  193 of 276 recorded samples sit directly over the loaded track surface with a
+  mean height error of 0.084 m, while mirroring the trajectory in X, Z, or both
+  drops that to 7, 29, and 0 samples respectively.
 - `GmVec4::PolygonClip` now follows the native six-plane, double-precision
   clipping path.
 - `GmSurf::ComputeCollision` now applies the native type ordering and reverses

@@ -4,10 +4,13 @@
 static char g_TextLineBuffer[4096];
 static uint32_t g_TextLineCursor = 0;
 
-// External LZO decompression mocks assumed in engine
+// External LZO decompression mocks assumed in engine. The length parameters
+// must be size_t: minilzo's lzo_uint is defined to match size_t, and the
+// callee writes the whole width back through dst_len. Declaring it as
+// uint32_t* smashes four bytes of the caller's stack on LP64 targets.
 extern "C" {
-    void lzo1x_1_compress(const void* src, uint32_t src_len, void* dst, uint32_t* dst_len, void* wrkmem);
-    int lzo1x_decompress_safe(const void* src, uint32_t src_len, void* dst, uint32_t* dst_len, void* wrkmem);
+    void lzo1x_1_compress(const void* src, size_t src_len, void* dst, size_t* dst_len, void* wrkmem);
+    int lzo1x_decompress_safe(const void* src, size_t src_len, void* dst, size_t* dst_len, void* wrkmem);
 }
 
 // =================================================
@@ -226,7 +229,7 @@ CClassicArchive* CClassicArchive::LoadFromGbx(const char* filepath) {
         cursor += 4;
 
         decompressed_data = new uint8_t[data_size];
-        uint32_t decompressed_len = data_size;
+        size_t decompressed_len = data_size;
         int r = lzo1x_decompress_safe(file_buffer + cursor, compressed_size, decompressed_data, &decompressed_len, nullptr);
 
         if (r != 0 || decompressed_len != data_size) {

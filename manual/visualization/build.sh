@@ -22,14 +22,18 @@ for file in $FILES; do
     OBJECTS="$OBJECTS build/$obj_name"
 done
 
+# Match test_compile.sh: optimised, but with multiply-add contraction disabled
+# so the simulation reproduces the unoptimised results bit for bit.
+OPTFLAGS="-O3 -ffp-contract=off -g"
+
 mkdir -p visualization/build
 g++ -c visualization/VehicleTrackSimulation.cpp \
     -o visualization/build/VehicleTrackSimulation.o \
-    $INCLUDES -std=c++20 -fpermissive -w -g
+    $INCLUDES -std=c++20 -fpermissive -w $OPTFLAGS
 
 g++ visualization/main.cpp visualization/build/VehicleTrackSimulation.o \
     $OBJECTS -o visualization/interactive_physics_test \
     $INCLUDES $LIBS $(pkg-config --cflags --libs sdl2) \
-    -std=c++20 -fpermissive -w -g
+    -std=c++20 -fpermissive -w $OPTFLAGS
 
 echo "Built ./visualization/interactive_physics_test"

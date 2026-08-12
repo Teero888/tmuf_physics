@@ -435,46 +435,72 @@ bool GmSurfMesh::LoadFromObj(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) return false;
     
+    // CFastArray::Add reallocates and copies the entire array for every single
+    // element, so appending a few hundred thousand vertices one at a time is
+    // quadratic. Accumulate locally and commit once at the end. Seeded from the
+    // current contents so repeated loads still append, as they did before.
+    std::vector<GmVec3> vertices(
+        m_vertices.m_data, m_vertices.m_data + m_vertices.m_count);
+    std::vector<GmSurfTriangle> triangles(
+        m_triangles.m_data, m_triangles.m_data + m_triangles.m_count);
+
     std::string line;
     while (std::getline(file, line)) {
-        if (line.empty()) continue;
-        std::istringstream iss(line);
-        std::string type;
-        iss >> type;
-        
-        if (type == "v") {
-            float x, y, z;
-            iss >> x >> y >> z;
-            m_vertices.Add(GmVec3(x, y, z));
-        } else if (type == "f") {
-            GmSurfTriangle tri;
+        const char* cursor = line.c_str();
+        while (*cursor == ' ' || *cursor == '\t') ++cursor;
+        const bool isValue = cursor[0] != '\0' &&
+            (cursor[1] == ' ' || cursor[1] == '\t');
+        if (!isValue) continue;
+
+        if (cursor[0] == 'v') {
+            char* end = nullptr;
+            const float x = std::strtof(cursor + 1, &end);
+            const float y = std::strtof(end, &end);
+            const float z = std::strtof(end, &end);
+            vertices.push_back(GmVec3(x, y, z));
+        } else if (cursor[0] == 'f' && !vertices.empty()) {
+            GmSurfTriangle tri{};
+            const char* scan = cursor + 1;
+            bool complete = true;
             for (int i = 0; i < 3; ++i) {
-                std::string vertStr;
-                iss >> vertStr;
-                size_t slashPos = vertStr.find('/');
-                if (slashPos != std::string::npos) {
-                    vertStr = vertStr.substr(0, slashPos);
+                while (*scan == ' ' || *scan == '\t') ++scan;
+                char* end = nullptr;
+                const long parsed = std::strtol(scan, &end, 10);
+                if (end == scan) {
+                    complete = false;
+                    break;
                 }
-                uint32_t idx = std::stoi(vertStr) - 1;
-                if (idx >= m_vertices.m_count) idx = m_vertices.m_count - 1;
-                tri.indices[i] = idx;
+                // Skip any texture/normal components of "v/vt/vn".
+                scan = end;
+                while (*scan != '\0' && *scan != ' ' && *scan != '\t') ++scan;
+                uint32_t index = static_cast<uint32_t>(parsed - 1);
+                if (index >= vertices.size()) {
+                    index = static_cast<uint32_t>(vertices.size() - 1);
+                }
+                tri.indices[i] = index;
             }
-            
+            if (!complete) continue;
+
             // Compute plane normal
-            GmVec3 v0 = m_vertices[tri.indices[0]];
-            GmVec3 v1 = m_vertices[tri.indices[1]];
-            GmVec3 v2 = m_vertices[tri.indices[2]];
-            
+            const GmVec3& v0 = vertices[tri.indices[0]];
+            const GmVec3& v1 = vertices[tri.indices[1]];
+            const GmVec3& v2 = vertices[tri.indices[2]];
+
             GmVec3 edge1 = v1 - v0;
             GmVec3 edge2 = v2 - v0;
             tri.planeNormal = GmVec3::Cross(edge1, edge2);
             tri.planeNormal.Normalize();
             tri.planeDist = -GmVec3::Dot(tri.planeNormal, v0);
-            
-            m_triangles.Add(tri);
+
+            triangles.push_back(tri);
         }
     }
-    
+
+    m_vertices.SetCount(static_cast<uint32_t>(vertices.size()));
+    std::copy(vertices.begin(), vertices.end(), m_vertices.m_data);
+    m_triangles.SetCount(static_cast<uint32_t>(triangles.size()));
+    std::copy(triangles.begin(), triangles.end(), m_triangles.m_data);
+
     BuildOctree();
     return true;
 }
