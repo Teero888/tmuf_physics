@@ -150,6 +150,39 @@ int main() {
     passed &= ExpectExecutableValue<std::uint32_t>(
         executable, "GmMap2 truncation control word", 0x0ff965, 0x000c000du);
 
+    // IntegrateVehicle's visual steering target: 30 degrees scaled by kPi over
+    // 180. The three source values, and the instruction that stores the result
+    // into wheel real-time state +0xA4.
+    passed &= ExpectExecutableValue(
+        executable, "wheel visual steering degrees", 0x736198,
+        kWheelVisualSteeringAngleDegrees);
+    passed &= ExpectExecutableValue(
+        executable, "wheel visual steering half turn", 0x736ab8,
+        kDegreesPerHalfTurn);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "IntegrateVehicle steering target store", 0x3c3a76,
+        0x01589fd9u);
+    // The float 30 degrees times kPi over 180, rounded once to single
+    // precision, is the value the executable multiplies the smoothed steer by.
+    passed &= ExpectExecutableValue<float>(
+        executable, "wheel visual steering angle max derivation", 0x736198,
+        static_cast<float>(
+            static_cast<double>(kWheelVisualSteeringAngleMax) *
+            kDegreesPerHalfTurn / kPi));
+
+    // ComputeForcesModel6's reverse selector: its lateral/forward speed
+    // threshold, the two stores that set and clear the flag, and the burnout
+    // force state test that gates the whole block.
+    passed &= ExpectExecutableValue(
+        executable, "reverse speed threshold", 0x7313ac, kReverseSpeedThreshold);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "reverse selector burnout gate", 0x3c5a1e, 0x069cab39u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "reverse selector brake load", 0x3c5a2a, 0xd85443d9u);
+    passed &= ExpectExecutableValue<std::uint32_t>(
+        executable, "reverse selector engine ceiling load", 0x3c5a3f,
+        0x05cc83d9u);
+
     if (!passed) return 1;
     std::puts("original executable constants regression: PASS");
     return 0;

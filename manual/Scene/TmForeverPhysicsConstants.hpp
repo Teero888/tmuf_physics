@@ -138,19 +138,30 @@ inline constexpr float kWheelDirectionSquaredEpsilon =
 
 // IntegrateVehicle 0x7C3A50..0x7C3A76 drives the visual steering target of a
 // steerable wheel with -smoothedSteer times a constant maximum angle. The
-// executable spells that constant as a float 30 degrees scaled by its widened
-// single-precision pi over 180, and stores the product back through a
-// four-byte slot before the multiply:
-//   .rdata 0x00B36198 float  30.0f                  (0x41F00000)
-//   .rdata 0x00B36110 double 3.1415927410125732     (0x400921FB60000000)
-//   .rdata 0x00B36AB8 double 180.0                  (0x4066800000000000)
+// executable spells that constant as a float 30 degrees scaled by kPi over
+// 180, and stores the product back through a four-byte slot before the
+// multiply, so the recorded value is the float the game actually uses:
+//   .rdata 0x00B36198 float  30.0f  (0x41F00000)
+//   .rdata 0x00B36110 double kPi
+//   .rdata 0x00B36AB8 double 180.0  (0x4066800000000000)
 inline constexpr float kWheelVisualSteeringAngleMax =
     0.523598790168762207031250f; // 0x3F060A92
+inline constexpr float kWheelVisualSteeringAngleDegrees = 30.0f; // 0x41F00000
+inline constexpr double kDegreesPerHalfTurn = 180.0;
 
-// IntegrateVehicle 0x7C39A9 rejects a degenerate steer radius before dividing
-// the smoothed steer by it. .rdata 0x00B9EF4C.
-inline constexpr float kSteerRadiusEpsilon =
-    9.999999747378752e-06f; // 0x3727C5AC
+// ComputeForcesModel6's reverse selector at 0x7C5A18..0x7C5B14 gates on
+// lateral and forward speed with a single float from .rdata 0x00B313AC. Its
+// gas and brake comparisons reuse kInputThreshold, the same .rdata 0x00B362C0
+// double this file already carries, and IntegrateVehicle's steer-radius guard
+// reuses kWheelInputEpsilon at .rdata 0x00B9EF4C.
+inline constexpr float kReverseSpeedThreshold = 2.0f; // 0x40000000
+
+// The forward-speed ceiling the reverse selector compares against lives at car
+// +0x5CC, which is SEngine +0x30. The car constructor seeds it from
+// .rdata 0x00B36194; a separate setter overwrites it with a km/h value scaled
+// by kSpeedCurveScale. Leaving it at zero makes reverse unreachable from a
+// standstill, because the selector needs a strictly negative forward speed.
+inline constexpr float kDefaultReverseSpeedCeiling = 10.0f; // 0x41200000
 
 // .data 0x00D1A840. GmMat3::SetUpVandDOV independently uses this guard while
 // normalizing the two basis vectors it constructs.

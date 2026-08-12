@@ -1827,6 +1827,12 @@ int main() {
     // Forward braking uses the speed-dependent request and the dynamic cap.
     // A strict cap hit records the capped axial output and marks every wheel
     // slipping after the native normal-ground block has already run.
+    //
+    // The reverse selector would otherwise engage at this speed, because 2 m/s
+    // is below the native 10 m/s ceiling. Suppressing the ceiling keeps this
+    // case isolated to the forward brake path it was written to pin; the
+    // reverse-engaged case is covered separately below.
+    impulseCar.m_engine.m_field_0x30 = 0.0f;
     impulseCar.m_inputBrake = 1.0f;
     tuning.m_brakeBase = 1.0f;
     tuning.m_brakeCoef = 2.0f;
@@ -1850,6 +1856,7 @@ int main() {
         VecNear(waterState.m_force, GmVec3(0.0f, 0.0f, -2.0f)) &&
         Near(model6AxialBrakeForce, 4.0f) &&
         model6HasSlippingWheel == 0 && allModel6WheelsSlipping);
+
     tuning.m_brakeBase = StadiumBrakeBase;
     tuning.m_brakeCoef = StadiumBrakeCoef;
     tuning.m_brakeMax = StadiumBrakeMax;
@@ -2192,6 +2199,138 @@ int main() {
         VecNear(contactCar.m_chassisContactNormalSum,
                 GmVec3(0.0f, 0.0f, 0.0f)) &&
         contactCar.m_wheels[0].m_hasLateralContact == 1);
+
+    // IntegrateVehicle's wheel loop, 0x7C399A..0x7C3A76. Every wheel refreshes
+    // its steering frame from the surface handler's base rotation, and only a
+    // steerable one is then rotated about Y and given a visual steering
+    // target.
+    {
+        using namespace TmForeverPhysicsConstants;
+        CSceneVehicleCar frameCar;
+        CHmsItem frameItem;
+        frameCar.m_hmsItem = &frameItem;
+        frameCar.m_simulationFlags = 1;
+        frameCar.m_smoothedSteer = 1.0f;
+        for (uint32_t i = 0; i < frameCar.m_wheels.GetCount(); ++i) {
+            frameCar.m_wheels[i].m_surfaceHandler.m_baseLocation.SetIdentity();
+        }
+        frameCar.IntegrateVehicle(&frameCar, 0.01f);
+
+        // A stationary car gives steerRadius == SteerRadiusMin, so the frame
+        // angle is -smoothedSteer / SteerRadiusMin.
+        const float expectedAngle = -1.0f / tuning.m_steerRadiusMin;
+        GmMat3 expectedFrame;
+        GmMat3 identityFrame;
+        identityFrame.SetIdentity();
+        expectedFrame.RotateY(identityFrame, expectedAngle);
+
+        passed &= Expect(
+            "steerable wheel frame rotates by the native steer angle",
+            MatNear(frameCar.m_wheels[0].m_realTimeState.m_steeringFrame,
+                    expectedFrame));
+        passed &= Expect(
+            "non-steerable wheel frame keeps the base rotation",
+            MatNear(frameCar.m_wheels[2].m_realTimeState.m_steeringFrame,
+                    identityFrame));
+        passed &= Expect(
+            "steerable wheel receives the 30 degree visual target",
+            Near(frameCar.m_wheels[0].m_realTimeState.m_targetSteeringAngle,
+                 -kWheelVisualSteeringAngleMax));
+        passed &= Expect(
+            "non-steerable wheel target stays zero",
+            frameCar.m_wheels[2].m_realTimeState.m_targetSteeringAngle ==
+                0.0f);
+        // Integrate walks the visible angle toward the target at one radian
+        // per second, so a 10 ms step moves it exactly that far.
+        passed &= Expect(
+            "visible steering angle advances one radian per second",
+            Near(frameCar.m_wheels[0].m_realTimeState.m_steeringAngle,
+                 -0.01f));
+    }
+
+    // ComputeForcesModel6's reverse selector, 0x7C5A18..0x7C5B14. The flag it
+    // owns is the only thing that lets IntegrateVehicle hand the brake input
+    // to EngineIntegrate, so every branch here is worth pinning.
+    {
+        using namespace TmForeverPhysicsConstants;
+        CSceneVehicleCar reverseCar;
+        reverseCar.m_engine.m_field_0x30 = 0.0f;
+        reverseCar.m_field_0x600 = 0;
+
+        auto selectReverse = [&](float gas, float brake, float forward,
+                                 float lateral, int engineState) {
+            reverseCar.m_inputGas = gas;
+            reverseCar.m_inputBrake = brake;
+            reverseCar.m_engineState = engineState;
+            reverseCar.UpdateReverseState(GmVec3(lateral, 0.0f, forward));
+            return reverseCar.m_engine.m_isReverse;
+        };
+
+        reverseCar.m_engine.m_isReverse = 0;
+        passed &= Expect(
+            "brake at rest engages reverse",
+            selectReverse(0.0f, 1.0f, -0.5f, 0.0f, 0) == 1);
+        reverseCar.m_engine.m_isReverse = 0;
+        passed &= Expect(
+            "brake below the input threshold does not engage reverse",
+            selectReverse(0.0f, static_cast<float>(kInputThreshold), -0.5f,
+                          0.0f, 0) == 0);
+        reverseCar.m_engine.m_isReverse = 0;
+        passed &= Expect(
+            "brake while moving forward past the engine ceiling stays forward",
+            selectReverse(0.0f, 1.0f, 1.0f, 0.0f, 0) == 0);
+        reverseCar.m_engine.m_isReverse = 0;
+        passed &= Expect(
+            "brake while sliding sideways does not engage reverse",
+            selectReverse(0.0f, 1.0f, -0.5f, kReverseSpeedThreshold, 0) == 0);
+
+        reverseCar.m_engine.m_isReverse = 1;
+        passed &= Expect(
+            "gas while rolling forward clears reverse",
+            selectReverse(1.0f, 0.0f, 0.5f, 0.0f, 0) == 0);
+        reverseCar.m_engine.m_isReverse = 1;
+        passed &= Expect(
+            "gas while sliding clears reverse even when rolling backwards",
+            selectReverse(1.0f, 0.0f, -5.0f, 3.0f, 0) == 0);
+        reverseCar.m_engine.m_isReverse = 1;
+        passed &= Expect(
+            "gas alone does not clear reverse while rolling backwards",
+            selectReverse(1.0f, 0.0f, -5.0f, 0.0f, 0) == 1);
+
+        reverseCar.m_engine.m_isReverse = 0;
+        passed &= Expect(
+            "coasting backwards past the speed threshold engages reverse",
+            selectReverse(0.0f, 0.0f, -kReverseSpeedThreshold - 0.5f, 0.0f,
+                          0) == 1);
+        reverseCar.m_engine.m_isReverse = 1;
+        passed &= Expect(
+            "coasting backwards below the speed threshold clears reverse",
+            selectReverse(0.0f, 0.0f, -1.0f, 0.0f, 0) == 0);
+        reverseCar.m_engine.m_isReverse = 1;
+        passed &= Expect(
+            "coasting while stopped clears reverse",
+            selectReverse(0.0f, 0.0f, 0.0f, 0.0f, 0) == 0);
+
+        reverseCar.m_engine.m_isReverse = 1;
+        passed &= Expect(
+            "any burnout force state clears reverse",
+            selectReverse(0.0f, 1.0f, -5.0f, 0.0f, 1) == 0);
+
+        reverseCar.m_engine.m_isReverse = 1;
+        reverseCar.m_field_0x600 = 1;
+        passed &= Expect(
+            "native +0x600 clears reverse while moving forward",
+            selectReverse(0.0f, 0.0f, 1.0f, 0.0f, 0) == 0);
+        reverseCar.m_field_0x600 = 0;
+
+        // The executable's comparisons are ordered, so an unordered forward
+        // speed falls through to the coasting branch's reverse result.
+        const float notANumber = std::numeric_limits<float>::quiet_NaN();
+        reverseCar.m_engine.m_isReverse = 0;
+        passed &= Expect(
+            "unordered forward speed follows the native reverse branch",
+            selectReverse(0.0f, 0.0f, notANumber, 0.0f, 0) == 1);
+    }
 
     if (!passed) return 1;
     std::puts("vehicle state regression: PASS");

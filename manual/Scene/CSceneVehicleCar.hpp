@@ -94,7 +94,10 @@ public:
             float m_compression;         // 0x00 (Wheel + 0xB4)
             float m_velocity;            // 0x04 (Wheel + 0xB8)
             float m_absorbDelta;          // 0x08 (Wheel + 0xBC)
-            uint8_t m_padding_0x0c[0x30 - 0x0C];
+            // 0x0C (Wheel + 0xC0). IntegrateVehicle copies the surface
+            // handler's base rotation here every step and then rotates a
+            // steerable wheel about Y by the visual steering angle.
+            GmMat3 m_steeringFrame;       // 0x0C
             GmIso4 m_orientation;         // 0x30 (Wheel + 0xE4)
             uint8_t m_padding_0x60[0x6C - 0x60];
             float m_angularVelocity;     // 0x6C (Wheel + 0x120)
@@ -110,6 +113,7 @@ public:
         static_assert(std::is_standard_layout_v<SRealTimeState>);
         static_assert(sizeof(SRealTimeState) == 0xA8);
         static_assert(offsetof(SRealTimeState, m_compression) == 0x00);
+        static_assert(offsetof(SRealTimeState, m_steeringFrame) == 0x0C);
         static_assert(offsetof(SRealTimeState, m_orientation) == 0x30);
         static_assert(offsetof(SRealTimeState, m_angularVelocity) == 0x6C);
         static_assert(offsetof(SRealTimeState, m_direction) == 0x90);
@@ -383,6 +387,11 @@ public:
         StadiumVehicleMaterials::GroundValues* groundMaterial,
         int* hasSlippingWheel,
         float* axialBrakeForce);
+    // The reverse selector at 0x7C5A18..0x7C5B14, on ComputeForcesModel6's
+    // common path between the burnout force state update and the axial force
+    // branch. Nothing later in Model 6 reads the flag; IntegrateVehicle and
+    // ApplyFrictionForces consume it on the following step.
+    void UpdateReverseState(const GmVec3& localLinearSpeed);
     // The fixed executable's implementation at 0x7FA770 ends in `ret 0x2c`,
     // proving that there are eleven 32-bit stack arguments. Ghidra had added a
     // spurious leading CSceneVehicleCar* parameter to this signature.

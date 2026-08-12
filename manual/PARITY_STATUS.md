@@ -25,6 +25,93 @@ gaps are below in dependency order.
   `StadiumCar.Solid.Gbx`. Its 35,199-vertex visual mesh and eight collidable
   ellipsoids are loaded into native-shaped plug trees, with the four wheel
   surface trees retained for contact classification.
+- The reverse selector at `0x7C5A18..0x7C5B14` is translated as
+  `UpdateReverseState`, on ComputeForcesModel6's common path between the
+  contacted-wheel consumer and the force branch split. It owns
+  `SEngine::m_isReverse` (engine `+0x28`, car `+0x5C4`), which was previously
+  written nowhere except `SEngine::Reset` and so was permanently zero: reverse
+  was unreachable, `IntegrateVehicle` always handed `EngineIntegrate` the gas
+  input instead of selecting brake as the reverse throttle, gear 0 was never
+  selected, and the Model-6 negative takeoff window could never open. Braking
+  as deceleration was unaffected throughout and still is — full gas reaches
+  98.2 km/h in 2 s and full gas with full brake reaches 30.0 km/h, both
+  unchanged by this translation.
+  The four recovered rules read car `+0x50` gas, car `+0x54` brake, the local
+  linear speed's X and Z, engine `+0x30`, the burnout force state `+0x69C`, and
+  `+0x600`. Every comparison is ordered, so an unordered speed rejects the
+  branch it guards, and the coasting rule's sign test puts a NaN forward speed
+  in the reverse result. The thresholds reuse the existing `kInputThreshold`
+  (`.rdata 0x00B362C0`) for gas and brake, plus a new `kReverseSpeedThreshold`
+  float `2.0f` at `.rdata 0x00B313AC` for lateral and forward speed. The
+  ordering matters: the normal-ground subset reads the flag back at `0x7C5BE5`
+  for its drive-torque sign. Thresholds, three instruction anchors, and
+  thirteen behavior cases including the unordered-speed path are
+  regression-covered.
+- The Model-6 reverse drive path is translated. `0x7C5FDB` selects the drive
+  curve on the flag — forward reads the tuning's `+0x34` acceleration curve
+  (`M5GetAccelFromSpeed`), reverse reads the `+0x230` rear-gear curve
+  (`M6GetRearGearAccelFromSpeed`) — while the slipping curve is evaluated
+  before the branch and used either way. `0x7C623E..0x7C62AA` then builds the
+  drive term from both pedals: an `fldz` seeds a brake direction that becomes
+  `kNegativeOne` while reversing and stays `0.0f` otherwise, each pedal is
+  scaled by the ground material's acceleration coefficient, the two are summed,
+  and only then does the acceleration curve apply. Forward therefore reduces to
+  the gas term alone, which keeps the A01 trace bit-identical, while reverse
+  drives backwards off the brake pedal.
+- Reverse engagement now uses its native threshold. The car constructor seeds
+  car `+0x5CC` (`SEngine +0x30`, the forward-speed ceiling the selector
+  compares against) with the `10.0f` at `.rdata 0x00B36194`, recorded as
+  `kDefaultReverseSpeedCeiling`; the field had been left at zero, which
+  confined reverse to a car that was already rolling backwards. Holding the
+  brake from the A01 spawn now accelerates the car backwards, 0.024 m over the
+  first second and 0.337 m over three.
+  The selector's `+0x600` rule needs no producer to be correct. `+0x600` is
+  written in exactly one place, `ComputeForces`' `car+0x74C == 3` branch, and
+  `+0x74C` is itself written exactly once — by the constructor, to `1` — and
+  never again anywhere in the executable. That branch is therefore unreachable
+  for this vehicle class, `+0x600` stays zero for the whole run, and the rule
+  is faithfully translated as a test that never fires. This was previously
+  recorded as a blocking dependency; it is not one.
+  The consequence is that the native does engage reverse the moment the brake
+  is held below 36 km/h, which is why the pinned Model-6 forward-braking
+  regression now sets the ceiling to zero for its own case: that assertion was
+  authored while `m_isReverse` was permanently zero, so its expected force
+  belongs to a forward-only scenario. The suppression keeps its native-derived
+  numbers meaningful rather than restating them from the new implementation.
+  The reverse-engaged force is exercised end to end instead; a self-contained
+  unit case for it still wants writing, because the shared Model-6 fixture
+  carries wheel-contact state between assertions.
+  The A01 replay cannot exercise any of this: its input chunk declares only
+  `_FakeFinishLine`, `SteerRight`, `SteerLeft`, `Accelerate`, and
+  `_FakeIsRaceRunning`, with no brake control at all. The ghost trace is
+  byte-for-byte unchanged by this translation, which confirms the selector does
+  not perturb the existing forward parity but also means closed-loop reverse
+  coverage needs a replay that actually brakes.
+- IntegrateVehicle's visual steering target at `0x7C399F..0x7C3A76` is
+  translated. A steerable wheel's `m_targetSteeringAngle` is
+  `-smoothedSteer * kWheelVisualSteeringAngleMax`, where that constant is the
+  float 30 degrees at `.rdata 0x00B36198` scaled by `kPi` over the 180.0 at
+  `.rdata 0x00B36AB8`, rounded once to single precision through the
+  executable's four-byte store. This is a plain scaling of the smoothed input,
+  not the speed-dependent processed steer the force model uses.
+  `SRealTimeState::Integrate` already walked the visible angle toward the
+  target at one radian per second, but nothing had ever written the target, so
+  wheel steering state was permanently zero. Nothing in the force path reads
+  it, and the A01 trace is unchanged.
+- The rest of that wheel loop is now translated too. Real-time state `+0x0C`
+  (native wheel `+0xC0`) is typed as `m_steeringFrame`, a `GmMat3` that was
+  previously unmodeled padding. `0x7C399A` refreshes it from the surface
+  handler's base rotation on every wheel each step, and a steerable wheel is
+  then rotated about Y by `-smoothedSteer / steerRadius`, where the radius is
+  the shared `SteerRadiusMin + |speed.z| * SteerRadiusCoef` and the divide is
+  guarded by `kWheelInputEpsilon`. Note this frame angle uses the small-angle
+  form, unlike the target angle's fixed 30 degrees and unlike the force
+  model's `AsinSafe` processed steer — three different steering quantities in
+  one loop. The native rotates in place, reading each source element before
+  overwriting it; `GmMat3::RotateY` writes through `*this`, so the translation
+  passes a distinct source copy to stay equivalent. Frame, target, and the
+  one-radian-per-second integration are regression-covered, and the A01 trace
+  is unchanged.
 - World handedness and the steering sign are pinned against the original A01
   replay. Correlating its recorded `SteerRight`/`SteerLeft` events with the
   recorded ghost heading over 41 steering samples gives
@@ -405,29 +492,6 @@ order proves observable; collision response can now consume the typed working
   acceleration/brake blend are connected. The remaining reverse/freewheel and
   special-state pipeline still contains missing logic or harness
   approximations.
-- Reverse is not reachable. `SEngine::m_isReverse` (engine `+0x28`, car
-  `+0x5C4`) is read in eight places but written nowhere except `SEngine::Reset`,
-  which clears it, so the flag is permanently zero. The consequences are that
-  `IntegrateVehicle` always hands `EngineIntegrate` the gas input rather than
-  selecting brake as the reverse throttle, gear 0 is never selected, and the
-  Model-6 negative takeoff window at `m_isReverse != 0` can never open.
-  Measured on the A01 spawn: 3 s of full brake from rest leaves the car at
-  0.09 km/h and 6 mm of travel. Braking as deceleration is unaffected and does
-  work — full gas reaches 98.2 km/h in 2 s, full gas with full brake reaches
-  30.0 km/h over the same interval.
-  The missing producer is the state machine at `0x7C5A2E..0x7C5B14`, inside the
-  ordinary Model-6 forward branch and just before the axial force tail. Against
-  car `+0x50` gas, car `+0x54` brake, the local linear speed's X and Z, engine
-  `+0x30`, the burnout force state `+0x69C`, and `+0x600`, it sets the flag when
-  brake is held below an engine-owned speed threshold with little lateral
-  speed, clears it when gas is held while moving forward or sliding, and with
-  neither input held selects on the sign of forward speed. Its two thresholds
-  are the double `0.1` at `.rdata 0x00B362C0` for the gas/brake inputs and the
-  float `2.0f` at `.rdata 0x00B313AC` for lateral speed. Translating it needs
-  the same strict branch-polarity treatment as the other recovered routines:
-  the executable's comparisons are `fcom`/`fcomp` pairs whose equality and NaN
-  behavior is observable, and the no-input case selects through a sign test
-  rather than a plain comparison.
 - The compile/unit harness is not a behavioral parity oracle. Closed-loop
   comparison is driven by the native replay trajectory and the interactive
   A01 path now that collision traversal, body state, and the fixed-step solver

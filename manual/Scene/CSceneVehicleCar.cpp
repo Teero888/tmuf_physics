@@ -193,7 +193,12 @@ CSceneVehicleCar::CSceneVehicleCar()
     m_engine.m_field_0x08 = 1.0f;
     m_engine.m_field_0x0c = 1.0f;
     m_engine.m_field_0x10 = 0.0f;
-    m_engine.m_field_0x30 = 0.0f;
+    // Native constructor write to car +0x5CC, which is this field, from the
+    // 10.0f at .rdata 0x00B36194. It is the forward-speed ceiling below which
+    // the reverse selector may engage, so the brake pedal starts pulling the
+    // car into reverse once it is rolling forward slower than 36 km/h.
+    m_engine.m_field_0x30 =
+        TmForeverPhysicsConstants::kDefaultReverseSpeedCeiling;
     m_engine.Reset();
     
     // Initialize 4 wheels for the Stadium car
@@ -706,26 +711,47 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
 
     // 1. Wheel speed & rotation updates.
     if ((m_simulationFlags & 1) != 0) {
-        // Not yet translated from this loop: 0x7C3940 also computes the steer
-        // radius (SteerRadiusMin + |speed.z| * SteerRadiusCoef, guarded by
-        // kSteerRadiusEpsilon) and uses it to RotateY the wheel orientation
-        // matrix at native wheel +0xC0, which is real-time state +0x0C. That
-        // matrix is still unmodeled padding here, and nothing in the force
-        // path reads it.
+        // 0x7C3940 computes the steer radius once, from the same
+        // SteerRadiusMin/SteerRadiusCoef pair the processed-steer producer
+        // uses, and every wheel in the loop shares it.
+        const float steerRadius = g_tuning != nullptr
+            ? std::abs(localVehicleSpeed.z) * g_tuning->m_steerRadiusCoef +
+                  g_tuning->m_steerRadiusMin
+            : 0.0f;
         uint32_t wheelCount = m_wheels.GetCount();
         for (uint32_t i = 0; i < wheelCount; ++i) {
             SSimulationWheel& wheel = m_wheels[i];
-            // 0x7C399F..0x7C3A76: only a steerable wheel receives a visual
-            // steering target, and it is a plain scaling of the smoothed
-            // input rather than the speed-dependent processed steer that the
-            // force model uses. SRealTimeState::Integrate then walks
-            // m_steeringAngle toward it at one radian per second.
-            wheel.m_realTimeState.m_targetSteeringAngle =
-                wheel.m_isSteerable != 0u
-                    ? -m_smoothedSteer *
-                          TmForeverPhysicsConstants::
-                              kWheelVisualSteeringAngleMax
-                    : 0.0f;
+
+            // 0x7C399A refreshes the wheel's steering frame from the surface
+            // handler's base rotation before anything rotates it.
+            wheel.m_realTimeState.m_steeringFrame =
+                wheel.m_surfaceHandler.m_baseLocation.rot;
+
+            // 0x7C399F..0x7C3A76: only a steerable wheel is rotated and only
+            // it receives a visual steering target. The target is a plain
+            // scaling of the smoothed input rather than the speed-dependent
+            // processed steer the force model uses; SRealTimeState::Integrate
+            // then walks m_steeringAngle toward it at one radian per second.
+            if (wheel.m_isSteerable != 0u) {
+                // 0x7C39A9 guards the divide with the shared +1e-5f epsilon.
+                const float frameAngle =
+                    steerRadius >=
+                            TmForeverPhysicsConstants::kWheelInputEpsilon
+                        ? -m_smoothedSteer / steerRadius
+                        : 0.0f;
+                // The native call rotates in place, reading each source
+                // element before it overwrites it. Our RotateY writes through
+                // *this, so it needs a distinct source to stay equivalent.
+                const GmMat3 baseFrame = wheel.m_realTimeState.m_steeringFrame;
+                wheel.m_realTimeState.m_steeringFrame.RotateY(
+                    baseFrame, frameAngle);
+                wheel.m_realTimeState.m_targetSteeringAngle =
+                    -m_smoothedSteer *
+                    TmForeverPhysicsConstants::kWheelVisualSteeringAngleMax;
+            } else {
+                wheel.m_realTimeState.m_targetSteeringAngle = 0.0f;
+            }
+
             WheelUpdateSpeedFromVehicleSpeed(&wheel, localVehicleSpeed.z, dt);
             wheel.m_realTimeState.Integrate(dt);
         }
@@ -1708,6 +1734,12 @@ void CSceneVehicleCar::ComputeForcesModel6(
         *hasSlippingWheel = 1;
     }
 
+    // 0x7C5A18..0x7C5B14 selects the reverse flag here, after the contacted
+    // wheel consumer and before either force branch. The normal-ground subset
+    // below reads it back at 0x7C5BE5 for its drive-torque sign, so this must
+    // stay ahead of that.
+    UpdateReverseState(*localLinearSpeed);
+
     if (g_tuning->m_steerModel != 5 || hasGroundMaterial == 0) {
         // Airborne, water, and non-Stadium paths have not yet been separated
         // from the old translation. Keep the prior behavior for those states
@@ -1830,8 +1862,14 @@ void CSceneVehicleCar::ComputeForcesModel6(
 
         const float slippingAcceleration =
             g_tuning->M5GetSlippingAccelFromSpeed(localForwardSpeed);
+        // 0x7C5FDB selects the drive curve on the reverse flag: forward reads
+        // the tuning's +0x34 acceleration curve, reverse reads the +0x230
+        // rear-gear curve. Only this term changes; the slipping curve above is
+        // evaluated before the branch and used either way.
         const float normalAcceleration =
-            g_tuning->M5GetAccelFromSpeed(localForwardSpeed);
+            m_engine.m_isReverse != 0
+                ? g_tuning->M6GetRearGearAccelFromSpeed(localForwardSpeed)
+                : g_tuning->M5GetAccelFromSpeed(localForwardSpeed);
         const float acceleration =
             slippingAcceleration * (1.0f - normalAccelerationWeight) +
             normalAcceleration * normalAccelerationWeight;
@@ -1849,10 +1887,21 @@ void CSceneVehicleCar::ComputeForcesModel6(
         const float engineStateAxialImpulse =
             g_tuning->GetModel6EngineStateAxialImpulse(
                 m_engineState, engineStateElapsed);
+        // 0x7C623E..0x7C62AA builds the drive term from both pedals. The brake
+        // side carries a direction that is -1 while reversing and 0 otherwise,
+        // so the forward case reduces to the gas term alone while reverse
+        // drives backwards off the brake pedal. The grouping below follows the
+        // executable: each pedal is scaled by the ground material first, the
+        // two are summed, and only then does the acceleration curve apply.
+        const float brakeDriveDirection = m_engine.m_isReverse != 0
+            ? TmForeverPhysicsConstants::kNegativeOne
+            : 0.0f;
+        const float driveInput =
+            brakeDriveDirection * groundMaterial->accelerationCoef *
+                m_inputBrake +
+            m_inputGas * groundMaterial->accelerationCoef;
         float longitudinalForce =
-            acceleration *
-                m_inputGas * groundMaterial->accelerationCoef *
-                engineStateAccelerationModulation -
+            driveInput * acceleration * engineStateAccelerationModulation -
             forwardBrakeForce + engineStateAxialImpulse;
         longitudinalForce =
             g_tuning->GetModel6SpeedLimitedAxialForce(
@@ -1870,6 +1919,57 @@ void CSceneVehicleCar::ComputeForcesModel6(
     }
     m_engineClutchBoost =
         engineStateKeepsClutchBoost || hasLateralOverLimit ? 1 : 0;
+}
+
+void CSceneVehicleCar::UpdateReverseState(const GmVec3& localLinearSpeed) {
+    using namespace TmForeverPhysicsConstants;
+
+    // 0x7C5A1E. Any burnout force state clears the flag and skips the rest.
+    if (m_engineState != 0) {
+        m_engine.m_isReverse = 0;
+        return;
+    }
+
+    const float forwardSpeed = localLinearSpeed.z;
+    const float lateralSpeed = std::abs(localLinearSpeed.x);
+    const double gas = static_cast<double>(m_inputGas);
+    const double brake = static_cast<double>(m_inputBrake);
+
+    // 0x7C5A2A. Brake held, travelling slower than the engine's own ceiling,
+    // and barely sliding sideways engages reverse. Every comparison here is
+    // strict, and each one rejects an unordered operand, so a NaN speed leaves
+    // the flag alone rather than engaging.
+    if (brake > kInputThreshold &&
+        forwardSpeed < m_engine.m_field_0x30 &&
+        lateralSpeed < kReverseSpeedThreshold) {
+        m_engine.m_isReverse = 1;
+    }
+
+    // 0x7C5A6D. Gas held while actually moving forward, or while sliding hard
+    // enough sideways, cancels it again.
+    if (gas > kInputThreshold &&
+        (forwardSpeed > 0.0f || lateralSpeed > kReverseSpeedThreshold)) {
+        m_engine.m_isReverse = 0;
+    }
+
+    // 0x7C5AA0. With neither pedal held the flag follows the direction of
+    // travel, and only once the car is rolling backwards faster than the same
+    // threshold. The executable's ordered tests put a NaN forward speed in the
+    // reverse branch, which these comparisons reproduce.
+    if (gas < kInputThreshold && brake < kInputThreshold) {
+        if (forwardSpeed >= 0.0f) {
+            m_engine.m_isReverse = 0;
+        } else if (std::abs(forwardSpeed) < kReverseSpeedThreshold) {
+            m_engine.m_isReverse = 0;
+        } else {
+            m_engine.m_isReverse = 1;
+        }
+    }
+
+    // 0x7C5AF8. Moving forward with +0x600 set always clears.
+    if (forwardSpeed > 0.0f && m_field_0x600 != 0) {
+        m_engine.m_isReverse = 0;
+    }
 }
 
 GmVec3 CSceneVehicleCar::GetModel6WheelLateralDirection(
