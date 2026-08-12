@@ -131,8 +131,6 @@ CSceneVehicleCar::SSimulationWheel::SSimulationWheel()
     m_realTimeState.m_targetSteeringAngle = 0.0f;
 }
 
-CSceneVehicleCar::SSimulationWheel::~SSimulationWheel() {}
-
 // SVehicleCarState
 CSceneVehicleCar::SVehicleCarState::~SVehicleCarState() {}
 
@@ -169,6 +167,8 @@ CSceneVehicleCar::CSceneVehicleCar()
       m_chassisImpact(0.0f),
       m_wheelContactCount(0),
       m_chassisContactCount(0),
+      m_lastWheelContactCount(0),
+      m_lastChassisContactCount(0),
       m_chassisContactPointSum(0.0f, 0.0f, 0.0f),
       m_chassisContactNormalSum(0.0f, 0.0f, 0.0f),
       m_appliedImpulseSum(0.0f, 0.0f, 0.0f),
@@ -228,6 +228,61 @@ CSceneVehicleCar::~CSceneVehicleCar() {}
 
 CMwNod* CSceneVehicleCar::MwNewCSceneVehicleCar() { return new CSceneVehicleCar(); }
 uint32_t CSceneVehicleCar::GetMwClassId() { return 0x0601D000; }
+
+void CSceneVehicleCar::UpdateParamsFromTuning() {
+    CHmsDyna* dyna = GetVehicleDyna(m_hmsItem);
+    if (g_tuning == nullptr || dyna == nullptr ||
+        dyna->m_field_0x108 == nullptr || m_wheels.GetCount() == 0u) {
+        return;
+    }
+
+    // 0x7BFFE0..0x7C0157 builds a center/half-extent box from the wheel
+    // attachment positions. The suspension reference height is accumulated
+    // separately from (wheel Y - radius), rather than from the box center.
+    GmVec3 minimum = m_wheels[0].m_localContactPosition;
+    GmVec3 maximum = minimum;
+    float lowerHeightSum =
+        m_wheels[0].m_localContactPosition.y - m_wheels[0].m_radius;
+    for (uint32_t index = 1u; index < m_wheels.GetCount(); ++index) {
+        const SSimulationWheel& wheel = m_wheels[index];
+        const GmVec3& position = wheel.m_localContactPosition;
+        minimum.x = std::min(minimum.x, position.x);
+        minimum.y = std::min(minimum.y, position.y);
+        minimum.z = std::min(minimum.z, position.z);
+        maximum.x = std::max(maximum.x, position.x);
+        maximum.y = std::max(maximum.y, position.y);
+        maximum.z = std::max(maximum.z, position.z);
+        lowerHeightSum += position.y - wheel.m_radius;
+    }
+
+    const GmVec3 center = (minimum + maximum) * 0.5f;
+    const GmVec3 halfExtents = (maximum - minimum) * 0.5f;
+    m_field_0x840 = halfExtents.z + halfExtents.z;
+
+    GmVec3 centerOfMass = center;
+    centerOfMass.z +=
+        g_tuning->m_centerOfMassAftFactor * halfExtents.z;
+    centerOfMass.y =
+        lowerHeightSum / static_cast<float>(m_wheels.GetCount()) +
+        g_tuning->m_centerOfMassVerticalOffset;
+
+    CPlugPhysicalObject& physical = *dyna->m_field_0x108;
+    physical.m_mass = g_tuning->m_mass;
+    physical.m_forceFieldCoef = g_tuning->m_gravityCoef;
+    physical.m_linearDamping = 0.0f;
+    physical.m_angularDampingX = 0.0f;
+    physical.m_maxDistancePerStep = g_tuning->m_maxDistancePerStep;
+    physical.SetCenterOfMass(centerOfMass);
+    physical.SetInertiaMatrixBox(
+        g_tuning->m_inertiaMass,
+        GmVec3(g_tuning->m_inertiaHalfDiagX,
+               g_tuning->m_inertiaHalfDiagY,
+               g_tuning->m_inertiaHalfDiagZ));
+
+    // 0x7C02F3..0x7C0307 copies the active Model-6 RPM ceiling into the
+    // embedded engine after updating the physical object.
+    m_engine.m_maxRpm = g_tuning->m_m6MaxRpm;
+}
 
 uint32_t CSceneVehicleCar::GetWheelFromSurfaceTree(
     uint32_t surfaceTreeToken) const {
@@ -538,6 +593,19 @@ void CSceneVehicleCar::AbsorbContact(CHmsPhysicalContact* contact) {
     }
 }
 
+void CSceneVehicleCar::AfterContacts() {
+    // Native 0x7C0A1C..0x7C0A50 clears the contact observations after first
+    // copying them into the render/replay state. The standalone library does
+    // not yet expose that presentation snapshot, but must retain the same
+    // per-physics-pass lifetime for its live accumulators.
+    m_lastWheelContactCount = m_wheelContactCount;
+    m_lastChassisContactCount = m_chassisContactCount;
+    m_wheelContactCount = 0u;
+    m_chassisContactCount = 0u;
+    m_chassisContactPointSum = GmVec3(0.0f, 0.0f, 0.0f);
+    m_chassisContactNormalSum = GmVec3(0.0f, 0.0f, 0.0f);
+}
+
 void* CSceneVehicleCar::_vector_deleting_destructor_(CRpcCallInternal* param_1, uint32_t param_2) {
     this->~CSceneVehicleCar();
     if ((param_2 & 1) != 0) {
@@ -799,6 +867,70 @@ void CSceneVehicleCar::WheelReset(SSimulationWheel* wheel) {
     wheel->m_realTimeState.m_rotationAngle = 0.0f;
     wheel->m_realTimeState.m_steeringAngle = 0.0f;
     wheel->m_realTimeState.m_targetSteeringAngle = 0.0f;
+}
+
+void CSceneVehicleCar::VehicleReset() {
+    // Physics-relevant subset of native 0x7C0320..0x7C05EC. Presentation,
+    // sound, and replay-state copies are intentionally outside this library,
+    // but every live field consumed by the force/contact pipeline is reset.
+    m_inputGas = 0.0f;
+    m_inputBrake = 0.0f;
+    m_inputSteer = 0.0f;
+    m_smoothedSteer = 0.0f;
+    m_field_0x5ec = 0.0f;
+    m_field_0x5f0 = 0.0f;
+    m_field_0x5f4 = 0.0f;
+    m_field_0x5f8 = 0.0f;
+    m_field_0x5fc = 0.0f;
+    m_field_0x600 = 0;
+    m_freeWheeling = 0;
+    m_chassisUp = GmVec3(0.0f, 1.0f, 0.0f);
+
+    m_useGroundedWheelSpeedOverride = 0;
+    m_wheelDriveDisabled = 0;
+    m_groundedWheelAngularSpeedOverride = 0.0f;
+    m_engineState = 0;
+    m_engineClutchBoost = 0;
+    m_engineTakeoffMode = 0;
+    m_engineLocalVelocity = GmVec3(0.0f, 0.0f, 0.0f);
+    m_engineOutsideTakeoffWindow = 0;
+    m_engineShiftDirection = 0;
+
+    m_hasBodyContact = 0;
+    m_lastBodyContactTick = std::numeric_limits<uint32_t>::max();
+    m_hasWaterContact = 0;
+    m_frictionCurrentTick = 0u;
+    m_frictionTickFraction = 0.0;
+    m_model6LastLateralOverLimitTick =
+        std::numeric_limits<uint32_t>::max();
+    m_model6LateralOverLimitStartTick =
+        std::numeric_limits<uint32_t>::max();
+    m_model6LateralOverLimitDuration = 0u;
+    m_model6EngineState1StartTick =
+        std::numeric_limits<uint32_t>::max();
+    m_model6EngineState3StartTick =
+        std::numeric_limits<uint32_t>::max();
+
+    m_hasAnyContact = 0;
+    m_hasChassisContact = 0;
+    m_chassisContactMaterial = 0u;
+    m_wheelContactMaterial = 0u;
+    m_frontWheelImpact = 0.0f;
+    m_rearWheelImpact = 0.0f;
+    m_chassisImpact = 0.0f;
+    m_wheelContactCount = 0u;
+    m_chassisContactCount = 0u;
+    m_lastWheelContactCount = 0u;
+    m_lastChassisContactCount = 0u;
+    m_chassisContactPointSum = GmVec3(0.0f, 0.0f, 0.0f);
+    m_chassisContactNormalSum = GmVec3(0.0f, 0.0f, 0.0f);
+    m_appliedImpulseSum = GmVec3(0.0f, 0.0f, 0.0f);
+    m_appliedCentralImpulseSum = GmVec3(0.0f, 0.0f, 0.0f);
+
+    for (uint32_t index = 0u; index < m_wheels.GetCount(); ++index) {
+        WheelReset(&m_wheels[index]);
+    }
+    m_engine.Reset();
 }
 
 void CSceneVehicleCar::EngineIntegrate(float input, float dt) {

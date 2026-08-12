@@ -85,6 +85,12 @@ inline constexpr double kPlaneDistanceThreshold = kInputThreshold;
 inline constexpr float kDefaultUniformGravity =
     -9.81000041961669921875f; // 0xC11CF5C3
 
+// .rdata 0x00B36144. CSceneVehicleCarTuning's constructor stores this at
+// +0x168, and UpdateParamsFromTuning copies it to the physical object's
+// maximum collision-substep distance at +0x30.
+inline constexpr float kDefaultVehicleMaxDistancePerStep =
+    0.300000011920928955078125f; // 0x3E99999A
+
 // CSceneVehicleCar::WheelUpdateSpeedFromVehicleSpeed at 0x007C0EC0 uses
 // these values to drive or brake an airborne wheel and to decay a wheel that
 // is neither driven nor braked. The scale and decay are native doubles, so

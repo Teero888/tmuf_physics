@@ -1,5 +1,6 @@
 #pragma once
 #include "Scene/CSceneVehicleCarTuning.hpp"
+#include "Scene/TmForeverPhysicsConstants.hpp"
 #include "Plug/CFuncKeysReal.hpp"
 
 // We use CFastArray directly.
@@ -123,7 +124,14 @@ inline constexpr float StadiumInertiaMass = 5.0f;
 inline constexpr float StadiumInertiaHalfDiagX = 0.5f;
 inline constexpr float StadiumInertiaHalfDiagY = 0.5f;
 inline constexpr float StadiumInertiaHalfDiagZ = 1.0f;
+inline constexpr float StadiumCenterOfMassAftFactor = 0.0f;
+inline constexpr float StadiumCenterOfMassVerticalOffset =
+    0.449999988079071044921875f;
 inline constexpr float StadiumGravityCoef = 3.0f;
+// Native tuning +0x168. The Stadium asset retains the constructor value
+// loaded from TmForeverFixed.exe .rdata 0x00B36144 (0x3E99999A).
+inline constexpr float StadiumMaxDistancePerStep =
+    TmForeverPhysicsConstants::kDefaultVehicleMaxDistancePerStep;
 inline constexpr float StadiumGravityCoefAir = 2.5f;
 inline constexpr float StadiumAngularFluidFrictionCoef1 = 0.4f;
 inline constexpr float StadiumGroundSlowDownBase = 1.0f;
@@ -250,7 +258,11 @@ inline void InitTuningData(CSceneVehicleCarTuning* tuning) {
     tuning->m_inertiaHalfDiagX = StadiumInertiaHalfDiagX;
     tuning->m_inertiaHalfDiagY = StadiumInertiaHalfDiagY;
     tuning->m_inertiaHalfDiagZ = StadiumInertiaHalfDiagZ;
+    tuning->m_centerOfMassAftFactor = StadiumCenterOfMassAftFactor;
+    tuning->m_centerOfMassVerticalOffset =
+        StadiumCenterOfMassVerticalOffset;
     tuning->m_gravityCoef = StadiumGravityCoef;
+    tuning->m_maxDistancePerStep = StadiumMaxDistancePerStep;
     tuning->m_gravityCoefAir = StadiumGravityCoefAir;
     tuning->m_angularFluidFrictionCoef1 = StadiumAngularFluidFrictionCoef1;
     tuning->m_groundSlowDownBase = StadiumGroundSlowDownBase;

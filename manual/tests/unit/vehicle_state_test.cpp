@@ -1,6 +1,7 @@
 #include "../../Scene/CSceneVehicleCar.hpp"
 #include "../../Scene/CSceneVehicleCarTuning.hpp"
 #include "../../Scene/CSceneMobilAbsorbContact.hpp"
+#include "../../Scene/CCallbackSceneVehicleCarAfterContacts.hpp"
 #include "../../Scene/TmForeverPhysicsConstants.hpp"
 #include "../../Scene/VehicleGroundSupport.hpp"
 #include "../../Hms/CHmsCorpus.hpp"
@@ -224,6 +225,131 @@ int main() {
     passed &= Expect("front-right wheel steerable", car.m_wheels[1].m_isSteerable == 1);
     passed &= Expect("rear-right wheel fixed", car.m_wheels[2].m_isSteerable == 0);
     passed &= Expect("rear-left wheel fixed", car.m_wheels[3].m_isSteerable == 0);
+
+    CSceneVehicleCar resetCar;
+    resetCar.m_inputGas = 1.0f;
+    resetCar.m_inputBrake = 0.5f;
+    resetCar.m_inputSteer = -1.0f;
+    resetCar.m_smoothedSteer = 0.75f;
+    resetCar.m_freeWheeling = 1;
+    resetCar.m_engineState = 3;
+    resetCar.m_engineTakeoffMode = 4;
+    resetCar.m_engine.m_currentGear = 5;
+    resetCar.m_engine.m_engineRpm = 8000.0f;
+    resetCar.m_frictionCurrentTick = 1234u;
+    resetCar.m_wheelContactCount = 9u;
+    resetCar.m_chassisContactCount = 7u;
+    resetCar.m_appliedImpulseSum = GmVec3(1.0f, 2.0f, 3.0f);
+    resetCar.m_wheels[0].m_realTimeState.m_compression = 0.6f;
+    resetCar.m_wheels[0].m_isSlipping = 1;
+    resetCar.VehicleReset();
+    passed &= Expect(
+        "vehicle reset restores native live physics state",
+        resetCar.m_inputGas == 0.0f &&
+        resetCar.m_inputBrake == 0.0f &&
+        resetCar.m_inputSteer == 0.0f &&
+        resetCar.m_smoothedSteer == 0.0f &&
+        resetCar.m_freeWheeling == 0 &&
+        resetCar.m_engineState == 0 &&
+        resetCar.m_engineTakeoffMode == 0 &&
+        resetCar.m_engine.m_currentGear == 1 &&
+        resetCar.m_engine.m_engineRpm == 0.0f &&
+        resetCar.m_frictionCurrentTick == 0u &&
+        resetCar.m_lastBodyContactTick ==
+            std::numeric_limits<uint32_t>::max() &&
+        resetCar.m_model6LastLateralOverLimitTick ==
+            std::numeric_limits<uint32_t>::max() &&
+        resetCar.m_model6EngineState1StartTick ==
+            std::numeric_limits<uint32_t>::max() &&
+        resetCar.m_wheelContactCount == 0u &&
+        resetCar.m_chassisContactCount == 0u &&
+        VecNear(resetCar.m_appliedImpulseSum,
+                GmVec3(0.0f, 0.0f, 0.0f)) &&
+        resetCar.m_wheels[0].m_realTimeState.m_compression ==
+            tuning.m_absorbingValRest &&
+        resetCar.m_wheels[0].m_isSlipping == 0);
+
+    // UpdateParamsFromTuning (0x7BFFA0) must replace the generic physical
+    // defaults and derive the COM from the actual simulation-wheel geometry.
+    CSceneVehicleCar physicalInitCar;
+    CSceneVehicleCarTuning physicalInitTuning;
+    CHmsItem physicalInitItem;
+    CHmsCorpus physicalInitCorpus;
+    CHmsDyna physicalInitDyna;
+    CPlugPhysicalObject physicalInitObject;
+    physicalInitCar.m_hmsItem = &physicalInitItem;
+    physicalInitItem.m_corpuses.Add(&physicalInitCorpus);
+    physicalInitCorpus.m_dyna = &physicalInitDyna;
+    physicalInitDyna.m_field_0x108 = &physicalInitObject;
+    physicalInitTuning.m_mass = 2.0f;
+    physicalInitTuning.m_inertiaMass = 3.0f;
+    physicalInitTuning.m_inertiaHalfDiagX = 0.25f;
+    physicalInitTuning.m_inertiaHalfDiagY = 0.5f;
+    physicalInitTuning.m_inertiaHalfDiagZ = 0.75f;
+    physicalInitTuning.m_centerOfMassAftFactor = 0.25f;
+    physicalInitTuning.m_centerOfMassVerticalOffset = 0.45f;
+    physicalInitTuning.m_gravityCoef = 3.0f;
+    physicalInitTuning.m_maxDistancePerStep = 0.125f;
+    physicalInitTuning.m_m6MaxRpm = 9000.0f;
+    g_tuning = &physicalInitTuning;
+    physicalInitCar.UpdateParamsFromTuning();
+
+    const GmVec3 wheelMinimum(
+        TmForeverPhysicsConstants::kStadiumWheelLocalX[2],
+        TmForeverPhysicsConstants::kStadiumWheelLocalY[0],
+        TmForeverPhysicsConstants::kStadiumWheelRearZ);
+    const GmVec3 wheelMaximum(
+        TmForeverPhysicsConstants::kStadiumWheelLocalX[3],
+        TmForeverPhysicsConstants::kStadiumWheelLocalY[2],
+        TmForeverPhysicsConstants::kStadiumWheelFrontZ);
+    const GmVec3 wheelCenter = (wheelMinimum + wheelMaximum) * 0.5f;
+    const GmVec3 wheelHalfExtents = (wheelMaximum - wheelMinimum) * 0.5f;
+    float averageWheelBottom = 0.0f;
+    for (uint32_t i = 0; i < physicalInitCar.m_wheels.GetCount(); ++i) {
+        averageWheelBottom +=
+            physicalInitCar.m_wheels[i].m_localContactPosition.y -
+            physicalInitCar.m_wheels[i].m_radius;
+    }
+    averageWheelBottom /=
+        static_cast<float>(physicalInitCar.m_wheels.GetCount());
+    const GmVec3 expectedPhysicalCenterOfMass(
+        wheelCenter.x,
+        averageWheelBottom +
+            physicalInitTuning.m_centerOfMassVerticalOffset,
+        wheelCenter.z + physicalInitTuning.m_centerOfMassAftFactor *
+                            wheelHalfExtents.z);
+    CPlugPhysicalObject expectedPhysicalInitObject;
+    expectedPhysicalInitObject.m_mass = physicalInitTuning.m_mass;
+    expectedPhysicalInitObject.SetInertiaMatrixBox(
+        physicalInitTuning.m_inertiaMass,
+        GmVec3(physicalInitTuning.m_inertiaHalfDiagX,
+               physicalInitTuning.m_inertiaHalfDiagY,
+               physicalInitTuning.m_inertiaHalfDiagZ));
+    passed &= Expect("vehicle tuning applies physical mass and gravity",
+                     physicalInitObject.m_mass == 2.0f &&
+                     physicalInitObject.m_forceFieldCoef == 3.0f);
+    passed &= Expect("vehicle tuning zeros physical damping",
+                     physicalInitObject.m_linearDamping == 0.0f &&
+                     physicalInitObject.m_angularDampingX == 0.0f);
+    passed &= Expect("vehicle tuning applies collision step distance",
+                     physicalInitObject.m_maxDistancePerStep == 0.125f);
+    passed &= Expect("vehicle tuning derives wheel-relative center of mass",
+                     VecNear(physicalInitObject.m_centerOfMass,
+                             expectedPhysicalCenterOfMass));
+    passed &= Expect("vehicle tuning applies inverse box inertia",
+                     MatNear(physicalInitObject.m_inverseInertia,
+                             expectedPhysicalInitObject.m_inverseInertia));
+    passed &= Expect("vehicle tuning refreshes wheelbase and engine maximum",
+                     Near(physicalInitCar.m_field_0x840,
+                          TmForeverPhysicsConstants::kStadiumWheelbase) &&
+                     physicalInitCar.m_engine.m_maxRpm == 9000.0f);
+    // CHmsCorpus owns a non-null dynamics pointer in production. This test's
+    // dynamics object is stack-backed, and the item likewise does not own its
+    // stack-backed corpus, so release both synthetic ownership links.
+    physicalInitCorpus.m_dyna = nullptr;
+    physicalInitItem.m_corpuses.m_count = 0u;
+    g_tuning = &tuning;
+
     car.m_wheels[0].m_groundContactNormalSum = GmVec3(0.0f, 2.0f, 0.0f);
     const GmVec3 steeredLateralDirection =
         car.GetModel6WheelLateralDirection(&car.m_wheels[0], 0.5f);
@@ -2049,6 +2175,23 @@ int main() {
                      contactCar.m_chassisContactCount +
                          contactCar.m_wheelContactCount ==
                          contactCountBeforeIgnore);
+
+    contactItem.CallbackSet(
+        CB_AFTER_CONTACTS,
+        CCallbackSceneVehicleCarAfterContacts::Instance());
+    contactItem.m_callbacks->m_callbacks[CB_AFTER_CONTACTS]->AfterContacts(
+        &contactItem);
+    passed &= Expect(
+        "vehicle after-contacts callback resets per-pass accumulators",
+        contactCar.m_wheelContactCount == 0u &&
+        contactCar.m_chassisContactCount == 0u &&
+        contactCar.m_lastWheelContactCount == 2u &&
+        contactCar.m_lastChassisContactCount == 1u &&
+        VecNear(contactCar.m_chassisContactPointSum,
+                GmVec3(0.0f, 0.0f, 0.0f)) &&
+        VecNear(contactCar.m_chassisContactNormalSum,
+                GmVec3(0.0f, 0.0f, 0.0f)) &&
+        contactCar.m_wheels[0].m_hasLateralContact == 1);
 
     if (!passed) return 1;
     std::puts("vehicle state regression: PASS");

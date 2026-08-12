@@ -1,6 +1,8 @@
 #include <SDL.h>
 
 #include "../../TuningData.hpp"
+#include "Classic/CClassicArchive.hpp"
+#include "Game/CGameCtnReplayRecord.hpp"
 #include "CHmsCorpus.hpp"
 #include "Gm/GmSurf.hpp"
 #include "Hms/CHmsCollisionManager.hpp"
@@ -14,6 +16,7 @@
 #include "Plug/CPlugSurfaceGeom.hpp"
 #include "Plug/CPlugTree.hpp"
 #include "Scene/CCallbackSceneVehicleCarComputeForces.hpp"
+#include "Scene/CCallbackSceneVehicleCarAfterContacts.hpp"
 #include "Scene/CSceneMobilAbsorbContact.hpp"
 #include "Scene/CSceneVehicleCar.hpp"
 #include "Scene/CSceneVehicleCarTuning.hpp"
@@ -30,6 +33,7 @@
 #include <cstring>
 #include <deque>
 #include <iostream>
+#include <memory>
 #include <string>
 
 extern CSceneVehicleCarTuning* g_tuning;
@@ -47,14 +51,17 @@ struct Options {
     std::string extractorProject;
     std::string cacheDirectory;
     std::string screenshotPath;
+    std::string replayPath;
     GmVec3 start = kDefaultStart;
     float yaw = kDefaultYaw;
     float automaticGas = 0.0f;
     float automaticSteer = 0.0f;
     int frameLimit = -1;
     int simulationStepLimit = -1;
+    int traceEvery = 0;
     bool topDown = false;
     bool forceCacheRebuild = false;
+    bool useReplayInputs = false;
 };
 
 struct ViewState {
@@ -108,6 +115,9 @@ void PrintUsage(const char* executable) {
         << "  --top-down           Start with the top-down camera\n"
         << "  --frames N           Exit after N rendered frames (smoke tests)\n"
         << "  --simulate N         Run N physics steps without opening a window\n"
+        << "  --trace-every N      Print every Nth headless physics state\n"
+        << "  --replay-inputs      Drive the simulation with A01 replay inputs\n"
+        << "  --replay PATH        Drive the simulation with replay inputs\n"
         << "  --gas VALUE          Constant gas input for --simulate or rendering\n"
         << "  --steer VALUE        Constant steering input (-1 through 1)\n"
         << "  --screenshot PATH    Save the first rendered frame as a BMP\n";
@@ -139,6 +149,9 @@ bool ParseOptions(int argc, char** argv, Options& options) {
     options.packsDirectory = executableDirectory + "/../../steamdata/Packs";
     options.extractorProject = executableDirectory +
         "/../TrackCollisionExtractor/TrackCollisionExtractor.csproj";
+    options.replayPath = executableDirectory +
+        "/../../steamdata/GameData/Tracks/Campaigns/Nations/White/"
+        "A01-Race.Replay.gbx";
     for (int i = 1; i < argc; ++i) {
         const std::string argument = argv[i];
         if (argument == "--help" || argument == "-h") {
@@ -147,6 +160,20 @@ bool ParseOptions(int argc, char** argv, Options& options) {
         }
         if (argument == "--top-down") {
             options.topDown = true;
+            continue;
+        }
+        if (argument == "--replay-inputs") {
+            options.useReplayInputs = true;
+            continue;
+        }
+        if (argument == "--replay" && i + 1 < argc) {
+            options.replayPath = argv[++i];
+            options.useReplayInputs = true;
+            continue;
+        }
+        if (argument.rfind("--replay=", 0) == 0) {
+            options.replayPath = argument.substr(9);
+            options.useReplayInputs = true;
             continue;
         }
         if ((argument == "--map" || argument == "--collision") &&
@@ -207,6 +234,13 @@ bool ParseOptions(int argc, char** argv, Options& options) {
         if (argument.rfind("--simulate=", 0) == 0) {
             if (!ParseInt(argument.c_str() + 11, options.simulationStepLimit))
                 return false;
+            continue;
+        }
+        if (argument == "--trace-every" && i + 1 < argc) {
+            if (!ParseInt(argv[++i], options.traceEvery) ||
+                options.traceEvery == 0) {
+                return false;
+            }
             continue;
         }
         if (argument == "--gas" && i + 1 < argc) {
@@ -307,6 +341,9 @@ public:
         item->CallbackSet(
             CB_ABSORB_CONTACT,
             CSceneMobilAbsorbContact::Instance());
+        item->CallbackSet(
+            CB_AFTER_CONTACTS,
+            CCallbackSceneVehicleCarAfterContacts::Instance());
         item->m_corpuses.Add(corpus);
         corpus->m_dyna = dyna;
         corpus->m_item = item;
@@ -320,14 +357,8 @@ public:
 
         InitTuningData(&tuning);
         g_tuning = &tuning;
-        physicalObject.m_mass = tuning.m_mass;
-        physicalObject.m_forceFieldCoef = tuning.m_gravityCoef;
-        physicalObject.SetInertiaMatrixBox(
-            tuning.m_inertiaMass,
-            GmVec3(tuning.m_inertiaHalfDiagX,
-                   tuning.m_inertiaHalfDiagY,
-                   tuning.m_inertiaHalfDiagZ));
         dyna->m_field_0x108 = &physicalObject;
+        car->UpdateParamsFromTuning();
         dyna->m_dynamicType = 1;
         dyna->UpdateWorldInverseInertia();
         item->m_flags1 =
@@ -359,6 +390,7 @@ public:
         collisionZone->AddCorpus(worldCorpus);
         collisionManager->UpdateStaticCollisionTrees();
         zone->m_ptr168 = collisionZone;
+        zone->m_dynamicCorpuses.Add(corpus);
         GmSurf::StaticInit();
         Reset();
 
@@ -372,23 +404,10 @@ public:
     }
 
     void Reset() {
-        dyna->Position() = startPosition;
+        dyna->Reset(nullptr);
+        dyna->SetTranslation(nullptr, &startPosition);
         dyna->SetYaw(startYaw);
-        GmVec3 zero(0.0f, 0.0f, 0.0f);
-        item->SetLinearSpeed(item, &zero);
-        item->SetAngularSpeed(item, &zero);
-        item->SetForce(item, &zero);
-        item->SetTorque(item, &zero);
-        car->m_inputGas = 0.0f;
-        car->m_inputBrake = 0.0f;
-        car->m_inputSteer = 0.0f;
-        car->m_smoothedSteer = 0.0f;
-        car->m_chassisUp = GmVec3(0.0f, 1.0f, 0.0f);
-        car->m_engine.Reset();
-        for (uint32_t i = 0; i < car->m_wheels.GetCount(); ++i) {
-            auto& wheel = car->m_wheels[i];
-            car->WheelReset(&wheel);
-        }
+        car->VehicleReset();
         simulatedSeconds = 0.0;
         lastDiagnostics = VehicleTrackStepDiagnostics{};
         trail.clear();
@@ -439,6 +458,108 @@ public:
     GmVec3 startPosition = kDefaultStart;
     float startYaw = kDefaultYaw;
     double simulatedSeconds = 0.0;
+};
+
+class ReplayInputPlayer {
+public:
+    bool Load(const std::string& path) {
+        std::unique_ptr<CClassicArchive> archive(
+            CClassicArchive::LoadFromGbx(path.c_str()));
+        if (archive == nullptr) {
+            std::cerr << "Could not load replay: " << path << '\n';
+            return false;
+        }
+        if (!archive->ScanForChunk(0x03092019u)) {
+            std::cerr << "Replay has no input-events chunk: " << path << '\n';
+            return false;
+        }
+
+        record = std::make_unique<CGameCtnReplayRecord>();
+        record->Chunk(nullptr, archive.get(), 0x03092019u);
+        if (record->m_events.empty()) {
+            std::cerr << "Replay has no input events: " << path << '\n';
+            return false;
+        }
+
+        for (size_t index = 0; index < record->m_controlNames.size(); ++index) {
+            const std::string& name = record->m_controlNames[index];
+            if (name == "Accelerate" || name == "UnknownId_524288") {
+                accelerateIndex = static_cast<int>(index);
+            } else if (name == "Brake" || name == "UnknownId_524289") {
+                brakeIndex = static_cast<int>(index);
+            } else if (name == "SteerLeft" || name == "UnknownId_524290") {
+                steerLeftIndex = static_cast<int>(index);
+            } else if (name == "SteerRight" || name == "UnknownId_524291") {
+                steerRightIndex = static_cast<int>(index);
+            } else if (name == "Steer" || name == "UnknownId_524292") {
+                steerIndex = static_cast<int>(index);
+            }
+        }
+
+        Reset();
+        std::cout << "Replay inputs: " << record->m_events.size()
+                  << " events from " << path << '\n';
+        return true;
+    }
+
+    void Reset() {
+        nextEvent = 0u;
+        gas = 0.0f;
+        brake = 0.0f;
+        steer = 0.0f;
+        if (record == nullptr) return;
+        while (nextEvent < record->m_events.size() &&
+               record->m_events[nextEvent].time < kRaceStartMs) {
+            ++nextEvent;
+        }
+    }
+
+    void Advance(uint32_t raceTimeMs) {
+        if (record == nullptr) return;
+        const uint32_t absoluteTimeMs = kRaceStartMs + raceTimeMs;
+        while (nextEvent < record->m_events.size()) {
+            const SInputEvent& event = record->m_events[nextEvent];
+            if (event.time > absoluteTimeMs) break;
+
+            const int controlIndex = static_cast<int>(event.controlIdx);
+            if (controlIndex == accelerateIndex) {
+                gas = event.value != 0u ? 1.0f : 0.0f;
+            } else if (controlIndex == brakeIndex) {
+                brake = event.value != 0u ? 1.0f : 0.0f;
+            } else if (controlIndex == steerRightIndex) {
+                if (event.value != 0u) steer = 1.0f;
+                else if (steer > 0.0f) steer = 0.0f;
+            } else if (controlIndex == steerLeftIndex) {
+                if (event.value != 0u) steer = -1.0f;
+                else if (steer < 0.0f) steer = 0.0f;
+            } else if (controlIndex == steerIndex) {
+                int32_t signedValue = 0;
+                static_assert(sizeof(signedValue) == sizeof(event.value));
+                std::memcpy(&signedValue, &event.value, sizeof(signedValue));
+                steer = std::clamp(
+                    static_cast<float>(signedValue) / 65535.0f,
+                    -1.0f, 1.0f);
+            }
+            ++nextEvent;
+        }
+    }
+
+    float Gas() const { return gas; }
+    float Brake() const { return brake; }
+    float Steer() const { return steer; }
+
+private:
+    static constexpr uint32_t kRaceStartMs = 100000u;
+    std::unique_ptr<CGameCtnReplayRecord> record;
+    size_t nextEvent = 0u;
+    int accelerateIndex = -1;
+    int brakeIndex = -1;
+    int steerLeftIndex = -1;
+    int steerRightIndex = -1;
+    int steerIndex = -1;
+    float gas = 0.0f;
+    float brake = 0.0f;
+    float steer = 0.0f;
 };
 
 Camera BuildChaseCamera(
@@ -814,11 +935,70 @@ int main(int argc, char** argv) {
     InteractiveSimulation simulation;
     if (!simulation.Initialize(options)) return 1;
 
+    ReplayInputPlayer replayInputs;
+    if (options.useReplayInputs && !replayInputs.Load(options.replayPath)) {
+        return 1;
+    }
+
     if (options.simulationStepLimit >= 0) {
-        simulation.SetInput(
-            options.automaticGas, 0.0f, options.automaticSteer);
+        if (!options.useReplayInputs) {
+            simulation.SetInput(
+                options.automaticGas, 0.0f, options.automaticSteer);
+        }
         for (int step = 0; step < options.simulationStepLimit; ++step)
+        {
+            if (options.useReplayInputs) {
+                replayInputs.Advance(static_cast<uint32_t>(step * 10));
+                simulation.SetInput(
+                    replayInputs.Gas(), replayInputs.Brake(),
+                    replayInputs.Steer());
+            }
             simulation.Step();
+            if (options.traceEvery > 0 &&
+                (step + 1) % options.traceEvery == 0) {
+                GmVec3 linearSpeed;
+                GmVec3 localLinearSpeed;
+                GmVec3 angularSpeed;
+                simulation.dyna->GetLinearSpeed(nullptr, &linearSpeed);
+                simulation.item->GetLinearSpeed(
+                    simulation.item, &localLinearSpeed);
+                simulation.dyna->GetAngularSpeed(nullptr, &angularSpeed);
+                std::cout << "Trace: t=" << simulation.simulatedSeconds
+                          << "s pos=(" << simulation.dyna->Position().x
+                          << ", " << simulation.dyna->Position().y
+                          << ", " << simulation.dyna->Position().z
+                          << ") velocity=(" << linearSpeed.x << ", "
+                          << linearSpeed.y << ", " << linearSpeed.z
+                          << ") localVelocity=(" << localLinearSpeed.x
+                          << ", " << localLinearSpeed.y << ", "
+                          << localLinearSpeed.z
+                          << ") angular=(" << angularSpeed.x << ", "
+                          << angularSpeed.y << ", " << angularSpeed.z
+                          << ") force=("
+                          << simulation.lastDiagnostics.accumulatedForce.x
+                          << ", "
+                          << simulation.lastDiagnostics.accumulatedForce.y
+                          << ", "
+                          << simulation.lastDiagnostics.accumulatedForce.z
+                          << ") accel="
+                          << simulation.tuning.M5GetAccelFromSpeed(
+                                 localLinearSpeed.z)
+                          << " input=("
+                          << simulation.car->m_inputGas << ", "
+                          << simulation.car->m_inputBrake << ", "
+                          << simulation.car->m_inputSteer << ")"
+                          << " slip=("
+                          << simulation.car->m_wheels[0].m_isSlipping
+                          << ", "
+                          << simulation.car->m_wheels[1].m_isSlipping
+                          << ", "
+                          << simulation.car->m_wheels[2].m_isSlipping
+                          << ", "
+                          << simulation.car->m_wheels[3].m_isSlipping
+                          << ") engineState="
+                          << simulation.car->m_engineState << '\n';
+            }
+        }
         GmVec3 angularSpeed;
         simulation.dyna->GetAngularSpeed(nullptr, &angularSpeed);
         std::cout << "Final state: t=" << simulation.simulatedSeconds
@@ -834,7 +1014,7 @@ int main(int argc, char** argv) {
                   << simulation.lastDiagnostics.accumulatedForce.y << ", "
                   << simulation.lastDiagnostics.accumulatedForce.z
                   << ") wheelContacts="
-                  << simulation.car->m_wheelContactCount
+                  << simulation.car->m_lastWheelContactCount
                   << " compression=("
                   << simulation.car->m_wheels[0]
                          .m_realTimeState.m_compression
@@ -913,7 +1093,11 @@ int main(int argc, char** argv) {
                 switch (event.key.keysym.sym) {
                     case SDLK_ESCAPE: running = false; break;
                     case SDLK_c: view.topDown = !view.topDown; break;
-                    case SDLK_r: simulation.Reset(); accumulator = 0.0; break;
+                    case SDLK_r:
+                        simulation.Reset();
+                        replayInputs.Reset();
+                        accumulator = 0.0;
+                        break;
                     case SDLK_SPACE: paused = !paused; accumulator = 0.0; break;
                     case SDLK_n: if (paused) singleStep = true; break;
                     default: break;
@@ -949,16 +1133,26 @@ int main(int argc, char** argv) {
             (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT]) ? 1.0f : 0.0f;
         const float steerRight =
             (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT]) ? 1.0f : 0.0f;
-        simulation.SetInput(
-            std::max(gas, options.automaticGas), brake,
-            std::clamp(
-                steerRight - steerLeft + options.automaticSteer,
-                -1.0f, 1.0f));
+        if (!options.useReplayInputs) {
+            simulation.SetInput(
+                std::max(gas, options.automaticGas), brake,
+                std::clamp(
+                    steerRight - steerLeft + options.automaticSteer,
+                    -1.0f, 1.0f));
+        }
 
         if (!paused) accumulator += elapsed;
         if (singleStep) accumulator = kPhysicsDt;
         int stepCount = 0;
         while (accumulator >= kPhysicsDt && stepCount < 12) {
+            if (options.useReplayInputs) {
+                const uint32_t raceTimeMs = static_cast<uint32_t>(
+                    std::llround(simulation.simulatedSeconds * 1000.0));
+                replayInputs.Advance(raceTimeMs);
+                simulation.SetInput(
+                    replayInputs.Gas(), replayInputs.Brake(),
+                    replayInputs.Steer());
+            }
             simulation.Step();
             accumulator -= kPhysicsDt;
             ++stepCount;

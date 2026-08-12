@@ -40,7 +40,14 @@ public:
     float m_inertiaHalfDiagX;
     float m_inertiaHalfDiagY;
     float m_inertiaHalfDiagZ;
+    // Native tuning +0x144/+0x148. UpdateParamsFromTuning derives the
+    // physical center of mass from the loaded wheel geometry, then applies
+    // these longitudinal and vertical adjustments.
+    float m_centerOfMassAftFactor;
+    float m_centerOfMassVerticalOffset;
     float m_gravityCoef;
+    // Native tuning +0x168, copied to CPlugPhysicalObject +0x30.
+    float m_maxDistancePerStep;
     float m_gravityCoefAir;
     float m_angularFluidFrictionCoef1;
     float m_groundSlowDownBase;

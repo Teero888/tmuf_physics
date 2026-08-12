@@ -2,7 +2,7 @@
 
 Last audited: 2026-08-12
 
-The physics library builds all 87 current translation units (the separately
+The physics library builds all 88 current translation units (the separately
 built visualization adds one helper unit), but a successful build is
 not yet evidence of a closed physics simulation. The highest-impact remaining
 gaps are below in dependency order.
@@ -91,7 +91,10 @@ gaps are below in dependency order.
 - `CHmsItem::SCallbackList` now matches the native six-pointer, no-vtable
   table. The recovered slot indices are wired for absorb-contact (2), force
   computation (3), and after-contacts (4); `PhysicsStep2` invokes slot 4 once
-  per registered dynamic corpus after response processing.
+  per registered dynamic corpus after response processing. Vehicle setup now
+  installs the native car slot-4 callback, which restores per-pass lifetime for
+  wheel/chassis contact counts and their point/normal accumulators instead of
+  allowing diagnostic state to grow for the entire run.
 - Collision response now constructs both native 0x4C-byte physical-contact
   records with the executable's corpus/data/material ownership, response-
   category local point and normal, signed local relative point speed, and
@@ -155,7 +158,7 @@ gaps are below in dependency order.
 - The processed-steering producer at `0x7C6CB2..0x7C6D33` is translated before
   Model-6 dispatch. It uses the car-local forward speed and the native
   `SteerRadiusMin`/`SteerRadiusCoef` fields (`+0x6C/+0x70`) to compute
-  `-smoothedSteer / sqrt(min + abs(speed) * coef)`. The executable's strict
+  `-smoothedSteer * AsinSafe(1 / (min + abs(speed) * coef))`. The executable's strict
   ordered epsilon branch—including equality and NaN behavior—constructor
   defaults, Stadium values, field descriptors, and instruction sequence are
   regression-covered.
@@ -321,6 +324,23 @@ order proves observable; collision response can now consume the typed working
   whole object to update world inverse inertia and point lever arms. The scalar
   at `+0x30` is also consumed as the native collision-substep distance rather
   than the earlier guessed second angular-damping component.
+- `CSceneVehicleCar::UpdateParamsFromTuning` now scans the four loaded wheel
+  attachment positions like native `0x7BFFA0`, derives the wheel bounding-box
+  center/extents and average wheel-bottom height, applies tuning
+  `CMAftForce`/`CMDownUp`, and writes the resulting center of mass, mass,
+  gravity coefficient, zero linear/angular damping, collision-step distance,
+  inverse box inertia, wheelbase, and Model-6 RPM ceiling. Stadium tuning 29's
+  exact `0.0f` aft factor and `0.45f` vertical offset come from the extracted
+  original `StadiumCar.VehicleTunings.Gbx`; the `0.3f` step-distance bits are
+  checked directly at executable `.rdata` `0x00B36144`. The simulation wheel
+  is also a plain, trivially copyable record with no synthetic vtable, matching
+  its native constructor and making raw `CFastBuffer` relocation valid.
+- `CSceneVehicleCar::VehicleReset` now translates the physics-relevant state
+  clearing from native `0x7C0320`: controls, steering, engine/freewheel state,
+  timers, contacts, impulses, wheel state, and engine state are reset together.
+  The interactive reset also rewrites both corpus state copies and registers
+  the corpus with the dynamic zone, so the recovered end-of-frame slot-4
+  callback actually runs during the viewer simulation.
 - The corpus transform itself and its solid refresh pointer are now typed.
   `CHmsCorpus` still contains native-offset casts and mock virtual calls in
   peripheral water/rotation/crash-dump paths that are unsafe on the current
@@ -367,15 +387,22 @@ order proves observable; collision response can now consume the typed working
   acceleration/brake blend are connected. The remaining reverse/freewheel and
   special-state pipeline still contains missing logic or harness
   approximations.
-- Closed-loop ghost comparison becomes meaningful only after collision
-  traversal, body state, and the fixed-step solver are real; until then it
-  mainly measures the scaffolding.
+- The compile/unit harness is not a behavioral parity oracle. Closed-loop
+  comparison is driven by the native replay trajectory and the interactive
+  A01 path now that collision traversal, body state, and the fixed-step solver
+  are connected; it still cannot certify unimplemented branches. The viewer
+  can now decode a replay's input-events chunk directly (`--replay-inputs` or
+  `--replay PATH`), including the A01 launch's intentionally idle first 10 ms,
+  so its trace uses the recorded controls rather than synthetic constant gas.
 - The interactive A01 path now exercises the real track, Stadium, car solid,
-  wheel contacts, collision manager, and vehicle callback. A one-second full-gas
-  smoke run reaches about 49.9 km/h with all four wheels classified as grounded,
-  replacing the previous runaway-spin failure. Ride height, pitch/contact depth,
-  reverse/freewheel behavior, and special-contact branches still visibly diverge
-  and are the next useful closed-loop targets.
+  wheel contacts, collision manager, and vehicle callback. With native physical
+  initialization and replay-timed inputs, the 0.9-second state is `x=177.135`,
+  `vx=13.293 m/s`, and pitch rate `-0.376 rad/s`, compared with the original
+  replay's `x=177.365`, `vx=14.192 m/s`, and `-0.381 rad/s`; all four wheels are
+  classified as grounded. This removes the generic damping loss and zero-COM
+  spin source, but the growing longitudinal/contact discrepancy is still real.
+  Ride height, contact depth/order, reverse/freewheel behavior, and special-
+  contact branches are the next useful closed-loop targets.
 
 ## Static-data recovery rule
 

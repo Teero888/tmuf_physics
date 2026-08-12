@@ -182,8 +182,12 @@ public:
         GmVec3 m_localContactPosition;
 
         SSimulationWheel();
-        virtual ~SSimulationWheel();
     };
+
+    // Native 0x7BD250 constructs a plain wheel record with no vtable. Keeping
+    // this trivially copyable also makes CFastBuffer's native-style raw record
+    // relocation valid on the standalone host.
+    static_assert(std::is_trivially_copyable_v<SSimulationWheel>);
 
     // Native 0x7C1810 helper. The executable has two stack arguments: the
     // simulation wheel and an unused force-model scalar. The force application
@@ -299,6 +303,8 @@ public:
     float m_chassisImpact;
     uint32_t m_wheelContactCount;
     uint32_t m_chassisContactCount;
+    uint32_t m_lastWheelContactCount;
+    uint32_t m_lastChassisContactCount;
     GmVec3 m_chassisContactPointSum;
     GmVec3 m_chassisContactNormalSum;
     GmVec3 m_appliedImpulseSum;
@@ -316,6 +322,9 @@ public:
     static CMwNod* MwNewCSceneVehicleCar();
     
     uint32_t GetMwClassId();
+    // Native 0x7BFFA0. This scans the simulation-wheel geometry and applies
+    // the active vehicle tuning to the attached physical object.
+    void UpdateParamsFromTuning();
     void* _vector_deleting_destructor_(CRpcCallInternal* param_1, uint32_t param_2);
     
     void Chunk(CFuncSegment* param_1, CClassicArchive* param_2, uint32_t param_3);
@@ -330,6 +339,7 @@ public:
     int ApplyWaterForces(const GmVec3* accumulatedLocalForce);
     // Native virtual at 0x7C3410 has one stack argument (`ret 0x04`).
     void AbsorbContact(CHmsPhysicalContact* contact) override;
+    void AfterContacts();
     // Native helpers at 0x7BD040 (`ret 0x04`) and 0x7C11D0 (`ret 0x08`).
     uint32_t GetWheelFromSurfaceTree(uint32_t surfaceTreeToken) const;
     void WheelAbsorbContact(
@@ -349,6 +359,9 @@ public:
     // Native 0x7BD1B0 initializes the suspension at AbsorbingValRest and
     // applies that displacement to the wheel collision subtree.
     void WheelReset(SSimulationWheel* wheel);
+    // Native 0x7C0320 resets the complete live vehicle-physics state while
+    // preserving loaded geometry and tuning.
+    void VehicleReset();
     void WheelIntegrate(SSimulationWheel* wheel, float dt);
     // TmForeverFixed.exe 0x7BD700 ends in `ret 0x08`: input and timestep are
     // the only two stack arguments.

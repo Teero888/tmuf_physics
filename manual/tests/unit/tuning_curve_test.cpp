@@ -74,8 +74,17 @@ int main() {
                          tuning.m_m5AccelSlipCoefMax, 1.0f);
     InitTuningData(&tuning);
 
+    passed &= ExpectNear("Stadium center-of-mass aft factor",
+                         tuning.m_centerOfMassAftFactor,
+                         StadiumCenterOfMassAftFactor);
+    passed &= ExpectNear("Stadium center-of-mass vertical offset",
+                         tuning.m_centerOfMassVerticalOffset,
+                         StadiumCenterOfMassVerticalOffset);
     passed &= ExpectNear("Stadium ground gravity coefficient",
                          tuning.m_gravityCoef, StadiumGravityCoef);
+    passed &= ExpectNear("Stadium maximum collision step distance",
+                         tuning.m_maxDistancePerStep,
+                         StadiumMaxDistancePerStep);
     passed &= ExpectNear("Stadium air gravity coefficient",
                          tuning.m_gravityCoefAir, StadiumGravityCoefAir);
     passed &= ExpectNear("Stadium constant ground slowdown",
@@ -237,13 +246,13 @@ int main() {
                          std::sqrt(0.5f));
     passed &= ExpectNear("Model6 processed steering at rest",
                          tuning.GetModel6ProcessedSteer(0.5f, 0.0f),
-                         -0.5f / std::sqrt(2.0f));
+                         -0.5f * std::asin(0.5f));
     passed &= ExpectNear("Model6 processed steering at forward speed",
                          tuning.GetModel6ProcessedSteer(0.5f, 100.0f),
-                         -0.5f / std::sqrt(87.0f));
+                         -0.5f * std::asin(1.0f / 87.0f));
     passed &= ExpectNear("Model6 processed steering uses absolute speed",
                          tuning.GetModel6ProcessedSteer(0.5f, -100.0f),
-                         -0.5f / std::sqrt(87.0f));
+                         -0.5f * std::asin(1.0f / 87.0f));
     tuning.m_steerRadiusMin = 0.0f;
     tuning.m_steerRadiusCoef = 0.0f;
     passed &= ExpectNear("Model6 processed steering below epsilon",
@@ -253,8 +262,8 @@ int main() {
         TmForeverPhysicsConstants::kWheelInputEpsilon;
     passed &= ExpectNear("Model6 processed steering at epsilon",
                          tuning.GetModel6ProcessedSteer(0.5f, 0.0f),
-                         -0.5f / std::sqrt(
-                                     TmForeverPhysicsConstants::kWheelInputEpsilon),
+                         -0.5f * static_cast<float>(
+                                     TmForeverPhysicsConstants::kPi * 0.5),
                          0.001f);
     tuning.m_steerRadiusMin = std::numeric_limits<float>::quiet_NaN();
     passed &= ExpectNan("Model6 processed steering propagates NaN",

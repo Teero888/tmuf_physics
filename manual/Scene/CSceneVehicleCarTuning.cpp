@@ -1,5 +1,6 @@
 #include "CSceneVehicleCarTuning.hpp"
 #include "CFuncKeysReal.hpp"
+#include "GmFunc.hpp"
 #include "TmForeverPhysicsConstants.hpp"
 #include "../TuningData.hpp"
 
@@ -165,18 +166,18 @@ float CSceneVehicleCarTuning::GetModel6ProcessedSteer(
     float smoothedSteer, float forwardSpeed) const {
     // TmForeverFixed.exe 0x7C6CB2..0x7C6D33. The local-speed vector begins at
     // stack +0x3C, so +0x44 is its forward (Z) component. Native x87 code
-    // rounds the denominator to float before the comparison and square root.
+    // rounds the denominator to float before the comparison and safe arcsine.
     const float absoluteForwardSpeed = std::abs(forwardSpeed);
     const float denominator =
         m_steerRadiusMin + absoluteForwardSpeed * m_steerRadiusCoef;
 
-    // `test ah, 5; jp` selects the reciprocal-square-root path for values at
+    // `test ah, 5; jp` selects the reciprocal/safe-arcsine path for values at
     // or above epsilon and for unordered comparisons. Consequently only an
     // ordered value strictly below epsilon produces zero; NaNs propagate.
     if (denominator < TmForeverPhysicsConstants::kWheelInputEpsilon) {
         return 0.0f;
     }
-    return -smoothedSteer * std::sqrt(1.0f / denominator);
+    return -smoothedSteer * GmFunc::AsinSafe(1.0f / denominator);
 }
 
 float CSceneVehicleCarTuning::GetModel6WheelSideForce(
@@ -332,7 +333,11 @@ CSceneVehicleCarTuning::CSceneVehicleCarTuning() : CMwNod() {
     m_inertiaHalfDiagX = 0.5f;
     m_inertiaHalfDiagY = 0.5f;
     m_inertiaHalfDiagZ = 1.0f;
+    m_centerOfMassAftFactor = 0.0f;
+    m_centerOfMassVerticalOffset = 0.0f;
     m_gravityCoef = 1.0f;
+    m_maxDistancePerStep =
+        TmForeverPhysicsConstants::kDefaultVehicleMaxDistancePerStep;
     m_gravityCoefAir = 1.0f;
     m_angularFluidFrictionCoef1 = 0.4f;
     // Native constructor offsets +0x58, +0x5C, and +0x1E8.

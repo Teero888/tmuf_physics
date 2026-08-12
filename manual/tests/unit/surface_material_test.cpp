@@ -39,7 +39,10 @@ bool ExpectVector(const char* name, const GmVec3& actual, const GmVec3& expected
     return false;
 }
 
-bool TestStaticMaterialResponse(uint16_t fixedMaterial, GmVec3 expectedSpeed) {
+bool TestStaticMaterialResponse(
+    uint16_t movingMaterial,
+    uint16_t fixedMaterial,
+    GmVec3 expectedSpeed) {
     CHmsItem movingItem;
     CHmsItem fixedItem;
     CPlugPhysicalObject movingPhysical;
@@ -63,7 +66,7 @@ bool TestStaticMaterialResponse(uint16_t fixedMaterial, GmVec3 expectedSpeed) {
     collision.Replacement() = GmVec3{0.0f, -0.2f, 0.0f};
     collision.ContactNormal() = GmVec3{0.0f, 1.0f, 0.0f};
     collision.ContactPoint() = GmVec3{0.0f, 0.0f, 0.0f};
-    collision.m_matId1 = 0u;
+    collision.m_matId1 = movingMaterial;
     collision.m_matId2 = fixedMaterial;
 
     CHmsZoneDynamic zone;
@@ -239,8 +242,20 @@ int main() {
                          positiveA.GetRestitutionCoefWith(&negative), -0.5f);
     passed &= ExpectNear("two non-positive restitutions add",
                          negative.GetRestitutionCoefWith(&negative), -1.0f);
-    passed &= TestStaticMaterialResponse(3u, GmVec3{4.0f, 0.0f, 0.0f});
-    passed &= TestStaticMaterialResponse(0u, GmVec3{-1.0f, 2.5f, 0.0f});
+    passed &= TestStaticMaterialResponse(
+        0u, 3u, GmVec3{4.0f, 0.0f, 0.0f});
+    passed &= TestStaticMaterialResponse(
+        0u, 0u,
+        GmVec3{
+            4.0f - 1.25f * 16.0f / std::sqrt(116.0f),
+            2.5f,
+            0.0f});
+    passed &= TestStaticMaterialResponse(
+        9u, 16u,
+        GmVec3{
+            4.0f + 0.5f * 8.0f / std::sqrt(116.0f),
+            -5.0f,
+            0.0f});
     passed &= TestCallbackOnlyResponseGate();
     passed &= TestReplacementSynthesis();
     passed &= TestEqualCategoryReplacementShares();

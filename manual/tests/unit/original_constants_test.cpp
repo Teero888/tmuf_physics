@@ -54,6 +54,9 @@ int main() {
     passed &= ExpectExecutableValue<std::uint32_t>(executable, "zero scalar slot", 0x72c178, 0);
     passed &= ExpectExecutableValue(executable, "uniform gravity", 0x759790,
                                     kDefaultUniformGravity);
+    passed &= ExpectExecutableValue(executable, "default vehicle collision step distance",
+                                    0x736144,
+                                    kDefaultVehicleMaxDistancePerStep);
     passed &= ExpectExecutableValue(executable, "wheel input epsilon", 0x79ef4c,
                                     kWheelInputEpsilon);
     passed &= ExpectExecutableValue(executable, "water rebound maximum depth", 0x741ea8,

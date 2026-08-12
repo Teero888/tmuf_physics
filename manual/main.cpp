@@ -11,6 +11,7 @@
 #include <limits>
 #include "Scene/CSceneVehicleCar.hpp"
 #include "Scene/CCallbackSceneVehicleCarComputeForces.hpp"
+#include "Scene/CCallbackSceneVehicleCarAfterContacts.hpp"
 #include "Scene/CSceneMobilAbsorbContact.hpp"
 
 #include "CHmsCorpus.hpp"
@@ -192,6 +193,9 @@ int main(int argc, char* argv[]) {
     item->CallbackSet(
         CB_ABSORB_CONTACT,
         CSceneMobilAbsorbContact::Instance());
+    item->CallbackSet(
+        CB_AFTER_CONTACTS,
+        CCallbackSceneVehicleCarAfterContacts::Instance());
     item->m_corpuses.Add(corpus);
     corpus->m_dyna = dyna;
     corpus->m_item = item;
@@ -218,14 +222,8 @@ int main(int argc, char* argv[]) {
     // harness builds the item manually, so provide the same physical boundary
     // explicitly instead of falling back to a scalar yaw inertia.
     CPlugPhysicalObject vehiclePhysicalObject;
-    vehiclePhysicalObject.m_mass = tuning->m_mass;
-    vehiclePhysicalObject.m_forceFieldCoef = tuning->m_gravityCoef;
-    vehiclePhysicalObject.SetInertiaMatrixBox(
-        tuning->m_inertiaMass,
-        GmVec3(tuning->m_inertiaHalfDiagX,
-               tuning->m_inertiaHalfDiagY,
-               tuning->m_inertiaHalfDiagZ));
     dyna->m_field_0x108 = &vehiclePhysicalObject;
+    car->UpdateParamsFromTuning();
     dyna->m_dynamicType = 1;
     dyna->UpdateWorldInverseInertia();
     item->m_flags1 = (item->m_flags1 & ~0x1800u) | (2u << 11u);

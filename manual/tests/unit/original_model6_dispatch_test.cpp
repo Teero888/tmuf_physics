@@ -73,7 +73,8 @@ int main() {
                           std::array<std::uint8_t, 3>{0xc2, 0x2c, 0x00});
 
     // ComputeForces converts smoothed steering into the Model6 input with
-    // -steer / sqrt(SteerRadiusMin + abs(localSpeed.z) * SteerRadiusCoef).
+    // -steer * AsinSafe(1 / (SteerRadiusMin +
+    //                        abs(localSpeed.z) * SteerRadiusCoef)).
     // The local-speed vector starts at stack +0x3C, making +0x44 its Z value.
     passed &= ExpectBytes(executable, "processed-steer forward-speed load",
                           0x3c6cb2,
@@ -94,6 +95,15 @@ int main() {
                               0xd8, 0xd1, 0xdf, 0xe0, 0xdd, 0xd9,
                               0xf6, 0xc4, 0x05, 0x7a, 0x06,
                               0xdd, 0xd8, 0xd9, 0xee, 0xeb, 0x18});
+    passed &= ExpectBytes(executable, "processed-steer reciprocal and safe arcsine",
+                          0x3c6ce9,
+                          std::array<std::uint8_t, 24>{
+                              0xd9, 0xe8, 0x51, 0xde, 0xf1,
+                              0xd9, 0x5c, 0x24, 0x30,
+                              0xd9, 0x44, 0x24, 0x30,
+                              0xd9, 0x1c, 0x24,
+                              0xe8, 0xb2, 0x08, 0xc9, 0xff,
+                              0x83, 0xc4, 0x04});
     passed &= ExpectBytes(executable, "processed-steer sign and scale",
                           0x3c6d09,
                           std::array<std::uint8_t, 20>{

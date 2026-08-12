@@ -210,9 +210,16 @@ void ApplyCollisionImpulse(
     const GmVec3 normalSpeed = normal * GmVec3::Dot(normal, pointSpeed);
     GmVec3 tangentSpeed = pointSpeed - normalSpeed;
     const float tangentLength = Length(tangentSpeed);
-    const float maximumTangentCancellation = speedLength * friction;
-    if (tangentLength > maximumTangentCancellation && tangentLength > 0.0f) {
-        tangentSpeed *= maximumTangentCancellation / tangentLength;
+    // Native 0x549116..0x549151 compares |v| with |v_t| * friction and,
+    // when the latter is smaller, multiplies the tangent by their ratio.
+    // This is deliberately not a conventional Coulomb clamp. In particular,
+    // the negative friction stored for the Stadium tire materials reverses a
+    // small tangent component; using |v| * friction as a cancellation cap
+    // made that reversal much too large and bled forward speed on every
+    // wheel/ground contact.
+    const float scaledTangentLength = tangentLength * friction;
+    if (scaledTangentLength < speedLength && speedLength > 0.0f) {
+        tangentSpeed *= scaledTangentLength / speedLength;
     }
 
     const GmVec3 cancellation = -(normalSpeed + tangentSpeed);
