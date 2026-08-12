@@ -65,10 +65,14 @@ struct Options {
     GmVec3 start = kDefaultStart;
     float yaw = kDefaultYaw;
     float automaticGas = 0.0f;
+    float automaticBrake = 0.0f;
     float automaticSteer = 0.0f;
     int frameLimit = -1;
     int simulationStepLimit = -1;
     int traceEvery = 0;
+    int screenshotFrame = 1;
+    float topDownZoom = 7.0f;
+    float chaseDistance = 13.0f;
     RenderStyle style = RenderStyle::Solid;
     bool topDown = false;
     bool forceCacheRebuild = false;
@@ -1016,6 +1020,13 @@ private:
 
 // A rigid mesh that moves every frame, so its vertices are transformed and
 // projected once per frame rather than once per triangle corner.
+// Per-wheel visual state, taken straight from the simulation's native wheel
+// real-time state.
+struct WheelPose {
+    float steeringAngle = 0.0f;
+    float spinAngle = 0.0f;
+};
+
 class DynamicGeometry {
 public:
     void Build(
@@ -1046,14 +1057,54 @@ public:
         }
         m_worldVertices.resize(vertexCount);
         m_projected.resize(vertexCount);
+        m_vertexWheel.assign(vertexCount, -1);
+        m_faceWheel.assign(m_faces.size(), -1);
+    }
+
+    // Splits the merged StadiumCar visual mesh into a body and four wheels so
+    // that steering and roll can be shown. The mesh arrives as one object, so
+    // wheels are recovered geometrically: each is a cylinder about the car's
+    // local X axis (the axle) centred on the native attachment point. The
+    // radius stops short of the wheel arches, which is what keeps bodywork
+    // from rotating along with the tyre.
+    void BuildWheelGroups() {
+        using namespace TmForeverPhysicsConstants;
+        for (int wheel = 0; wheel < kStadiumWheelCount; ++wheel) {
+            m_wheelCenters[wheel] = GmVec3(
+                kStadiumWheelLocalX[wheel], kStadiumWheelLocalY[wheel],
+                kStadiumWheelLocalZ[wheel]);
+        }
+        for (size_t i = 0; i < m_localVertices.size(); ++i) {
+            m_vertexWheel[i] = ClassifyVertex(m_localVertices[i]);
+        }
+        // A face rotates only when all three of its corners do, so the body
+        // never tears away from a wheel it shares vertices with.
+        for (size_t i = 0; i < m_faces.size(); ++i) {
+            const GmSurfTriangle& face = m_faces[i];
+            const int8_t first = m_vertexWheel[face.indices[0]];
+            m_faceWheel[i] =
+                (first >= 0 && m_vertexWheel[face.indices[1]] == first &&
+                 m_vertexWheel[face.indices[2]] == first)
+                    ? first
+                    : -1;
+        }
+    }
+
+    int WheelVertexCount(int wheel) const {
+        int total = 0;
+        for (const int8_t owner : m_vertexWheel) {
+            if (owner == wheel) ++total;
+        }
+        return total;
     }
 
     size_t EdgeCount() const { return m_edges.size(); }
 
     int DrawWireframe(
-        LineBatch& batch, const ViewProjection& view, const GmIso4& location) {
+        LineBatch& batch, const ViewProjection& view, const GmIso4& location,
+        const WheelPose* poses) {
         if (m_edges.empty()) return 0;
-        Transform(view, location);
+        Transform(view, location, poses);
         int drawn = 0;
         for (const auto& edge : m_edges) {
             if (AddProjectedSegment(
@@ -1067,13 +1118,19 @@ public:
 
     int DrawSurfaces(
         SurfaceBatch& batch, const ViewProjection& view,
-        const GmIso4& location) {
+        const GmIso4& location, const WheelPose* poses) {
         if (m_faces.empty()) return 0;
-        Transform(view, location);
+        Transform(view, location, poses);
         const GmMat3& rotation = location.rot;
         int drawn = 0;
-        for (const GmSurfTriangle& face : m_faces) {
-            const GmVec3& local = face.planeNormal;
+        for (size_t faceIndex = 0; faceIndex < m_faces.size(); ++faceIndex) {
+            const GmSurfTriangle& face = m_faces[faceIndex];
+            const int8_t wheel = m_faceWheel[faceIndex];
+            // A rotated wheel needs its plane normal rotated too, or the
+            // shading stays fixed while the geometry turns.
+            const GmVec3 local = (wheel >= 0 && poses != nullptr)
+                ? RotateIntoWheel(face.planeNormal, poses[wheel])
+                : face.planeNormal;
             const GmVec3 normal(
                 rotation.m00 * local.x + rotation.m01 * local.y +
                     rotation.m02 * local.z,
@@ -1096,9 +1153,50 @@ public:
     }
 
 private:
-    void Transform(const ViewProjection& view, const GmIso4& location) {
+    // Half the tyre width and its radius, in car-local metres. The native
+    // attachment points sit at |x| ~ 0.87 and the mesh reaches |x| ~ 1.07, so
+    // 0.21 spans the tyre; 0.36 stays inside the arch, which begins near 0.37.
+    static constexpr float kWheelHalfWidth = 0.21f;
+    static constexpr float kWheelRadius = 0.36f;
+
+    int8_t ClassifyVertex(const GmVec3& local) const {
+        for (int wheel = 0;
+             wheel < TmForeverPhysicsConstants::kStadiumWheelCount; ++wheel) {
+            const GmVec3& center = m_wheelCenters[wheel];
+            if (std::abs(local.x - center.x) > kWheelHalfWidth) continue;
+            const float dy = local.y - center.y;
+            const float dz = local.z - center.z;
+            if (dy * dy + dz * dz <= kWheelRadius * kWheelRadius) {
+                return static_cast<int8_t>(wheel);
+            }
+        }
+        return -1;
+    }
+
+    // Rolls about the axle (car-local X), then steers about the vertical axis.
+    static GmVec3 RotateIntoWheel(const GmVec3& value, const WheelPose& pose) {
+        const float spinCos = std::cos(pose.spinAngle);
+        const float spinSin = std::sin(pose.spinAngle);
+        const float rolledY = value.y * spinCos - value.z * spinSin;
+        const float rolledZ = value.y * spinSin + value.z * spinCos;
+        const float steerCos = std::cos(pose.steeringAngle);
+        const float steerSin = std::sin(pose.steeringAngle);
+        return GmVec3(
+            value.x * steerCos + rolledZ * steerSin,
+            rolledY,
+            -value.x * steerSin + rolledZ * steerCos);
+    }
+
+    void Transform(
+        const ViewProjection& view, const GmIso4& location,
+        const WheelPose* poses) {
         for (size_t i = 0; i < m_localVertices.size(); ++i) {
             GmVec3 world = m_localVertices[i];
+            const int8_t wheel = m_vertexWheel[i];
+            if (wheel >= 0 && poses != nullptr) {
+                const GmVec3& center = m_wheelCenters[wheel];
+                world = center + RotateIntoWheel(world - center, poses[wheel]);
+            }
             world.Mult(location);
             m_worldVertices[i] = world;
             m_projected[i] = ProjectVertex(view, world);
@@ -1110,6 +1208,9 @@ private:
     std::vector<std::pair<uint32_t, uint32_t>> m_edges;
     std::vector<GmSurfTriangle> m_faces;
     std::vector<ProjectedVertex> m_projected;
+    std::vector<int8_t> m_vertexWheel;
+    std::vector<int8_t> m_faceWheel;
+    GmVec3 m_wheelCenters[TmForeverPhysicsConstants::kStadiumWheelCount];
     SDL_Color m_wireColor{};
     SurfaceMaterial m_solidColor{};
 };
@@ -1131,6 +1232,8 @@ void PrintUsage(const char* executable) {
         << "  --start X Y Z        Respawn position (default: A01 start)\n"
         << "  --yaw DEGREES        Respawn heading (default: 90)\n"
         << "  --top-down           Start with the top-down camera\n"
+        << "  --zoom VALUE         Top-down pixels per metre (default 7)\n"
+        << "  --chase-distance N   Chase camera distance in metres (default 13)\n"
         << "  --solid              Start in shaded-surface mode (default)\n"
         << "  --wireframe          Start in wireframe mode\n"
         << "  --frames N           Exit after N rendered frames (smoke tests)\n"
@@ -1139,8 +1242,24 @@ void PrintUsage(const char* executable) {
         << "  --replay-inputs      Drive the simulation with A01 replay inputs\n"
         << "  --replay PATH        Drive the simulation with replay inputs\n"
         << "  --gas VALUE          Constant gas input for --simulate or rendering\n"
+        << "  --brake VALUE        Constant brake input (0 through 1)\n"
         << "  --steer VALUE        Constant steering input (-1 through 1)\n"
-        << "  --screenshot PATH    Save the first rendered frame as a BMP\n";
+        << "  --screenshot PATH    Save a rendered frame as a BMP\n"
+        << "  --screenshot-frame N Frame to capture (default 1)\n"
+        << "\n"
+        << "Keys (interactive window):\n"
+        << "  W / Up               Accelerate\n"
+        << "  S / Down             Brake, then reverse once stopped\n"
+        << "  A / Left             Steer left\n"
+        << "  D / Right            Steer right\n"
+        << "  C                    Toggle chase and heading-up top-down camera\n"
+        << "  M                    Toggle shaded surfaces and wireframe\n"
+        << "  B                    Toggle backface culling (solid mode)\n"
+        << "  Mouse wheel          Camera distance, or top-down zoom\n"
+        << "  Space                Pause and resume the simulation\n"
+        << "  N                    Advance one 10 ms physics step while paused\n"
+        << "  R                    Reset to the spawn\n"
+        << "  Close window         Quit (Escape is deliberately not bound)\n";
 }
 
 bool ParseFloat(const char* text, float& value) {
@@ -1276,6 +1395,12 @@ bool ParseOptions(int argc, char** argv, Options& options) {
             options.automaticGas = std::clamp(options.automaticGas, 0.0f, 1.0f);
             continue;
         }
+        if (argument == "--brake" && i + 1 < argc) {
+            if (!ParseFloat(argv[++i], options.automaticBrake)) return false;
+            options.automaticBrake =
+                std::clamp(options.automaticBrake, 0.0f, 1.0f);
+            continue;
+        }
         if (argument == "--steer" && i + 1 < argc) {
             if (!ParseFloat(argv[++i], options.automaticSteer)) return false;
             options.automaticSteer =
@@ -1290,6 +1415,22 @@ bool ParseOptions(int argc, char** argv, Options& options) {
         }
         if (argument == "--screenshot" && i + 1 < argc) {
             options.screenshotPath = argv[++i];
+            continue;
+        }
+        if (argument == "--screenshot-frame" && i + 1 < argc) {
+            if (!ParseInt(argv[++i], options.screenshotFrame)) return false;
+            options.screenshotFrame = std::max(options.screenshotFrame, 1);
+            continue;
+        }
+        if (argument == "--zoom" && i + 1 < argc) {
+            if (!ParseFloat(argv[++i], options.topDownZoom)) return false;
+            options.topDownZoom = std::clamp(options.topDownZoom, 1.5f, 200.0f);
+            continue;
+        }
+        if (argument == "--chase-distance" && i + 1 < argc) {
+            if (!ParseFloat(argv[++i], options.chaseDistance)) return false;
+            options.chaseDistance =
+                std::clamp(options.chaseDistance, 2.0f, 35.0f);
             continue;
         }
         if (argument.rfind("--screenshot=", 0) == 0) {
@@ -1468,11 +1609,16 @@ public:
         stadiumGeometry.Build(stadiumVisualMesh, false);
         if (GmSurfMesh* carMesh = vehicleAsset.VisualMesh()) {
             carGeometry.Build(*carMesh, kCarWireColor, kCarSolidColor);
+            carGeometry.BuildWheelGroups();
         }
         std::cout << "Render data: " << trackGeometry.EdgeCount()
                   << " track edges, " << stadiumGeometry.EdgeCount()
                   << " stadium edges, " << carGeometry.EdgeCount()
-                  << " car edges\n";
+                  << " car edges; wheel vertices "
+                  << carGeometry.WheelVertexCount(0) << '/'
+                  << carGeometry.WheelVertexCount(1) << '/'
+                  << carGeometry.WheelVertexCount(2) << '/'
+                  << carGeometry.WheelVertexCount(3) << '\n';
     }
 
     GmSurfMesh mesh;
@@ -1662,6 +1808,22 @@ int DrawTrail(
     return drawn;
 }
 
+// Reads the native per-wheel visual state the simulation maintains:
+// m_steeringAngle is walked toward IntegrateVehicle's target at one radian per
+// second, and m_rotationAngle accumulates over 256 turns before wrapping, so
+// it is folded back into one turn before reaching a trig call.
+void CollectWheelPoses(
+    const InteractiveSimulation& simulation, WheelPose* poses) {
+    const uint32_t count = std::min<uint32_t>(
+        simulation.car->m_wheels.GetCount(),
+        TmForeverPhysicsConstants::kStadiumWheelCount);
+    for (uint32_t i = 0; i < count; ++i) {
+        const auto& state = simulation.car->m_wheels[i].m_realTimeState;
+        poses[i].steeringAngle = state.m_steeringAngle;
+        poses[i].spinAngle = std::fmod(state.m_rotationAngle, 2.0f * kPi);
+    }
+}
+
 GmIso4 VehicleLocation(const InteractiveSimulation& simulation) {
     GmIso4 location;
     location.SetIdentity();
@@ -1741,6 +1903,9 @@ int Render(
     projection.cullBackFaces =
         view.style == RenderStyle::Solid && view.cullBackFaces;
 
+    WheelPose wheelPoses[TmForeverPhysicsConstants::kStadiumWheelCount]{};
+    CollectWheelPoses(simulation, wheelPoses);
+
     const ViewWedge wedge(projection);
     simulation.trackGeometry.BeginFrame();
     simulation.stadiumGeometry.BeginFrame();
@@ -1762,7 +1927,7 @@ int Render(
         primitives += simulation.trackGeometry.DrawSurfaces(
             surfaces, projection, wedge, projection.origin, trackRadius);
         primitives += simulation.carGeometry.DrawSurfaces(
-            surfaces, projection, VehicleLocation(simulation));
+            surfaces, projection, VehicleLocation(simulation), wheelPoses);
         surfaces.Flush();
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     } else {
@@ -1771,7 +1936,7 @@ int Render(
         primitives += simulation.trackGeometry.DrawWireframe(
             lines, projection, wedge, projection.origin, trackRadius);
         primitives += simulation.carGeometry.DrawWireframe(
-            lines, projection, VehicleLocation(simulation));
+            lines, projection, VehicleLocation(simulation), wheelPoses);
     }
 
     primitives += DrawTrail(lines, projection, simulation);
@@ -1824,7 +1989,8 @@ int main(int argc, char** argv) {
     if (options.simulationStepLimit >= 0) {
         if (!options.useReplayInputs) {
             simulation.SetInput(
-                options.automaticGas, 0.0f, options.automaticSteer);
+                options.automaticGas, options.automaticBrake,
+                options.automaticSteer);
         }
         for (int step = 0; step < options.simulationStepLimit; ++step)
         {
@@ -1877,7 +2043,19 @@ int main(int argc, char** argv) {
                           << ", "
                           << simulation.car->m_wheels[3].m_isSlipping
                           << ") engineState="
-                          << simulation.car->m_engineState << '\n';
+                          << simulation.car->m_engineState
+                          << " smoothedSteer="
+                          << simulation.car->m_smoothedSteer
+                          << " wheelSteer=("
+                          << simulation.car->m_wheels[0]
+                                 .m_realTimeState.m_steeringAngle
+                          << ", "
+                          << simulation.car->m_wheels[1]
+                                 .m_realTimeState.m_steeringAngle
+                          << ") target="
+                          << simulation.car->m_wheels[0]
+                                 .m_realTimeState.m_targetSteeringAngle
+                          << '\n';
             }
         }
         GmVec3 angularSpeed;
@@ -1956,6 +2134,8 @@ int main(int argc, char** argv) {
     ViewState view;
     view.topDown = options.topDown;
     view.style = options.style;
+    view.topDownZoom = options.topDownZoom;
+    view.chaseDistance = options.chaseDistance;
     bool running = true;
     bool paused = false;
     bool singleStep = false;
@@ -2038,7 +2218,8 @@ int main(int argc, char** argv) {
             (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT]) ? 1.0f : 0.0f;
         if (!options.useReplayInputs) {
             simulation.SetInput(
-                std::max(gas, options.automaticGas), brake,
+                std::max(gas, options.automaticGas),
+                std::max(brake, options.automaticBrake),
                 std::clamp(
                     steerRight - steerLeft + options.automaticSteer,
                     -1.0f, 1.0f));
@@ -2080,7 +2261,10 @@ int main(int argc, char** argv) {
         renderSeconds +=
             static_cast<double>(SDL_GetPerformanceCounter() - renderStart) /
             counterFrequency;
-        if (!screenshotSaved && !options.screenshotPath.empty()) {
+        // renderedFrames still counts completed frames here, so the frame just
+        // rendered is renderedFrames + 1.
+        if (!screenshotSaved && !options.screenshotPath.empty() &&
+            renderedFrames + 1 >= options.screenshotFrame) {
             screenshotSaved = SaveScreenshot(
                 renderer, width, height, options.screenshotPath);
             if (screenshotSaved) {

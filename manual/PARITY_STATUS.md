@@ -405,6 +405,29 @@ order proves observable; collision response can now consume the typed working
   acceleration/brake blend are connected. The remaining reverse/freewheel and
   special-state pipeline still contains missing logic or harness
   approximations.
+- Reverse is not reachable. `SEngine::m_isReverse` (engine `+0x28`, car
+  `+0x5C4`) is read in eight places but written nowhere except `SEngine::Reset`,
+  which clears it, so the flag is permanently zero. The consequences are that
+  `IntegrateVehicle` always hands `EngineIntegrate` the gas input rather than
+  selecting brake as the reverse throttle, gear 0 is never selected, and the
+  Model-6 negative takeoff window at `m_isReverse != 0` can never open.
+  Measured on the A01 spawn: 3 s of full brake from rest leaves the car at
+  0.09 km/h and 6 mm of travel. Braking as deceleration is unaffected and does
+  work — full gas reaches 98.2 km/h in 2 s, full gas with full brake reaches
+  30.0 km/h over the same interval.
+  The missing producer is the state machine at `0x7C5A2E..0x7C5B14`, inside the
+  ordinary Model-6 forward branch and just before the axial force tail. Against
+  car `+0x50` gas, car `+0x54` brake, the local linear speed's X and Z, engine
+  `+0x30`, the burnout force state `+0x69C`, and `+0x600`, it sets the flag when
+  brake is held below an engine-owned speed threshold with little lateral
+  speed, clears it when gas is held while moving forward or sliding, and with
+  neither input held selects on the sign of forward speed. Its two thresholds
+  are the double `0.1` at `.rdata 0x00B362C0` for the gas/brake inputs and the
+  float `2.0f` at `.rdata 0x00B313AC` for lateral speed. Translating it needs
+  the same strict branch-polarity treatment as the other recovered routines:
+  the executable's comparisons are `fcom`/`fcomp` pairs whose equality and NaN
+  behavior is observable, and the no-input case selects through a sign test
+  rather than a plain comparison.
 - The compile/unit harness is not a behavioral parity oracle. Closed-loop
   comparison is driven by the native replay trajectory and the interactive
   A01 path now that collision traversal, body state, and the fixed-step solver

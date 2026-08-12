@@ -136,6 +136,22 @@ inline constexpr float kWheelRotationAnglePeriod =
 inline constexpr float kWheelDirectionSquaredEpsilon =
     9.99999943962492920972e-11f; // 0x2EDBE6FE
 
+// IntegrateVehicle 0x7C3A50..0x7C3A76 drives the visual steering target of a
+// steerable wheel with -smoothedSteer times a constant maximum angle. The
+// executable spells that constant as a float 30 degrees scaled by its widened
+// single-precision pi over 180, and stores the product back through a
+// four-byte slot before the multiply:
+//   .rdata 0x00B36198 float  30.0f                  (0x41F00000)
+//   .rdata 0x00B36110 double 3.1415927410125732     (0x400921FB60000000)
+//   .rdata 0x00B36AB8 double 180.0                  (0x4066800000000000)
+inline constexpr float kWheelVisualSteeringAngleMax =
+    0.523598790168762207031250f; // 0x3F060A92
+
+// IntegrateVehicle 0x7C39A9 rejects a degenerate steer radius before dividing
+// the smoothed steer by it. .rdata 0x00B9EF4C.
+inline constexpr float kSteerRadiusEpsilon =
+    9.999999747378752e-06f; // 0x3727C5AC
+
 // .data 0x00D1A840. GmMat3::SetUpVandDOV independently uses this guard while
 // normalizing the two basis vectors it constructs.
 inline constexpr float kMatrixBasisSquaredEpsilon =

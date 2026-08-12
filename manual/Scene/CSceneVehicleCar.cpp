@@ -706,9 +706,26 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
 
     // 1. Wheel speed & rotation updates.
     if ((m_simulationFlags & 1) != 0) {
+        // Not yet translated from this loop: 0x7C3940 also computes the steer
+        // radius (SteerRadiusMin + |speed.z| * SteerRadiusCoef, guarded by
+        // kSteerRadiusEpsilon) and uses it to RotateY the wheel orientation
+        // matrix at native wheel +0xC0, which is real-time state +0x0C. That
+        // matrix is still unmodeled padding here, and nothing in the force
+        // path reads it.
         uint32_t wheelCount = m_wheels.GetCount();
         for (uint32_t i = 0; i < wheelCount; ++i) {
             SSimulationWheel& wheel = m_wheels[i];
+            // 0x7C399F..0x7C3A76: only a steerable wheel receives a visual
+            // steering target, and it is a plain scaling of the smoothed
+            // input rather than the speed-dependent processed steer that the
+            // force model uses. SRealTimeState::Integrate then walks
+            // m_steeringAngle toward it at one radian per second.
+            wheel.m_realTimeState.m_targetSteeringAngle =
+                wheel.m_isSteerable != 0u
+                    ? -m_smoothedSteer *
+                          TmForeverPhysicsConstants::
+                              kWheelVisualSteeringAngleMax
+                    : 0.0f;
             WheelUpdateSpeedFromVehicleSpeed(&wheel, localVehicleSpeed.z, dt);
             wheel.m_realTimeState.Integrate(dt);
         }
@@ -724,6 +741,11 @@ void CSceneVehicleCar::IntegrateVehicle(CSceneVehicleCar* pilot, float dt) {
 
     // 3. Engine and transmission. The native caller selects brake while the
     // reverse flag is set and suppresses the engine completely in freewheel.
+    //
+    // m_isReverse never becomes non-zero in this build: its producer, the
+    // state machine at 0x7C5A2E..0x7C5B14 in the ordinary Model-6 forward
+    // branch, is not translated yet. Reverse is therefore unreachable and this
+    // always selects gas. See PARITY_STATUS.md.
     if ((m_simulationFlags & 4) != 0) {
         if (m_freeWheeling != 0) {
             m_engine.m_engineRpm = 0.0f;

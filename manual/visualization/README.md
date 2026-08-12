@@ -28,15 +28,30 @@ Controls:
 - Space: pause
 - `N`: advance one 10 ms physics step while paused
 - `R`: reset to the spawn
-- Escape: quit
+- Close the window to quit (Escape is deliberately not bound)
 
 Start directly in one style with `--solid` (the default) or `--wireframe`.
+`--zoom` and `--chase-distance` set the initial camera framing, and
+`--help` lists every option and key binding.
+
+The front wheels show their steering angle, and all four show their roll. Both
+come from the native per-wheel real-time state: `IntegrateVehicle` drives a
+steerable wheel's target to 30 degrees of the smoothed input, and the wheel
+integrator walks the visible angle toward it at one radian per second. The
+merged StadiumCar mesh has no wheel objects, so the viewer recovers them
+geometrically as cylinders about the native attachment points.
+
+Reverse currently does nothing: the flag that selects it is never set. See
+`PARITY_STATUS.md` for the missing native producer. Braking as deceleration
+does work.
 
 Speed, simulation time, position, grounded-wheel count, camera mode, draw
 style, primitive count, and frame rate are shown in the window title. Green
 wheel marks have ground contact, red marks do not, and the orange line is the
 driven trajectory. On exit the viewer prints the average per-frame physics,
-render, and present cost.
+render, and present cost. `--screenshot-frame N` captures a later frame, which
+is what makes state that takes time to build up (steering, trail) visible in a
+smoke-test capture.
 
 Solid mode shades each face with a fixed key light and fades distant geometry
 into the background. SDL's 2D renderer has no depth buffer, so faces are
