@@ -4,7 +4,7 @@
 
 /* Chunk entries with no payload may also be stored skippable. */
 #define NOPAY(id) {(id), TMUF_GBX_MAYBE_SKIP, NULL}
-#define READ(id, fn) {(id), 0, (fn)}
+#define READ(id, fn) {(id), TMUF_GBX_MAYBE_SKIP, (fn)}
 #define COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
 #define UNUSED(x) (void)(x)
@@ -569,7 +569,551 @@ static const tmuf_gbx_class LIGHT = {0x04001000, "GxLight", 1, LIGHT_CHUNKS, COU
 static const tmuf_gbx_chunk DECORATOR_SOLID_CHUNKS[] = {READ(0x090a3000, skip_noderef_buffer)};
 static const tmuf_gbx_class DECORATOR_SOLID = {0x090a3000, "CPlugDecoratorSolid", 1, DECORATOR_SOLID_CHUNKS, 1, NULL};
 
+
+/* ---- CPlugMaterial (0x09079000) ---- */
+
+static void material_ref(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_gbx_node *n = tmuf_gbx_noderef(g);
+  if (id == 0x09079007)
+    ((tmuf_plug_material *)node)->custom = n;
+}
+
+static void material_device_sets(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  if (tmuf_gbx_noderef(g))
+    return; /* material model */
+  int shader_refs = id == 0x09079009 || id == 0x0907900c || id == 0x0907900d;
+  int formats = id == 0x0907900c || id == 0x0907900d;
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "device set count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_skip(g, 4);
+    if (tmuf_gbx_bool(g))
+      tmuf_gbx_fidref(g);
+    else
+      tmuf_gbx_noderef(g);
+    if (shader_refs) {
+      tmuf_gbx_fidref(g);
+      tmuf_gbx_fidref(g);
+    }
+  }
+  if (formats)
+    skip_counted(g, 4);
+}
+
+static void material_surface(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_plug_material *m = node;
+  uint32_t f = tmuf_gbx_u32(g);
+  if (id == 0x09079002)
+    f = (f & 0x7e1fffffu) | 0x80000000u;
+  else if (id == 0x0907900a)
+    f |= 0x80000000u;
+  m->has_surface = 1;
+  m->surface_flags = f;
+  m->surface_id = (uint8_t)(f & 0xffu);
+}
+
+static const tmuf_gbx_chunk MATERIAL_CHUNKS[] = {
+    NOPAY(0x09079000),
+    READ(0x09079001, material_ref),
+    {0x09079002, TMUF_GBX_MAYBE_SKIP, material_surface},
+    NOPAY(0x09079003),
+    NOPAY(0x09079004),
+    NOPAY(0x09079005),
+    NOPAY(0x09079006),
+    READ(0x09079007, material_ref),
+    {0x09079008, TMUF_GBX_MAYBE_SKIP, material_device_sets},
+    {0x09079009, TMUF_GBX_MAYBE_SKIP, material_device_sets},
+    {0x0907900a, TMUF_GBX_MAYBE_SKIP, material_surface},
+    READ(0x0907900b, material_ref),
+    {0x0907900c, TMUF_GBX_MAYBE_SKIP, material_device_sets},
+    READ(0x0907900d, material_device_sets),
+    READ(0x0907900e, material_surface),
+    READ(0x0907900f, skip4),
+};
+static const tmuf_gbx_class MATERIAL = {0x09079000, "CPlugMaterial", sizeof(tmuf_plug_material), MATERIAL_CHUNKS,
+                                        COUNT(MATERIAL_CHUNKS), NULL};
+
+/* ---- CPlugMaterialCustom (0x0903a000) ---- */
+
+static void custom_int_array(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  skip_counted(g, 4);
+}
+
+static void custom_bitmaps(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "custom bitmap count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_id(g, NULL);
+    tmuf_gbx_skip(g, 4);
+    tmuf_gbx_noderef(g);
+  }
+}
+
+static void custom_gpu_fx_array(tmuf_gbx *g) {
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "gpu fx count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_id(g, NULL);
+    uint32_t components = tmuf_gbx_u32(g), registers = tmuf_gbx_u32(g);
+    tmuf_gbx_bool(g);
+    if (components > 0x100000u || registers > 0x100000u) {
+      tmuf_gbx_fail(g, "gpu fx size");
+      return;
+    }
+    tmuf_gbx_skip(g, (size_t)components * registers * 4);
+  }
+}
+
+static void custom_gpu_fx(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  custom_gpu_fx_array(g);
+  custom_gpu_fx_array(g);
+}
+
+static void custom_bitmap_skip(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "custom bitmap skip count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_id(g, NULL);
+    tmuf_gbx_bool(g);
+  }
+}
+
+static void custom_flags(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t f = tmuf_gbx_u32(g);
+  tmuf_gbx_skip(g, 12);
+  if (f & 1)
+    tmuf_gbx_skip(g, 4);
+}
+
+static const tmuf_gbx_chunk MATERIAL_CUSTOM_CHUNKS[] = {
+    READ(0x0903a004, custom_int_array), READ(0x0903a006, custom_bitmaps), READ(0x0903a00a, custom_gpu_fx),
+    READ(0x0903a00c, custom_bitmap_skip), READ(0x0903a00d, custom_flags), {0x0903a00f, 1, NULL}, {0x0903a011, 1, NULL},
+};
+static const tmuf_gbx_class MATERIAL_CUSTOM = {0x0903a000, "CPlugMaterialCustom", 1, MATERIAL_CUSTOM_CHUNKS,
+                                               COUNT(MATERIAL_CUSTOM_CHUNKS), NULL};
+
+/* ---- CPlugShader family (0x09002000: Generic, Apply) ---- */
+
+static void noderef_array(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "node array count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    tmuf_gbx_noderef(g);
+}
+
+static void c0900200e(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_gbx_noderef(g);
+  noderef_array(g, node, id);
+  tmuf_gbx_noderef(g);
+  noderef_array(g, node, id);
+}
+
+static void c09002016(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 12);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 2);
+}
+
+static void c09004003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 0x58);
+}
+
+static const tmuf_gbx_chunk SHADER_CHUNKS[] = {
+    READ(0x0900200e, c0900200e), READ(0x09002016, c09002016), READ(0x09004003, c09004003),
+    READ(0x09026002, noderef_array), READ(0x09026004, skip4), READ(0x09026008, skip8),
+};
+static const tmuf_gbx_class SHADER = {0x09002000, "CPlugShader", 1, SHADER_CHUNKS, COUNT(SHADER_CHUNKS), NULL};
+
+/* ---- CPlugShaderPass (0x09067000) ---- */
+
+static void gpu_pipeline(tmuf_gbx *g) {
+  int enabled = tmuf_gbx_bool(g);
+  tmuf_gbx_noderef(g);
+  if (!enabled)
+    return;
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "gpu load fx count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_id(g, NULL);
+    tmuf_gbx_skip(g, 16);
+  }
+  skip_counted(g, 16);
+}
+
+static void c0906700a(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "pipeline id count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    tmuf_gbx_id(g, NULL);
+  gpu_pipeline(g);
+  gpu_pipeline(g);
+}
+
+static const tmuf_gbx_chunk SHADER_PASS_CHUNKS[] = {
+    READ(0x09067006, noderef_array), READ(0x09067007, skip4), READ(0x0906700a, c0906700a),
+};
+static const tmuf_gbx_class SHADER_PASS = {0x09067000, "CPlugShaderPass", 1, SHADER_PASS_CHUNKS,
+                                           COUNT(SHADER_PASS_CHUNKS), NULL};
+
+/* ---- CPlugBitmapSampler family (0x0907e000: Address, Apply) ---- */
+
+static void c0907e008(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_id(g, NULL);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 8);
+}
+
+static void c09047007(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 4);
+  tmuf_gbx_noderef(g);
+  uint8_t has_transform = tmuf_gbx_u8(g);
+  if (has_transform > 1) {
+    tmuf_gbx_fail(g, "bitmap address transform flag %u", has_transform);
+    return;
+  }
+  if (has_transform)
+    tmuf_gbx_skip(g, 24);
+}
+
+static const tmuf_gbx_chunk BITMAP_SAMPLER_CHUNKS[] = {
+    READ(0x0907e008, c0907e008), READ(0x09047007, c09047007), READ(0x09047009, skip4), READ(0x09012004, skip4),
+};
+static const tmuf_gbx_class BITMAP_SAMPLER = {0x0907e000, "CPlugBitmapSampler", 1, BITMAP_SAMPLER_CHUNKS,
+                                              COUNT(BITMAP_SAMPLER_CHUNKS), NULL};
+
+/* ---- shared helpers for node lists ---- */
+
+static void read_node_list(tmuf_gbx *g, tmuf_node_list *l) {
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "node list count %u", n);
+    return;
+  }
+  l->nodes = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
+  l->count = n;
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    l->nodes[i] = tmuf_gbx_noderef(g);
+}
+
+static const char *id_text(tmuf_gbx *g) {
+  uint32_t number;
+  const char *s = tmuf_gbx_id(g, &number);
+  return s ? s : "";
+}
+
+/* ---- CGameCtnCollector (0x0301a000) ---- */
+
+static void c0301a009(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_string(g);
+  if (tmuf_gbx_bool(g))
+    tmuf_gbx_noderef(g);
+  tmuf_gbx_id(g, NULL);
+}
+
+static void c0301a00b(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_block_info *b = node;
+  for (int i = 0; i < 3; i++)
+    b->collector_ident[i] = id_text(g);
+}
+
+#define COLLECTOR_CHUNKS \
+  READ(0x0301a006, skip4), READ(0x0301a007, skip24), READ(0x0301a009, c0301a009), READ(0x0301a00a, skip_id), \
+      READ(0x0301a00b, c0301a00b)
+
+/* ---- CGameCtnBlockInfo (0x0304e000) and variants, CGameCtnBlock ---- */
+
+static void block_info_base(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_block_info *b = node;
+  b->base_chunk = id;
+  b->name = id_text(g);
+  tmuf_gbx_read(g, b->base_words, 24);
+  b->base_ref = tmuf_gbx_noderef(g);
+  read_node_list(g, &b->units[0]);
+  read_node_list(g, &b->units[1]);
+  for (int k = 0; k < 2 && !g->error; k++) {
+    uint32_t n = tmuf_gbx_u32(g);
+    if (n > 0x10000u) {
+      tmuf_gbx_fail(g, "block variant count %u", n);
+      return;
+    }
+    b->variant_count[k] = n;
+    b->variants[k] = TMUF_ARENA_ARRAY(g->arena, tmuf_node_list, n ? n : 1);
+    for (uint32_t v = 0; v < n && !g->error; v++)
+      read_node_list(g, &b->variants[k][v]);
+  }
+  if (id == 0x0304e004 || id == 0x0304e005 || id == 0x0304e008)
+    tmuf_gbx_read(g, b->extra, 7);
+  if (id == 0x0304e005 || id == 0x0304e008)
+    tmuf_gbx_read(g, b->extra + 7, 2);
+  if (id == 0x0304e008)
+    tmuf_gbx_string(g);
+}
+
+static void c0304e00e(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 4);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+}
+
+static void c03052000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_block_info *)node)->road_ref = tmuf_gbx_noderef(g);
+}
+
+static void c03053002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_block_info *)node)->clip_id = id_text(g);
+}
+
+static void c03055000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_block_info *b = node;
+  for (int i = 0; i < 3; i++)
+    b->pylon_refs[i] = tmuf_gbx_noderef(g);
+}
+
+static void skip96(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 96);
+}
+
+static const tmuf_gbx_chunk BLOCK_INFO_CHUNKS[] = {
+    COLLECTOR_CHUNKS,
+    READ(0x0304e000, block_info_base),
+    READ(0x0304e001, block_info_base),
+    NOPAY(0x0304e002),
+    NOPAY(0x0304e003),
+    READ(0x0304e004, block_info_base),
+    READ(0x0304e005, block_info_base),
+    NOPAY(0x0304e006),
+    NOPAY(0x0304e007),
+    READ(0x0304e008, block_info_base),
+    READ(0x0304e009, skip4),
+    NOPAY(0x0304e00a),
+    NOPAY(0x0304e00b),
+    READ(0x0304e00c, skip96),
+    READ(0x0304e00d, skip4),
+    READ(0x0304e00e, c0304e00e),
+    READ(0x0304e00f, skip4),
+    READ(0x03052000, c03052000),
+    READ(0x03053002, c03053002),
+    READ(0x03055000, c03055000),
+};
+static const tmuf_gbx_class BLOCK_INFO = {0x0304e000, "CGameCtnBlockInfo", sizeof(tmuf_block_info),
+                                          BLOCK_INFO_CHUNKS, COUNT(BLOCK_INFO_CHUNKS), NULL};
+static const tmuf_gbx_class BLOCK = {0x03057000, "CGameCtnBlock", sizeof(tmuf_block_info), BLOCK_INFO_CHUNKS,
+                                     COUNT(BLOCK_INFO_CHUNKS), NULL};
+
+/* ---- CGameCtnBlockUnitInfo (0x03036000) ---- */
+
+static void c03036000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_block_unit *u = node;
+  tmuf_gbx_read(g, u->base, 24);
+  read_node_list(g, &u->sources);
+}
+
+static void c03036001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_block_unit *u = node;
+  u->surface = id_text(g);
+  tmuf_gbx_read(g, u->surface_extra, 8);
+}
+
+static void c03036002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_block_unit *)node)->underground = tmuf_gbx_u32(g);
+}
+
+static void c03036003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_block_unit *u = node;
+  u->replacement = tmuf_gbx_noderef(g);
+  u->junction = id_text(g);
+  tmuf_gbx_read(g, u->junction_extra, 8);
+}
+
+static void c03036004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_block_unit *)node)->helper_mask = tmuf_gbx_u32(g);
+}
+
+static void c03036005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_block_unit *)node)->terrain_modifier = id_text(g);
+}
+
+static const tmuf_gbx_chunk BLOCK_UNIT_CHUNKS[] = {
+    READ(0x03036000, c03036000), READ(0x03036001, c03036001), READ(0x03036002, c03036002),
+    READ(0x03036003, c03036003), READ(0x03036004, c03036004), READ(0x03036005, c03036005),
+};
+static const tmuf_gbx_class BLOCK_UNIT = {0x03036000, "CGameCtnBlockUnitInfo", sizeof(tmuf_block_unit),
+                                          BLOCK_UNIT_CHUNKS, COUNT(BLOCK_UNIT_CHUNKS), NULL};
+
+/* ---- CHmsItem (0x06003000), CHmsLight, CHmsSoundSource: archived inline ---- */
+
+static void c06003001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_hms_item *)node)->solid = tmuf_gbx_noderef(g);
+}
+
+static void hms_state(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_hms_item *h = node;
+  h->has_state = 1;
+  h->physics_flags = tmuf_gbx_u32(g);
+  h->rendering_flags = tmuf_gbx_u32(g);
+  h->visibility = tmuf_gbx_u16(g);
+}
+
+#define SKIPN(name, n) \
+  static void name(tmuf_gbx *g, void *node, uint32_t id) { \
+    UNUSED(node); \
+    UNUSED(id); \
+    tmuf_gbx_skip(g, n); \
+  }
+SKIPN(skip17, 17)
+SKIPN(skip20, 20)
+SKIPN(skip21, 21)
+SKIPN(skip25, 25)
+
+static const tmuf_gbx_chunk HMS_ITEM_CHUNKS[] = {
+    READ(0x06003000, skip16),          READ(0x06003001, c06003001), READ(0x06003002, skip_noderef_buffer),
+    READ(0x06003003, skip20),          READ(0x06003004, skip17),    READ(0x06003005, skip21),
+    READ(0x06003006, skip25),          READ(0x06003007, skip25),    READ(0x06003008, skip12),
+    READ(0x06003009, skip4),           READ(0x0600300a, skip8),     READ(0x0600300b, hms_state),
+    READ(0x0600300c, hms_state),       READ(0x0600300d, hms_state), READ(0x0600300e, hms_state),
+    READ(0x0600300f, hms_state),       READ(0x06003010, hms_state), READ(0x06003011, hms_state),
+};
+static const tmuf_gbx_class HMS_ITEM = {0x06003000, "CHmsItem", sizeof(tmuf_hms_item), HMS_ITEM_CHUNKS,
+                                        COUNT(HMS_ITEM_CHUNKS), NULL};
+
+static void hms_light(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  int refs = id == 0x0600c003 ? 3 : id == 0x0600c002 ? 2 : 1;
+  tmuf_gbx_skip(g, 4);
+  while (refs--)
+    tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk HMS_LIGHT_CHUNKS[] = {
+    READ(0x0600c000, hms_light), READ(0x0600c001, hms_light), READ(0x0600c002, hms_light), READ(0x0600c003, hms_light),
+};
+static const tmuf_gbx_class HMS_LIGHT = {0x0600c000, "CHmsLight", 1, HMS_LIGHT_CHUNKS, COUNT(HMS_LIGHT_CHUNKS), NULL};
+
+static void c0600d005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 8);
+}
+
+static const tmuf_gbx_chunk HMS_SOUND_CHUNKS[] = {
+    NOPAY(0x0600d000),         READ(0x0600d001, skip_noderef), READ(0x0600d002, skip8),
+    READ(0x0600d003, skip12), READ(0x0600d004, skip12),       READ(0x0600d005, c0600d005),
+    READ(0x0600d006, skip4),
+};
+static const tmuf_gbx_class HMS_SOUND = {0x0600d000, "CHmsSoundSource", 1, HMS_SOUND_CHUNKS, COUNT(HMS_SOUND_CHUNKS),
+                                         NULL};
+
+/* ---- CSceneObject (0x0a005000): CScenePoc, CSceneMobil, ... ---- */
+
+static void c0a005001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_scene_object *)node)->name = id_text(g);
+}
+
+static void c0a011003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  read_node_list(g, &((tmuf_scene_object *)node)->children);
+}
+
+static void c0a011005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_scene_object *o = node;
+  o->has_item = 1;
+  tmuf_gbx_node_body(g, &HMS_ITEM, &o->item);
+}
+
+static void c0a00b000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint8_t dummy;
+  tmuf_gbx_node_body(g, &HMS_LIGHT, &dummy);
+}
+
+static void c0a00e000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint8_t dummy;
+  tmuf_gbx_node_body(g, &HMS_SOUND, &dummy);
+}
+
+static const tmuf_gbx_chunk SCENE_OBJECT_CHUNKS[] = {
+    NOPAY(0x01001000),          NOPAY(0x0a005000),         READ(0x0a005001, c0a005001),
+    READ(0x0a005002, skip4),    READ(0x0a005003, skip_noderef), READ(0x0a005004, skip4),
+    READ(0x0a009000, skip4),    READ(0x0a00b000, c0a00b000), READ(0x0a00e000, c0a00e000),
+    NOPAY(0x0a011000),          NOPAY(0x0a011001),         NOPAY(0x0a011002),
+    READ(0x0a011003, c0a011003), NOPAY(0x0a011004),        READ(0x0a011005, c0a011005),
+    READ(0x0a011006, skip_noderef),
+};
+static const tmuf_gbx_class SCENE_OBJECT = {0x0a005000, "CSceneObject", sizeof(tmuf_scene_object),
+                                            SCENE_OBJECT_CHUNKS, COUNT(SCENE_OBJECT_CHUNKS), NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
-    &SOLID, &TREE, &TREE_MIP, &TREE_LIGHT, &VISUAL, &SURFACE, &SURFACE_GEOM, &LIGHT, &DECORATOR_SOLID,
+    &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
+    &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
+    &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

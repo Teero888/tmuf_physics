@@ -133,6 +133,8 @@ const char *tmuf_gbx_string(tmuf_gbx *g);
 /* Lookback string. Numeric ids (no string) are returned in *number with
    NULL; empty ids return "" . number may be NULL. */
 const char *tmuf_gbx_id(tmuf_gbx *g, uint32_t *number);
+/* External file reference by node index (no inline node). NULL for null. */
+tmuf_gbx_node *tmuf_gbx_fidref(tmuf_gbx *g);
 /* Node reference; parses inline nodes on first sight. NULL for null refs. */
 tmuf_gbx_node *tmuf_gbx_noderef(tmuf_gbx *g);
 /* Parse a node's chunk stream until FACADE01 (with the node feedback of

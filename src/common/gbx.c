@@ -294,6 +294,11 @@ void tmuf_gbx_node_body(tmuf_gbx *g, const tmuf_gbx_class *cls, void *node) {
   tmuf_gbx_node_body_as(g, cls, cls->id, node);
 }
 
+/*
+ * CMwNod::Archive, reading (TMUF 0x92430c): chunks until FACADE01. A chunk
+ * the class does not know is followed by either "PIKS" + size (skipped) or
+ * anything else, which ends the node with that word consumed.
+ */
 void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t class_id, void *node) {
   uint32_t saved_class = g->node_class;
   g->node_class = class_id;
@@ -304,18 +309,20 @@ void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t clas
       break;
     uint32_t id = tmuf_wrap_chunk_id(raw);
     const tmuf_gbx_chunk *c = find_chunk(cls, id);
-    int skippable = c && c->skippable != TMUF_GBX_MAYBE_SKIP ? c->skippable : tmuf_gbx_peek_u32(g) == TMUF_GBX_SKIP;
-    if (!c && !skippable) {
-      tmuf_gbx_fail(g, "%s (%08x): unknown chunk %08x", cls->name, class_id, id);
-      break;
+    if (!c) {
+      if (tmuf_gbx_u32(g) != TMUF_GBX_SKIP)
+        break;
+      tmuf_gbx_skip(g, tmuf_gbx_u32(g));
+      continue;
     }
+    int skippable = c->skippable != TMUF_GBX_MAYBE_SKIP ? c->skippable : tmuf_gbx_peek_u32(g) == TMUF_GBX_SKIP;
     if (skippable) {
       if (tmuf_gbx_u32(g) != TMUF_GBX_SKIP) {
         tmuf_gbx_fail(g, "%s: chunk %08x missing PIKS", cls->name, id);
         break;
       }
       uint32_t size = tmuf_gbx_u32(g);
-      if (!c || !c->read) {
+      if (!c->read) {
         tmuf_gbx_skip(g, size);
         continue;
       }
@@ -350,11 +357,24 @@ static tmuf_gbx_node *new_inline_node(tmuf_gbx *g, uint32_t index, uint32_t clas
   return n;
 }
 
-tmuf_gbx_node *tmuf_gbx_noderef(tmuf_gbx *g) {
+tmuf_gbx_node *tmuf_gbx_fidref(tmuf_gbx *g) {
   uint32_t index = tmuf_gbx_u32(g);
   if (g->error || index == TMUF_GBX_NULL_NODE)
     return NULL;
-  if (index == 0 || index > g->node_count) {
+  if (index == 0 || index > g->node_count || !g->nodes[index].external) {
+    tmuf_gbx_fail(g, "fid reference %u is not external", index);
+    return NULL;
+  }
+  return &g->nodes[index];
+}
+
+tmuf_gbx_node *tmuf_gbx_noderef(tmuf_gbx *g) {
+  uint32_t index = tmuf_gbx_u32(g);
+  if (g->error || index == TMUF_GBX_NULL_NODE || index == 0xfffffffeu)
+    return NULL;
+  if (index == 0)
+    return &g->nodes[0]; /* the root node */
+  if (index > g->node_count) {
     tmuf_gbx_fail(g, "node index %u of %u", index, g->node_count);
     return NULL;
   }
@@ -512,6 +532,9 @@ void *tmuf_gbx_read_root(tmuf_gbx *g) {
     tmuf_gbx_fail(g, "out of memory");
     return NULL;
   }
+  g->nodes[0].class_id = g->class_id;
+  g->nodes[0].cls = cls;
+  g->nodes[0].data = node;
   tmuf_gbx_node_body_as(g, cls, g->class_id, node);
   return g->error ? NULL : node;
 }

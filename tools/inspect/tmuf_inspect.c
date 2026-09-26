@@ -226,6 +226,8 @@ static int cmd_map(const char *in, const char *out) {
 typedef struct logging_source {
   tmuf_source base;
   tmuf_source *inner;
+  uint8_t seen[1 << 20]; /* first MiB of plain bytes read, for dumps */
+  size_t seen_size;
   uint32_t mixes[65536];
   size_t mix_count;
   uint64_t *pos;
@@ -234,7 +236,13 @@ typedef struct logging_source {
 
 static int log_read(tmuf_source *s, void *out, size_t n) {
   logging_source *l = (logging_source *)s;
-  return l->inner->read(l->inner, out, n);
+  int ok = l->inner->read(l->inner, out, n);
+  if (ok) {
+    size_t k = n < sizeof l->seen - l->seen_size ? n : sizeof l->seen - l->seen_size;
+    memcpy(l->seen + l->seen_size, out, k);
+    l->seen_size += k;
+  }
+  return ok;
 }
 
 static void log_mix(tmuf_source *s, const uint8_t *b, size_t n) {
@@ -279,6 +287,16 @@ static int cmd_gbx(const char *dir, const char *pack_name, const char *path) {
   if (ok)
     tmuf_gbx_read_root(&g);
   printf("%s after %llu bytes\n", g.error ? g.message : "parsed", (unsigned long long)g.pos);
+  if (g.error) {
+    size_t end = ls.seen_size, start = end > 96 ? end - 96 : 0;
+    start &= ~(size_t)15;
+    for (size_t i = start; i < end; i += 16) {
+      printf("  %06zx:", i);
+      for (size_t j = i; j < i + 16 && j < end; j++)
+        printf(" %02x", ls.seen[j]);
+      printf("\n");
+    }
+  }
   printf("mixes:");
   for (size_t i = 0; i < ls.mix_count; i++)
     printf(" %02x%02x%02x%02x@%llu", ls.mixes[i] & 0xff, (ls.mixes[i] >> 8) & 0xff, (ls.mixes[i] >> 16) & 0xff,
@@ -311,6 +329,10 @@ static int verify_file(const tmuf_pack *pack, const char *path, const char *expe
   ls.pos = &g.pos;
   if (tmuf_gbx_read_header(&g))
     tmuf_gbx_read_root(&g);
+  /* A correct parse consumes the file exactly. */
+  uint32_t file_size = pack->files[idx].uncompressed_size;
+  if (!g.error && g.pos != file_size)
+    tmuf_gbx_fail(&g, "parse ended at %llu of %u bytes", (unsigned long long)g.pos, file_size);
   /* Compare the mixes made so far, even if parsing failed. */
   size_t i = 0;
   const char *e = expected;
