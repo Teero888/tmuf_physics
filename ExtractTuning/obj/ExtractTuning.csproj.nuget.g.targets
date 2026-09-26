@@ -1,7 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <Import Project="$(NuGetPackageRoot)nativesharplzo/0.3.5/buildTransitive/NativeSharpLzo.targets" Condition="Exists('$(NuGetPackageRoot)nativesharplzo/0.3.5/buildTransitive/NativeSharpLzo.targets')" />
-    <Import Project="$(NuGetPackageRoot)microsoft.extensions.logging.abstractions/10.0.2/buildTransitive/net8.0/Microsoft.Extensions.Logging.Abstractions.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.extensions.logging.abstractions/10.0.2/buildTransitive/net8.0/Microsoft.Extensions.Logging.Abstractions.targets')" />
-  </ImportGroup>
-</Project>

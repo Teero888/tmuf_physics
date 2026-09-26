@@ -1,43 +1,6 @@
-# Project specific ignores
-steamdata
-GbxDump
-gbx-tools-3d
-gbx_map
-gbx-io
-oldw
-manual/gbx-net-master
-manual/GBX.NET
-manual/GbxDumper/bin
-manual/GbxDumper/obj
-manual/dotnet
-ExtractTuning/bin
-
-# Generated files
-scripts/physics_extracted_code.c
-scripts/reconstructed_structs.json
-scripts/reconstructed_structs.h
-scripts/unknown_types.txt
-scripts/potential_enums.txt
-scripts/struct_sizes.json
-scripts/dump.cpp
-
-# Executables and debug info
-exe/*
-!exe/TmForeverFixed.exe
-!exe/TmForeverFixed.pdb
-
-# OS files
-.DS_Store
-Thumbs.db
-
-lib
-scripts/venv
-manual/build
-manual/visualization/build
-manual/*.tmnfcol
-manual/TrackCollisionExtractor/bin
-manual/TrackCollisionExtractor/obj
-.cache
-
-manual/physics_harness
-manual/visualization/interactive_physics_test
+/build*/
+/compile_commands.json
+/.cache/
+__pycache__/
+*.Replay.Gbx
+*.Challenge.Gbx

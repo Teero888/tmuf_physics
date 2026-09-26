@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [reference, optimized]
+        toolchain:
+          - { os: ubuntu-latest, cc: gcc, name: linux-gcc }
+          - { os: ubuntu-latest, cc: clang, name: linux-clang }
+          - { os: windows-latest, arch: x64, name: windows-msvc-x64 }
+          - { os: windows-latest, arch: Win32, name: windows-msvc-x86 }
+    name: ${{ matrix.toolchain.name }} (${{ matrix.backend }})
+    runs-on: ${{ matrix.toolchain.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.toolchain.cc }} -DCMAKE_BUILD_TYPE=Release -DTMNF_PHYSICS_BACKEND=${{ matrix.backend }}
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -A ${{ matrix.toolchain.arch }} -DTMNF_PHYSICS_BACKEND=${{ matrix.backend }}
+      - run: cmake --build build --config Release
+      - run: ctest --test-dir build -C Release --output-on-failure

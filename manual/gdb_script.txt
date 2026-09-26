@@ -1,8 +1,0 @@
-run
-frame 1
-p i
-p tri
-p tri.indices[0]
-p tri.indices[1]
-p tri.indices[2]
-p m_vertices.m_count
