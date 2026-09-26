@@ -54,12 +54,18 @@ static void world_inertia(gm_mat3 *out, const gm_mat3 *rot, const gm_mat3 *body)
   *out = mat3_mul_transpose(&a, rot);
 }
 
+/* CHmsDyna::SetLocation: write and current state */
 void dyna_set_location(dyna *d, const gm_iso4 *loc) {
+  dyna_state *w = &d->write;
+  quat_from_mat3(&w->quat, &loc->r);
+  w->rot = loc->r;
+  w->pos = loc->t;
+  world_inertia(&w->inv_inertia_world, &w->rot, &d->params.inv_inertia_local);
   dyna_state *s = &d->state;
-  quat_from_mat3(&s->quat, &loc->r);
+  s->quat = w->quat;
   s->rot = loc->r;
   s->pos = loc->t;
-  world_inertia(&s->inv_inertia_world, &s->rot, &d->params.inv_inertia_local);
+  s->inv_inertia_world = w->inv_inertia_world;
 }
 
 /* CHmsDyna::IntegrateStep */

@@ -253,6 +253,11 @@ static uint32_t build_bintree(ref_world *w, const uint32_t *src, uint32_t n, int
   return emitted;
 }
 
+ref_surf *ref_world_surface(ref_world *w, tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *surface) {
+  build_ctx b = {w, assets, 0, 0};
+  return (ref_surf *)get_surf(&b, owner, surface);
+}
+
 int ref_world_build(ref_world *w, tmuf_scene *scene) {
   memset(w, 0, sizeof *w);
   build_ctx b = {w, &scene->assets, 0, 0};

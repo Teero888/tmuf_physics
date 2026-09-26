@@ -133,7 +133,19 @@ typedef struct tmuf_scene_object {
   tmuf_hms_item item;
   /* CSceneVehicle / CSceneVehicleCar */
   tmuf_gbx_node *vehicle_tunings, *vehicle_materials, *vehicle_struct;
+  int has_physical_params;
+  float physical_params[8]; /* 0x0a02b00c: speed cap, reverse speed, water box (center, half) */
 } tmuf_scene_object;
+
+/* CSceneVehicleMaterial (0x0a031000) */
+typedef struct tmuf_vehicle_material {
+  tmuf_gbx_node *fake_bitmap;
+  float fake_period_x, fake_period_z;
+  float blend[4]; /* x y z w */
+  uint32_t natural_id;
+  float fake_speed_scale, fake_depth_max;
+  float feedback_speed_divisor, feedback_scale;
+} tmuf_vehicle_material;
 
 /* Vehicle tuning: chunks kept as raw fields in file order; physics code
    names them by chunk id and field index (see tuning_schema.h). */

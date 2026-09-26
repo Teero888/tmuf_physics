@@ -45,6 +45,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/scene.h
   src/common/vehicle_tuning.c
   src/common/vehicle_tuning.h
+  src/common/vehicle.c
+  src/common/vehicle.h
   src/common/version.c
 )
 
@@ -60,6 +62,13 @@ set(TMUF_PHYSICS_REFERENCE_SOURCES
   src/reference/world.h
   src/reference/collide.c
   src/reference/collide.h
+  src/reference/car.c
+  src/reference/car.h
+  src/reference/car_util.h
+  src/reference/car_forces.c
+  src/reference/car_models.c
+  src/reference/sim.c
+  src/reference/sim.h
 )
 set(TMUF_PHYSICS_OPTIMIZED_SOURCES
   src/optimized/backend.c
@@ -133,6 +142,9 @@ if(TMUF_PHYSICS_TOOLS)
   add_executable(tmuf_inspect tools/inspect/tmuf_inspect.c)
   target_include_directories(tmuf_inspect PRIVATE src)
   target_link_libraries(tmuf_inspect PRIVATE tmuf_physics)
+  add_executable(tmuf_sim tools/sim/tmuf_sim.c)
+  target_include_directories(tmuf_sim PRIVATE src)
+  target_link_libraries(tmuf_sim PRIVATE tmuf_physics)
 endif()
 
 if(BUILD_TESTING)

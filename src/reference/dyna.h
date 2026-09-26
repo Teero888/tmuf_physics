@@ -30,13 +30,17 @@ typedef struct dyna_params {
   gm_mat3 inv_inertia_local; /* body inverse inertia ("bodyInertiaLike") */
   gm_vec3 com;               /* local center of mass */
   float max_step_distance;
+  float linear_damping_scale, angular_damping_scale;
+  float force_scale; /* scales the force fields (gravity) */
 } dyna_params;
 
 #define DYNA_MAX_REPLACEMENTS 64
 
 typedef struct dyna {
   dyna_params params;
-  dyna_state state; /* current (working) state */
+  dyna_state state; /* currentState: the working state */
+  dyna_state write; /* writeState: GetLocation() */
+  dyna_state temp;  /* tempState */
   dyna_type type;
   int active;
   int has_max_ang;

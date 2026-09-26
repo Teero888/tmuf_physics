@@ -272,6 +272,9 @@ static const scalar_binding SCALARS[] = {
     {0x0a02905au, 'R', 0, offsetof(tmuf_vehicle_tuning, geared_drive.input.reverse_transition_speed_high), 0}, /* M6ModeInputLowWindow */
     {0x0a02905au, 'R', 1, offsetof(tmuf_vehicle_tuning, geared_drive.input.forward_transition_speed_low), 0}, /* M6ModeInputLowWindow */
     {0x0a02905au, 'R', 2, offsetof(tmuf_vehicle_tuning, geared_drive.input.reverse_transition_speed_low), 0}, /* M6ModeInputLowWindow */
+    {0x0a029010u, 'N', 0, offsetof(tmuf_vehicle_tuning, handling_model), 0}, /* ForceModelAndM6SideForceTorque */
+    {0x0a02900du, 'N', 0, offsetof(tmuf_vehicle_tuning, contact_response.single_material), 0}, /* SingleMaterialRef */
+    {0x0a02900eu, 'N', 0, offsetof(tmuf_vehicle_tuning, wheel_force_mode), 0}, /* WheelForceMode */
     {0x0a029035u, 'N', 0, offsetof(tmuf_vehicle_tuning, slip_response.slip_slowdown_enabled), 1}, /* Model5SlipSlowdownEnabled */
     {0x0a02901eu, 'N', 0, offsetof(tmuf_vehicle_tuning, body_air_response.air_control_memory_tick_window), 0}, /* AirControlMemoryTickWindow */
     {0x0a02902fu, 'N', 0, offsetof(tmuf_vehicle_tuning, turbo.duration_a), 0}, /* TurboDuration */

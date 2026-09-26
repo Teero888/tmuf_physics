@@ -52,6 +52,8 @@ typedef struct ref_world {
 } ref_world;
 
 int ref_world_build(ref_world *w, tmuf_scene *scene);
+/* Surface of another (moving) item; owned by the world. */
+ref_surf *ref_world_surface(ref_world *w, tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *surface);
 void ref_world_free(ref_world *w);
 
 /* Mesh access */
