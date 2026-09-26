@@ -49,6 +49,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
 # The two backends never share a file. Exactly one is compiled in.
 set(TMUF_PHYSICS_REFERENCE_SOURCES
   src/reference/backend.c
+  src/reference/fmath.c
+  src/reference/fmath.h
 )
 set(TMUF_PHYSICS_OPTIMIZED_SOURCES
   src/optimized/backend.c
