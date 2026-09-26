@@ -45,7 +45,7 @@ class Worker:
     def __init__(self, index, args):
         self.index = index
         self.args = args
-        self.display = f":{90 + index}"
+        self.display = f":{args.display_base + index}"
         self.root = os.path.join(args.out, "workers", str(index))
         self.prefix = os.path.join(self.root, "pfx")
         self.docs = os.path.join(self.prefix, "drive_c", "users", os.environ.get("USER", "user"),
@@ -61,6 +61,9 @@ class Worker:
         if not os.path.isdir(self.prefix):
             os.makedirs(self.root, exist_ok=True)
             shutil.copytree(self.args.template_prefix, self.prefix, symlinks=True)
+        self.start_xvfb()
+
+    def start_xvfb(self):
         self.xvfb = subprocess.Popen(
             ["Xvfb", self.display, "-screen", "0", f"{WIDTH}x{HEIGHT}x24", "-nolisten", "tcp"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -96,6 +99,8 @@ class Worker:
         subprocess.run(["import", "-window", "root", path], env=self.env(), stderr=subprocess.DEVNULL)
 
     def run(self, replay):
+        if self.xvfb is None or self.xvfb.poll() is not None:
+            self.start_xvfb()
         stem = os.path.basename(replay)[:-len(".Replay.Gbx")]
         replay_dir = os.path.join(self.docs, "Tracks", "Replays", REPLAY_SUBDIR)
         shutil.rmtree(replay_dir, ignore_errors=True)
@@ -110,9 +115,11 @@ class Worker:
 
         env = self.env()
         env["TMUF_ORACLE_OUT"] = to_windows_path(dump)
+        if self.args.trace:
+            env["TMUF_ORACLE_TRACE"] = self.args.trace
         start = time.time()
         proc = subprocess.Popen(
-            ["wine", os.path.join(BUILD, "launcher.exe"), os.path.join(BUILD, "dumper.dll"),
+            ["wine", os.path.join(self.args.build, "launcher.exe"), os.path.join(self.args.build, "dumper.dll"),
              "TmForever.exe", f"/profile={PROFILE}", f"/validatepath={REPLAY_SUBDIR}\\"],
             cwd=self.args.game, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         dismissed = 0
@@ -147,6 +154,12 @@ class Worker:
             with open(dump, "rb") as src, gzip.open(out, "wb", compresslevel=6) as dst:
                 shutil.copyfileobj(src, dst)
             result["dump"] = out
+        if os.path.exists(dump + ".trace"):
+            out = os.path.join(self.args.out, "dumps", stem + ".trace.gz")
+            with open(dump + ".trace", "rb") as src, gzip.open(out, "wb", compresslevel=6) as dst:
+                shutil.copyfileobj(src, dst)
+            os.remove(dump + ".trace")
+            result["trace"] = out
         return result
 
 
@@ -157,8 +170,16 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--timeout", type=float, default=600)
+    ap.add_argument("--build", default=BUILD, help="directory with launcher.exe and dumper.dll")
+    ap.add_argument("--trace", default="", help="TMUF_ORACLE_TRACE for the dumper, e.g. feedback")
+    ap.add_argument("--display-base", type=int, default=90, help="worker i uses X display :BASE+i")
     ap.add_argument("replays", nargs="+")
     args = ap.parse_args()
+    # Wine runs from the game directory; make every path absolute.
+    args.build = os.path.abspath(args.build)
+    args.out = os.path.abspath(args.out)
+    args.game = os.path.abspath(args.game)
+    args.template_prefix = os.path.abspath(args.template_prefix)
 
     for d in ("dumps", "timeouts", "workers"):
         os.makedirs(os.path.join(args.out, d), exist_ok=True)
@@ -166,7 +187,10 @@ def main():
     done = set()
     if os.path.exists(results_path):
         for line in open(results_path):
-            done.add(json.loads(line)["replay"])
+            r = json.loads(line)
+            # Runs without a verdict (game never finished) are retried.
+            if r.get("verdict"):
+                done.add(r["replay"])
 
     todo = queue.Queue()
     for r in args.replays:

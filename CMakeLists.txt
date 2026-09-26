@@ -5,11 +5,14 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 project(tmuf_physics LANGUAGES C)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(CTest)
 
 set(TMUF_PHYSICS_BACKEND "reference" CACHE STRING "Physics implementation: reference or optimized")
 set_property(CACHE TMUF_PHYSICS_BACKEND PROPERTY STRINGS reference optimized)
 option(TMUF_PHYSICS_SHARED "Build tmuf_physics as a shared library" OFF)
+option(TMUF_PHYSICS_TOOLS "Build development tools" OFF)
 
 if(NOT TMUF_PHYSICS_BACKEND MATCHES "^(reference|optimized)$")
   message(FATAL_ERROR "TMUF_PHYSICS_BACKEND must be 'reference' or 'optimized', got '${TMUF_PHYSICS_BACKEND}'")
@@ -17,6 +20,13 @@ endif()
 
 # Parsing shared by both backends: GBX, packs, replays -> plain data.
 set(TMUF_PHYSICS_COMMON_SOURCES
+  src/common/compress.c
+  src/common/compress.h
+  src/common/crypto.c
+  src/common/crypto.h
+  src/common/pack.c
+  src/common/pack.h
+  src/common/blowfish_tables.h
   src/common/version.c
 )
 
@@ -34,6 +44,22 @@ else()
   set(TMUF_PHYSICS_BACKEND_SOURCES ${TMUF_PHYSICS_OPTIMIZED_SOURCES})
 endif()
 
+# zlib 1.2.3 inflate, as linked into the game (see src/common/zlib/README.md).
+add_library(tmuf_zlib OBJECT
+  src/common/zlib/adler32.c
+  src/common/zlib/inffast.c
+  src/common/zlib/inflate.c
+  src/common/zlib/inftrees.c
+  src/common/zlib/zutil.c
+)
+set_target_properties(tmuf_zlib PROPERTIES POSITION_INDEPENDENT_CODE ON C_STANDARD 99)
+target_compile_definitions(tmuf_zlib PRIVATE NO_DUMMY_DECL NO_GZIP)
+if(MSVC)
+  target_compile_options(tmuf_zlib PRIVATE /w)
+else()
+  target_compile_options(tmuf_zlib PRIVATE -w)
+endif()
+
 if(TMUF_PHYSICS_SHARED)
   set(TMUF_PHYSICS_LIB_TYPE SHARED)
 else()
@@ -44,6 +70,7 @@ add_library(tmuf_physics ${TMUF_PHYSICS_LIB_TYPE}
   include/tmuf_physics/tmuf_physics.h
   ${TMUF_PHYSICS_COMMON_SOURCES}
   ${TMUF_PHYSICS_BACKEND_SOURCES}
+  $<TARGET_OBJECTS:tmuf_zlib>
 )
 target_include_directories(tmuf_physics PUBLIC include PRIVATE src)
 
@@ -75,8 +102,19 @@ if(NOT WIN32)
   target_link_libraries(tmuf_physics PRIVATE m)
 endif()
 
+if(TMUF_PHYSICS_TOOLS)
+  add_executable(tmuf_inspect tools/inspect/tmuf_inspect.c)
+  target_include_directories(tmuf_inspect PRIVATE src)
+  target_link_libraries(tmuf_inspect PRIVATE tmuf_physics)
+endif()
+
 if(BUILD_TESTING)
   add_executable(tmuf_physics_smoke tests/smoke.c)
   target_link_libraries(tmuf_physics_smoke PRIVATE tmuf_physics)
   add_test(NAME smoke COMMAND tmuf_physics_smoke)
+
+  add_executable(tmuf_common_tests tests/common_tests.c)
+  target_include_directories(tmuf_common_tests PRIVATE src tests)
+  target_link_libraries(tmuf_common_tests PRIVATE tmuf_physics)
+  add_test(NAME common COMMAND tmuf_common_tests)
 endif()
