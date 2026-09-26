@@ -3,12 +3,16 @@
  *   tmuf_inspect packs PACKS_DIR [PACK]      open packs, test-extract every file
  *   tmuf_inspect ls PACKS_DIR PACK           list files of one pack
  *   tmuf_inspect cat PACKS_DIR PACK PATH OUT extract one file
+ *   tmuf_inspect replays FILE...            parse replays, summarise
+ *   tmuf_inspect body GBX OUT               write the (decompressed) body
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/gbx.h"
 #include "common/pack.h"
+#include "common/replay.h"
 
 static uint8_t *read_file(const char *path, size_t *size) {
   FILE *f = fopen(path, "rb");
@@ -100,7 +104,83 @@ static void test_pack(const char *dir, const tmuf_packlist *list, const char *na
   tmuf_pack_close(&pack);
 }
 
+static int cmd_replays(int argc, char **argv) {
+  int ok = 0, failed = 0;
+  int verbose = argc == 1;
+  for (int i = 0; i < argc; i++) {
+    size_t size;
+    uint8_t *data = read_file(argv[i], &size);
+    if (!data) {
+      printf("FAIL %s: cannot read\n", argv[i]);
+      failed++;
+      continue;
+    }
+    tmuf_arena arena;
+    tmuf_arena_init(&arena);
+    tmuf_replay_file r;
+    char err[256];
+    if (!tmuf_replay_parse(data, size, &arena, &r, err, sizeof err)) {
+      printf("FAIL %s: %s\n", argv[i], err);
+      failed++;
+    } else {
+      ok++;
+      const tmuf_ghost *gh = r.ghosts[0];
+      if (verbose) {
+        printf("challenge %u bytes, %u ghost(s)\n", r.challenge_size, r.ghost_count);
+        printf("race time %u, respawns %u, stunts %u, vehicle %s/%s/%s\n", gh->race_time, gh->respawns,
+               gh->stunt_score, gh->vehicle[0], gh->vehicle[1], gh->vehicle[2]);
+        printf("inputs: duration %u, version %u, %u events, seed %u, actions:", gh->input_duration,
+               gh->input_version, gh->event_count, gh->validation_seed);
+        for (uint32_t a = 0; a < gh->action_count; a++)
+          printf(" %s", gh->actions[a]);
+        printf("\n");
+        for (uint32_t e = 0; e < gh->event_count && e < 12; e++)
+          printf("  %8u %-12s %08x\n", gh->events[e].time,
+                 gh->events[e].action < gh->action_count ? gh->actions[gh->events[e].action] : "?",
+                 gh->events[e].value);
+      } else if (!gh->has_inputs) {
+        printf("NOINPUT %s\n", argv[i]);
+      }
+    }
+    tmuf_arena_free(&arena);
+    free(data);
+  }
+  printf("replays: %d ok, %d failed\n", ok, failed);
+  return failed != 0;
+}
+
+static int cmd_body(const char *in, const char *out) {
+  size_t size;
+  uint8_t *data = read_file(in, &size);
+  if (!data)
+    return 1;
+  tmuf_arena arena;
+  tmuf_arena_init(&arena);
+  tmuf_mem_source src;
+  tmuf_mem_source_init(&src, data, size);
+  tmuf_gbx g;
+  tmuf_gbx_init(&g, &src.base, &arena, NULL, 0);
+  int ok = tmuf_gbx_read_header(&g);
+  if (ok) {
+    tmuf_mem_source *body = (tmuf_mem_source *)g.src;
+    FILE *f = fopen(out, "wb");
+    fwrite(body->data + body->pos, 1, body->size - body->pos, f);
+    fclose(f);
+    printf("class %08x (%s), %u nodes, body %zu bytes\n", g.class_id, tmuf_class_name(g.class_id), g.node_count,
+           body->size - body->pos);
+  } else {
+    printf("%s\n", g.message);
+  }
+  tmuf_arena_free(&arena);
+  free(data);
+  return !ok;
+}
+
 int main(int argc, char **argv) {
+  if (argc >= 4 && strcmp(argv[1], "body") == 0)
+    return cmd_body(argv[2], argv[3]);
+  if (argc >= 2 && strcmp(argv[1], "replays") == 0)
+    return cmd_replays(argc - 2, argv + 2);
   if (argc < 3) {
     fprintf(stderr, "usage: see source\n");
     return 2;

@@ -20,6 +20,12 @@ endif()
 
 # Parsing shared by both backends: GBX, packs, replays -> plain data.
 set(TMUF_PHYSICS_COMMON_SOURCES
+  src/common/arena.c
+  src/common/arena.h
+  src/common/gbx.c
+  src/common/gbx.h
+  src/common/replay.c
+  src/common/replay.h
   src/common/compress.c
   src/common/compress.h
   src/common/crypto.c
