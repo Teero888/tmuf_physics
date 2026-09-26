@@ -273,6 +273,23 @@ static tmuf_pack_ref find_collector(const tmuf_scene *s, const char *name, uint8
 
 enum { CATALOG_BLOCK_INFO, CATALOG_DECORATION };
 
+/* Collections live under Collections\ (.TMCollection or .TMElementColl);
+   matched by the name stored in their body. */
+static tmuf_asset *find_collection(tmuf_scene *s, const char *name) {
+  const tmuf_packset *set = s->assets.set;
+  char path[512];
+  for (int p = 0; p < set->pack_count; p++)
+    for (uint32_t f = 0; f < set->packs[p].file_count; f++) {
+      if (!tmuf_pack_file_path(&set->packs[p], f, path, sizeof path) || strncmp(path, "Collections\\", 12) != 0)
+        continue;
+      tmuf_asset *a = tmuf_assets_load(&s->assets, (tmuf_pack_ref){p, f});
+      if (a && a->class_id == 0x03033000u && a->root && ((tmuf_collection *)a->root)->name &&
+          ieq(((tmuf_collection *)a->root)->name, name))
+        return a;
+    }
+  return NULL;
+}
+
 static void block_size(tmuf_scene *s, tmuf_asset *bi_asset, const tmuf_block_info *bi, int ground, uint32_t size[3]) {
   size[0] = size[1] = size[2] = 1;
   const tmuf_node_list *units = &bi->units[ground ? 0 : 1];
@@ -421,10 +438,16 @@ static void place_block(tmuf_scene *s, placed_block *pb, uint32_t tag) {
      requested family), then the common helper */
   int helper_ground = (flags & 0x1000u) != 0;
   const tmuf_gbx_node *fh = pb->info->helpers[helper_ground ? 0 : 1];
+  uint32_t before = s->triangle_count;
   if (fh)
     emit_mobil(s, pb->asset, (tmuf_gbx_node *)fh, &loc, 0);
+  uint32_t mid = s->triangle_count;
   if (pb->info->helpers[2])
     emit_mobil(s, pb->asset, pb->info->helpers[2], &loc, 0);
+  if (debug_enabled() && (pb->info->helpers[0] || pb->info->helpers[1] || pb->info->helpers[2]))
+    fprintf(stderr, "helpers %s: g %p a %p c %p -> family %u common %u\n", pb->b.name ? pb->b.name : "(auto)",
+            (void *)pb->info->helpers[0], (void *)pb->info->helpers[1], (void *)pb->info->helpers[2], mid - before,
+            s->triangle_count - mid);
   s->blocks_placed++;
   const char *probe = getenv("TMUF_SCENE_PROBE");
   if (probe && pb->b.name && strcmp(pb->b.name, probe) == 0) {
@@ -446,12 +469,9 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   memset(s, 0, sizeof *s);
   s->rand_state = 1;
   tmuf_assets_init(&s->assets, set);
-  const char *env = map->decoration[1];
-  char path[512];
-  snprintf(path, sizeof path, "Collections\\%s.TMCollection.Gbx", env);
-  tmuf_asset *ca = tmuf_assets_load_path(&s->assets, path);
-  if (!ca || ca->class_id != 0x03033000u) {
-    snprintf(s->error, sizeof s->error, "no collection %s", path);
+  tmuf_asset *ca = find_collection(s, map->decoration[1]);
+  if (!ca) {
+    snprintf(s->error, sizeof s->error, "no collection %s", map->decoration[1]);
     return 0;
   }
   const tmuf_collection *coll = ca->root;

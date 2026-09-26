@@ -1881,6 +1881,10 @@ static const tmuf_gbx_class COLLECTION = {0x03033000, "CGameCtnCollection", size
 
 static void decoration_ref(tmuf_gbx *g, void *node, uint32_t id) {
   ((tmuf_decoration *)node)->refs[(id & 0xfff) - 0x11] = tmuf_gbx_noderef(g);
+  /* Only the size (0x03038011, the first) matters for physics; the audio and
+     mood nodes that follow use crypted chunks, so stop here. */
+  if (id == 0x03038011u)
+    g->stop = 1;
 }
 
 static void decoration_ident(tmuf_gbx *g, void *node, uint32_t id) {
