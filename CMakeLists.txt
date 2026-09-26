@@ -56,6 +56,10 @@ set(TMUF_PHYSICS_REFERENCE_SOURCES
   src/reference/gm.h
   src/reference/dyna.c
   src/reference/dyna.h
+  src/reference/world.c
+  src/reference/world.h
+  src/reference/collide.c
+  src/reference/collide.h
 )
 set(TMUF_PHYSICS_OPTIMIZED_SOURCES
   src/optimized/backend.c

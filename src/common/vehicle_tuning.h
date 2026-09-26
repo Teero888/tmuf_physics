@@ -13,7 +13,7 @@
 
 #define TMUF_MAX_GEARS 16
 #define TMUF_MAX_CURVE_KEYS 64
-#define TMUF_MATERIAL_RUBBER 5u
+#define TMUF_MATERIAL_RUBBER 9u
 
 typedef struct tmuf_curve {
   int present;

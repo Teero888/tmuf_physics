@@ -22,6 +22,15 @@ typedef struct tmuf_static_triangle {
   uint32_t block;    /* index of the map block that placed it */
 } tmuf_static_triangle;
 
+/* A static item as the game adds it to the collision zone: a solid's tree
+   (in the asset that holds it) at a world location. */
+typedef struct tmuf_scene_corpus {
+  tmuf_asset *owner;
+  tmuf_gbx_node *tree;
+  tmuf_iso iso;
+  uint32_t tag; /* map block index, 0x80000000|i automatic, 0xc0000000|i decoration */
+} tmuf_scene_corpus;
+
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
   tmuf_pack_ref ref;
@@ -42,6 +51,8 @@ typedef struct tmuf_scene {
   tmuf_iso start; /* spawn location of the first start block */
   uint32_t rand_state;
   uint32_t catalog_count, catalog_cap;
+  uint32_t corpus_count, corpus_cap;
+  tmuf_scene_corpus *corpora; /* in the order the game adds them */
   tmuf_scene_catalog_entry *catalog;
   char error[600];
 } tmuf_scene;

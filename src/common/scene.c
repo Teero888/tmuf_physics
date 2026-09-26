@@ -151,6 +151,22 @@ static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node
     emit_tree(s, ta, t->children[i], &world, depth + 1);
 }
 
+static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, const tmuf_iso *iso) {
+  if (s->corpus_count == s->corpus_cap) {
+    uint32_t cap = s->corpus_cap ? s->corpus_cap * 2 : 1024;
+    tmuf_scene_corpus *c = realloc(s->corpora, sizeof *c * cap);
+    if (!c)
+      return;
+    s->corpora = c;
+    s->corpus_cap = cap;
+  }
+  tmuf_scene_corpus *c = &s->corpora[s->corpus_count++];
+  c->owner = owner;
+  c->tree = tree;
+  c->iso = *iso;
+  c->tag = s->current_block;
+}
+
 static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_node, const tmuf_iso *world, int depth) {
   tmuf_asset *sa;
   tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, owner, solid_node, &sa);
@@ -165,8 +181,10 @@ static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_no
       emit_solid(s, sa, solid->model, world, depth + 1);
     return;
   }
-  if (solid->tree)
+  if (solid->tree) {
+    add_corpus(s, sa, solid->tree, world);
     emit_tree(s, sa, solid->tree, world, 0);
+  }
 }
 
 static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_node, const tmuf_iso *world, int depth) {
@@ -501,6 +519,23 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
             coll->folders[1], coll->folders[2], coll->folders[3], map->decoration[0], map->decoration[1],
             map->decoration[2]);
 
+  /* decoration scene (added to the zone before the map) */
+  tmuf_asset *sa;
+  tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, dsa, dsize->scene, &sa);
+  if (sn && sn->data && sn->class_id == 0x0a003000u) {
+    const tmuf_scene3d *sc = sn->data;
+    for (uint32_t i = 0; i < sc->mobil_count && i < sc->loc_count; i++) {
+      if (!sc->mobils[i] || !sc->mobils[i]->model)
+        continue;
+      tmuf_iso loc;
+      tmuf_iso_from_archive(&loc, sc->locs[i].iso);
+      s->current_block = 0xc0000000u | i;
+      emit_mobil(s, sa, sc->mobils[i]->model, &loc, 0);
+    }
+  } else if (debug_enabled()) {
+    fprintf(stderr, "no decoration scene\n");
+  }
+
   /* default zone: flat, clip and pylon block infos */
   tmuf_asset *za;
   tmuf_gbx_node *zn = tmuf_assets_follow(&s->assets, ca, coll->default_zone, &za);
@@ -641,28 +676,13 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
 
   free(zone_height), free(has_terrain), free(ground_block), free(blocks), free(units);
 
-  /* decoration scene */
-  tmuf_asset *sa;
-  tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, dsa, dsize->scene, &sa);
-  if (sn && sn->data && sn->class_id == 0x0a003000u) {
-    const tmuf_scene3d *sc = sn->data;
-    for (uint32_t i = 0; i < sc->mobil_count && i < sc->loc_count; i++) {
-      if (!sc->mobils[i] || !sc->mobils[i]->model)
-        continue;
-      tmuf_iso loc;
-      tmuf_iso_from_archive(&loc, sc->locs[i].iso);
-      s->current_block = 0xc0000000u | i;
-      emit_mobil(s, sa, sc->mobils[i]->model, &loc, 0);
-    }
-  } else if (debug_enabled()) {
-    fprintf(stderr, "no decoration scene\n");
-  }
   return 1;
 }
 
 void tmuf_scene_free(tmuf_scene *s) {
   free(s->triangles);
   free(s->catalog);
+  free(s->corpora);
   tmuf_assets_free(&s->assets);
   memset(s, 0, sizeof *s);
 }
