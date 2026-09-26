@@ -101,7 +101,7 @@ else()
     -fno-reciprocal-math
     -fsigned-zeros
     -ftrapping-math
-    -Wall -Wextra -Wshadow -Wdouble-promotion
+    -Wall -Wextra -Wshadow -Wdouble-promotion -Wno-missing-field-initializers
   )
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(i.86|x86)$")
     target_compile_options(tmuf_physics PRIVATE -msse2 -mfpmath=sse)

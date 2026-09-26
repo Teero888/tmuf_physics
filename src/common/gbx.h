@@ -56,6 +56,10 @@ struct tmuf_gbx_class {
   const tmuf_gbx_chunk *chunks;
   size_t chunk_count;
   const tmuf_gbx_class *base; /* chunks of base classes are searched too */
+  /* Optional: chunks not in the table that accepts() takes are read by
+     generic (skippable if "PIKS" follows). */
+  int (*accepts)(uint32_t chunk_id);
+  tmuf_chunk_fn generic;
 };
 
 typedef struct tmuf_gbx_node {
@@ -82,6 +86,7 @@ struct tmuf_gbx {
 
   int error;
   uint32_t node_class; /* actual class id of the node being read */
+  uint32_t chunk_size; /* size of the skippable chunk being read, else ~0 */
   int stop; /* set by a chunk reader to end the current node early */
   char message[192];
   uint64_t pos; /* bytes consumed from src */
@@ -145,6 +150,9 @@ void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t clas
 /* Mix a value into the source feedback (class-specific archive feedback). */
 void tmuf_gbx_mix_u32(tmuf_gbx *g, uint32_t v);
 
+/* Flags of the game's GetChunkInfo for a node of class_id (0xfacade01 if
+   unknown): bit 0 parsed, bit 4 stored skippable. */
+uint32_t tmuf_chunk_info(uint32_t class_id, uint32_t chunk_id);
 uint32_t tmuf_wrap_class_id(uint32_t archive_id);
 uint32_t tmuf_unwrap_class_id(uint32_t current_id);
 static inline uint32_t tmuf_wrap_chunk_id(uint32_t id) { return tmuf_wrap_class_id(id & 0xfffff000u) | (id & 0xfffu); }

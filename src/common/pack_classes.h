@@ -125,6 +125,69 @@ typedef struct tmuf_scene_object {
   tmuf_hms_item item;
 } tmuf_scene_object;
 
+/* Vehicle tuning: chunks kept as raw fields in file order; physics code
+   names them by chunk id and field index (see tuning_schema.h). */
+typedef struct tmuf_tuning_field {
+  char kind; /* R N B O F I */
+  uint32_t raw;          /* R N B (float bits for R) */
+  tmuf_gbx_node *node;   /* O */
+  uint32_t float_count;  /* F */
+  const float *floats;   /* F */
+  const char *id;        /* I */
+} tmuf_tuning_field;
+
+typedef struct tmuf_tuning_chunk {
+  uint32_t chunk_id;
+  uint32_t field_count;
+  tmuf_tuning_field *fields;
+} tmuf_tuning_chunk;
+
+typedef struct tmuf_car_tuning {
+  const char *name;
+  tmuf_gbx_node *base_ref;
+  float base_real;
+  uint32_t chunk_count, chunk_cap;
+  tmuf_tuning_chunk *chunks;
+} tmuf_car_tuning;
+
+typedef struct tmuf_vehicle_tunings {
+  tmuf_node_list tunings;
+  uint32_t selected;
+} tmuf_vehicle_tunings;
+
+typedef struct tmuf_func_keys {
+  const char *name;
+  uint32_t x_count, y_count;
+  const float *xs, *ys;
+  uint32_t mode;
+  float range[2];
+} tmuf_func_keys;
+
+typedef struct tmuf_vehicle_wheel_def {
+  int flags[2];
+  const char *name;
+} tmuf_vehicle_wheel_def;
+
+typedef struct tmuf_vehicle_struct {
+  uint32_t wheel_count;
+  tmuf_vehicle_wheel_def *wheels;
+  uint32_t visual_vehicle_count;
+  int has_visual_vehicle_count;
+  tmuf_node_list material_groups, emitters;
+  tmuf_gbx_node *feedback_curves[3];
+} tmuf_vehicle_struct;
+
+typedef struct tmuf_zone {
+  const char *name;
+  const char *basic_name;
+  uint32_t type;
+  uint32_t height, depth;
+  int old_zone, has_water;
+  tmuf_node_list refs;
+  tmuf_gbx_node *block_infos[4]; /* flat: 3 or 4; frontier: 1 */
+  const char *frontier_parent, *frontier_child;
+} tmuf_zone;
+
 extern const tmuf_gbx_class *const tmuf_pack_classes[];
 extern const size_t tmuf_pack_class_count;
 

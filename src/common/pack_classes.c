@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include "common/tuning_schema.h"
+
 /* Chunk entries with no payload may also be stored skippable. */
 #define NOPAY(id) {(id), TMUF_GBX_MAYBE_SKIP, NULL}
 #define READ(id, fn) {(id), TMUF_GBX_MAYBE_SKIP, (fn)}
@@ -1111,9 +1113,376 @@ static const tmuf_gbx_chunk SCENE_OBJECT_CHUNKS[] = {
 static const tmuf_gbx_class SCENE_OBJECT = {0x0a005000, "CSceneObject", sizeof(tmuf_scene_object),
                                             SCENE_OBJECT_CHUNKS, COUNT(SCENE_OBJECT_CHUNKS), NULL};
 
+/* ---- CSceneVehicleTunings (0x0a030000) ---- */
+
+static void c0a030000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_tunings *t = node;
+  tmuf_gbx_u32(g);
+  read_node_list(g, &t->tunings);
+  t->selected = tmuf_gbx_u32(g);
+}
+
+static const tmuf_gbx_chunk TUNINGS_CHUNKS[] = {READ(0x0a030000, c0a030000)};
+static const tmuf_gbx_class TUNINGS = {0x0a030000, "CSceneVehicleTunings", sizeof(tmuf_vehicle_tunings),
+                                       TUNINGS_CHUNKS, 1, NULL};
+
+/* ---- CSceneVehicleTuning (0x0a02e000) / CSceneVehicleCarTuning (0x0a029000) ---- */
+
+static void c0a02e000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_car_tuning *t = node;
+  t->name = id_text(g);
+  t->base_ref = tmuf_gbx_noderef(g);
+  t->base_real = tmuf_gbx_f32(g);
+  /* The game mixes the first four characters of the tuning name. */
+  size_t n = strlen(t->name);
+  if (n > 3)
+    tmuf_gbx_mix_u32(g, (uint32_t)(uint8_t)t->name[0] | (uint32_t)(uint8_t)t->name[1] << 8 |
+                            (uint32_t)(uint8_t)t->name[2] << 16 | (uint32_t)(uint8_t)t->name[3] << 24);
+}
+
+static const tmuf_tuning_chunk_schema *tuning_schema(uint32_t id) {
+  size_t lo = 0, hi = sizeof TMUF_TUNING_SCHEMA / sizeof TMUF_TUNING_SCHEMA[0];
+  while (lo < hi) {
+    size_t mid = (lo + hi) / 2;
+    if (TMUF_TUNING_SCHEMA[mid].chunk_id < id)
+      lo = mid + 1;
+    else
+      hi = mid;
+  }
+  return lo < sizeof TMUF_TUNING_SCHEMA / sizeof TMUF_TUNING_SCHEMA[0] && TMUF_TUNING_SCHEMA[lo].chunk_id == id
+             ? &TMUF_TUNING_SCHEMA[lo]
+             : NULL;
+}
+
+static void car_tuning_chunk(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_car_tuning *t = node;
+  const tmuf_tuning_chunk_schema *sc = tuning_schema(id);
+  if (!sc) {
+    tmuf_gbx_fail(g, "no schema for tuning chunk %08x", id);
+    return;
+  }
+  if (t->chunk_count == t->chunk_cap) {
+    uint32_t cap = t->chunk_cap ? t->chunk_cap * 2 : 64;
+    tmuf_tuning_chunk *c = TMUF_ARENA_ARRAY(g->arena, tmuf_tuning_chunk, cap);
+    if (!c) {
+      tmuf_gbx_fail(g, "out of memory");
+      return;
+    }
+    if (t->chunk_count)
+      memcpy(c, t->chunks, sizeof *c * t->chunk_count);
+    t->chunks = c;
+    t->chunk_cap = cap;
+  }
+  tmuf_tuning_chunk *c = &t->chunks[t->chunk_count++];
+  c->chunk_id = id;
+  c->field_count = (uint32_t)strlen(sc->fields);
+  c->fields = TMUF_ARENA_ARRAY(g->arena, tmuf_tuning_field, c->field_count ? c->field_count : 1);
+  for (uint32_t i = 0; i < c->field_count && !g->error; i++) {
+    tmuf_tuning_field *f = &c->fields[i];
+    f->kind = sc->fields[i];
+    switch (f->kind) {
+    case 'R':
+    case 'N':
+    case 'B':
+      f->raw = tmuf_gbx_u32(g);
+      break;
+    case 'O':
+      f->node = tmuf_gbx_noderef(g);
+      break;
+    case 'F':
+      f->float_count = tmuf_gbx_u32(g);
+      f->floats = read_block(g, f->float_count, 4);
+      break;
+    case 'I':
+      f->id = id_text(g);
+      break;
+    }
+  }
+}
+
+static int car_tuning_accepts(uint32_t id) { return tuning_schema(id) != NULL; }
+
+static const tmuf_gbx_chunk CAR_TUNING_CHUNKS[] = {READ(0x0a02e000, c0a02e000)};
+static const tmuf_gbx_class CAR_TUNING = {
+    0x0a02e000, "CSceneVehicleTuning", sizeof(tmuf_car_tuning), CAR_TUNING_CHUNKS, 1, NULL,
+    car_tuning_accepts, car_tuning_chunk,
+};
+
+/* ---- CFuncKeys (0x05002000): CFuncKeysReal ---- */
+
+static void func_floats(tmuf_gbx *g, uint32_t *count, const float **out) {
+  *count = tmuf_gbx_u32(g);
+  if (*count > 0x100000u) {
+    tmuf_gbx_fail(g, "curve key count %u", *count);
+    return;
+  }
+  *out = read_block(g, *count, 4);
+}
+
+static void c05002000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_string(g);
+}
+
+static void c05002001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_keys *f = node;
+  func_floats(g, &f->x_count, &f->xs);
+}
+
+static void c05002002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_keys *f = node;
+  read_floats(g, f->range, 2);
+}
+
+static void c05002003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_func_keys *)node)->name = id_text(g);
+}
+
+static void c0501a000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_keys *f = node;
+  func_floats(g, &f->y_count, &f->ys);
+}
+
+static void c0501a001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_keys *f = node;
+  func_floats(g, &f->y_count, &f->ys);
+  f->mode = tmuf_gbx_u32(g);
+}
+
+static const tmuf_gbx_chunk FUNC_KEYS_CHUNKS[] = {
+    READ(0x05002000, c05002000), READ(0x05002001, c05002001), READ(0x05002002, c05002002),
+    READ(0x05002003, c05002003), READ(0x0501a000, c0501a000), READ(0x0501a001, c0501a001),
+};
+static const tmuf_gbx_class FUNC_KEYS = {0x05002000, "CFuncKeys", sizeof(tmuf_func_keys), FUNC_KEYS_CHUNKS,
+                                         COUNT(FUNC_KEYS_CHUNKS), NULL};
+
+/* ---- CSceneVehicleStruct (0x0a039000) ---- */
+
+static uint32_t vs_count(tmuf_gbx *g) {
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u)
+    tmuf_gbx_fail(g, "vehicle struct count %u", n);
+  return g->error ? 0 : n;
+}
+
+static void vs_visual_id(tmuf_gbx *g) {
+  tmuf_gbx_id(g, NULL);
+  tmuf_gbx_bool(g);
+}
+
+static void c0a039005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  v->wheel_count = vs_count(g);
+  v->wheels = TMUF_ARENA_ARRAY(g->arena, tmuf_vehicle_wheel_def, v->wheel_count ? v->wheel_count : 1);
+  for (uint32_t i = 0; i < v->wheel_count && !g->error; i++) {
+    v->wheels[i].flags[0] = tmuf_gbx_bool(g);
+    v->wheels[i].flags[1] = tmuf_gbx_bool(g);
+    v->wheels[i].name = id_text(g);
+  }
+}
+
+static void c0a039006(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  v->visual_vehicle_count = vs_count(g);
+  v->has_visual_vehicle_count = !g->error;
+}
+
+static int vs_need_count(tmuf_gbx *g, tmuf_vehicle_struct *v) {
+  if (!v->has_visual_vehicle_count)
+    tmuf_gbx_fail(g, "vehicle struct visual chunk before count");
+  return v->has_visual_vehicle_count;
+}
+
+static void c0a039009(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  if (!vs_need_count(g, v))
+    return;
+  for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    uint32_t n = vs_count(g);
+    for (uint32_t i = 0; i < n && !g->error; i++) {
+      vs_visual_id(g);
+      vs_visual_id(g);
+      vs_visual_id(g);
+      tmuf_gbx_skip(g, 12);
+    }
+  }
+}
+
+static void c0a03900a(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  if (!vs_need_count(g, v))
+    return;
+  for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    uint32_t n = vs_count(g);
+    for (uint32_t i = 0; i < n && !g->error; i++) {
+      vs_visual_id(g);
+      tmuf_gbx_skip(g, 4);
+    }
+  }
+}
+
+static void c0a03900f(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  if (!vs_need_count(g, v))
+    return;
+  for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    uint32_t n = vs_count(g);
+    for (uint32_t i = 0; i < n && !g->error; i++) {
+      for (int j = 0; j < 4; j++)
+        vs_visual_id(g);
+      tmuf_gbx_skip(g, 8);
+    }
+  }
+}
+
+static void c0a039010(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  if (!vs_need_count(g, v))
+    return;
+  for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    for (int j = 0; j < 4; j++)
+      vs_visual_id(g);
+    tmuf_gbx_skip(g, 4);
+  }
+}
+
+static void c0a039012(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gbx_u32(g);
+  read_node_list(g, &((tmuf_vehicle_struct *)node)->material_groups);
+}
+
+static void c0a039014(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gbx_u32(g);
+  read_node_list(g, &((tmuf_vehicle_struct *)node)->emitters);
+}
+
+static void c0a039013(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_struct *v = node;
+  for (int i = 0; i < 3; i++)
+    v->feedback_curves[i] = tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk VEHICLE_STRUCT_CHUNKS[] = {
+    READ(0x0a039005, c0a039005), READ(0x0a039006, c0a039006), READ(0x0a039009, c0a039009),
+    READ(0x0a03900a, c0a03900a), READ(0x0a03900f, c0a03900f), READ(0x0a039010, c0a039010),
+    READ(0x0a039012, c0a039012), READ(0x0a039013, c0a039013), READ(0x0a039014, c0a039014),
+};
+static const tmuf_gbx_class VEHICLE_STRUCT = {0x0a039000, "CSceneVehicleStruct", sizeof(tmuf_vehicle_struct),
+                                              VEHICLE_STRUCT_CHUNKS, COUNT(VEHICLE_STRUCT_CHUNKS), NULL};
+
+static void c0a015000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  skip_counted(g, 4);
+}
+
+static const tmuf_gbx_chunk VEHICLE_MATERIAL_GROUP_CHUNKS[] = {READ(0x0a015000, c0a015000)};
+static const tmuf_gbx_class VEHICLE_MATERIAL_GROUP = {0x0a015000, "CSceneVehicleMaterialGroup", 1,
+                                                      VEHICLE_MATERIAL_GROUP_CHUNKS, 1, NULL};
+
+static void c0a010004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 4);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 24 + 48 + 56);
+}
+
+static const tmuf_gbx_chunk VEHICLE_EMITTER_CHUNKS[] = {
+    READ(0x0a010002, skip4), READ(0x0a010003, skip24), READ(0x0a010004, c0a010004), READ(0x0a010005, skip4),
+};
+static const tmuf_gbx_class VEHICLE_EMITTER = {0x0a010000, "CSceneVehicleEmitter", 1, VEHICLE_EMITTER_CHUNKS,
+                                               COUNT(VEHICLE_EMITTER_CHUNKS), NULL};
+
+/* ---- CGameCtnZone (0x0305c000): Flat, Frontier ---- */
+
+static void zone_c000(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_zone *z = node;
+  tmuf_gbx_u32(g);
+  if (id == 0x0305c000)
+    tmuf_gbx_u32(g); /* local name index */
+  else
+    z->name = id_text(g);
+  z->type = tmuf_gbx_u32(g);
+  if (id != 0x0305c002)
+    read_node_list(g, &z->refs);
+}
+
+static void c0305c003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_zone *z = node;
+  z->height = tmuf_gbx_u32(g);
+  z->name = id_text(g);
+  z->basic_name = id_text(g);
+  z->type = tmuf_gbx_u32(g);
+}
+
+static void c0305c004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_zone *z = node;
+  z->depth = tmuf_gbx_u32(g);
+  z->old_zone = tmuf_gbx_u32(g) != 0;
+}
+
+static void c0305c005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_zone *)node)->has_water = tmuf_gbx_u32(g) != 0;
+}
+
+static void zone_flat(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_zone *z = node;
+  int n = id == 0x0305d000 ? 3 : 4;
+  for (int i = 0; i < n; i++)
+    z->block_infos[i] = tmuf_gbx_noderef(g);
+}
+
+/* Two bools, or a larger skippable form. */
+static void c0305d002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, g->chunk_size != 0xffffffffu ? g->chunk_size : 8);
+}
+
+static void zone_frontier(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_zone *z = node;
+  z->block_infos[0] = tmuf_gbx_noderef(g);
+  z->frontier_parent = id_text(g);
+  z->frontier_child = id_text(g);
+}
+
+static const tmuf_gbx_chunk ZONE_CHUNKS[] = {
+    READ(0x0305c000, zone_c000), READ(0x0305c001, zone_c000), READ(0x0305c002, zone_c000),
+    READ(0x0305c003, c0305c003), READ(0x0305c004, c0305c004), READ(0x0305c005, c0305c005),
+    READ(0x0305d000, zone_flat), READ(0x0305d001, zone_flat), READ(0x0305d002, c0305d002),
+    READ(0x0305e000, zone_frontier), READ(0x0305e001, zone_frontier),
+};
+static const tmuf_gbx_class ZONE = {0x0305c000, "CGameCtnZone", sizeof(tmuf_zone), ZONE_CHUNKS, COUNT(ZONE_CHUNKS),
+                                    NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
-    &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT,
+    &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
+    &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

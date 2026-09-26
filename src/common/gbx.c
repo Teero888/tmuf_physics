@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "common/class_id_table.h"
+#include "common/chunk_info_table.h"
 #include "common/class_tree.h"
 #include "common/compress.h"
 
@@ -83,6 +84,7 @@ void tmuf_gbx_init(tmuf_gbx *g, tmuf_source *src, tmuf_arena *arena, const tmuf_
   g->arena = arena;
   g->classes = classes;
   g->class_count = class_count;
+  g->chunk_size = 0xffffffffu;
 }
 
 void tmuf_gbx_fail(tmuf_gbx *g, const char *fmt, ...) {
@@ -256,11 +258,18 @@ static const tmuf_gbx_class *find_class(const tmuf_gbx *g, uint32_t id) {
   return NULL;
 }
 
-static const tmuf_gbx_chunk *find_chunk(const tmuf_gbx_class *cls, uint32_t id) {
-  for (; cls; cls = cls->base)
+static const tmuf_gbx_chunk *find_chunk(const tmuf_gbx_class *cls, uint32_t id, tmuf_gbx_chunk *scratch) {
+  for (; cls; cls = cls->base) {
     for (size_t i = 0; i < cls->chunk_count; i++)
       if (cls->chunks[i].id == id)
         return &cls->chunks[i];
+    if (cls->accepts && cls->accepts(id)) {
+      scratch->id = id;
+      scratch->skippable = TMUF_GBX_MAYBE_SKIP;
+      scratch->read = cls->generic;
+      return scratch;
+    }
+  }
   return NULL;
 }
 
@@ -294,10 +303,36 @@ void tmuf_gbx_node_body(tmuf_gbx *g, const tmuf_gbx_class *cls, void *node) {
   tmuf_gbx_node_body_as(g, cls, cls->id, node);
 }
 
+#define CHUNK_UNKNOWN 0xfacade01u
+
+/* GetChunkInfo of the node's actual class (generated from the game). */
+uint32_t tmuf_chunk_info(uint32_t class_id, uint32_t chunk_id) {
+  for (size_t i = 0; i < sizeof TMUF_CHUNK_INFO_OVERRIDE / sizeof TMUF_CHUNK_INFO_OVERRIDE[0]; i++)
+    if (TMUF_CHUNK_INFO_OVERRIDE[i][1] == chunk_id) {
+      for (uint32_t c = class_id, depth = 0; c && c != 0xffffffffu && depth < 32; c = tmuf_class_parent(c), depth++)
+        if (TMUF_CHUNK_INFO_OVERRIDE[i][0] == c)
+          return TMUF_CHUNK_INFO_OVERRIDE[i][2];
+    }
+  size_t lo = 0, hi = sizeof TMUF_CHUNK_INFO / sizeof TMUF_CHUNK_INFO[0];
+  while (lo < hi) {
+    size_t mid = (lo + hi) / 2;
+    if (TMUF_CHUNK_INFO[mid][0] < chunk_id)
+      lo = mid + 1;
+    else
+      hi = mid;
+  }
+  if (lo < sizeof TMUF_CHUNK_INFO / sizeof TMUF_CHUNK_INFO[0] && TMUF_CHUNK_INFO[lo][0] == chunk_id)
+    return TMUF_CHUNK_INFO[lo][1];
+  return CHUNK_UNKNOWN;
+}
+
 /*
- * CMwNod::Archive, reading (TMUF 0x92430c): chunks until FACADE01. A chunk
- * the class does not know is followed by either "PIKS" + size (skipped) or
- * anything else, which ends the node with that word consumed.
+ * CMwNod::Archive, reading (TMUF 0x92430c). For each chunk id the class's
+ * GetChunkInfo decides: unknown, or skippable but not parsed -> the next
+ * word must be "PIKS" + size (skipped) or the node ends with that word
+ * consumed; skippable and parsed -> "PIKS" + size, then Chunk(); else
+ * Chunk(). No peeking: reading ahead would decrypt a pack page before the
+ * game has mixed node feedback into it.
  */
 void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t class_id, void *node) {
   uint32_t saved_class = g->node_class;
@@ -308,33 +343,44 @@ void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t clas
     if (g->error || raw == TMUF_GBX_FACADE)
       break;
     uint32_t id = tmuf_wrap_chunk_id(raw);
-    const tmuf_gbx_chunk *c = find_chunk(cls, id);
-    if (!c) {
+    uint32_t info = tmuf_chunk_info(class_id, id);
+    if (info == CHUNK_UNKNOWN || (!(info & 1) && (info & 0x10))) {
       if (tmuf_gbx_u32(g) != TMUF_GBX_SKIP)
         break;
       tmuf_gbx_skip(g, tmuf_gbx_u32(g));
       continue;
     }
-    int skippable = c->skippable != TMUF_GBX_MAYBE_SKIP ? c->skippable : tmuf_gbx_peek_u32(g) == TMUF_GBX_SKIP;
-    if (skippable) {
+    tmuf_gbx_chunk scratch;
+    const tmuf_gbx_chunk *c = find_chunk(cls, id, &scratch);
+    if (!c && (info & 0x10)) {
+      /* Skippable chunk nothing here needs: skip it by its size. */
       if (tmuf_gbx_u32(g) != TMUF_GBX_SKIP) {
         tmuf_gbx_fail(g, "%s: chunk %08x missing PIKS", cls->name, id);
         break;
       }
-      uint32_t size = tmuf_gbx_u32(g);
-      if (!c->read) {
-        tmuf_gbx_skip(g, size);
-        continue;
-      }
-      uint64_t start = g->pos;
-      c->read(g, node, id);
-      if (!g->error && g->pos - start != size)
-        tmuf_gbx_fail(g, "%s: chunk %08x read %llu of %u bytes", cls->name, id,
-                      (unsigned long long)(g->pos - start), size);
+      tmuf_gbx_skip(g, tmuf_gbx_u32(g));
       continue;
     }
+    if (!c) {
+      tmuf_gbx_fail(g, "%s (%08x): no reader for chunk %08x (info %x)", cls->name, class_id, id, info);
+      break;
+    }
+    uint32_t size = 0xffffffffu;
+    if (info & 0x10) {
+      if (tmuf_gbx_u32(g) != TMUF_GBX_SKIP) {
+        tmuf_gbx_fail(g, "%s: chunk %08x missing PIKS", cls->name, id);
+        break;
+      }
+      size = tmuf_gbx_u32(g);
+    }
+    uint64_t start = g->pos;
+    g->chunk_size = size;
     if (c->read)
       c->read(g, node, id);
+    g->chunk_size = 0xffffffffu;
+    if (!g->error && size != 0xffffffffu && g->pos - start != size)
+      tmuf_gbx_fail(g, "%s: chunk %08x read %llu of %u bytes", cls->name, id, (unsigned long long)(g->pos - start),
+                    size);
   }
   g->node_class = saved_class;
 }
