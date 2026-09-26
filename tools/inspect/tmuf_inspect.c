@@ -20,6 +20,8 @@
 
 #include "common/challenge.h"
 #include "common/scene.h"
+#include "common/assets.h"
+#include "common/vehicle_tuning.h"
 #include "common/gbx.h"
 #include "common/pack.h"
 #include "common/pack_classes.h"
@@ -540,7 +542,71 @@ static int cmd_scene(const char *packs, const char *in, const char *out) {
   return !ok;
 }
 
+/* Decodes the selected tuning of a CSceneVehicleTunings pack file. */
+static int cmd_tuning(const char *packs, const char *path) {
+  tmuf_packset set;
+  char err[256];
+  if (!tmuf_packset_open(&set, packs, err, sizeof err)) {
+    printf("packs: %s\n", err);
+    return 1;
+  }
+  tmuf_assets assets;
+  tmuf_assets_init(&assets, &set);
+  int rc = 1;
+  tmuf_asset *a = tmuf_assets_load_path(&assets, path);
+  if (!a) {
+    a = tmuf_assets_load(&assets, tmuf_packset_find_stored(&set, path));
+  }
+  if (a && a->class_id == 0x0a030000u) {
+    const tmuf_vehicle_tunings *ts = a->root;
+    printf("%u tunings, selected %u\n", ts->tunings.count, ts->selected);
+    for (uint32_t i = 0; getenv("TMUF_ALL_TUNINGS") && i < ts->tunings.count; i++) {
+      tmuf_asset *xa;
+      tmuf_gbx_node *xn = tmuf_assets_follow(&assets, a, ts->tunings.nodes[i], &xa);
+      static tmuf_vehicle_tuning x;
+      if (xn && xn->data && tmuf_vehicle_tuning_decode(&x, &assets, xa, xn->data, err, sizeof err) == 0)
+        printf("  [%u] %s mass %g imass %g box %g %g %g handling %u\n", i, ((tmuf_car_tuning *)xn->data)->name,
+               x.body_air_response.solid_physical_mass, x.body_air_response.solid_inertia_mass,
+               x.body_air_response.solid_inertia_box_size[0], x.body_air_response.solid_inertia_box_size[1],
+               x.body_air_response.solid_inertia_box_size[2], x.handling_model);
+      else
+        printf("  [%u] %s\n", i, err);
+    }
+    tmuf_asset *ta;
+    tmuf_gbx_node *tn = ts->selected < ts->tunings.count
+                            ? tmuf_assets_follow(&assets, a, ts->tunings.nodes[ts->selected], &ta)
+                            : NULL;
+    if (tn && tn->data) {
+      static tmuf_vehicle_tuning t;
+      if (tmuf_vehicle_tuning_decode(&t, &assets, ta, tn->data, err, sizeof err) == 0) {
+        printf("tuning %s: mass %g inertia mass %g box %g %g %g handling %u wheel force %u engine speed norm %g\n",
+               ((tmuf_car_tuning *)tn->data)->name, t.body_air_response.solid_physical_mass,
+               t.body_air_response.solid_inertia_mass, t.body_air_response.solid_inertia_box_size[0],
+               t.body_air_response.solid_inertia_box_size[1], t.body_air_response.solid_inertia_box_size[2],
+               t.handling_model, t.wheel_force_mode, t.engine_speed_norm);
+        printf("gears %u:", t.geared_drive.transmission.gear_count);
+        for (uint32_t i = 0; i < t.geared_drive.transmission.gear_count; i++)
+          printf(" %g", t.geared_drive.transmission.gear_speed_ratio[i]);
+        printf("\naccel curve keys %u, max side friction keys %u\n", t.curves.slip_response_accel_from_speed.count,
+               t.curves.max_side_friction_from_speed.count);
+        rc = 0;
+      } else {
+        printf("decode: %s\n", err);
+      }
+    } else {
+      printf("no selected tuning\n");
+    }
+  } else {
+    printf("cannot load %s\n", path);
+  }
+  tmuf_assets_free(&assets);
+  tmuf_packset_close(&set);
+  return rc;
+}
+
 int main(int argc, char **argv) {
+  if (argc >= 4 && strcmp(argv[1], "tuning") == 0)
+    return cmd_tuning(argv[2], argv[3]);
   if (argc >= 5 && strcmp(argv[1], "scene") == 0)
     return cmd_scene(argv[2], argv[3], argv[4]);
   if (argc >= 4 && strcmp(argv[1], "refs") == 0)
