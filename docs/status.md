@@ -43,3 +43,25 @@ Last updated 2026-09-26.
   mobils -> solids -> world-space collision surfaces.
 - Physics (reference backend): not started.
 - Optimized backend, public API, frametee integration.
+
+## Next: scene assembly (notes for picking up)
+
+- Reference to compare against: a dev-only tool writes a map's static collision triangles
+  (`u32 count`, 9 floats each). "fragmented" (corpus 7260080): 206581.
+- Flow (the game's Preload): collection + decoration size, automatic
+  base (ground zones), challenge construction (explicit blocks plus
+  automatic pylons/clips), per placement mobils -> CHmsItem solid -> tree ->
+  surfaces, decoration scene.
+- Block flags: variant = f & 0x3f, mobil selection = (f >> 6) & 0x3f (0x3f
+  automatic), 0x1000 ground family, 0x2000 creates mobil, 0x4000 custom
+  size, 0x8000 skin, 0x10000 secondary source. Mobil =
+  variants[ground ? 0 : 1][variant][selection].
+- Block size per family: max(unit offset) + 1. Unit chunk 0x03036000:
+  junction mask, helper, unused, offset x y z, count, source refs.
+- Mobil location: coord * (square size, height, size) (collection: Stadium
+  32/8), rotated by quarter turns about Y; West adds size.z*sq to x, South
+  adds size.x to x and size.z to z, East adds size.x to z.
+- Mesh triangle record (32 B): normal xyz, plane distance, 3 u32 indices,
+  u16 local material. Iso4 on disk: rows X Y Z then translation.
+- Block info files: <Env>\ConstructionBlockInfo\<Kind>\<Name>.TMED<Kind>.Gbx
+  (plain names); collection: Collections\<Env>.TMCollection.Gbx.
