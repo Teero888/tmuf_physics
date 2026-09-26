@@ -1,3 +1,3 @@
-#include <tmnf_physics/tmnf_physics.h>
+#include <tmuf_physics/tmuf_physics.h>
 
-tmnf_backend tmnf_backend_id(void) { return TMNF_BACKEND_REFERENCE; }
+tmuf_backend tmuf_backend_id(void) { return TMUF_BACKEND_REFERENCE; }

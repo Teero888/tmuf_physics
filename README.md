@@ -1,4 +1,4 @@
-# tmnf_physics
+# tmuf_physics
 
 TrackMania Nations/United Forever physics in C, aiming for bit-exact parity with
 the original game (TmForever 2.11.26). It covers all seven United environments
@@ -27,7 +27,7 @@ shared between threads; each simulation owns its own context.
 ## Build
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DTMNF_PHYSICS_BACKEND=reference
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DTMUF_PHYSICS_BACKEND=reference
 cmake --build build
 ctest --test-dir build
 ```

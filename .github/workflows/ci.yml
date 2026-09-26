@@ -19,9 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Configure (Linux)
         if: runner.os == 'Linux'
-        run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.toolchain.cc }} -DCMAKE_BUILD_TYPE=Release -DTMNF_PHYSICS_BACKEND=${{ matrix.backend }}
+        run: cmake -S . -B build -DCMAKE_C_COMPILER=${{ matrix.toolchain.cc }} -DCMAKE_BUILD_TYPE=Release -DTMUF_PHYSICS_BACKEND=${{ matrix.backend }}
       - name: Configure (Windows)
         if: runner.os == 'Windows'
-        run: cmake -S . -B build -A ${{ matrix.toolchain.arch }} -DTMNF_PHYSICS_BACKEND=${{ matrix.backend }}
+        run: cmake -S . -B build -A ${{ matrix.toolchain.arch }} -DTMUF_PHYSICS_BACKEND=${{ matrix.backend }}
       - run: cmake --build build --config Release
       - run: ctest --test-dir build -C Release --output-on-failure

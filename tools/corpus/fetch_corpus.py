@@ -19,7 +19,7 @@ import time
 import urllib.error
 import urllib.request
 
-USER_AGENT = "tmnf_physics-corpus/0.1 (+https://github.com/Teero888)"
+USER_AGENT = "tmuf_physics-corpus/0.1 (+https://github.com/Teero888)"
 DELAY = 1.0
 
 
