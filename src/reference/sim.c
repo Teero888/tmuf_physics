@@ -521,6 +521,16 @@ static void collision_response(ref_sim *s) {
     ct.accepted = 1;
     ct.replacement = mat3_tmul_vec(rot, repl);
     ct.speed = mat3_tmul_vec(rot, v3_neg(rel));
+    if (getenv("TMUF_SIM_TRACE")) {
+      int w = -1;
+      for (uint32_t k = 0; k < s->car.wheel_count; k++)
+        if (s->car.wheels[k].tree == ct.tree)
+          w = (int)k;
+      fprintf(stderr, "  CON t=%u w%d n %.6g %.6g %.6g p %.6g %.6g %.6g v %.6g %.6g %.6g r %.6g %.6g %.6g mat %u\n",
+              s->tick_ms, w, (double)ct.normal.x, (double)ct.normal.y, (double)ct.normal.z, (double)ct.point.x,
+              (double)ct.point.y, (double)ct.point.z, (double)ct.speed.x, (double)ct.speed.y, (double)ct.speed.z,
+              (double)ct.replacement.x, (double)ct.replacement.y, (double)ct.replacement.z, ct.peer_material);
+    }
     car_absorb_contact(&s->car, &ct);
     repl = local_to_world_side_a(rot, ct.replacement);
     dyna_add_replacement(d, repl);

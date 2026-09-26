@@ -11,6 +11,13 @@
  *   STEP:   u8 1, u32 step_index, u32 zone
  *   DYNA:   u8 2, u32 dyna, u8 state[dyna_state_size]
  *
+ * TMUF_ORACLE_TRACE=physics adds, in the same stream:
+ *   PRE:     u8 3, u32 dyna, u32 dt bits, u8 state[size]   CHmsDyna::DoPreCollisionDynamic
+ *            entry (current state after the forces of the substep)
+ *   CONTACT: u8 4, u32 car, u8 contact[0x60]               CSceneVehicleCar::AbsorbContact entry
+ *   POST:    u8 5, u32 dyna, u8 state[size]                CHmsDyna::DoPostCollisionDynamic
+ *            entry (after the collision response, before the replacement)
+ *
  * TMUF_ORACLE_TRACE=feedback additionally writes TMUF_ORACLE_OUT.trace, a
  * text log of pack stream feedback: "I stream source offset size" when a
  * crypted stream starts reading (offset: position in the source, i.e. the
@@ -73,6 +80,32 @@ static void on_copy_temp_to_state(void *dyna, const uint32_t *stack) {
   write_u32((uint32_t)(uintptr_t)dyna);
   fwrite((const uint8_t *)dyna + DYNA_TEMP_STATE_OFFSET, DYNA_STATE_SIZE, 1, g_out);
   g_dyna_records++;
+}
+
+/* CHmsDyna: pointer to the current state at +0x32c */
+#define DYNA_CURRENT_STATE_PTR 0x32c
+#define CONTACT_SIZE 0x60
+
+static void on_pre_collision(void *dyna, const uint32_t *stack) {
+  write_u8(3);
+  write_u32((uint32_t)(uintptr_t)dyna);
+  write_u32(stack[ST_ARG0]);
+  const uint8_t *state = *(const uint8_t *const *)((const uint8_t *)dyna + DYNA_CURRENT_STATE_PTR);
+  fwrite(state, DYNA_STATE_SIZE, 1, g_out);
+}
+
+static void on_post_collision(void *dyna, const uint32_t *stack) {
+  (void)stack;
+  write_u8(5);
+  write_u32((uint32_t)(uintptr_t)dyna);
+  const uint8_t *state = *(const uint8_t *const *)((const uint8_t *)dyna + DYNA_CURRENT_STATE_PTR);
+  fwrite(state, DYNA_STATE_SIZE, 1, g_out);
+}
+
+static void on_car_absorb_contact(void *car, const uint32_t *stack) {
+  write_u8(4);
+  write_u32((uint32_t)(uintptr_t)car);
+  fwrite((const void *)(uintptr_t)stack[ST_ARG0], CONTACT_SIZE, 1, g_out);
 }
 
 typedef uint32_t(__attribute__((thiscall)) * buffer_get_offset_fn)(void *self);
@@ -222,6 +255,16 @@ static hook g_hooks[] = {
      on_copy_temp_to_state},
 };
 
+static hook g_physics_hooks[] = {
+    {"CHmsDyna::DoPreCollisionDynamic", 0x00535bd0, {0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8}, 6, on_pre_collision},
+    {"CHmsDyna::DoPostCollisionDynamic",
+     0x005362d0,
+     {0x83, 0xec, 0x0c, 0x56, 0x8d, 0x44, 0x24, 0x04},
+     8,
+     on_post_collision},
+    {"CSceneVehicleCar::AbsorbContact", 0x007c2f10, {0x83, 0xec, 0x30, 0x56, 0x57}, 5, on_car_absorb_contact},
+};
+
 static hook g_plain_hooks[] = {
     {"CClassicBufferCrypted::BlowfishCBC_Read", 0x009113a0, {0x83, 0xec, 0x14, 0x53, 0x55, 0x56}, 6, on_crypted_read},
     {"CClassicBufferZlib::Read", 0x00910c60, {0x53, 0x8b, 0x59, 0x10, 0x56}, 5, on_zlib_read},
@@ -318,6 +361,10 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
     n = GetEnvironmentVariableA("TMUF_ORACLE_TRACE", trace, sizeof trace);
     int want_feedback = n > 0 && n < sizeof trace && strstr(trace, "feedback");
     int want_plain = n > 0 && n < sizeof trace && strstr(trace, "plain");
+    if (n > 0 && n < sizeof trace && strstr(trace, "physics"))
+      for (size_t i = 0; i < sizeof g_physics_hooks / sizeof g_physics_hooks[0]; i++)
+        if (!install(&g_physics_hooks[i]))
+          return FALSE;
     char extra[MAX_PATH + 16];
     if (want_feedback) {
       snprintf(extra, sizeof extra, "%s.trace", path);

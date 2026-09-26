@@ -110,7 +110,21 @@ static int diff_states(const float *a, const float *b, int verbose, int *first_f
 typedef struct opts {
   uint32_t max_ticks;
   int verbose, print, summary;
+  const char *ext; /* an external trace */
 } opts;
+
+/* trace records: u32 tick, u32 time, 19 floats */
+typedef struct ext_rec {
+  uint32_t tick, time;
+  float f[19];
+} ext_rec;
+
+static ext_rec *load_ext(const char *path, uint32_t *n) {
+  size_t size;
+  uint8_t *d = read_file(path, &size);
+  *n = d ? (uint32_t)(size / sizeof(ext_rec)) : 0;
+  return (ext_rec *)d;
+}
 
 static int run_one(const tmuf_packset *set, const char *replay_path, const char *oracle_path, const opts *op) {
   char err[1024] = "";
@@ -186,6 +200,8 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     printf("%s ERROR oracle\n", name);
     goto done;
   }
+  uint32_t ext_count = 0, ext_bad = 0;
+  ext_rec *ext = op->ext ? load_ext(op->ext, &ext_count) : NULL;
   uint32_t n = tick_count < op->max_ticks ? tick_count : op->max_ticks;
   /* the game restarts the race once it is finished: compare up to the
      recorded race time */
@@ -207,6 +223,22 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
              sim.car.wheels[2].contact ? sim.car.wheels[2].contact_material : -1,
              sim.car.wheels[3].contact ? sim.car.wheels[3].contact_material : -1, ticks[i].gate_a, ticks[i].gate_b,
              ticks[i].steering);
+    if (ext && !ext_bad) {
+      for (uint32_t k = 0; k < ext_count; k++)
+        if (ext[k].time == ticks[i].time_ms) {
+          /* quat x y z w, pos, lin, ang */
+          const float ours_ext[13] = {ours[1], ours[2], ours[3], ours[0], ours[13], ours[14], ours[15],
+                                     ours[16], ours[17], ours[18], ours[22], ours[23], ours[24]};
+          for (int j = 0; j < 13; j++)
+            if (memcmp(&ours_ext[j], &ext[k].f[j], 4) != 0) {
+              printf("The trace differs first at tick %u t=%u: field %d ours %.9g ext %.9g\n", i, ticks[i].time_ms, j,
+                     (double)ours_ext[j], (double)ext[k].f[j]);
+              ext_bad = 1;
+              break;
+            }
+          break;
+        }
+    }
     if (!o.count || diverged || ticks[i].time_ms > end_ms)
       continue;
     uint32_t k = i + 1;
@@ -240,6 +272,7 @@ done:
     tmuf_scene_free(&scene);
   free(ticks);
   free(o.states);
+  free(ext);
   free(data);
   tmuf_arena_free(&arena);
   fflush(stdout);
@@ -252,7 +285,7 @@ int main(int argc, char **argv) {
                     "       tmuf_sim PACKS --batch LIST\n");
     return 2;
   }
-  opts op = {UINT32_MAX, 0, 0, 0};
+  opts op = {UINT32_MAX, 0, 0, 0, NULL};
   const char *replay = NULL, *oracle_path = NULL, *batch = NULL;
   for (int i = 2; i < argc; i++) {
     if (strcmp(argv[i], "--ticks") == 0 && i + 1 < argc)
@@ -261,6 +294,8 @@ int main(int argc, char **argv) {
       op.verbose = 1;
     else if (strcmp(argv[i], "--print") == 0)
       op.print = 1;
+    else if (strcmp(argv[i], "--ext") == 0 && i + 1 < argc)
+      op.ext = argv[++i];
     else if (strcmp(argv[i], "--batch") == 0 && i + 1 < argc)
       batch = argv[++i];
     else if (!replay)
