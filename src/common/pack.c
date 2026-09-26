@@ -5,6 +5,8 @@
 #include <string.h>
 
 #include "common/compress.h"
+#include "common/gbx.h"
+#include "common/zlib/zlib.h"
 
 #define PACKLIST_HEADER 10u
 #define PACKLIST_SIGNATURE 16u
@@ -424,4 +426,115 @@ int tmuf_pack_extract(const tmuf_pack *pack, uint32_t index, uint8_t **out, size
   *out = plain;
   *out_size = f->uncompressed_size;
   return 1;
+}
+
+/* ---- pack stream (the game's crypted + zlib buffer stack) ---- */
+
+static int payload_read(tmuf_pack_stream *s, void *out, size_t n) {
+  if (s->encrypted)
+    return tmuf_crypt_read(&s->crypt, out, n);
+  if (n > s->plain_size - s->plain_pos)
+    return 0;
+  memcpy(out, s->plain + s->plain_pos, n);
+  s->plain_pos += n;
+  return 1;
+}
+
+/* CClassicBufferZlib read loop (TMUF 0x910a60). */
+static int zlib_layer_read(tmuf_pack_stream *s, uint8_t *out, size_t n) {
+  z_stream *z = s->z;
+  while (n > 0) {
+    if (s->out_consumed >= s->out_produced) {
+      if (s->z_eof)
+        return 0;
+      z->next_out = s->out;
+      z->avail_out = sizeof s->out;
+      s->out_consumed = 0;
+      while (z->avail_out > 0) {
+        if (z->avail_in == 0) {
+          if (s->packed_left == 0) {
+            s->z_eof = 1;
+            break;
+          }
+          size_t k = s->packed_left < sizeof s->in ? s->packed_left : sizeof s->in;
+          if (!payload_read(s, s->in, k)) {
+            s->z_error = s->z_eof = 1;
+            break;
+          }
+          s->packed_left -= k;
+          z->next_in = s->in;
+          z->avail_in = (uInt)k;
+        }
+        int r = inflate(z, Z_SYNC_FLUSH);
+        if (r != Z_OK) {
+          s->z_eof = 1;
+          s->z_error = r != Z_STREAM_END;
+          break;
+        }
+      }
+      s->out_produced = sizeof s->out - z->avail_out;
+      if (s->z_error || s->out_produced == 0)
+        return 0;
+    }
+    size_t k = s->out_produced - s->out_consumed;
+    if (k > n)
+      k = n;
+    memcpy(out, s->out + s->out_consumed, k);
+    s->out_consumed += k;
+    out += k;
+    n -= k;
+  }
+  return 1;
+}
+
+static int pack_stream_read(tmuf_source *src, void *out, size_t n) {
+  tmuf_pack_stream *s = (tmuf_pack_stream *)src;
+  return s->compressed ? zlib_layer_read(s, out, n) : payload_read(s, out, n);
+}
+
+static void pack_stream_mix(tmuf_source *src, const uint8_t *bytes, size_t n) {
+  tmuf_pack_stream *s = (tmuf_pack_stream *)src;
+  if (s->encrypted)
+    tmuf_crypt_mix(&s->crypt, bytes, n);
+}
+
+int tmuf_pack_stream_open(tmuf_pack_stream *s, const tmuf_pack *pack, uint32_t index) {
+  memset(s, 0, sizeof *s);
+  if (index >= pack->file_count)
+    return 0;
+  const tmuf_pack_file *f = &pack->files[index];
+  s->base.read = pack_stream_read;
+  s->base.mix = pack_stream_mix;
+  s->encrypted = tmuf_pack_file_encrypted(f);
+  s->compressed = tmuf_pack_file_compressed(f);
+  uint32_t packed = s->compressed ? f->compressed_size : f->uncompressed_size;
+  size_t offset = (size_t)pack->data_start + f->offset;
+  if (offset > pack->size || packed > pack->size - offset)
+    return 0;
+  if (s->encrypted) {
+    size_t enc = ((size_t)packed + 7u) & ~(size_t)7u;
+    if (8 + enc > pack->size - offset || !tmuf_crypt_init(&s->crypt, &pack->bf, pack->data + offset, 8 + enc, 8))
+      return 0;
+  } else {
+    s->plain = pack->data + offset;
+    s->plain_size = packed;
+  }
+  s->packed_left = packed;
+  if (s->compressed) {
+    z_stream *z = calloc(1, sizeof *z);
+    if (!z || inflateInit(z) != Z_OK) {
+      free(z);
+      return 0;
+    }
+    s->z = z;
+  }
+  return 1;
+}
+
+void tmuf_pack_stream_close(tmuf_pack_stream *s) {
+  if (s->z) {
+    inflateEnd(s->z);
+    free(s->z);
+  }
+  s->z = NULL;
 }

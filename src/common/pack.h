@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "common/crypto.h"
+#include "common/gbx.h"
 
 #define TMUF_PACKLIST_MAX 64
 
@@ -94,6 +95,29 @@ static inline int tmuf_pack_file_encrypted(const tmuf_pack_file *f) {
   return !(f->flags & (TMUF_PACK_FLAG_PUBLIC | TMUF_PACK_FLAG_NO_CRYPT));
 }
 static inline int tmuf_pack_file_compressed(const tmuf_pack_file *f) { return (f->flags & TMUF_PACK_FLAG_COMPRESSION) != 0; }
+
+/*
+ * A pack file as the game reads it: CClassicBufferCrypted (256-byte pages
+ * with feedback) under CClassicBufferZlib (0x100-byte input reads, 0x400
+ * output buffer, inflate(Z_SYNC_FLUSH), zlib 1.2.3). base.mix feeds the
+ * crypted layer, so node feedback lands exactly where the game's does.
+ */
+typedef struct tmuf_pack_stream {
+  tmuf_source base;
+  int encrypted, compressed;
+  tmuf_crypt crypt;
+  const uint8_t *plain; /* unencrypted payload */
+  size_t plain_size, plain_pos;
+  size_t packed_left; /* payload bytes not yet read by the zlib layer */
+  void *z;            /* z_stream */
+  uint8_t in[0x100];
+  uint8_t out[0x400];
+  size_t out_produced, out_consumed;
+  int z_eof, z_error;
+} tmuf_pack_stream;
+
+int tmuf_pack_stream_open(tmuf_pack_stream *s, const tmuf_pack *pack, uint32_t index);
+void tmuf_pack_stream_close(tmuf_pack_stream *s);
 
 /* Decrypt and inflate a file without archive feedback. Works for every file
    whose content does not depend on parser feedback. *out is malloc'd. */

@@ -39,9 +39,13 @@ typedef struct tmuf_gbx_class tmuf_gbx_class;
 
 typedef void (*tmuf_chunk_fn)(tmuf_gbx *g, void *node, uint32_t chunk_id);
 
+/* tmuf_gbx_chunk.skippable: 0 never, 1 always ("PIKS" + u32 size + data),
+   TMUF_GBX_MAYBE_SKIP: skippable if "PIKS" follows. */
+#define TMUF_GBX_MAYBE_SKIP 2
+
 typedef struct tmuf_gbx_chunk {
   uint32_t id;       /* current chunk id (class id wrapped) */
-  int skippable;     /* stored as "PIKS" + u32 size + data */
+  int skippable;
   tmuf_chunk_fn read; /* NULL: skip; only valid for skippable chunks */
 } tmuf_gbx_chunk;
 
@@ -77,6 +81,7 @@ struct tmuf_gbx {
   int feedback; /* mix node parent class ids into the source, as the game does */
 
   int error;
+  uint32_t node_class; /* actual class id of the node being read */
   int stop; /* set by a chunk reader to end the current node early */
   char message[192];
   uint64_t pos; /* bytes consumed from src */
@@ -130,8 +135,13 @@ const char *tmuf_gbx_string(tmuf_gbx *g);
 const char *tmuf_gbx_id(tmuf_gbx *g, uint32_t *number);
 /* Node reference; parses inline nodes on first sight. NULL for null refs. */
 tmuf_gbx_node *tmuf_gbx_noderef(tmuf_gbx *g);
-/* Parse a node's chunk stream until FACADE01. */
+/* Parse a node's chunk stream until FACADE01 (with the node feedback of
+   CMwNod::Archive). _as gives the node's actual class when it is read with
+   an ancestor's reader. */
 void tmuf_gbx_node_body(tmuf_gbx *g, const tmuf_gbx_class *cls, void *node);
+void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t class_id, void *node);
+/* Mix a value into the source feedback (class-specific archive feedback). */
+void tmuf_gbx_mix_u32(tmuf_gbx *g, uint32_t v);
 
 uint32_t tmuf_wrap_class_id(uint32_t archive_id);
 uint32_t tmuf_unwrap_class_id(uint32_t current_id);

@@ -12,8 +12,9 @@
  *   DYNA:   u8 2, u32 dyna, u8 state[dyna_state_size]
  *
  * TMUF_ORACLE_TRACE=feedback additionally writes TMUF_ORACLE_OUT.trace, a
- * text log of pack stream feedback: "I stream" when a crypted stream starts
- * reading, "F stream caller hexbytes" for every value the archive code mixes
+ * text log of pack stream feedback: "I stream source offset size" when a
+ * crypted stream starts reading (offset: position in the source, i.e. the
+ * file inside the .pak), "F stream caller hexbytes" for every value the archive code mixes
  * into it (CClassicBufferCrypted::Write on a reading stream), followed by
  * likely return addresses further up the stack.
  */
@@ -66,9 +67,20 @@ static void on_copy_temp_to_state(void *dyna, const uint32_t *stack) {
   g_dyna_records++;
 }
 
+typedef uint32_t(__attribute__((thiscall)) * buffer_get_offset_fn)(void *self);
+
+/* CClassicBufferCrypted::Blowfish_InitForReading(CClassicBuffer *source, key,
+   size): the IV is read at the source's current offset, i.e. the file's
+   position inside the .pak. */
 static void on_crypted_init_read(void *stream, const uint32_t *stack) {
-  (void)stack;
-  fprintf(g_trace, "I %08x\n", (unsigned)(uintptr_t)stream);
+  void *source = (void *)(uintptr_t)stack[ST_ARG0];
+  uint32_t offset = 0xffffffffu;
+  if (source) {
+    buffer_get_offset_fn get_offset = (buffer_get_offset_fn)(*(void ***)source)[0x14 / 4];
+    offset = get_offset(source);
+  }
+  fprintf(g_trace, "I %08x %08x %08x %08x\n", (unsigned)(uintptr_t)stream, (unsigned)(uintptr_t)source,
+          (unsigned)offset, (unsigned)stack[ST_ARG0 + 2]);
 }
 
 /* CClassicBufferCrypted::Write(const void *data, unsigned n).

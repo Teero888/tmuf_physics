@@ -283,25 +283,36 @@ static void node_feedback(tmuf_gbx *g, uint32_t class_id) {
   g->src->mix(g->src, b, 4);
 }
 
+void tmuf_gbx_mix_u32(tmuf_gbx *g, uint32_t v) {
+  if (!g->feedback || !g->src->mix || g->error)
+    return;
+  uint8_t b[4] = {(uint8_t)v, (uint8_t)(v >> 8), (uint8_t)(v >> 16), (uint8_t)(v >> 24)};
+  g->src->mix(g->src, b, 4);
+}
+
 void tmuf_gbx_node_body(tmuf_gbx *g, const tmuf_gbx_class *cls, void *node) {
-  node_feedback(g, cls->id);
+  tmuf_gbx_node_body_as(g, cls, cls->id, node);
+}
+
+void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t class_id, void *node) {
+  uint32_t saved_class = g->node_class;
+  g->node_class = class_id;
+  node_feedback(g, class_id);
   for (int guard = 0; guard < 100000 && !g->error && !g->stop; guard++) {
     uint32_t raw = tmuf_gbx_u32(g);
-    if (g->error)
-      return;
-    if (raw == TMUF_GBX_FACADE)
-      return;
+    if (g->error || raw == TMUF_GBX_FACADE)
+      break;
     uint32_t id = tmuf_wrap_chunk_id(raw);
     const tmuf_gbx_chunk *c = find_chunk(cls, id);
-    int skippable = c ? c->skippable : tmuf_gbx_peek_u32(g) == TMUF_GBX_SKIP;
+    int skippable = c && c->skippable != TMUF_GBX_MAYBE_SKIP ? c->skippable : tmuf_gbx_peek_u32(g) == TMUF_GBX_SKIP;
     if (!c && !skippable) {
-      tmuf_gbx_fail(g, "%s: unknown chunk %08x", cls->name, id);
-      return;
+      tmuf_gbx_fail(g, "%s (%08x): unknown chunk %08x", cls->name, class_id, id);
+      break;
     }
     if (skippable) {
       if (tmuf_gbx_u32(g) != TMUF_GBX_SKIP) {
         tmuf_gbx_fail(g, "%s: chunk %08x missing PIKS", cls->name, id);
-        return;
+        break;
       }
       uint32_t size = tmuf_gbx_u32(g);
       if (!c || !c->read) {
@@ -315,8 +326,10 @@ void tmuf_gbx_node_body(tmuf_gbx *g, const tmuf_gbx_class *cls, void *node) {
                       (unsigned long long)(g->pos - start), size);
       continue;
     }
-    c->read(g, node, id);
+    if (c->read)
+      c->read(g, node, id);
   }
+  g->node_class = saved_class;
 }
 
 static tmuf_gbx_node *new_inline_node(tmuf_gbx *g, uint32_t index, uint32_t class_id) {
@@ -333,7 +346,7 @@ static tmuf_gbx_node *new_inline_node(tmuf_gbx *g, uint32_t index, uint32_t clas
     tmuf_gbx_fail(g, "out of memory");
     return NULL;
   }
-  tmuf_gbx_node_body(g, cls, n->data);
+  tmuf_gbx_node_body_as(g, cls, class_id, n->data);
   return n;
 }
 
@@ -499,6 +512,6 @@ void *tmuf_gbx_read_root(tmuf_gbx *g) {
     tmuf_gbx_fail(g, "out of memory");
     return NULL;
   }
-  tmuf_gbx_node_body(g, cls, node);
+  tmuf_gbx_node_body_as(g, cls, g->class_id, node);
   return g->error ? NULL : node;
 }

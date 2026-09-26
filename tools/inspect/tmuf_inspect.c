@@ -5,13 +5,21 @@
  *   tmuf_inspect cat PACKS_DIR PACK PATH OUT extract one file
  *   tmuf_inspect replays FILE...            parse replays, summarise
  *   tmuf_inspect body GBX OUT               write the (decompressed) body
+ *   tmuf_inspect map REPLAY OUT             write the embedded challenge GBX
+ *   tmuf_inspect gbx PACKS_DIR PACK PATH    parse a pack file with feedback,
+ *                                           print header info and mixed values
+ *   tmuf_inspect verify PACKS_DIR LIST      LIST lines: "pack<TAB>path<TAB>hex..."
+ *                                           (expected mixes from an oracle
+ *                                           trace); parse and compare each
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/challenge.h"
 #include "common/gbx.h"
 #include "common/pack.h"
+#include "common/pack_classes.h"
 #include "common/replay.h"
 
 static uint8_t *read_file(const char *path, size_t *size) {
@@ -123,7 +131,23 @@ static int cmd_replays(int argc, char **argv) {
       printf("FAIL %s: %s\n", argv[i], err);
       failed++;
     } else {
+      tmuf_challenge c;
+      if (!tmuf_challenge_parse(r.challenge, r.challenge_size, &arena, &c, err, sizeof err)) {
+        printf("FAIL %s: challenge: %s\n", argv[i], err);
+        failed++;
+        tmuf_arena_free(&arena);
+        free(data);
+        continue;
+      }
       ok++;
+      if (verbose) {
+        printf("map \"%s\" %s/%s/%s, decoration %s/%s/%s, size %ux%ux%u, %u blocks (v%u), vehicle %s, laps %u%s\n",
+               c.name, c.map[0], c.map[1], c.map[2], c.decoration[0], c.decoration[1], c.decoration[2], c.size[0],
+               c.size[1], c.size[2], c.block_count, c.block_version, c.vehicle[0], c.laps, c.lap_race ? " (lap race)" : "");
+        for (uint32_t b = 0; b < c.block_count && b < 6; b++)
+          printf("  %-28s dir %u at %u,%u,%u flags %08x\n", c.blocks[b].name, c.blocks[b].dir, c.blocks[b].x,
+                 c.blocks[b].y, c.blocks[b].z, c.blocks[b].flags);
+      }
       const tmuf_ghost *gh = r.ghosts[0];
       if (verbose) {
         printf("challenge %u bytes, %u ghost(s)\n", r.challenge_size, r.ghost_count);
@@ -176,7 +200,202 @@ static int cmd_body(const char *in, const char *out) {
   return !ok;
 }
 
+static int cmd_map(const char *in, const char *out) {
+  size_t size;
+  uint8_t *data = read_file(in, &size);
+  if (!data)
+    return 1;
+  tmuf_arena arena;
+  tmuf_arena_init(&arena);
+  tmuf_replay_file r;
+  char err[256];
+  int ok = tmuf_replay_parse(data, size, &arena, &r, err, sizeof err);
+  if (ok) {
+    FILE *f = fopen(out, "wb");
+    fwrite(r.challenge, 1, r.challenge_size, f);
+    fclose(f);
+  } else {
+    printf("%s\n", err);
+  }
+  tmuf_arena_free(&arena);
+  free(data);
+  return !ok;
+}
+
+/* Records every value mixed into the stream, then forwards it. */
+typedef struct logging_source {
+  tmuf_source base;
+  tmuf_source *inner;
+  uint32_t mixes[65536];
+  size_t mix_count;
+  uint64_t *pos;
+  uint64_t mix_pos[65536];
+} logging_source;
+
+static int log_read(tmuf_source *s, void *out, size_t n) {
+  logging_source *l = (logging_source *)s;
+  return l->inner->read(l->inner, out, n);
+}
+
+static void log_mix(tmuf_source *s, const uint8_t *b, size_t n) {
+  logging_source *l = (logging_source *)s;
+  if (n == 4 && l->mix_count < 65536) {
+    l->mix_pos[l->mix_count] = *l->pos;
+    l->mixes[l->mix_count++] = (uint32_t)b[0] | (uint32_t)b[1] << 8 | (uint32_t)b[2] << 16 | (uint32_t)b[3] << 24;
+  }
+  l->inner->mix(l->inner, b, n);
+}
+
+static int cmd_gbx(const char *dir, const char *pack_name, const char *path) {
+  tmuf_packlist list;
+  tmuf_pack pack;
+  if (!load_packlist(dir, &list) || !open_pack(dir, &list, pack_name, &pack)) {
+    fprintf(stderr, "cannot open pack\n");
+    return 1;
+  }
+  long idx = tmuf_pack_find(&pack, path);
+  tmuf_pack_stream ps;
+  if (idx < 0 || !tmuf_pack_stream_open(&ps, &pack, (uint32_t)idx)) {
+    fprintf(stderr, "cannot open %s\n", path);
+    return 1;
+  }
+  static logging_source ls;
+  memset(&ls, 0, sizeof ls);
+  ls.base.read = log_read;
+  ls.base.mix = log_mix;
+  ls.inner = &ps.base;
+  tmuf_arena arena;
+  tmuf_arena_init(&arena);
+  tmuf_gbx g;
+  tmuf_gbx_init(&g, &ls.base, &arena, tmuf_pack_classes, tmuf_pack_class_count);
+  g.feedback = 1;
+  ls.pos = &g.pos;
+  int ok = tmuf_gbx_read_header(&g);
+  printf("class %08x (%s), format %.4s, %u nodes, %u header chunks\n", g.class_id, tmuf_class_name(g.class_id),
+         (const char *)g.format, g.node_count, g.header_chunk_count);
+  for (uint32_t i = 1; i <= g.node_count; i++)
+    if (g.nodes[i].external)
+      printf("  ext node %u: %s\n", i, g.nodes[i].file ? g.nodes[i].file : "(resource)");
+  if (ok)
+    tmuf_gbx_read_root(&g);
+  printf("%s after %llu bytes\n", g.error ? g.message : "parsed", (unsigned long long)g.pos);
+  printf("mixes:");
+  for (size_t i = 0; i < ls.mix_count; i++)
+    printf(" %02x%02x%02x%02x@%llu", ls.mixes[i] & 0xff, (ls.mixes[i] >> 8) & 0xff, (ls.mixes[i] >> 16) & 0xff,
+           ls.mixes[i] >> 24, (unsigned long long)ls.mix_pos[i]);
+  printf("\n");
+  tmuf_arena_free(&arena);
+  tmuf_pack_stream_close(&ps);
+  tmuf_pack_close(&pack);
+  return g.error;
+}
+
+/* Parse one pack file; returns 1 if it parsed and the mixes match. */
+static int verify_file(const tmuf_pack *pack, const char *path, const char *expected, char *why, size_t why_size) {
+  long idx = tmuf_pack_find(pack, path);
+  tmuf_pack_stream ps;
+  if (idx < 0 || !tmuf_pack_stream_open(&ps, pack, (uint32_t)idx)) {
+    snprintf(why, why_size, "cannot open");
+    return 0;
+  }
+  static logging_source ls;
+  memset(&ls, 0, sizeof ls);
+  ls.base.read = log_read;
+  ls.base.mix = log_mix;
+  ls.inner = &ps.base;
+  tmuf_arena arena;
+  tmuf_arena_init(&arena);
+  tmuf_gbx g;
+  tmuf_gbx_init(&g, &ls.base, &arena, tmuf_pack_classes, tmuf_pack_class_count);
+  g.feedback = 1;
+  ls.pos = &g.pos;
+  if (tmuf_gbx_read_header(&g))
+    tmuf_gbx_read_root(&g);
+  /* Compare the mixes made so far, even if parsing failed. */
+  size_t i = 0;
+  const char *e = expected;
+  int mismatch = -1;
+  while (*e) {
+    while (*e == ' ')
+      e++;
+    if (!*e)
+      break;
+    unsigned v = (unsigned)strtoul(e, NULL, 16);
+    uint32_t want = (v >> 24) | ((v >> 8) & 0xff00u) | ((v << 8) & 0xff0000u) | (v << 24);
+    if (i >= ls.mix_count) {
+      if (!g.error && mismatch < 0)
+        mismatch = (int)i;
+      break;
+    }
+    if (ls.mixes[i] != want && mismatch < 0)
+      mismatch = (int)i;
+    i++;
+    while (*e && *e != ' ')
+      e++;
+  }
+  if (!g.error && i < ls.mix_count && mismatch < 0)
+    mismatch = (int)i;
+  int ok = !g.error && mismatch < 0;
+  if (g.error)
+    snprintf(why, why_size, "%s (mixes ok up to %zu)", g.message, mismatch < 0 ? i : (size_t)mismatch);
+  else if (mismatch >= 0)
+    snprintf(why, why_size, "mix %d differs (have %zu, pos %llu)", mismatch, ls.mix_count,
+             mismatch < (int)ls.mix_count ? (unsigned long long)ls.mix_pos[mismatch] : 0ull);
+  tmuf_arena_free(&arena);
+  tmuf_pack_stream_close(&ps);
+  return ok;
+}
+
+static int cmd_verify(const char *dir, const char *list_path) {
+  tmuf_packlist list;
+  if (!load_packlist(dir, &list))
+    return 1;
+  FILE *f = fopen(list_path, "r");
+  if (!f)
+    return 1;
+  static char line[1 << 20];
+  tmuf_pack pack;
+  char current[64] = "";
+  int have_pack = 0, ok = 0, failed = 0;
+  while (fgets(line, sizeof line, f)) {
+    line[strcspn(line, "\n")] = 0;
+    char *pack_name = line, *path = strchr(line, '\t');
+    if (!path)
+      continue;
+    *path++ = 0;
+    char *mixes = strchr(path, '\t');
+    if (!mixes)
+      mixes = path + strlen(path);
+    else
+      *mixes++ = 0;
+    if (strcmp(pack_name, current) != 0) {
+      if (have_pack)
+        tmuf_pack_close(&pack);
+      have_pack = open_pack(dir, &list, pack_name, &pack);
+      snprintf(current, sizeof current, "%s", pack_name);
+    }
+    char why[256] = "";
+    if (have_pack && verify_file(&pack, path, mixes, why, sizeof why)) {
+      ok++;
+    } else {
+      failed++;
+      printf("FAIL %s %s: %s\n", pack_name, path, have_pack ? why : "no pack");
+    }
+  }
+  if (have_pack)
+    tmuf_pack_close(&pack);
+  fclose(f);
+  printf("verify: %d ok, %d failed\n", ok, failed);
+  return failed != 0;
+}
+
 int main(int argc, char **argv) {
+  if (argc >= 4 && strcmp(argv[1], "verify") == 0)
+    return cmd_verify(argv[2], argv[3]);
+  if (argc >= 5 && strcmp(argv[1], "gbx") == 0)
+    return cmd_gbx(argv[2], argv[3], argv[4]);
+  if (argc >= 4 && strcmp(argv[1], "map") == 0)
+    return cmd_map(argv[2], argv[3]);
   if (argc >= 4 && strcmp(argv[1], "body") == 0)
     return cmd_body(argv[2], argv[3]);
   if (argc >= 2 && strcmp(argv[1], "replays") == 0)
@@ -204,8 +423,9 @@ int main(int argc, char **argv) {
     for (uint32_t i = 0; i < pack.file_count; i++) {
       const tmuf_pack_file *f = &pack.files[i];
       tmuf_pack_file_path(&pack, i, path, sizeof path);
-      printf("%08x %c%c %9u %s\n", f->class_id, tmuf_pack_file_encrypted(f) ? 'E' : '-',
-             tmuf_pack_file_compressed(f) ? 'Z' : '-', f->uncompressed_size, path);
+      printf("%08x %c%c %9u %9u %9u %s\n", f->class_id, tmuf_pack_file_encrypted(f) ? 'E' : '-',
+             tmuf_pack_file_compressed(f) ? 'Z' : '-', f->uncompressed_size, f->compressed_size,
+             pack.data_start + f->offset, path);
     }
   } else if (strcmp(argv[1], "cat") == 0 && argc >= 6) {
     long idx = tmuf_pack_find(&pack, argv[4]);

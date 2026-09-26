@@ -45,7 +45,12 @@ for name, locs in load_publics(sys.argv[2]).items():
     if ecx is None or len(pushes) < 4:
         continue
     class_id, parent, name_ptr = pushes[-1], pushes[-2], pushes[-3]
-    infos[ecx] = (class_id, parent, cstring(name_ptr) if name_ptr else "")
+    text = cstring(name_ptr) if name_ptr else ""
+    if not text:
+        # Some classes (vehicle tunings, ...) have their name string blanked;
+        # the PDB symbol still names them.
+        text = name.rsplit("m_MwClassInfo_", 1)[1].rstrip("'")
+    infos[ecx] = (class_id, parent, text)
 
 rows = []
 for addr, (cid, parent, name) in infos.items():
