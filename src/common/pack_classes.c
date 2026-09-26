@@ -1479,10 +1479,92 @@ static const tmuf_gbx_chunk ZONE_CHUNKS[] = {
 static const tmuf_gbx_class ZONE = {0x0305c000, "CGameCtnZone", sizeof(tmuf_zone), ZONE_CHUNKS, COUNT(ZONE_CHUNKS),
                                     NULL};
 
+/* ---- CSceneObjectLink (0x0a014000) ---- */
+
+/* CSceneMobil::ArchiveOwnDataOld (reading), for a model instance. */
+static void mobil_own_data(tmuf_gbx *g, tmuf_object_link *l) {
+  uint32_t version = tmuf_gbx_u32(g);
+  if (version == 0) {
+    l->instance_name = id_text(g);
+    return;
+  }
+  if (version == 2) {
+    /* (class, size) pairs until -1; CSceneMobil does not consume the data. */
+    for (int guard = 0; guard < 4096 && !g->error; guard++) {
+      if (tmuf_wrap_class_id(tmuf_gbx_u32(g)) == 0xffffffffu)
+        break;
+      tmuf_gbx_u32(g);
+    }
+  } else if (version != 1) {
+    return;
+  }
+  l->instance_name = id_text(g);
+  read_node_list(g, &l->instance_children);
+}
+
+static void link_read_iso_active(tmuf_gbx *g, tmuf_object_link *l) {
+  read_floats(g, l->iso, 12);
+  l->active = tmuf_gbx_bool(g);
+}
+
+static void c0a014000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_object_link *l = node;
+  l->object = tmuf_gbx_noderef(g);
+  link_read_iso_active(g, l);
+}
+
+/* CSceneObjectLink::Chunk 0x0a014001: a mobil goes through
+   CSceneMobil::DoMobilPtr (model reference, then the new instance's own
+   data), anything else is a plain reference. */
+static void c0a014001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_object_link *l = node;
+  l->is_mobil = tmuf_gbx_bool(g);
+  l->object = tmuf_gbx_noderef(g);
+  if (l->is_mobil && l->object)
+    mobil_own_data(g, l);
+  link_read_iso_active(g, l);
+}
+
+static void c0a014002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_object_link *l = node;
+  l->tree_id = id_text(g);
+  tmuf_gbx_bool(g);
+  tmuf_gbx_bool(g);
+}
+
+static void c0a014003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_object_link *)node)->tree_id = id_text(g);
+}
+
+static void c0a00f001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_object_link *l = node;
+  tmuf_gbx_skip(g, 24);
+  l->active = tmuf_gbx_bool(g);
+}
+
+static void c0a00f002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_object_link *)node)->active = tmuf_gbx_bool(g);
+}
+
+static const tmuf_gbx_chunk OBJECT_LINK_CHUNKS[] = {
+    READ(0x0a00f000, c0a014000), READ(0x0a00f001, c0a00f001), READ(0x0a00f002, c0a00f002),
+    READ(0x0a014000, c0a014000), READ(0x0a014001, c0a014001), READ(0x0a014002, c0a014002),
+    READ(0x0a014003, c0a014003),
+};
+static const tmuf_gbx_class OBJECT_LINK = {0x0a014000, "CSceneObjectLink", sizeof(tmuf_object_link),
+                                           OBJECT_LINK_CHUNKS, COUNT(OBJECT_LINK_CHUNKS), NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
+    &OBJECT_LINK,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

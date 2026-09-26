@@ -188,6 +188,16 @@ typedef struct tmuf_zone {
   const char *frontier_parent, *frontier_child;
 } tmuf_zone;
 
+typedef struct tmuf_object_link {
+  int is_mobil;
+  tmuf_gbx_node *object; /* the linked object, or the mobil's model */
+  const char *instance_name;
+  tmuf_node_list instance_children;
+  float iso[12];
+  int active;
+  const char *tree_id;
+} tmuf_object_link;
+
 extern const tmuf_gbx_class *const tmuf_pack_classes[];
 extern const size_t tmuf_pack_class_count;
 

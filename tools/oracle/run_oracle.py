@@ -73,6 +73,9 @@ class Worker:
         subprocess.run(["wineserver", "-k"], env=self.env(), stderr=subprocess.DEVNULL)
         if self.xvfb:
             self.xvfb.terminate()
+        if not self.args.keep_prefixes:
+            # Each prefix copy is ~700 MB.
+            shutil.rmtree(self.root, ignore_errors=True)
 
     def pixel(self, fx, fy):
         x, y = int(fx * WIDTH), int(fy * HEIGHT)
@@ -173,6 +176,7 @@ def main():
     ap.add_argument("--build", default=BUILD, help="directory with launcher.exe and dumper.dll")
     ap.add_argument("--trace", default="", help="TMUF_ORACLE_TRACE for the dumper, e.g. feedback")
     ap.add_argument("--display-base", type=int, default=90, help="worker i uses X display :BASE+i")
+    ap.add_argument("--keep-prefixes", action="store_true", help="keep worker Wine prefixes after the run")
     ap.add_argument("replays", nargs="+")
     args = ap.parse_args()
     # Wine runs from the game directory; make every path absolute.
