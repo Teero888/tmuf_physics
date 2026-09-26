@@ -87,6 +87,29 @@ void tmuf_gbx_init(tmuf_gbx *g, tmuf_source *src, tmuf_arena *arena, const tmuf_
   g->chunk_size = 0xffffffffu;
 }
 
+void **tmuf_gbx_internal_ref(tmuf_gbx *g, uint32_t index) {
+  if (index >= 0x100000u) {
+    tmuf_gbx_fail(g, "internal reference %u", index);
+    return NULL;
+  }
+  if (index >= g->internal_ref_cap) {
+    uint32_t cap = g->internal_ref_cap ? g->internal_ref_cap : 16;
+    while (cap <= index)
+      cap *= 2;
+    void **refs = TMUF_ARENA_ARRAY(g->arena, void *, cap);
+    if (!refs) {
+      tmuf_gbx_fail(g, "out of memory");
+      return NULL;
+    }
+    memset(refs, 0, sizeof *refs * cap);
+    if (g->internal_ref_cap)
+      memcpy(refs, g->internal_refs, sizeof *refs * g->internal_ref_cap);
+    g->internal_refs = refs;
+    g->internal_ref_cap = cap;
+  }
+  return &g->internal_refs[index];
+}
+
 void tmuf_gbx_fail(tmuf_gbx *g, const char *fmt, ...) {
   if (g->error)
     return;

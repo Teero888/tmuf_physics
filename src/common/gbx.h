@@ -104,6 +104,11 @@ struct tmuf_gbx {
   const char **ids;
   uint32_t id_count, id_cap;
 
+  /* internal references (CSystemArchiveNod::AddInternalRef), used by
+     CSceneMobil::DoMobilPtr: slot -> value set on first use */
+  void **internal_refs;
+  uint32_t internal_ref_cap;
+
   /* header */
   uint16_t version;
   uint8_t format[4];
@@ -160,6 +165,8 @@ int tmuf_gbx_external_path(const tmuf_gbx *g, const tmuf_gbx_node *n, const char
    an ancestor's reader. */
 void tmuf_gbx_node_body(tmuf_gbx *g, const tmuf_gbx_class *cls, void *node);
 void tmuf_gbx_node_body_as(tmuf_gbx *g, const tmuf_gbx_class *cls, uint32_t class_id, void *node);
+/* Slot of the internal reference table; grows as needed. NULL on error. */
+void **tmuf_gbx_internal_ref(tmuf_gbx *g, uint32_t index);
 /* Mix a value into the source feedback (class-specific archive feedback). */
 void tmuf_gbx_mix_u32(tmuf_gbx *g, uint32_t v);
 

@@ -601,6 +601,23 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
       place_block(s, &blocks[i], blocks[i].map_index);
 
   free(zone_height), free(has_terrain), free(ground_block), free(blocks), free(units);
+
+  /* decoration scene */
+  tmuf_asset *sa;
+  tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, dsa, dsize->scene, &sa);
+  if (sn && sn->data && sn->class_id == 0x0a003000u) {
+    const tmuf_scene3d *sc = sn->data;
+    for (uint32_t i = 0; i < sc->mobil_count && i < sc->loc_count; i++) {
+      if (!sc->mobils[i] || !sc->mobils[i]->model)
+        continue;
+      tmuf_iso loc;
+      tmuf_iso_from_archive(&loc, sc->locs[i].iso);
+      s->current_block = 0xc0000000u | i;
+      emit_mobil(s, sa, sc->mobils[i]->model, &loc, 0);
+    }
+  } else if (debug_enabled()) {
+    fprintf(stderr, "no decoration scene\n");
+  }
   return 1;
 }
 

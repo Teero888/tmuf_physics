@@ -67,6 +67,7 @@ SKIP_FN(16)
 SKIP_FN(24)
 SKIP_FN(32)
 SKIP_FN(52)
+SKIP_FN(80)
 SKIP_FN(72)
 
 /* u32 reserved, u32 count, count node references. */
@@ -1675,10 +1676,10 @@ static const tmuf_gbx_class ZONE = {0x0305c000, "CGameCtnZone", sizeof(tmuf_zone
 /* ---- CSceneObjectLink (0x0a014000) ---- */
 
 /* CSceneMobil::ArchiveOwnDataOld (reading), for a model instance. */
-static void mobil_own_data(tmuf_gbx *g, tmuf_object_link *l) {
+static void mobil_own_data_into(tmuf_gbx *g, const char **name, tmuf_node_list *children) {
   uint32_t version = tmuf_gbx_u32(g);
   if (version == 0) {
-    l->instance_name = id_text(g);
+    *name = id_text(g);
     return;
   }
   if (version == 2) {
@@ -1691,8 +1692,40 @@ static void mobil_own_data(tmuf_gbx *g, tmuf_object_link *l) {
   } else if (version != 1) {
     return;
   }
-  l->instance_name = id_text(g);
-  read_node_list(g, &l->instance_children);
+  *name = id_text(g);
+  read_node_list(g, children);
+}
+
+static void mobil_own_data(tmuf_gbx *g, tmuf_object_link *l) {
+  mobil_own_data_into(g, &l->instance_name, &l->instance_children);
+}
+
+/* CSceneMobil::DoMobilPtr (versioned): -1 null, -2 plain node reference,
+   else an internal reference slot whose first use carries the model
+   reference and the instance's own data. */
+static tmuf_mobil_instance *do_mobil_ptr(tmuf_gbx *g) {
+  uint32_t v = tmuf_gbx_u32(g);
+  if (g->error || v == 0xffffffffu)
+    return NULL;
+  tmuf_mobil_instance *m = TMUF_ARENA_NEW(g->arena, tmuf_mobil_instance);
+  if (!m) {
+    tmuf_gbx_fail(g, "out of memory");
+    return NULL;
+  }
+  if (v == 0xfffffffeu) {
+    m->model = tmuf_gbx_noderef(g);
+    return m;
+  }
+  void **slot = tmuf_gbx_internal_ref(g, v);
+  if (!slot)
+    return NULL;
+  if (*slot)
+    return *slot;
+  m->model = tmuf_gbx_noderef(g);
+  if (m->model)
+    mobil_own_data_into(g, &m->name, &m->children);
+  *slot = m;
+  return m;
 }
 
 static void link_read_iso_active(tmuf_gbx *g, tmuf_object_link *l) {
@@ -1881,12 +1914,237 @@ static const tmuf_gbx_chunk DECORATION_SIZE_CHUNKS[] = {READ(0x0303b000, skip20)
 static const tmuf_gbx_class DECORATION_SIZE = {0x0303b000, "CGameCtnDecorationSize", sizeof(tmuf_decoration_size),
                                                DECORATION_SIZE_CHUNKS, COUNT(DECORATION_SIZE_CHUNKS), NULL};
 
+/* ---- CScene3d (0x0a003000) with CScene (0x0a001000) ---- */
+
+static void fast_buffer_nod(tmuf_gbx *g, tmuf_node_list *out) {
+  uint32_t version = tmuf_gbx_u32(g);
+  if (version != 10) {
+    tmuf_gbx_fail(g, "fast buffer version %u", version);
+    return;
+  }
+  read_node_list(g, out);
+}
+
+static void c_fast_buffer_nod(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_node_list l;
+  fast_buffer_nod(g, &l);
+}
+
+static void c0a001004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  skip_counted(g, 4);
+}
+
+static void c0a003004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "scene buffer count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_noderef(g);
+    tmuf_gbx_noderef(g);
+    tmuf_gbx_skip(g, 48);
+  }
+}
+
+static void c0a003007(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 4 + 48);
+}
+
+static void c0a003008(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "scene field count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_noderef(g);
+    tmuf_gbx_noderef(g);
+  }
+}
+
+static void c0a00300b(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_string(g);
+}
+
+static void c0a00300f(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_gbx_noderef(g);
+  c_fast_buffer_nod(g, node, id);
+}
+
+static void c0a003012(tmuf_gbx *g, void *node, uint32_t id) {
+  c_fast_buffer_nod(g, node, id);
+  tmuf_gbx_u32(g);
+}
+
+static void c0a003013(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "scene fx count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    tmuf_gbx_noderef(g);
+}
+
+/* CScene::InternalArchiveSceneObjectBuffer */
+static void scene_object_buffer(tmuf_gbx *g, tmuf_scene3d *sc, int mobils) {
+  uint32_t count;
+  tmuf_mobil_instance **list = NULL;
+  if (mobils) {
+    count = tmuf_gbx_u32(g);
+    if (count > 0x100000u) {
+      tmuf_gbx_fail(g, "scene object count %u", count);
+      return;
+    }
+    list = TMUF_ARENA_ARRAY(g->arena, tmuf_mobil_instance *, count ? count : 1);
+    for (uint32_t i = 0; i < count && !g->error; i++)
+      list[i] = do_mobil_ptr(g);
+  } else {
+    tmuf_node_list l;
+    fast_buffer_nod(g, &l);
+    count = l.count;
+  }
+  uint32_t locs = tmuf_gbx_u32(g);
+  if (locs > 0x100000u) {
+    tmuf_gbx_fail(g, "scene loc count %u", locs);
+    return;
+  }
+  tmuf_scene_loc *loc = TMUF_ARENA_ARRAY(g->arena, tmuf_scene_loc, locs ? locs : 1);
+  for (uint32_t i = 0; i < locs && !g->error; i++) {
+    loc[i].sector = tmuf_gbx_noderef(g);
+    read_floats(g, loc[i].iso, 12);
+  }
+  if (mobils && !g->error) {
+    sc->mobil_count = count;
+    sc->mobils = list;
+    sc->loc_count = locs;
+    sc->locs = loc;
+  }
+}
+
+static void c0a003016(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_scene3d *sc = node;
+  uint32_t version = id == 0x0a003016u ? 1 : id == 0x0a003017u ? 2 : 3;
+  fast_buffer_nod(g, &sc->sectors);
+  if (version > 2)
+    tmuf_gbx_u32(g);
+  scene_object_buffer(g, sc, version > 2);
+  for (int i = 0; i < 5 && !g->error; i++)
+    scene_object_buffer(g, sc, 0);
+  if (version > 1)
+    c_fast_buffer_nod(g, node, id); /* gates */
+  c_fast_buffer_nod(g, node, id);   /* paths */
+  /* then Chunk(0x0a00300e) (reads nothing here), Chunk(0x0a00300f),
+     Chunk(0x0a003015) */
+  c0a00300f(g, node, 0x0a00300fu);
+  tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk SCENE3D_CHUNKS[] = {
+    NOPAY(0x0a001000),              NOPAY(0x0a001001),              READ(0x0a001003, skip_noderef),
+    READ(0x0a001004, c0a001004),    READ(0x0a001005, c_fast_buffer_nod),
+    READ(0x0a003000, noderef_array), READ(0x0a003001, noderef_array), NOPAY(0x0a003002),
+    NOPAY(0x0a003003),              READ(0x0a003004, c0a003004),    READ(0x0a003005, c_fast_buffer_nod),
+    NOPAY(0x0a003006),              READ(0x0a003007, c0a003007),    READ(0x0a003008, c0a003008),
+    READ(0x0a003009, c0a003004),    NOPAY(0x0a00300a),              READ(0x0a00300b, c0a00300b),
+    READ(0x0a00300c, skip4),        NOPAY(0x0a00300d),              READ(0x0a00300f, c0a00300f),
+    READ(0x0a003010, skip16),       READ(0x0a003011, skip_noderef), READ(0x0a003012, c0a003012),
+    READ(0x0a003013, c0a003013),    READ(0x0a003014, skip80),       READ(0x0a003015, skip_noderef),
+    READ(0x0a003016, c0a003016),    READ(0x0a003017, c0a003016),    READ(0x0a003018, c0a003016),
+};
+static const tmuf_gbx_class SCENE3D = {0x0a003000, "CScene3d", sizeof(tmuf_scene3d), SCENE3D_CHUNKS,
+                                       COUNT(SCENE3D_CHUNKS), NULL};
+
+/* ---- CSceneTrafficGraph (0x0a062000) ---- */
+
+static void c0a062004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  uint32_t nodes = tmuf_gbx_u32(g), links = tmuf_gbx_u32(g);
+  if (nodes > 0x100000u || links) {
+    tmuf_gbx_fail(g, "traffic graph %u nodes %u links", nodes, links);
+    return;
+  }
+  tmuf_gbx_skip(g, (size_t)nodes * 4);
+}
+
+static const tmuf_gbx_chunk TRAFFIC_GRAPH_CHUNKS[] = {NOPAY(0x0a062000), NOPAY(0x0a062001), NOPAY(0x0a062002),
+                                                      NOPAY(0x0a062003), READ(0x0a062004, c0a062004),
+                                                      NOPAY(0x0a062005)};
+static const tmuf_gbx_class TRAFFIC_GRAPH = {0x0a062000, "CSceneTrafficGraph", 1, TRAFFIC_GRAPH_CHUNKS,
+                                             COUNT(TRAFFIC_GRAPH_CHUNKS), NULL};
+
+/* ---- CSceneSector (0x0a004000) ---- */
+
+static void c0a004000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk SECTOR_CHUNKS[] = {READ(0x0a004000, c0a004000), READ(0x0a004001, skip48),
+                                               READ(0x0a004002, skip_id), READ(0x0a004004, skip24)};
+static const tmuf_gbx_class SECTOR = {0x0a004000, "CSceneSector", 1, SECTOR_CHUNKS, COUNT(SECTOR_CHUNKS), NULL};
+
+/* ---- CHmsZone (0x06004000) ---- */
+
+static void c06004002(tmuf_gbx *g, void *node, uint32_t id) {
+  c_fast_buffer_nod(g, node, id);
+  tmuf_gbx_skip(g, 28); /* GxFogGlobal: color, start, end, density, flags */
+}
+
+static void c06004003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  if (tmuf_gbx_bool(g))
+    tmuf_gbx_skip(g, 24);
+}
+
+static const tmuf_gbx_chunk HMS_ZONE_CHUNKS[] = {
+    READ(0x06004000, skip4),         NOPAY(0x06004001),         READ(0x06004002, c06004002),
+    READ(0x06004003, c06004003),     READ(0x06004004, skip_noderef), READ(0x06004005, c_fast_buffer_nod),
+    READ(0x06004006, skip_noderef),
+};
+static const tmuf_gbx_class HMS_ZONE = {0x06004000, "CHmsZone", 1, HMS_ZONE_CHUNKS, COUNT(HMS_ZONE_CHUNKS), NULL};
+
+/* ---- CMwRefBuffer (0x01026000) ---- */
+
+static void c01026000(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_gbx_u32(g);
+  tmuf_gbx_bool(g);
+  fast_buffer_nod(g, node);
+  UNUSED(id);
+}
+
+static const tmuf_gbx_chunk REF_BUFFER_CHUNKS[] = {READ(0x01026000, c01026000)};
+static const tmuf_gbx_class REF_BUFFER = {0x01026000, "CMwRefBuffer", sizeof(tmuf_node_list), REF_BUFFER_CHUNKS, 1,
+                                          NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
-    &MOTION_TRACK,    &DECORATION_SIZE,
+    &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
+    &TRAFFIC_GRAPH,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

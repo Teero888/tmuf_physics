@@ -227,6 +227,26 @@ typedef struct tmuf_decoration {
   tmuf_gbx_node *refs[6]; /* 0x03038011..16: size, audio, mood, ... */
 } tmuf_decoration;
 
+/* A mobil created from a model (CSceneMobil::InternalDoMobilPtr). */
+typedef struct tmuf_mobil_instance {
+  tmuf_gbx_node *model;
+  const char *name;
+  tmuf_node_list children;
+} tmuf_mobil_instance;
+
+typedef struct tmuf_scene_loc {
+  tmuf_gbx_node *sector;
+  float iso[12]; /* rotation rows, translation */
+} tmuf_scene_loc;
+
+typedef struct tmuf_scene3d {
+  tmuf_node_list sectors;
+  uint32_t mobil_count;
+  tmuf_mobil_instance **mobils; /* NULL entries for null pointers */
+  uint32_t loc_count;
+  tmuf_scene_loc *locs; /* one per mobil */
+} tmuf_scene3d;
+
 typedef struct tmuf_decoration_size {
   uint32_t base_height; /* default zone height, in squares */
   uint32_t size[3];
