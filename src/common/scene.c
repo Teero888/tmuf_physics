@@ -612,6 +612,25 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
     }
   }
 
+  /* CGameCtnChallenge::GetStartLine(0): first start or start/finish block;
+     CGameCtnBlock::GetSpawnLoc: the block info's spawn location for the
+     block's family, then the block location. */
+  for (uint32_t i = 0; i < auto_first && !s->has_start; i++) {
+    placed_block *pb = &blocks[i];
+    if (pb->removed || !pb->info->has_way_type || (pb->info->way_type != 0 && pb->info->way_type != 4))
+      continue;
+    int ground = (pb->b.flags & 0x1000u) != 0;
+    uint32_t sz3[3];
+    block_size(s, pb->asset, pb->info, ground, sz3);
+    tmuf_iso loc, local;
+    block_location(s, &pb->b, sz3, &loc);
+    tmuf_iso_identity(&local);
+    if (pb->info->has_spawn)
+      tmuf_iso_from_archive(&local, pb->info->spawn[ground ? 0 : 1]);
+    tmuf_iso_mult(&s->start, &local, &loc);
+    s->has_start = 1;
+  }
+
   /* mobils in the game's add order: terrain (above), fill, others */
   for (uint32_t i = auto_first; i < count; i++)
     if (!blocks[i].removed)

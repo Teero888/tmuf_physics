@@ -38,6 +38,8 @@ typedef struct tmuf_scene {
   tmuf_static_triangle *triangles;
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
+  int has_start;
+  tmuf_iso start; /* spawn location of the first start block */
   uint32_t rand_state;
   uint32_t catalog_count, catalog_cap;
   tmuf_scene_catalog_entry *catalog;

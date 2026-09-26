@@ -510,6 +510,10 @@ static int cmd_scene(const char *packs, const char *in, const char *out) {
   }
   tmuf_scene scene;
   int ok = tmuf_scene_build(&scene, &set, &map);
+  if (scene.has_start)
+    printf("start: rot %g %g %g / %g %g %g / %g %g %g pos %.9g %.9g %.9g\n", scene.start.m[0][0], scene.start.m[0][1],
+           scene.start.m[0][2], scene.start.m[1][0], scene.start.m[1][1], scene.start.m[1][2], scene.start.m[2][0],
+           scene.start.m[2][1], scene.start.m[2][2], scene.start.t[0], scene.start.t[1], scene.start.t[2]);
   printf("scene %s: %u blocks placed, %u missing, %u triangles %s\n", map.name ? map.name : "?", scene.blocks_placed,
          scene.blocks_missing, scene.triangle_count, ok ? "" : scene.error);
   FILE *f = fopen(out, "wb");
