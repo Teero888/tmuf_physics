@@ -63,6 +63,7 @@ SKIP_FN(4)
 SKIP_FN(8)
 SKIP_FN(12)
 SKIP_FN(16)
+
 SKIP_FN(24)
 SKIP_FN(32)
 SKIP_FN(52)
@@ -1264,12 +1265,196 @@ static void c0501a001(tmuf_gbx *g, void *node, uint32_t id) {
   f->mode = tmuf_gbx_u32(g);
 }
 
+/* CFuncKeysSkel: skeleton, then per frame one location (quaternion,
+   translation) per bone. */
+static void c05006000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_func_keys *)node)->skeleton = tmuf_gbx_noderef(g);
+}
+
+static void c05006001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_keys *f = node;
+  uint32_t frames = tmuf_gbx_u32(g);
+  if (g->error)
+    return;
+  if (!f->skeleton || !f->skeleton->data || !f->skeleton->cls || f->skeleton->cls->id != 0x05005000u) {
+    tmuf_gbx_fail(g, "CFuncKeysSkel without a loaded skeleton");
+    return;
+  }
+  uint32_t bones = ((tmuf_func_skel *)f->skeleton->data)->bone_count;
+  uint64_t n = (uint64_t)frames * bones;
+  if (n > 0x1000000u) {
+    tmuf_gbx_fail(g, "skeleton key count %llu", (unsigned long long)n);
+    return;
+  }
+  tmuf_gbx_skip(g, (size_t)n * 28);
+}
+
 static const tmuf_gbx_chunk FUNC_KEYS_CHUNKS[] = {
     READ(0x05002000, c05002000), READ(0x05002001, c05002001), READ(0x05002002, c05002002),
     READ(0x05002003, c05002003), READ(0x0501a000, c0501a000), READ(0x0501a001, c0501a001),
+    READ(0x05006000, c05006000), READ(0x05006001, c05006001), READ(0x05030000, c05002001),
 };
 static const tmuf_gbx_class FUNC_KEYS = {0x05002000, "CFuncKeys", sizeof(tmuf_func_keys), FUNC_KEYS_CHUNKS,
                                          COUNT(FUNC_KEYS_CHUNKS), NULL};
+
+/* ---- CFuncSkel (0x05005000) ---- */
+
+static void func_skel_bones(tmuf_gbx *g, tmuf_func_skel *k, int element_arrays) {
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "bone count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_id(g, NULL);
+    if (element_arrays)
+      skip_counted(g, 4);
+  }
+  k->bone_count = n;
+}
+
+static void func_skel_legacy(tmuf_gbx *g, int ids) {
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "skeleton table count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    if (ids)
+      tmuf_gbx_id(g, NULL);
+    else
+      tmuf_gbx_string(g);
+    tmuf_gbx_u32(g);
+  }
+}
+
+static void c05005000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  func_skel_legacy(g, 0);
+  func_skel_bones(g, node, 1);
+}
+
+static void c05005001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  func_skel_legacy(g, 1);
+  func_skel_bones(g, node, 1);
+}
+
+static void c05005002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  func_skel_bones(g, node, 0);
+}
+
+static const tmuf_gbx_chunk FUNC_SKEL_CHUNKS[] = {READ(0x05005000, c05005000), READ(0x05005001, c05005001),
+                                                  READ(0x05005002, c05005002)};
+static const tmuf_gbx_class FUNC_SKEL = {0x05005000, "CFuncSkel", sizeof(tmuf_func_skel), FUNC_SKEL_CHUNKS,
+                                         COUNT(FUNC_SKEL_CHUNKS), NULL};
+
+/* ---- CFuncPlug (0x0500b000) and CFuncTreeSubVisualSequence ---- */
+
+static void skip4_id(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 4);
+  tmuf_gbx_id(g, NULL);
+}
+
+static void skip16_id(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 16);
+  tmuf_gbx_id(g, NULL);
+}
+
+static void c05031000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_func_keys keys;
+  memset(&keys, 0, sizeof keys);
+  tmuf_gbx_node_body_as(g, &FUNC_KEYS, 0x05030000u, &keys); /* CFuncKeysNatural */
+}
+
+static const tmuf_gbx_chunk FUNC_PLUG_CHUNKS[] = {
+    READ(0x0500b000, skip4),     READ(0x0500b001, skip4_id), READ(0x0500b002, skip8),
+    READ(0x0500b003, skip12),    READ(0x0500b004, skip16),   READ(0x0500b005, skip16_id),
+    READ(0x05031000, c05031000), READ(0x05031001, skip_id),  READ(0x05031002, skip_noderef),
+    READ(0x05031003, skip12),
+};
+static const tmuf_gbx_class FUNC_PLUG = {0x0500b000, "CFuncPlug", 1, FUNC_PLUG_CHUNKS, COUNT(FUNC_PLUG_CHUNKS), NULL};
+
+/* ---- CMotion (0x08001000) family ---- */
+
+static const tmuf_gbx_chunk MOTION_CMD_BASE_CHUNKS[] = {READ(0x08029000, skip16), READ(0x08029001, skip20),
+                                                        READ(0x08029002, skip24)};
+static const tmuf_gbx_class MOTION_CMD_BASE = {0x08029000, "CMotionCmdBase", 1, MOTION_CMD_BASE_CHUNKS,
+                                               COUNT(MOTION_CMD_BASE_CHUNKS), NULL};
+
+static void optional_noderef(tmuf_gbx *g) {
+  if (tmuf_gbx_bool(g))
+    tmuf_gbx_noderef(g);
+}
+
+static void c08034000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  optional_noderef(g);
+}
+
+static void c08034001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  optional_noderef(g);
+  tmuf_gbx_id(g, NULL);
+}
+
+/* 0x08034002: track, command, ...; 003: command, ...; 004: command, u32,
+   bool, ... . Each ends with an id and a node array. */
+static void c08034002(tmuf_gbx *g, void *node, uint32_t id) {
+  if (id == 0x08034002u)
+    tmuf_gbx_noderef(g);
+  uint8_t cmd;
+  tmuf_gbx_node_body(g, &MOTION_CMD_BASE, &cmd);
+  tmuf_gbx_skip(g, 4);
+  if (id == 0x08034004u)
+    tmuf_gbx_bool(g);
+  tmuf_gbx_id(g, NULL);
+  noderef_array(g, node, id);
+}
+
+static void c0802b000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  for (int i = 0; i < 3; i++)
+    tmuf_gbx_noderef(g);
+}
+
+static void c0804c000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, id == 0x0804c000u ? 16 : 24);
+}
+
+static void c08055000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 8);
+}
+
+static const tmuf_gbx_chunk MOTION_CHUNKS[] = {
+    READ(0x08001000, skip_id),   READ(0x08028000, noderef_array), READ(0x08028001, noderef_array),
+    READ(0x08034000, c08034000), READ(0x08034001, c08034001),     READ(0x08034002, c08034002),
+    READ(0x08034003, c08034002), READ(0x08034004, c08034002),     READ(0x0804c000, c0804c000),
+    READ(0x0804c001, c0804c000), READ(0x08054000, skip_noderef),  READ(0x08055000, c08055000),
+};
+static const tmuf_gbx_class MOTION = {0x08001000, "CMotion", 1, MOTION_CHUNKS, COUNT(MOTION_CHUNKS), NULL};
+
+/* CMotionTrack (0x08033000) derives from CMwCmdContainer, not CMotion. */
+static const tmuf_gbx_chunk MOTION_TRACK_CHUNKS[] = {READ(0x0802b000, c0802b000), READ(0x08037000, skip_noderef)};
+static const tmuf_gbx_class MOTION_TRACK = {0x08033000, "CMotionTrack", 1, MOTION_TRACK_CHUNKS,
+                                            COUNT(MOTION_TRACK_CHUNKS), NULL};
 
 /* ---- CSceneVehicleStruct (0x0a039000) ---- */
 
@@ -1685,6 +1870,7 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
-    &OBJECT_LINK,     &COLLECTION, &DECORATION,
+    &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
+    &MOTION_TRACK,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

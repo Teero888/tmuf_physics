@@ -22,6 +22,11 @@ typedef struct tmuf_static_triangle {
   uint32_t block;    /* index of the map block that placed it */
 } tmuf_static_triangle;
 
+typedef struct tmuf_scene_catalog_entry {
+  const char *name; /* collector identifier */
+  tmuf_pack_ref ref;
+} tmuf_scene_catalog_entry;
+
 typedef struct tmuf_scene {
   tmuf_assets assets;
   const char *collection;
@@ -30,6 +35,8 @@ typedef struct tmuf_scene {
   tmuf_static_triangle *triangles;
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
+  uint32_t catalog_count;
+  tmuf_scene_catalog_entry *catalog;
   char error[600];
 } tmuf_scene;
 

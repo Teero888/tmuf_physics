@@ -200,15 +200,32 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
 
 /* ---- blocks ---- */
 
-static const char *base_name(const char *path, char *buf, size_t size) {
-  const char *b = strrchr(path, '\\');
-  b = b ? b + 1 : path;
-  size_t n = strcspn(b, ".");
-  if (n >= size)
-    n = size - 1;
-  memcpy(buf, b, n);
-  buf[n] = 0;
-  return buf;
+/* Identifier of a collector file (header chunk 0x0301a003: version, then the
+   ident: name, collection, author). The game indexes block infos by it. */
+static const char *collector_name(tmuf_scene *s, tmuf_pack_ref ref) {
+  const tmuf_pack *pack = &s->assets.set->packs[ref.pack];
+  tmuf_pack_stream ps;
+  if (!tmuf_pack_stream_open(&ps, pack, ref.file))
+    return NULL;
+  tmuf_gbx g;
+  tmuf_gbx_init(&g, &ps.base, &s->assets.arena, NULL, 0);
+  const char *name = NULL;
+  if (tmuf_gbx_read_header(&g)) {
+    for (uint32_t i = 0; i < g.header_chunk_count; i++) {
+      if (g.header_chunks[i].id != 0x0301a003u)
+        continue;
+      tmuf_mem_source ms;
+      tmuf_mem_source_init(&ms, g.header_chunks[i].data, g.header_chunks[i].size);
+      tmuf_gbx h;
+      tmuf_gbx_init(&h, &ms.base, &s->assets.arena, NULL, 0);
+      const char *id = tmuf_gbx_id(&h, NULL);
+      if (!h.error && id && *id)
+        name = id;
+      break;
+    }
+  }
+  tmuf_pack_stream_close(&ps);
+  return name;
 }
 
 static int ieq(const char *a, const char *b) {
@@ -221,16 +238,34 @@ static int ieq(const char *a, const char *b) {
   return *a == *b;
 }
 
-static tmuf_pack_ref find_block_info(const tmuf_packset *set, const char *folder, const char *name) {
-  char path[512], base[128];
+static void build_catalog(tmuf_scene *s, const char *folder) {
+  const tmuf_packset *set = s->assets.set;
+  char path[512];
   size_t flen = strlen(folder);
+  uint32_t cap = 0;
   for (int p = 0; p < set->pack_count; p++)
     for (uint32_t f = 0; f < set->packs[p].file_count; f++) {
-      if (!tmuf_pack_file_path(&set->packs[p], f, path, sizeof path) || strncmp(path, folder, flen) != 0)
+      if (!tmuf_pack_file_path(&set->packs[p], f, path, sizeof path) || strncmp(path, folder, flen) != 0 ||
+          !strstr(path, ".TMED"))
         continue;
-      if (strstr(path, ".TMED") && ieq(base_name(path, base, sizeof base), name))
-        return (tmuf_pack_ref){p, f};
+      const char *name = collector_name(s, (tmuf_pack_ref){p, f});
+      if (!name)
+        continue;
+      if (s->catalog_count == cap) {
+        cap = cap ? cap * 2 : 256;
+        tmuf_scene_catalog_entry *c = realloc(s->catalog, sizeof *c * cap);
+        if (!c)
+          return;
+        s->catalog = c;
+      }
+      s->catalog[s->catalog_count++] = (tmuf_scene_catalog_entry){name, {p, f}};
     }
+}
+
+static tmuf_pack_ref find_block_info(const tmuf_scene *s, const char *name) {
+  for (uint32_t i = 0; i < s->catalog_count; i++)
+    if (ieq(s->catalog[i].name, name))
+      return s->catalog[i].ref;
   return (tmuf_pack_ref){-1, 0};
 }
 
@@ -292,11 +327,11 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->collection = coll->name;
   s->square_size = coll->square_size;
   s->square_height = coll->square_height;
-  const char *folder = coll->folders[0];
+  build_catalog(s, coll->folders[0]);
 
   for (uint32_t i = 0; i < map->block_count; i++) {
     const tmuf_challenge_block *b = &map->blocks[i];
-    tmuf_asset *ba = tmuf_assets_load(&s->assets, find_block_info(set, folder, b->name));
+    tmuf_asset *ba = tmuf_assets_load(&s->assets, find_block_info(s, b->name));
     if (debug_enabled())
       fprintf(stderr, "block %s flags %08x -> %s\n", b->name, b->flags, ba ? ba->path : "(none)");
     if (!ba || !ba->root) {
@@ -329,6 +364,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
 
 void tmuf_scene_free(tmuf_scene *s) {
   free(s->triangles);
+  free(s->catalog);
   tmuf_assets_free(&s->assets);
   memset(s, 0, sizeof *s);
 }

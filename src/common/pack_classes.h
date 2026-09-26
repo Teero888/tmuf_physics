@@ -164,7 +164,12 @@ typedef struct tmuf_func_keys {
   const float *xs, *ys;
   uint32_t mode;
   float range[2];
+  tmuf_gbx_node *skeleton; /* CFuncKeysSkel */
 } tmuf_func_keys;
+
+typedef struct tmuf_func_skel {
+  uint32_t bone_count;
+} tmuf_func_skel;
 
 typedef struct tmuf_vehicle_wheel_def {
   int flags[2];
