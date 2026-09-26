@@ -37,14 +37,29 @@ Last updated 2026-09-26.
 
 ## Not done yet
 
-- Pack classes: CMotion* (animated mobils), CScene3d, CGameCtnDecoration,
-  CGameCtnDecorationSize, CGameCtnCollection, CGameSkin, a few CFunc*.
-- Scene assembly: map -> collection/decoration -> block infos -> variants ->
-  mobils -> solids -> world-space collision surfaces.
+- Pack classes: CScene3d (decoration scene), CGameSkin, a few CFunc*.
+- Scene assembly, remaining: automatic base terrain (default zone), clips,
+  pylons, decoration scene; and keeping per-item structure (the game collides
+  against a static octree of items, so contact order depends on it).
 - Physics (reference backend): not started.
 - Optimized backend, public API, frametee integration.
 
-## Next: scene assembly (notes for picking up)
+## Scene assembly (src/common/scene.c)
+
+- Explicit map blocks: block infos found by collector identifier (header
+  chunk 0x0301a003), ground/air variant, mobil selection, location, item
+  solids (following solid models), object links, tree transforms. On the
+  "fragmented" test map all 227 blocks resolve and all 125852 emitted
+  triangles are bit-identical to the reference static triangles
+  (`tools/dev/cmp_tris.py`, `tmuf_inspect scene`).
+- Still missing on that map: ground terrain fill, pylons, decoration
+  (~80k triangles).
+- Decoration and decoration size are loaded (map size, base height).
+- Ghidra project of TmForeverFixed.exe + PDB (full types):
+  `~/software/tmuf_oracle/ghidra` (`scripts/Decompile.java` dumps functions
+  matching regex lists).
+
+## Scene notes
 
 - Reference to compare against: a dev-only tool writes a map's static collision triangles
   (`u32 count`, 9 floats each). "fragmented" (corpus 7260080): 206581.
@@ -59,8 +74,9 @@ Last updated 2026-09-26.
 - Block size per family: max(unit offset) + 1. Unit chunk 0x03036000:
   junction mask, helper, unused, offset x y z, count, source refs.
 - Mobil location: coord * (square size, height, size) (collection: Stadium
-  32/8), rotated by quarter turns about Y; West adds size.z*sq to x, South
-  adds size.x to x and size.z to z, East adds size.x to z.
+  32/8), rotated by quarter turns about Y (rows X = (c,0,-s), Z = (s,0,c));
+  East adds size.z*sq to x, South adds size.x to x and size.z to z, West
+  adds size.x to z.
 - Mesh triangle record (32 B): normal xyz, plane distance, 3 u32 indices,
   u16 local material. Iso4 on disk: rows X Y Z then translation.
 - Block info files: <Env>\ConstructionBlockInfo\<Kind>\<Name>.TMED<Kind>.Gbx

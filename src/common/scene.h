@@ -25,17 +25,20 @@ typedef struct tmuf_static_triangle {
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
   tmuf_pack_ref ref;
+  uint8_t tag;
 } tmuf_scene_catalog_entry;
 
 typedef struct tmuf_scene {
   tmuf_assets assets;
   const char *collection;
   float square_size, square_height;
+  uint32_t size[3];    /* map size in squares (decoration size) */
+  uint32_t base_height; /* default zone height */
   uint32_t triangle_count, triangle_cap;
   tmuf_static_triangle *triangles;
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
-  uint32_t catalog_count;
+  uint32_t catalog_count, catalog_cap;
   tmuf_scene_catalog_entry *catalog;
   char error[600];
 } tmuf_scene;

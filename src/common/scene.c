@@ -238,36 +238,40 @@ static int ieq(const char *a, const char *b) {
   return *a == *b;
 }
 
-static void build_catalog(tmuf_scene *s, const char *folder) {
+/* Appends every collector under folder whose file name contains kind (e.g.
+   ".TMED", ".TMDecoration.") to the catalog. */
+static void build_catalog(tmuf_scene *s, const char *folder, const char *kind, uint8_t tag) {
   const tmuf_packset *set = s->assets.set;
   char path[512];
   size_t flen = strlen(folder);
-  uint32_t cap = 0;
   for (int p = 0; p < set->pack_count; p++)
     for (uint32_t f = 0; f < set->packs[p].file_count; f++) {
       if (!tmuf_pack_file_path(&set->packs[p], f, path, sizeof path) || strncmp(path, folder, flen) != 0 ||
-          !strstr(path, ".TMED"))
+          !strstr(path, kind))
         continue;
       const char *name = collector_name(s, (tmuf_pack_ref){p, f});
       if (!name)
         continue;
-      if (s->catalog_count == cap) {
-        cap = cap ? cap * 2 : 256;
+      if (s->catalog_count == s->catalog_cap) {
+        uint32_t cap = s->catalog_cap ? s->catalog_cap * 2 : 256;
         tmuf_scene_catalog_entry *c = realloc(s->catalog, sizeof *c * cap);
         if (!c)
           return;
         s->catalog = c;
+        s->catalog_cap = cap;
       }
-      s->catalog[s->catalog_count++] = (tmuf_scene_catalog_entry){name, {p, f}};
+      s->catalog[s->catalog_count++] = (tmuf_scene_catalog_entry){name, {p, f}, tag};
     }
 }
 
-static tmuf_pack_ref find_block_info(const tmuf_scene *s, const char *name) {
+static tmuf_pack_ref find_collector(const tmuf_scene *s, const char *name, uint8_t tag) {
   for (uint32_t i = 0; i < s->catalog_count; i++)
-    if (ieq(s->catalog[i].name, name))
+    if (s->catalog[i].tag == tag && ieq(s->catalog[i].name, name))
       return s->catalog[i].ref;
   return (tmuf_pack_ref){-1, 0};
 }
+
+enum { CATALOG_BLOCK_INFO, CATALOG_DECORATION };
 
 static void block_size(tmuf_scene *s, tmuf_asset *bi_asset, const tmuf_block_info *bi, int ground, uint32_t size[3]) {
   size[0] = size[1] = size[2] = 1;
@@ -327,11 +331,32 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->collection = coll->name;
   s->square_size = coll->square_size;
   s->square_height = coll->square_height;
-  build_catalog(s, coll->folders[0]);
+  build_catalog(s, coll->folders[0], ".TMED", CATALOG_BLOCK_INFO);
+  build_catalog(s, coll->folders[2], ".TMDecoration.", CATALOG_DECORATION);
+  tmuf_asset *da = tmuf_assets_load(&s->assets, find_collector(s, map->decoration[0], CATALOG_DECORATION));
+  if (!da || da->class_id != 0x03038000u) {
+    snprintf(s->error, sizeof s->error, "no decoration %s", map->decoration[0]);
+    return 0;
+  }
+  tmuf_asset *dsa;
+  tmuf_gbx_node *dsn = tmuf_assets_follow(&s->assets, da, ((tmuf_decoration *)da->root)->refs[0], &dsa);
+  if (!dsn || !dsn->data || dsn->class_id != 0x0303b000u) {
+    snprintf(s->error, sizeof s->error, "no decoration size for %s", map->decoration[0]);
+    return 0;
+  }
+  const tmuf_decoration_size *dsize = dsn->data;
+  s->size[0] = dsize->size[0];
+  s->size[1] = dsize->size[1];
+  s->size[2] = dsize->size[2];
+  s->base_height = dsize->base_height;
+  if (debug_enabled())
+    fprintf(stderr, "collection %s folders %s | %s | %s | %s; decoration %s %s %s\n", coll->name, coll->folders[0],
+            coll->folders[1], coll->folders[2], coll->folders[3], map->decoration[0], map->decoration[1],
+            map->decoration[2]);
 
   for (uint32_t i = 0; i < map->block_count; i++) {
     const tmuf_challenge_block *b = &map->blocks[i];
-    tmuf_asset *ba = tmuf_assets_load(&s->assets, find_block_info(s, b->name));
+    tmuf_asset *ba = tmuf_assets_load(&s->assets, find_collector(s, b->name, CATALOG_BLOCK_INFO));
     if (debug_enabled())
       fprintf(stderr, "block %s flags %08x -> %s\n", b->name, b->flags, ba ? ba->path : "(none)");
     if (!ba || !ba->root) {
