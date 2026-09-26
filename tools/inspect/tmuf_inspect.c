@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "common/challenge.h"
+#include "common/scene.h"
 #include "common/gbx.h"
 #include "common/pack.h"
 #include "common/pack_classes.h"
@@ -480,7 +481,64 @@ static int cmd_refs(const char *dir, const char *list_path) {
   return unresolved != 0;
 }
 
+/* Static collision triangles of a map (challenge or replay file), written as
+   u32 count then 9 floats per triangle. */
+static int cmd_scene(const char *packs, const char *in, const char *out) {
+  size_t size;
+  uint8_t *data = read_file(in, &size);
+  if (!data)
+    return 1;
+  tmuf_arena arena;
+  tmuf_arena_init(&arena);
+  char err[256];
+  const uint8_t *map_data = data;
+  size_t map_size = size;
+  tmuf_replay_file r;
+  if (tmuf_replay_parse(data, size, &arena, &r, err, sizeof err) && r.challenge) {
+    map_data = r.challenge;
+    map_size = r.challenge_size;
+  }
+  tmuf_challenge map;
+  if (!tmuf_challenge_parse(map_data, map_size, &arena, &map, err, sizeof err)) {
+    printf("map: %s\n", err);
+    return 1;
+  }
+  tmuf_packset set;
+  if (!tmuf_packset_open(&set, packs, err, sizeof err)) {
+    printf("packs: %s\n", err);
+    return 1;
+  }
+  tmuf_scene scene;
+  int ok = tmuf_scene_build(&scene, &set, &map);
+  printf("scene %s: %u blocks placed, %u missing, %u triangles %s\n", map.name ? map.name : "?", scene.blocks_placed,
+         scene.blocks_missing, scene.triangle_count, ok ? "" : scene.error);
+  FILE *f = fopen(out, "wb");
+  if (f) {
+    fwrite(&scene.triangle_count, 4, 1, f);
+    for (uint32_t i = 0; i < scene.triangle_count; i++)
+      fwrite(scene.triangles[i].v, 4, 9, f);
+    fclose(f);
+  }
+  if (getenv("TMUF_SCENE_BLOCKS")) {
+    f = fopen(getenv("TMUF_SCENE_BLOCKS"), "w");
+    for (uint32_t i = 0; f && i < map.block_count; i++)
+      fprintf(f, "B %u %s %u %u %u %u %08x\n", i, map.blocks[i].name, map.blocks[i].dir, map.blocks[i].x, map.blocks[i].y,
+              map.blocks[i].z, map.blocks[i].flags);
+    for (uint32_t i = 0; f && i < scene.triangle_count; i++)
+      fprintf(f, "T %u\n", scene.triangles[i].block);
+    if (f)
+      fclose(f);
+  }
+  tmuf_scene_free(&scene);
+  tmuf_packset_close(&set);
+  tmuf_arena_free(&arena);
+  free(data);
+  return !ok;
+}
+
 int main(int argc, char **argv) {
+  if (argc >= 5 && strcmp(argv[1], "scene") == 0)
+    return cmd_scene(argv[2], argv[3], argv[4]);
   if (argc >= 4 && strcmp(argv[1], "refs") == 0)
     return cmd_refs(argv[2], argv[3]);
   if (argc >= 4 && strcmp(argv[1], "verify") == 0)

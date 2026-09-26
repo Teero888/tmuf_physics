@@ -111,7 +111,8 @@ static void c0900500a(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_plug_solid *s = node;
   int use_model = tmuf_gbx_bool(g), has_model = tmuf_gbx_bool(g);
   if (has_model)
-    tmuf_gbx_noderef(g);
+    s->model = tmuf_gbx_noderef(g);
+  s->use_model = use_model && has_model;
   if (use_model && has_model)
     return;
   uint32_t mode = tmuf_gbx_u32(g);
@@ -145,7 +146,8 @@ static void c0900500d(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_plug_solid *s = node;
   int use_model = tmuf_gbx_bool(g), has_model = tmuf_gbx_bool(g);
   if (has_model)
-    tmuf_gbx_noderef(g);
+    s->model = tmuf_gbx_noderef(g);
+  s->use_model = use_model && has_model;
   if (!(use_model && has_model))
     s->tree = tmuf_gbx_noderef(g);
 }
@@ -156,10 +158,11 @@ static void c09005011(tmuf_gbx *g, void *node, uint32_t id) {
   int use_model = tmuf_gbx_bool(g), has_model = tmuf_gbx_bool(g);
   if (has_model) {
     if (tmuf_gbx_bool(g))
-      tmuf_gbx_u32(g); /* model fid reference index */
+      s->model = tmuf_gbx_fidref(g);
     else
-      tmuf_gbx_noderef(g);
+      s->model = tmuf_gbx_noderef(g);
   }
+  s->use_model = use_model && has_model;
   if (!(use_model && has_model))
     s->tree = tmuf_gbx_noderef(g);
 }
@@ -962,7 +965,11 @@ static const tmuf_gbx_class BLOCK = {0x03057000, "CGameCtnBlock", sizeof(tmuf_bl
 static void c03036000(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_block_unit *u = node;
-  tmuf_gbx_read(g, u->base, 24);
+  u->junction_mask = tmuf_gbx_u32(g);
+  u->helper = tmuf_gbx_u32(g);
+  tmuf_gbx_u32(g);
+  for (int i = 0; i < 3; i++)
+    u->offset[i] = tmuf_gbx_u32(g);
   read_node_list(g, &u->sources);
 }
 

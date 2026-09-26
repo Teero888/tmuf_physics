@@ -39,6 +39,10 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/blowfish_tables.h
   src/common/challenge.c
   src/common/challenge.h
+  src/common/assets.c
+  src/common/assets.h
+  src/common/scene.c
+  src/common/scene.h
   src/common/version.c
 )
 

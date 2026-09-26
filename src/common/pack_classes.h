@@ -11,6 +11,8 @@
 
 typedef struct tmuf_plug_solid {
   tmuf_gbx_node *tree;
+  tmuf_gbx_node *model; /* solid whose tree is used when use_model is set */
+  int use_model;
   int has_physics;
   float mass, center_of_mass[3], inertia[9];
   float fluid_friction, response_a, response_b;
@@ -99,7 +101,8 @@ typedef struct tmuf_block_info {
 } tmuf_block_info;
 
 typedef struct tmuf_block_unit {
-  uint8_t base[24]; /* offset and flags, uninterpreted */
+  uint32_t junction_mask, helper;
+  uint32_t offset[3];
   tmuf_node_list sources;
   const char *surface;
   uint8_t surface_extra[8];
