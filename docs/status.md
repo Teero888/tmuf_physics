@@ -15,8 +15,9 @@ Last updated 2026-09-26.
 - `symmap.py` maps 48.6k PDB functions (TmForeverFixed.exe) to the TMUF exe.
 - Game setup: `~/software/tmuf_oracle/{game,pfx}` (copy of the Steam TMUF
   install, activated profile `steamuser`).
-- Ground truth so far: 300 valid local replays (all campaign envs) and the
-  TMNF-X world records (Stadium), full per-tick trajectories.
+- Ground truth: 300 valid local replays (all campaign envs) and 3103 valid
+  TMX replays (tmnf + tmuf exchange), full per-tick trajectories
+  (`~/software/tmuf_oracle/run2`, `run3`; 369 "Wrong Simu", 135 no verdict).
 - TAS replays (tmtas.exchange) are rejected by the game's validation right
   at race start (no trajectory), so they need an input-injecting oracle.
 
@@ -41,7 +42,14 @@ Last updated 2026-09-26.
 - Scene assembly, remaining: automatic base terrain (default zone), clips,
   pylons, decoration scene; and keeping per-item structure (the game collides
   against a static octree of items, so contact order depends on it).
-- Physics (reference backend): not started.
+- Physics (reference backend): started. gm.h (game memory layout: row-major
+  matrices, quaternion w,x,y,z, validated on 10k oracle states), fmath.c
+  (deterministic binary32 transcendental functions), dyna.c (CHmsDyna
+  integration, forces, impulses, replacement). Vehicle: tuning decoder
+  (src/common/vehicle_tuning.c), vehicle mobil/solid readers; the StadiumCar
+  inverse inertia formula is confirmed against the oracle. Next: vehicle
+  definition (wheels, COM), static collision (octree, mesh/ellipsoid
+  queries), contacts, CSceneVehicleCar::ComputeForces, inputs, race logic.
 - Optimized backend, public API, frametee integration.
 
 ## Scene assembly (src/common/scene.c)
@@ -52,9 +60,14 @@ Last updated 2026-09-26.
   "fragmented" test map all 227 blocks resolve and all 125852 emitted
   triangles are bit-identical to the reference static triangles
   (`tools/dev/cmp_tris.py`, `tmuf_inspect scene`).
-- Still missing on that map: ground terrain fill, pylons, decoration
-  (~80k triangles).
-- Decoration and decoration size are loaded (map size, base height).
+- Terrain fill (default zone), helper mobils and the decoration scene are in:
+  the test map now matches the reference completely (206581/206581 triangles, bitwise).
+  Over 48 corpus maps: A04-Acrobatic exact; other Stadium maps within a few
+  hundred to a few thousand triangles (missing: clips via
+  CGameCtnApp::AddClipsToScene/UpdateClip, pylons via UpdatePylons; extra:
+  air-family helper mobils - open question for the oracle);
+  other environments need frontier zones, clips and pylons.
+- Start location (first start block spawn) matches the oracle's first state.
 - Ghidra project of TmForeverFixed.exe + PDB (full types):
   `~/software/tmuf_oracle/ghidra` (`scripts/Decompile.java` dumps functions
   matching regex lists).
