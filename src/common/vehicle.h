@@ -30,6 +30,10 @@ typedef struct tmuf_vehicle {
   float water_box[6]; /* center, half extents */
   uint32_t material_count;
   tmuf_vehicle_material materials[TMUF_VEHICLE_MAX_MATERIALS];
+  /* fake contact texture (CPlugFileTga of the materials' bitmap), stored
+     pixel order */
+  uint32_t fake_width, fake_height, fake_bpp;
+  const uint8_t *fake_pixels;
 } tmuf_vehicle;
 
 /* Loads the vehicle whose collector identifier is `name` (a ghost's

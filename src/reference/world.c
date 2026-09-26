@@ -262,6 +262,8 @@ int ref_world_build(ref_world *w, tmuf_scene *scene) {
   memset(w, 0, sizeof *w);
   build_ctx b = {w, &scene->assets, 0, 0};
   for (uint32_t i = 0; i < scene->corpus_count && !b.error; i++) {
+    if (scene->corpora[i].trigger || scene->corpora[i].collision_group != 4)
+      continue; /* race triggers and non-static items are not in the static group */
     b.corpus = i;
     gm_iso4 iso = iso_from_scene(&scene->corpora[i].iso);
     add_tree(&b, scene->corpora[i].owner, scene->corpora[i].tree, &iso, 0);

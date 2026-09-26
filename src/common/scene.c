@@ -165,6 +165,11 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->tree = tree;
   c->iso = *iso;
   c->tag = s->current_block;
+  c->trigger = s->current_trigger;
+  c->item_flags = s->current_item_flags;
+  /* Helper trees hang below a new CHALLENGEHELPERTREE tree without the
+     collision flag: never collided. Other mobils keep their item group. */
+  c->collision_group = s->helper_depth ? 0 : !c->item_flags ? 4 : (uint8_t)((c->item_flags >> 13) & 15u);
 }
 
 static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_node, const tmuf_iso *world, int depth) {
@@ -201,6 +206,12 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   if (!mn->cls || mn->cls->id != 0x0a005000u)
     return;
   const tmuf_scene_object *m = mn->data;
+  /* CGameCtnBlock::SetMobilAndHelper: the linked trigger mobils */
+  uint8_t saved_trigger = s->current_trigger;
+  uint32_t saved_flags = s->current_item_flags;
+  if (m->name && (strcmp(m->name, "TriggerCheckpoint") == 0 || strcmp(m->name, "TriggerFinishLine") == 0))
+    s->current_trigger = 1;
+  s->current_item_flags = m->has_item ? m->item.physics_flags : 0;
   if (m->has_item && m->item.solid)
     emit_solid(s, ma, m->item.solid, world, 0);
   for (uint32_t i = 0; i < m->children.count; i++) {
@@ -214,6 +225,8 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
     tmuf_iso_mult(&linked, &local, world);
     emit_mobil(s, la, link->object, &linked, depth + 1);
   }
+  s->current_trigger = saved_trigger;
+  s->current_item_flags = saved_flags;
 }
 
 /* ---- blocks ---- */
@@ -457,11 +470,13 @@ static void place_block(tmuf_scene *s, placed_block *pb, uint32_t tag) {
   int helper_ground = (flags & 0x1000u) != 0;
   const tmuf_gbx_node *fh = pb->info->helpers[helper_ground ? 0 : 1];
   uint32_t before = s->triangle_count;
+  s->helper_depth++;
   if (fh)
     emit_mobil(s, pb->asset, (tmuf_gbx_node *)fh, &loc, 0);
   uint32_t mid = s->triangle_count;
   if (pb->info->helpers[2])
     emit_mobil(s, pb->asset, pb->info->helpers[2], &loc, 0);
+  s->helper_depth--;
   if (debug_enabled() && (pb->info->helpers[0] || pb->info->helpers[1] || pb->info->helpers[2]))
     fprintf(stderr, "helpers %s: g %p a %p c %p -> family %u common %u\n", pb->b.name ? pb->b.name : "(auto)",
             (void *)pb->info->helpers[0], (void *)pb->info->helpers[1], (void *)pb->info->helpers[2], mid - before,

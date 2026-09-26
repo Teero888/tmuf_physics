@@ -1,6 +1,7 @@
 #include "common/vehicle.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "common/pack.h"
@@ -69,6 +70,62 @@ static tmuf_pack_ref collector_mobil(tmuf_assets *assets, tmuf_pack_ref ref) {
   }
   tmuf_pack_stream_close(&ps);
   return out;
+}
+
+/* First external node of a file (by its header) whose pack class is cls. */
+static tmuf_pack_ref file_ext_class(tmuf_assets *assets, tmuf_pack_ref ref, uint32_t cls) {
+  tmuf_pack_ref none = {-1, 0};
+  const tmuf_packset *set = assets->set;
+  char from[512];
+  if (!tmuf_pack_file_path(&set->packs[ref.pack], ref.file, from, sizeof from))
+    return none;
+  tmuf_pack_stream ps;
+  if (!tmuf_pack_stream_open(&ps, &set->packs[ref.pack], ref.file))
+    return none;
+  tmuf_gbx g;
+  tmuf_gbx_init(&g, &ps.base, &assets->arena, NULL, 0);
+  tmuf_pack_ref out = none;
+  if (tmuf_gbx_read_header(&g))
+    for (uint32_t i = 1; i <= g.node_count && out.pack < 0; i++) {
+      if (!g.nodes[i].external)
+        continue;
+      char plain[512];
+      tmuf_pack_ref r = tmuf_packset_resolve(set, &g, &g.nodes[i], from, plain, sizeof plain);
+      if (r.pack >= 0 && set->packs[r.pack].files[r.file].class_id == cls)
+        out = r;
+    }
+  tmuf_pack_stream_close(&ps);
+  return out;
+}
+
+/* The materials' fake contact bitmap image: an uncompressed true color TGA */
+static void load_fake_texture(tmuf_vehicle *v, tmuf_assets *assets, tmuf_asset *materials) {
+  tmuf_pack_ref bitmap = file_ext_class(assets, materials->ref, 0x09011000u);
+  if (bitmap.pack < 0)
+    return;
+  tmuf_pack_ref tga = file_ext_class(assets, bitmap, 0x09023000u);
+  if (tga.pack < 0)
+    return;
+  uint8_t *data;
+  size_t size;
+  if (!tmuf_pack_extract(&assets->set->packs[tga.pack], tga.file, &data, &size))
+    return;
+  if (size >= 18 && data[1] == 0 && data[2] == 2 && data[16] != 0 && data[16] % 8 == 0) {
+    uint32_t w = (uint32_t)data[12] | (uint32_t)data[13] << 8, h = (uint32_t)data[14] | (uint32_t)data[15] << 8;
+    uint32_t bpp = data[16] / 8u;
+    size_t off = 18u + data[0], n = (size_t)w * h * bpp;
+    if (w && h && off <= size && n <= size - off) {
+      uint8_t *px = tmuf_arena_alloc(&assets->arena, n);
+      if (px) {
+        memcpy(px, data + off, n);
+        v->fake_width = w;
+        v->fake_height = h;
+        v->fake_bpp = bpp;
+        v->fake_pixels = px;
+      }
+    }
+  }
+  free(data);
 }
 
 int tmuf_vehicle_load(tmuf_vehicle *v, tmuf_assets *assets, const char *name, char *err, size_t err_size) {
@@ -174,6 +231,8 @@ int tmuf_vehicle_load(tmuf_vehicle *v, tmuf_assets *assets, const char *name, ch
         v->materials[v->material_count++] = *(const tmuf_vehicle_material *)mn->data;
     }
   }
+  if (rn && ra && ra != ma)
+    load_fake_texture(v, assets, ra);
   if (v->material_count == 0) {
     snprintf(err, err_size, "vehicle %s: no materials", name);
     return 0;

@@ -29,6 +29,9 @@ typedef struct tmuf_scene_corpus {
   tmuf_gbx_node *tree;
   tmuf_iso iso;
   uint32_t tag; /* map block index, 0x80000000|i automatic, 0xc0000000|i decoration */
+  uint8_t trigger; /* TriggerCheckpoint / TriggerFinishLine: not part of the static world */
+  uint32_t item_flags; /* archived CHmsItem physics word of its mobil, 0 if none */
+  uint8_t collision_group; /* CHmsItem::ECollisionGroup the game gives it (4: static) */
 } tmuf_scene_corpus;
 
 typedef struct tmuf_scene_catalog_entry {
@@ -47,6 +50,9 @@ typedef struct tmuf_scene {
   tmuf_static_triangle *triangles;
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
+  uint8_t current_trigger;
+  uint32_t current_item_flags;
+  int helper_depth;
   int has_start;
   tmuf_iso start; /* spawn location of the first start block */
   uint32_t rand_state;

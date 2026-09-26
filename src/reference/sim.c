@@ -172,10 +172,34 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
       ((uint8_t *)t->surf->material_ids)[0] = (uint8_t)d->tuning.contact_response.single_material;
   }
   ref_mtree_update_box(d->root);
+  if (getenv("TMUF_SIM_DEBUG")) {
+    for (uint32_t i = 0; i < s->tree_count; i++) {
+      const ref_mtree *t = &s->trees[i];
+      fprintf(stderr, "tree %u %p flags %x children %u surf type %d t=(%g %g %g) box c=(%g %g %g) h=(%g %g %g)\n", i,
+              (const void *)t, t->flags, t->child_count, t->surf ? (int)t->surf->type : -1, (double)t->local.t.x,
+              (double)t->local.t.y, (double)t->local.t.z, (double)t->box.center.x, (double)t->box.center.y,
+              (double)t->box.center.z, (double)t->box.half.x, (double)t->box.half.y, (double)t->box.half.z);
+    }
+    for (uint32_t i = 0; i < v->wheel_count; i++)
+      fprintf(stderr, "wheel %u %s front %d kill %d tree %p\n", i, v->wheels[i].surface, v->wheels[i].front,
+              v->wheels[i].kills_lateral_speed, (void *)d->wheels[i].tree);
+    fprintf(stderr, "fake texture %ux%u bpp %u\n", v->fake_width, v->fake_height, v->fake_bpp);
+    for (uint32_t i = 0; i < v->material_count; i++)
+      fprintf(stderr, "material %u id %u blend %g %g %g %g fake %d period %g %g scale %g depth %g\n", i,
+              v->materials[i].natural_id, (double)v->materials[i].blend[0], (double)v->materials[i].blend[1],
+              (double)v->materials[i].blend[2], (double)v->materials[i].blend[3], v->materials[i].fake_bitmap != NULL,
+              (double)v->materials[i].fake_period_x, (double)v->materials[i].fake_period_z,
+              (double)v->materials[i].fake_speed_scale, (double)v->materials[i].fake_depth_max);
+  }
   d->linear_speed_cap = v->has_params ? v->speed_cap : 277.77777f;
   d->reverse_gear_speed_threshold = v->has_params ? v->reverse_speed_threshold : 10.0f;
   d->water_box.center = v3(v->water_box[0], v->water_box[1], v->water_box[2]);
   d->water_box.half = v3(v->water_box[3], v->water_box[4], v->water_box[5]);
+  d->fake_texture.width = v->fake_width;
+  d->fake_texture.height = v->fake_height;
+  d->fake_texture.bpp = v->fake_bpp;
+  d->fake_texture.stride = v->fake_width * v->fake_bpp;
+  d->fake_texture.pixels = v->fake_pixels;
   d->material_count = v->material_count;
   for (uint32_t i = 0; i < v->material_count; i++) {
     const tmuf_vehicle_material *m = &v->materials[i];
@@ -461,6 +485,14 @@ static gm_vec3 local_to_world_side_a(const gm_mat3 *r, gm_vec3 v) {
 
 static void collision_response(ref_sim *s) {
   sort_collisions(s->buf.items, s->buf.count);
+  if (getenv("TMUF_SIM_DEBUG"))
+    for (uint32_t i = 0; i < s->buf.count; i++) {
+      const ref_collision *c = &s->buf.items[i];
+      fprintf(stderr, "  t=%u col %u tree %p corpus %d mat %u/%u p %.9g %.9g %.9g n %.9g %.9g %.9g sep %.9g %.9g %.9g\n",
+              s->tick_ms, i, c->tree_a, c->corpus_b, c->mat_a, c->mat_b, (double)c->point.x, (double)c->point.y, (double)c->point.z, (double)c->normal.x,
+              (double)c->normal.y, (double)c->normal.z, (double)c->separation.x, (double)c->separation.y,
+              (double)c->separation.z);
+    }
   dyna *d = &s->body;
   for (uint32_t i = 0; i < s->buf.count; i++) {
     ref_collision *col = &s->buf.items[i];

@@ -1,5 +1,6 @@
 /* CSceneVehicleCar: lifecycle, wheels, contacts and impulses. */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "reference/car_util.h"
@@ -673,7 +674,20 @@ void car_create_fake_contacts(car *c) {
     gm_vec3 wp = iso4_mul_point(&iso, w->rest_iso.t);
     uint32_t px = fake_texture_index(wp.x, mat->fake_period_x, tex->width);
     uint32_t py = fake_texture_index(wp.z, mat->fake_period_z, tex->height);
-    uint8_t pixel = tex->pixels[(size_t)py * tex->stride + (size_t)px * tex->bpp];
+    static int flip = -1, ch = 0, swap = 0;
+    if (flip < 0) {
+      flip = getenv("TMUF_FAKE_FLIP") ? 1 : 0;
+      ch = getenv("TMUF_FAKE_CH") ? atoi(getenv("TMUF_FAKE_CH")) : 0;
+      swap = getenv("TMUF_FAKE_SWAP") ? 1 : 0;
+    }
+    if (swap) {
+      uint32_t t2 = px;
+      px = py;
+      py = t2;
+    }
+    if (flip)
+      py = tex->height - 1 - py;
+    uint8_t pixel = tex->pixels[(size_t)py * tex->stride + (size_t)px * tex->bpp + (size_t)ch];
     if (pixel == 0)
       continue;
     float ratio = (float)pixel / 255.0f;
