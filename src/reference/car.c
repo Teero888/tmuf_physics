@@ -655,6 +655,8 @@ static uint32_t fake_texture_index(float coord, float period, uint32_t dim) {
 }
 
 void car_create_fake_contacts(car *c) {
+  if (getenv("TMUF_NO_FAKE"))
+    return;
   gm_vec3 lin = body_lin_local(c);
   uint32_t cached = ~0u;
   const car_material *mat = NULL;

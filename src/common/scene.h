@@ -53,6 +53,9 @@ typedef struct tmuf_scene {
   uint8_t current_trigger;
   uint32_t current_item_flags;
   int helper_depth;
+  uint32_t frontier_count;
+  const void *frontier_info[64]; /* block infos of frontier zones */
+  uint32_t frontier_height[64];
   int has_start;
   tmuf_iso start; /* spawn location of the first start block */
   uint32_t rand_state;

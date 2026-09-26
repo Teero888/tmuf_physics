@@ -460,6 +460,12 @@ static void place_block(tmuf_scene *s, placed_block *pb, uint32_t tag) {
   block_size(s, pb->asset, pb->info, ground, size);
   tmuf_iso loc;
   block_location(s, &pb->b, size, &loc);
+  if (pb->type == BT_FRONTIER)
+    for (uint32_t i = 0; i < s->frontier_count; i++)
+      if (s->frontier_info[i] == pb->info) {
+        loc.t[1] += -(float)s->frontier_height[i] * s->square_height;
+        break;
+      }
   s->current_block = tag;
   if (debug_enabled())
     fprintf(stderr, "place %s at %u %u %u dir %u ground %d variant %u mobil %u/%u\n", pb->b.name ? pb->b.name : "(auto)",
@@ -562,6 +568,22 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
       base_asset = NULL;
   }
 
+  /* frontier zones: their blocks' mobils are lowered by the zone height
+     (ReplaySceneBlockDefinition::UsesCollectionLandZoneHeight) */
+  for (uint32_t i = 0; i < coll->zones.count && s->frontier_count < 64; i++) {
+    tmuf_asset *fa;
+    tmuf_gbx_node *fz = tmuf_assets_follow(&s->assets, ca, coll->zones.nodes[i], &fa);
+    if (!fz || !fz->data || fz->class_id != 0x0305e000u)
+      continue;
+    const tmuf_zone *z = fz->data;
+    tmuf_asset *ia;
+    tmuf_gbx_node *in = z->block_infos[0] ? tmuf_assets_follow(&s->assets, fa, z->block_infos[0], &ia) : NULL;
+    if (in && in->data) {
+      s->frontier_info[s->frontier_count] = in->data;
+      s->frontier_height[s->frontier_count++] = z->height;
+    }
+  }
+
   uint32_t sx = s->size[0], sy = s->size[1], sz = s->size[2];
   size_t columns = (size_t)sx * sz;
   uint8_t *zone_height = malloc(columns ? columns : 1);
@@ -612,7 +634,6 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
       continue;
     if (pb->b.x < sx && pb->b.z < sz)
       ground_block[(size_t)pb->b.x * sz + pb->b.z] = (int32_t)i;
-    place_block(s, pb, pb->map_index);
   }
 
   /* 2. default zone fill of the remaining columns (x outer, z inner) */
@@ -681,7 +702,11 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
     s->has_start = 1;
   }
 
-  /* mobils in the game's add order: terrain (above), fill, others */
+  /* mobils in the game's add order (removed ones never make it into the
+     zone): terrain, fill, others */
+  for (uint32_t i = 0; i < auto_first; i++)
+    if (blocks[i].type <= BT_FRONTIER && !blocks[i].removed)
+      place_block(s, &blocks[i], blocks[i].map_index);
   for (uint32_t i = auto_first; i < count; i++)
     if (!blocks[i].removed)
       place_block(s, &blocks[i], 0x80000000u | i);
