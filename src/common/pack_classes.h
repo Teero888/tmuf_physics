@@ -131,6 +131,8 @@ typedef struct tmuf_scene_object {
   tmuf_node_list children;
   int has_item;
   tmuf_hms_item item;
+  /* CSceneVehicle / CSceneVehicleCar */
+  tmuf_gbx_node *vehicle_tunings, *vehicle_materials, *vehicle_struct;
 } tmuf_scene_object;
 
 /* Vehicle tuning: chunks kept as raw fields in file order; physics code

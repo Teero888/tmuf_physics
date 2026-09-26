@@ -1120,7 +1120,68 @@ static void c0a00e000(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_gbx_node_body(g, &HMS_SOUND, &dummy);
 }
 
+static void c_fast_buffer_nod(tmuf_gbx *g, void *node, uint32_t id);
+
+/* CSceneVehicle 0x0a060000: tunings, materials remap, two references, then
+   the vehicle struct. */
+static void c0a060000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_scene_object *o = node;
+  o->vehicle_tunings = tmuf_gbx_noderef(g);
+  o->vehicle_materials = tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+  o->vehicle_struct = tmuf_gbx_noderef(g);
+}
+
+static void c0a02b003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_scene_object *)node)->vehicle_tunings = tmuf_gbx_noderef(g);
+}
+
+static void c0a02b008(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_scene_object *)node)->vehicle_materials = tmuf_gbx_noderef(g);
+}
+
+static void c0a02b014(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_scene_object *)node)->vehicle_struct = tmuf_gbx_noderef(g);
+}
+
+static void noderef_skip12(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 12);
+}
+
+static void noderef3(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  for (int i = 0; i < 3; i++)
+    tmuf_gbx_noderef(g);
+}
+
+static void noderef2(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
+}
+
+static void c0a02b002(tmuf_gbx *g, void *node, uint32_t id) {
+  c_fast_buffer_nod(g, node, id);
+  tmuf_gbx_u32(g);
+}
+
 static const tmuf_gbx_chunk SCENE_OBJECT_CHUNKS[] = {
+    READ(0x0a060000, c0a060000),    READ(0x0a02b002, c0a02b002),   READ(0x0a02b003, c0a02b003),
+    READ(0x0a02b004, skip_noderef), READ(0x0a02b005, noderef_skip12), READ(0x0a02b006, noderef3),
+    READ(0x0a02b007, noderef_skip12), READ(0x0a02b008, c0a02b008), READ(0x0a02b00a, skip16),
+    READ(0x0a02b00b, noderef2),     READ(0x0a02b00c, skip32),      NOPAY(0x0a02b00d),
+    NOPAY(0x0a02b00e),              NOPAY(0x0a02b00f),             NOPAY(0x0a02b010),
+    NOPAY(0x0a02b011),              NOPAY(0x0a02b012),             READ(0x0a02b014, c0a02b014),
     NOPAY(0x01001000),          NOPAY(0x0a005000),         READ(0x0a005001, c0a005001),
     READ(0x0a005002, skip4),    READ(0x0a005003, skip_noderef), READ(0x0a005004, skip4),
     READ(0x0a009000, skip4),    READ(0x0a00b000, c0a00b000), READ(0x0a00e000, c0a00e000),
@@ -2150,6 +2211,13 @@ static const tmuf_gbx_chunk REF_BUFFER_CHUNKS[] = {READ(0x01026000, c01026000)};
 static const tmuf_gbx_class REF_BUFFER = {0x01026000, "CMwRefBuffer", sizeof(tmuf_node_list), REF_BUFFER_CHUNKS, 1,
                                           NULL};
 
+/* ---- CSceneVehicleEnvironment (0x0a033000) ---- */
+
+static const tmuf_gbx_chunk VEHICLE_ENV_CHUNKS[] = {READ(0x0a033000, skip4), NOPAY(0x0a033001),
+                                                    READ(0x0a033002, noderef_array)};
+static const tmuf_gbx_class VEHICLE_ENV = {0x0a033000, "CSceneVehicleEnvironment", 1, VEHICLE_ENV_CHUNKS,
+                                           COUNT(VEHICLE_ENV_CHUNKS), NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
@@ -2157,6 +2225,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
-    &TRAFFIC_GRAPH,
+    &TRAFFIC_GRAPH,   &VEHICLE_ENV,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

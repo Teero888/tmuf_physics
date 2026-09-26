@@ -604,7 +604,67 @@ static int cmd_tuning(const char *packs, const char *path) {
   return rc;
 }
 
+static void dump_tree(tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *node, int depth) {
+  tmuf_asset *ta;
+  tmuf_gbx_node *tn = tmuf_assets_follow(assets, owner, node, &ta);
+  if (!tn || !tn->data || depth > 20)
+    return;
+  uint32_t cls = tn->cls ? tn->cls->id : 0;
+  if (cls != 0x0904f000u && cls != 0x09015000u && cls != 0x09062000u) {
+    printf("%*s[%08x]\n", depth * 2, "", tn->class_id);
+    return;
+  }
+  const tmuf_plug_tree *t = tn->data;
+  printf("%*stree '%s' flags %08x", depth * 2, "", t->name ? t->name : "", t->flags);
+  if (t->has_iso)
+    printf(" iso t=(%g %g %g)", t->iso[9], t->iso[10], t->iso[11]);
+  if (t->surface) {
+    tmuf_asset *sa;
+    tmuf_gbx_node *sn = tmuf_assets_follow(assets, ta, t->surface, &sa);
+    if (sn && sn->data && sn->class_id == 0x0900c000u) {
+      const tmuf_plug_surface *surf = sn->data;
+      tmuf_asset *ga;
+      tmuf_gbx_node *gn = tmuf_assets_follow(assets, sa, surf->geom, &ga);
+      if (gn && gn->data) {
+        const tmuf_plug_surface_geom *geom = gn->data;
+        printf(" surface type %u params %g %g %g %g %g %g tris %u mats %u", geom->type, geom->params[0],
+               geom->params[1], geom->params[2], geom->params[3], geom->params[4], geom->params[5],
+               geom->triangle_count, surf->material_count);
+      }
+    }
+  }
+  printf("\n");
+  for (uint32_t i = 0; i < t->child_count; i++)
+    dump_tree(assets, ta, t->children[i], depth + 1);
+}
+
+/* Prints the tree of a solid (pack path). */
+static int cmd_solid(const char *packs, const char *path) {
+  tmuf_packset set;
+  char err[256];
+  if (!tmuf_packset_open(&set, packs, err, sizeof err)) {
+    printf("packs: %s\n", err);
+    return 1;
+  }
+  tmuf_assets assets;
+  tmuf_assets_init(&assets, &set);
+  tmuf_asset *a = tmuf_assets_load_path(&assets, path);
+  if (!a)
+    a = tmuf_assets_load(&assets, tmuf_packset_find_stored(&set, path));
+  if (a && a->class_id == 0x09005000u) {
+    const tmuf_plug_solid *s = a->root;
+    printf("solid physics %d mass %g com %g %g %g\n", s->has_physics, s->mass, s->center_of_mass[0],
+           s->center_of_mass[1], s->center_of_mass[2]);
+    dump_tree(&assets, a, s->tree, 0);
+  }
+  tmuf_assets_free(&assets);
+  tmuf_packset_close(&set);
+  return 0;
+}
+
 int main(int argc, char **argv) {
+  if (argc >= 4 && strcmp(argv[1], "solid") == 0)
+    return cmd_solid(argv[2], argv[3]);
   if (argc >= 4 && strcmp(argv[1], "tuning") == 0)
     return cmd_tuning(argv[2], argv[3]);
   if (argc >= 5 && strcmp(argv[1], "scene") == 0)
