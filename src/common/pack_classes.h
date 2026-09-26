@@ -198,6 +198,32 @@ typedef struct tmuf_object_link {
   const char *tree_id;
 } tmuf_object_link;
 
+typedef struct tmuf_collection {
+  const char *name;
+  uint32_t zone_tag;
+  tmuf_node_list zones;
+  tmuf_gbx_node *default_zone;
+  float square_size, square_height;
+  const char *vehicle[3];
+  tmuf_gbx_node *scene_refs[2];
+  uint32_t surface_replacement_count;
+  float water_surface, water_secondary, water_render_cull;
+  int default_water, has_water_heights;
+  const char *folders[4]; /* block infos, ?, decorations, menu textures */
+  const char *display_name;
+} tmuf_collection;
+
+typedef struct tmuf_decoration {
+  const char *collector_ident[3];
+  tmuf_gbx_node *refs[6]; /* 0x03038011..16: size, audio, mood, ... */
+} tmuf_decoration;
+
+typedef struct tmuf_decoration_size {
+  uint32_t size[3];
+  uint32_t words[2];
+  tmuf_gbx_node *scene;
+} tmuf_decoration_size;
+
 extern const tmuf_gbx_class *const tmuf_pack_classes[];
 extern const size_t tmuf_pack_class_count;
 

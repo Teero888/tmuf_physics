@@ -34,6 +34,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/pack.h
   src/common/pack_classes.c
   src/common/pack_classes.h
+  src/common/packset.c
+  src/common/packset.h
   src/common/blowfish_tables.h
   src/common/challenge.c
   src/common/challenge.h

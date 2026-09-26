@@ -8,6 +8,8 @@
  *   tmuf_inspect map REPLAY OUT             write the embedded challenge GBX
  *   tmuf_inspect gbx PACKS_DIR PACK PATH    parse a pack file with feedback,
  *                                           print header info and mixed values
+ *   tmuf_inspect refs PACKS_DIR LIST        resolve the external references of
+ *                                           every file in LIST (verify format)
  *   tmuf_inspect verify PACKS_DIR LIST      LIST lines: "pack<TAB>path<TAB>hex..."
  *                                           (expected mixes from an oracle
  *                                           trace); parse and compare each
@@ -20,6 +22,7 @@
 #include "common/gbx.h"
 #include "common/pack.h"
 #include "common/pack_classes.h"
+#include "common/packset.h"
 #include "common/replay.h"
 
 static uint8_t *read_file(const char *path, size_t *size) {
@@ -281,9 +284,20 @@ static int cmd_gbx(const char *dir, const char *pack_name, const char *path) {
   int ok = tmuf_gbx_read_header(&g);
   printf("class %08x (%s), format %.4s, %u nodes, %u header chunks\n", g.class_id, tmuf_class_name(g.class_id),
          (const char *)g.format, g.node_count, g.header_chunk_count);
+  char file_dir[512];
+  snprintf(file_dir, sizeof file_dir, "%s", path);
+  char *slash = strrchr(file_dir, '\\');
+  if (slash)
+    slash[1] = 0;
+  else
+    file_dir[0] = 0;
   for (uint32_t i = 1; i <= g.node_count; i++)
-    if (g.nodes[i].external)
-      printf("  ext node %u: %s\n", i, g.nodes[i].file ? g.nodes[i].file : "(resource)");
+    if (g.nodes[i].external) {
+      char ext[512];
+      if (!tmuf_gbx_external_path(&g, &g.nodes[i], file_dir, ext, sizeof ext))
+        snprintf(ext, sizeof ext, "(unresolved)");
+      printf("  ext node %u: %s -> %s\n", i, g.nodes[i].file ? g.nodes[i].file : "(resource)", ext);
+    }
   if (ok)
     tmuf_gbx_read_root(&g);
   printf("%s after %llu bytes\n", g.error ? g.message : "parsed", (unsigned long long)g.pos);
@@ -411,7 +425,64 @@ static int cmd_verify(const char *dir, const char *list_path) {
   return failed != 0;
 }
 
+static int cmd_refs(const char *dir, const char *list_path) {
+  static tmuf_packset set;
+  char err[256];
+  if (!tmuf_packset_open(&set, dir, err, sizeof err)) {
+    fprintf(stderr, "%s\n", err);
+    return 1;
+  }
+  FILE *f = fopen(list_path, "r");
+  if (!f)
+    return 1;
+  static char line[1 << 20];
+  int files = 0, refs = 0, unresolved = 0, shown = 0;
+  while (fgets(line, sizeof line, f)) {
+    line[strcspn(line, "\n")] = 0;
+    char *path = strchr(line, '\t');
+    if (!path)
+      continue;
+    *path++ = 0;
+    char *tab = strchr(path, '\t');
+    if (tab)
+      *tab = 0;
+    tmuf_pack_ref r = tmuf_packset_find_stored(&set, path);
+    if (r.pack < 0)
+      continue;
+    tmuf_pack_stream ps;
+    if (!tmuf_pack_stream_open(&ps, &set.packs[r.pack], r.file))
+      continue;
+    tmuf_arena arena;
+    tmuf_arena_init(&arena);
+    tmuf_gbx g;
+    tmuf_gbx_init(&g, &ps.base, &arena, NULL, 0);
+    if (tmuf_gbx_read_header(&g)) {
+      files++;
+      for (uint32_t i = 1; i <= g.node_count; i++) {
+        if (!g.nodes[i].external || !g.nodes[i].file)
+          continue;
+        refs++;
+        char plain[600];
+        if (tmuf_packset_resolve(&set, &g, &g.nodes[i], path, plain, sizeof plain).pack < 0) {
+          unresolved++;
+          if (shown++ < 100000)
+            printf("UNRESOLVED %s: %s (folder %u, up %u)\n", path, g.nodes[i].file, g.nodes[i].folder,
+                   g.ancestor_level);
+        }
+      }
+    }
+    tmuf_arena_free(&arena);
+    tmuf_pack_stream_close(&ps);
+  }
+  fclose(f);
+  printf("refs: %d files, %d external refs, %d unresolved\n", files, refs, unresolved);
+  tmuf_packset_close(&set);
+  return unresolved != 0;
+}
+
 int main(int argc, char **argv) {
+  if (argc >= 4 && strcmp(argv[1], "refs") == 0)
+    return cmd_refs(argv[2], argv[3]);
   if (argc >= 4 && strcmp(argv[1], "verify") == 0)
     return cmd_verify(argv[2], argv[3]);
   if (argc >= 5 && strcmp(argv[1], "gbx") == 0)

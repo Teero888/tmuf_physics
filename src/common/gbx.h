@@ -67,8 +67,14 @@ typedef struct tmuf_gbx_node {
   const tmuf_gbx_class *cls;
   void *data;          /* NULL for external nodes */
   const char *file;    /* external nodes: file name as stored */
+  uint32_t folder;     /* external nodes: folder index (0: the file's own) */
   int external;
 } tmuf_gbx_node;
+
+typedef struct tmuf_gbx_folder {
+  const char *name;
+  uint32_t parent; /* folder index, 0 for top level */
+} tmuf_gbx_folder;
 
 typedef struct tmuf_gbx_header_chunk {
   uint32_t id;
@@ -106,6 +112,9 @@ struct tmuf_gbx {
   tmuf_gbx_header_chunk *header_chunks;
   uint32_t node_count;
   tmuf_gbx_node *nodes; /* index 1..node_count */
+  uint32_t ancestor_level; /* external refs: directories to go up */
+  uint32_t folder_count;
+  tmuf_gbx_folder *folders; /* index 1..folder_count, depth first */
 
   /* memory source used for LZO-compressed bodies */
   tmuf_mem_source body_src;
@@ -142,6 +151,10 @@ const char *tmuf_gbx_id(tmuf_gbx *g, uint32_t *number);
 tmuf_gbx_node *tmuf_gbx_fidref(tmuf_gbx *g);
 /* Node reference; parses inline nodes on first sight. NULL for null refs. */
 tmuf_gbx_node *tmuf_gbx_noderef(tmuf_gbx *g);
+/* Plain path of an external node, relative to the pack root, given the
+   directory (ending in '\\') of the file that references it. */
+int tmuf_gbx_external_path(const tmuf_gbx *g, const tmuf_gbx_node *n, const char *dir, char *out, size_t out_size);
+
 /* Parse a node's chunk stream until FACADE01 (with the node feedback of
    CMwNod::Archive). _as gives the node's actual class when it is read with
    an ancestor's reader. */

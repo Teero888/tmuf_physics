@@ -17,6 +17,13 @@
  * file inside the .pak), "F stream caller hexbytes" for every value the archive code mixes
  * into it (CClassicBufferCrypted::Write on a reading stream), followed by
  * likely return addresses further up the stack.
+ *
+ * TMUF_ORACLE_TRACE=plain additionally writes TMUF_ORACLE_OUT.plain, every
+ * plain byte the pack readers produce (little endian records):
+ *   'I' u32 stream u32 source u32 offset u32 size   crypted stream starts
+ *   'O' u32 zlib u32 source 0 0                       zlib buffer opens
+ *   'C' u32 stream u32 count 0 bytes[count]           BlowfishCBC_Read output
+ *   'Z' u32 zlib u32 count 0 bytes[count]             CClassicBufferZlib::Read
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -46,6 +53,7 @@ typedef struct hook {
 
 static FILE *g_out;
 static FILE *g_trace;
+static FILE *g_plain;
 static uint32_t g_step;
 static uint32_t g_dyna_records;
 
@@ -72,6 +80,98 @@ typedef uint32_t(__attribute__((thiscall)) * buffer_get_offset_fn)(void *self);
 /* CClassicBufferCrypted::Blowfish_InitForReading(CClassicBuffer *source, key,
    size): the IV is read at the source's current offset, i.e. the file's
    position inside the .pak. */
+/* ---- return hooks: log a function's output buffer after it returns ---- */
+
+typedef struct frame {
+  uint32_t key; /* esp right after the hooked function's ret */
+  uint32_t ret;
+  uint32_t self, out;
+  char kind;
+  int used;
+} frame;
+
+static frame g_frames[512];
+static volatile LONG g_frames_lock;
+static uint8_t *g_ret_stub;
+
+static void frames_lock(void) {
+  while (InterlockedExchange(&g_frames_lock, 1))
+    ;
+}
+static void frames_unlock(void) { InterlockedExchange(&g_frames_lock, 0); }
+
+static void plain_record(char kind, uint32_t a, uint32_t b, uint32_t c, uint32_t d, const void *data, uint32_t n) {
+  if (!g_plain)
+    return;
+  uint32_t words[4] = {a, b, c, d};
+  fputc(kind, g_plain);
+  fwrite(words, 4, 4, g_plain);
+  if (n)
+    fwrite(data, 1, n, g_plain);
+}
+
+/* Entry side: remember the call and send it to g_ret_stub on return.
+   args_bytes: bytes the callee pops (ret N). */
+static void hook_return(const uint32_t *stack, char kind, void *self, uint32_t out, uint32_t args_bytes) {
+  uint32_t *s = (uint32_t *)stack;
+  uint32_t key = (uint32_t)(uintptr_t)&s[ST_RET] + 4 + args_bytes;
+  frames_lock();
+  for (int i = 0; i < 512; i++)
+    if (!g_frames[i].used) {
+      g_frames[i] = (frame){key, s[ST_RET], (uint32_t)(uintptr_t)self, out, kind, 1};
+      s[ST_RET] = (uint32_t)(uintptr_t)g_ret_stub;
+      break;
+    }
+  frames_unlock();
+}
+
+/* Called from g_ret_stub: stack[0] eflags, [1..8] pushad, [9] slot for the
+   real return address; &stack[10] is esp after the hooked ret. */
+static void on_return(uint32_t *stack) {
+  uint32_t key = (uint32_t)(uintptr_t)&stack[10];
+  frame f = {0};
+  frames_lock();
+  for (int i = 0; i < 512; i++)
+    if (g_frames[i].used && g_frames[i].key == key) {
+      f = g_frames[i];
+      g_frames[i].used = 0;
+      break;
+    }
+  frames_unlock();
+  stack[9] = f.ret;
+  uint32_t count = stack[8]; /* eax */
+  if (f.used && count && count < (64u << 20))
+    plain_record(f.kind, f.self, count, 0, 0, (const void *)(uintptr_t)f.out, count);
+}
+
+static void on_crypted_read(void *stream, const uint32_t *stack) {
+  hook_return(stack, 'C', stream, stack[ST_ARG0], 8);
+}
+
+static void on_zlib_read(void *zlib, const uint32_t *stack) { hook_return(stack, 'Z', zlib, stack[ST_ARG0], 8); }
+
+static void on_zlib_open(void *zlib, const uint32_t *stack) {
+  plain_record('O', (uint32_t)(uintptr_t)zlib, stack[ST_ARG0], 0, 0, NULL, 0);
+}
+
+static void make_ret_stub(void) {
+  uint8_t *p = VirtualAlloc(NULL, 64, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+  g_ret_stub = p;
+  *p++ = 0x83, *p++ = 0xec, *p++ = 0x04; /* sub esp, 4 */
+  *p++ = 0x60;                           /* pushad */
+  *p++ = 0x9c;                           /* pushfd */
+  *p++ = 0x54;                           /* push esp */
+  *p++ = 0xe8;
+  int32_t rel = (int32_t)((uintptr_t)on_return - (uintptr_t)(p + 4));
+  memcpy(p, &rel, 4);
+  p += 4;
+  *p++ = 0x83, *p++ = 0xc4, *p++ = 0x04; /* add esp, 4 */
+  *p++ = 0x9d;                           /* popfd */
+  *p++ = 0x61;                           /* popad */
+  *p++ = 0xc3;                           /* ret */
+  FlushInstructionCache(GetCurrentProcess(), g_ret_stub, (SIZE_T)(p - g_ret_stub));
+}
+
 static void on_crypted_init_read(void *stream, const uint32_t *stack) {
   void *source = (void *)(uintptr_t)stack[ST_ARG0];
   uint32_t offset = 0xffffffffu;
@@ -79,14 +179,16 @@ static void on_crypted_init_read(void *stream, const uint32_t *stack) {
     buffer_get_offset_fn get_offset = (buffer_get_offset_fn)(*(void ***)source)[0x14 / 4];
     offset = get_offset(source);
   }
-  fprintf(g_trace, "I %08x %08x %08x %08x\n", (unsigned)(uintptr_t)stream, (unsigned)(uintptr_t)source,
-          (unsigned)offset, (unsigned)stack[ST_ARG0 + 2]);
+  if (g_trace)
+    fprintf(g_trace, "I %08x %08x %08x %08x\n", (unsigned)(uintptr_t)stream, (unsigned)(uintptr_t)source,
+            (unsigned)offset, (unsigned)stack[ST_ARG0 + 2]);
+  plain_record('I', (uint32_t)(uintptr_t)stream, (uint32_t)(uintptr_t)source, offset, stack[ST_ARG0 + 2], NULL, 0);
 }
 
 /* CClassicBufferCrypted::Write(const void *data, unsigned n).
    The stream is reading when *(this+8) != 0; then Write only mixes feedback. */
 static void on_crypted_write(void *stream, const uint32_t *stack) {
-  if (*(const uint32_t *)((const uint8_t *)stream + 8) == 0)
+  if (!g_trace || *(const uint32_t *)((const uint8_t *)stream + 8) == 0)
     return;
   const uint8_t *data = (const uint8_t *)(uintptr_t)stack[ST_ARG0];
   uint32_t n = stack[ST_ARG0 + 1];
@@ -118,6 +220,12 @@ static hook g_hooks[] = {
      {0x56, 0x8b, 0xc1, 0x57, 0x8b, 0xb8, 0x28, 0x03, 0x00, 0x00},
      10,
      on_copy_temp_to_state},
+};
+
+static hook g_plain_hooks[] = {
+    {"CClassicBufferCrypted::BlowfishCBC_Read", 0x009113a0, {0x83, 0xec, 0x14, 0x53, 0x55, 0x56}, 6, on_crypted_read},
+    {"CClassicBufferZlib::Read", 0x00910c60, {0x53, 0x8b, 0x59, 0x10, 0x56}, 5, on_zlib_read},
+    {"CClassicBufferZlib::OpenForReading", 0x009109c0, {0x8b, 0x44, 0x24, 0x04, 0x56}, 5, on_zlib_open},
 };
 
 static hook g_trace_hooks[] = {
@@ -208,16 +316,31 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
         return FALSE;
 
     n = GetEnvironmentVariableA("TMUF_ORACLE_TRACE", trace, sizeof trace);
-    if (n > 0 && n < sizeof trace && strstr(trace, "feedback")) {
-      strcat(path, ".trace");
-      g_trace = fopen(path, "w");
+    int want_feedback = n > 0 && n < sizeof trace && strstr(trace, "feedback");
+    int want_plain = n > 0 && n < sizeof trace && strstr(trace, "plain");
+    char extra[MAX_PATH + 16];
+    if (want_feedback) {
+      snprintf(extra, sizeof extra, "%s.trace", path);
+      g_trace = fopen(extra, "w");
       if (!g_trace)
         return FALSE;
       setvbuf(g_trace, NULL, _IOFBF, 1 << 20);
+    }
+    if (want_plain) {
+      snprintf(extra, sizeof extra, "%s.plain", path);
+      g_plain = fopen(extra, "wb");
+      if (!g_plain)
+        return FALSE;
+      setvbuf(g_plain, NULL, _IOFBF, 1 << 22);
+      make_ret_stub();
+      for (size_t i = 0; i < sizeof g_plain_hooks / sizeof g_plain_hooks[0]; i++)
+        if (!install(&g_plain_hooks[i]))
+          return FALSE;
+    }
+    if (want_feedback || want_plain)
       for (size_t i = 0; i < sizeof g_trace_hooks / sizeof g_trace_hooks[0]; i++)
         if (!install(&g_trace_hooks[i]))
           return FALSE;
-    }
   } else if (reason == DLL_PROCESS_DETACH) {
     if (g_out) {
       fclose(g_out);
@@ -226,6 +349,10 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
     if (g_trace) {
       fclose(g_trace);
       g_trace = NULL;
+    }
+    if (g_plain) {
+      fclose(g_plain);
+      g_plain = NULL;
     }
     char steps[16];
     snprintf(steps, sizeof steps, "%u", g_step);

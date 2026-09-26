@@ -433,17 +433,68 @@ tmuf_gbx_node *tmuf_gbx_noderef(tmuf_gbx *g) {
 
 /* ---- header ---- */
 
-static int read_folders(tmuf_gbx *g, unsigned depth) {
+/* Reference table folders, flattened depth first, 1-based. */
+static int read_folders(tmuf_gbx *g, uint32_t parent, unsigned depth) {
   uint32_t count = tmuf_gbx_u32(g);
   if (count > 4096 || depth > 32) {
     tmuf_gbx_fail(g, "reference folders");
     return 0;
   }
   for (uint32_t i = 0; i < count && !g->error; i++) {
-    tmuf_gbx_string(g);
-    read_folders(g, depth + 1);
+    const char *name = tmuf_gbx_string(g);
+    if (g->folder_count % 64 == 0) {
+      tmuf_gbx_folder *f = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_folder, (size_t)g->folder_count + 65);
+      if (!f) {
+        tmuf_gbx_fail(g, "out of memory");
+        return 0;
+      }
+      if (g->folder_count)
+        memcpy(f, g->folders, sizeof *f * ((size_t)g->folder_count + 1));
+      g->folders = f;
+    }
+    uint32_t index = ++g->folder_count;
+    g->folders[index].name = name;
+    g->folders[index].parent = parent;
+    read_folders(g, index, depth + 1);
   }
   return !g->error;
+}
+
+static int append(char *out, size_t out_size, const char *s) {
+  size_t n = strlen(out), k = strlen(s);
+  if (n + k >= out_size)
+    return 0;
+  memcpy(out + n, s, k + 1);
+  return 1;
+}
+
+static int append_folder(const tmuf_gbx *g, uint32_t folder, char *out, size_t out_size, unsigned depth) {
+  if (folder == 0)
+    return 1;
+  if (folder > g->folder_count || depth > 32)
+    return 0;
+  return append_folder(g, g->folders[folder].parent, out, out_size, depth + 1) &&
+         append(out, out_size, g->folders[folder].name) && append(out, out_size, "\\");
+}
+
+int tmuf_gbx_external_path(const tmuf_gbx *g, const tmuf_gbx_node *n, const char *dir, char *out, size_t out_size) {
+  if (!n || !n->external || !n->file || out_size == 0)
+    return 0;
+  out[0] = 0;
+  /* Go up ancestor_level directories from dir. */
+  size_t len = strlen(dir);
+  if (len >= out_size)
+    return 0;
+  memcpy(out, dir, len + 1);
+  for (uint32_t up = 0; up < g->ancestor_level; up++) {
+    if (len == 0)
+      return 0;
+    len--; /* trailing backslash */
+    while (len > 0 && out[len - 1] != '\\')
+      len--;
+    out[len] = 0;
+  }
+  return append_folder(g, n->folder, out, out_size, 0) && append(out, out_size, n->file);
 }
 
 int tmuf_gbx_read_header(tmuf_gbx *g) {
@@ -515,11 +566,12 @@ int tmuf_gbx_read_header(tmuf_gbx *g) {
     return 0;
   }
   if (external) {
-    tmuf_gbx_u32(g); /* ancestor level */
-    read_folders(g, 0);
+    g->ancestor_level = tmuf_gbx_u32(g);
+    read_folders(g, 0, 0);
     for (uint32_t i = 0; i < external && !g->error; i++) {
       uint32_t flags = tmuf_gbx_u32(g);
       const char *file = NULL;
+      uint32_t folder = 0;
       if (flags & 4)
         tmuf_gbx_u32(g); /* resource index */
       else
@@ -528,13 +580,14 @@ int tmuf_gbx_read_header(tmuf_gbx *g) {
       if (g->version >= 5)
         tmuf_gbx_u32(g); /* use file */
       if (!(flags & 4))
-        tmuf_gbx_u32(g); /* folder index */
+        folder = tmuf_gbx_u32(g);
       if (index == 0 || index > g->node_count) {
         tmuf_gbx_fail(g, "external node index %u", index);
         return 0;
       }
       g->nodes[index].external = 1;
       g->nodes[index].file = file;
+      g->nodes[index].folder = folder;
     }
   }
   if (g->error)

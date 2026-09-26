@@ -1560,11 +1560,124 @@ static const tmuf_gbx_chunk OBJECT_LINK_CHUNKS[] = {
 static const tmuf_gbx_class OBJECT_LINK = {0x0a014000, "CSceneObjectLink", sizeof(tmuf_object_link),
                                            OBJECT_LINK_CHUNKS, COUNT(OBJECT_LINK_CHUNKS), NULL};
 
+static void count4_array(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  skip_counted(g, 4);
+}
+
+/* ---- CGameCtnCollection (0x03033000) ---- */
+
+static void c03033009(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  c->name = id_text(g);
+  c->zone_tag = tmuf_gbx_u32(g);
+  read_node_list(g, &c->zones);
+  c->default_zone = tmuf_gbx_noderef(g);
+  tmuf_gbx_u32(g);
+  c->square_size = tmuf_gbx_f32(g);
+  c->square_height = tmuf_gbx_f32(g);
+  for (int i = 0; i < 3; i++)
+    c->vehicle[i] = id_text(g);
+}
+
+static void c0303300d(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  for (int i = 0; i < 2; i++) {
+    tmuf_gbx_u32(g);
+    c->scene_refs[i] = tmuf_gbx_noderef(g);
+  }
+}
+
+static void c0303301d(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  c->surface_replacement_count = tmuf_gbx_u32(g);
+  if (c->surface_replacement_count > 0x100000u) {
+    tmuf_gbx_fail(g, "surface replacement count %u", c->surface_replacement_count);
+    return;
+  }
+  for (uint32_t i = 0; i < c->surface_replacement_count && !g->error; i++) {
+    tmuf_gbx_id(g, NULL);
+    tmuf_gbx_id(g, NULL);
+    tmuf_gbx_u32(g);
+  }
+  tmuf_gbx_skip(g, 8);
+}
+
+static void c0303301e(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  c->has_water_heights = 1;
+  c->water_surface = tmuf_gbx_f32(g);
+  c->water_secondary = tmuf_gbx_f32(g);
+  c->water_render_cull = tmuf_gbx_f32(g);
+  c->default_water = tmuf_gbx_bool(g);
+}
+
+static void c03033020(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  for (int i = 0; i < 4; i++)
+    c->folders[i] = tmuf_gbx_string(g);
+}
+
+static void c03033021(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_collection *)node)->display_name = tmuf_gbx_string(g);
+}
+
+static void skip48(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 48);
+}
+
+static void skip28(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 28);
+}
+
+static const tmuf_gbx_chunk COLLECTION_CHUNKS[] = {
+    READ(0x03033009, c03033009), READ(0x0303300c, skip8),   READ(0x0303300d, c0303300d),
+    READ(0x0303300e, skip4),     READ(0x03033011, skip4),   READ(0x03033019, skip4),
+    READ(0x0303301a, skip48),    READ(0x0303301d, c0303301d), READ(0x0303301e, c0303301e),
+    READ(0x0303301f, count4_array), READ(0x03033020, c03033020), READ(0x03033021, c03033021),
+    READ(0x03033022, skip4),     READ(0x03033023, skip4),   READ(0x03033024, skip28),
+};
+static const tmuf_gbx_class COLLECTION = {0x03033000, "CGameCtnCollection", sizeof(tmuf_collection),
+                                          COLLECTION_CHUNKS, COUNT(COLLECTION_CHUNKS), NULL};
+
+/* ---- CGameCtnDecoration (0x03038000) ---- */
+
+static void decoration_ref(tmuf_gbx *g, void *node, uint32_t id) {
+  ((tmuf_decoration *)node)->refs[(id & 0xfff) - 0x11] = tmuf_gbx_noderef(g);
+}
+
+static void decoration_ident(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_decoration *d = node;
+  for (int i = 0; i < 3; i++)
+    d->collector_ident[i] = id_text(g);
+}
+
+static const tmuf_gbx_chunk DECORATION_CHUNKS[] = {
+    READ(0x0301a006, skip4),          READ(0x0301a007, skip24),         READ(0x0301a009, c0301a009),
+    READ(0x0301a00a, skip_id),        READ(0x0301a00b, decoration_ident), READ(0x03038011, decoration_ref),
+    READ(0x03038012, decoration_ref), READ(0x03038013, decoration_ref), READ(0x03038014, decoration_ref),
+    READ(0x03038015, decoration_ref), READ(0x03038016, decoration_ref),
+};
+static const tmuf_gbx_class DECORATION = {0x03038000, "CGameCtnDecoration", sizeof(tmuf_decoration),
+                                          DECORATION_CHUNKS, COUNT(DECORATION_CHUNKS), NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
-    &OBJECT_LINK,
+    &OBJECT_LINK,     &COLLECTION, &DECORATION,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

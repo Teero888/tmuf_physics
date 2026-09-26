@@ -157,6 +157,12 @@ class Worker:
             with open(dump, "rb") as src, gzip.open(out, "wb", compresslevel=6) as dst:
                 shutil.copyfileobj(src, dst)
             result["dump"] = out
+        if os.path.exists(dump + ".plain"):
+            out = os.path.join(self.args.out, "dumps", stem + ".plain.gz")
+            with open(dump + ".plain", "rb") as src, gzip.open(out, "wb", compresslevel=3) as dst:
+                shutil.copyfileobj(src, dst)
+            os.remove(dump + ".plain")
+            result["plain"] = out
         if os.path.exists(dump + ".trace"):
             out = os.path.join(self.args.out, "dumps", stem + ".trace.gz")
             with open(dump + ".trace", "rb") as src, gzip.open(out, "wb", compresslevel=6) as dst:
