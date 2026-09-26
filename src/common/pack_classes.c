@@ -902,13 +902,14 @@ static void block_info_base(tmuf_gbx *g, void *node, uint32_t id) {
     tmuf_gbx_string(g);
 }
 
+/* 0x0304e00a/00b/00e: u32, then helper mobils: ground, air(, common). */
 static void c0304e00e(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
-  UNUSED(id);
+  tmuf_block_info *b = node;
   tmuf_gbx_skip(g, 4);
-  tmuf_gbx_noderef(g);
-  tmuf_gbx_noderef(g);
-  tmuf_gbx_noderef(g);
+  b->helpers[0] = tmuf_gbx_noderef(g);
+  b->helpers[1] = tmuf_gbx_noderef(g);
+  if (id != 0x0304e00a)
+    b->helpers[2] = tmuf_gbx_noderef(g);
 }
 
 static void c03052000(tmuf_gbx *g, void *node, uint32_t id) {
@@ -946,8 +947,8 @@ static const tmuf_gbx_chunk BLOCK_INFO_CHUNKS[] = {
     NOPAY(0x0304e007),
     READ(0x0304e008, block_info_base),
     READ(0x0304e009, skip4),
-    NOPAY(0x0304e00a),
-    NOPAY(0x0304e00b),
+    READ(0x0304e00a, c0304e00e),
+    READ(0x0304e00b, c0304e00e),
     READ(0x0304e00c, skip96),
     READ(0x0304e00d, skip4),
     READ(0x0304e00e, c0304e00e),

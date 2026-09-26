@@ -98,6 +98,7 @@ typedef struct tmuf_block_info {
   tmuf_gbx_node *pylon_refs[3];
   const char *clip_id;
   uint32_t base_chunk;
+  tmuf_gbx_node *helpers[3]; /* helper mobils: ground, air, common */
 } tmuf_block_info;
 
 typedef struct tmuf_block_unit {
