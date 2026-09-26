@@ -227,9 +227,9 @@ typedef struct tmuf_decoration {
 } tmuf_decoration;
 
 typedef struct tmuf_decoration_size {
+  uint32_t base_height; /* default zone height, in squares */
   uint32_t size[3];
-  uint32_t words[2];
-  tmuf_gbx_node *scene;
+  tmuf_gbx_node *scene; /* CScene3d */
 } tmuf_decoration_size;
 
 extern const tmuf_gbx_class *const tmuf_pack_classes[];

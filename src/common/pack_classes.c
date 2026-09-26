@@ -1865,12 +1865,27 @@ static const tmuf_gbx_chunk DECORATION_CHUNKS[] = {
 static const tmuf_gbx_class DECORATION = {0x03038000, "CGameCtnDecoration", sizeof(tmuf_decoration),
                                           DECORATION_CHUNKS, COUNT(DECORATION_CHUNKS), NULL};
 
+/* ---- CGameCtnDecorationSize (0x0303b000) ---- */
+
+static void c0303b001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_decoration_size *d = node;
+  d->base_height = tmuf_gbx_u32(g);
+  for (int i = 0; i < 3; i++)
+    d->size[i] = tmuf_gbx_u32(g);
+  d->scene = tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk DECORATION_SIZE_CHUNKS[] = {READ(0x0303b000, skip20), READ(0x0303b001, c0303b001)};
+static const tmuf_gbx_class DECORATION_SIZE = {0x0303b000, "CGameCtnDecorationSize", sizeof(tmuf_decoration_size),
+                                               DECORATION_SIZE_CHUNKS, COUNT(DECORATION_SIZE_CHUNKS), NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
-    &MOTION_TRACK,
+    &MOTION_TRACK,    &DECORATION_SIZE,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);
