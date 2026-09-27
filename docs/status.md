@@ -1,6 +1,6 @@
 # Status
 
-Last updated 2026-09-26.
+Last updated 2026-09-28.
 
 ## Oracle (tools/oracle)
 
@@ -36,41 +36,56 @@ Last updated 2026-09-26.
   materials 560/560, every block info variant, zones, vehicle tunings and
   structs, mobils 95/124.
 
+## Reference backend (src/reference)
+
+Matches the game bit for bit on all 307 local oracle replays (every
+environment; `tools/sim/run_corpus.sh`): 302 run to the finish and finish at
+the recorded race time, the other 5 are replays the game rejects ("Wrong
+Simu") and match up to where the game aborts them. Includes an hour-long
+60-lap replay with respawns (360855 ticks, 11 s).
+
+- CHmsDyna integration, substeps, collision detection (static octree,
+  sphere/ellipsoid/box/mesh), sphere contact merge, collision response.
+- CSceneVehicleCar: all handling models, wheels, engine/gears, steering,
+  turbo, fake contacts, air control, water (buoyancy, drag, splash).
+- Race: checkpoint/finish triggers (collision group 1), checkpoint slots,
+  laps, spawn locations, respawn, freewheel reset.
+
+## Scene (src/common/scene.c, scene_ctn.c)
+
+- Challenge construction following the game's
+  CGameCtnChallenge: zone grid, field units, automatic base, suppression,
+  block mobils, clips (AddClipsToScene/UpdateClip), pylons.
+- Static triangles contain every reference triangle on 49 test maps;
+  the extra ones are editor helpers (never collided) and mobils with
+  emitter-leaves motion (trees), collided but left out of the reference
+  dump.
+- Material remaps: terrain-modifier skins (CGameCtnDecorationTerrainModifier
+  / CPlugGameSkin) for decoration-skin and replacement blocks; collection
+  surface replacement pairs decide replacement for ground blocks and clips.
+- Water grid (CSceneVehicleWaterZone) from the zones' water flags.
+
 ## Not done yet
 
-- Pack classes: CScene3d (decoration scene), CGameSkin, a few CFunc*.
-- Scene assembly, remaining: automatic base terrain (default zone), clips,
-  pylons, decoration scene; and keeping per-item structure (the game collides
-  against a static octree of items, so contact order depends on it).
-- Physics (reference backend): started. gm.h (game memory layout: row-major
-  matrices, quaternion w,x,y,z, validated on 10k oracle states), fmath.c
-  (deterministic binary32 transcendental functions), dyna.c (CHmsDyna
-  integration, forces, impulses, replacement). Vehicle: tuning decoder
-  (src/common/vehicle_tuning.c), vehicle mobil/solid readers; the StadiumCar
-  inverse inertia formula is confirmed against the oracle. Next: vehicle
-  definition (wheels, COM), static collision (octree, mesh/ellipsoid
-  queries), contacts, CSceneVehicleCar::ComputeForces, inputs, race logic.
-- Optimized backend, public API, frametee integration.
+- Water for collections with geometry water planes (Rally, Speed): the
+  plane of each wet column comes from the block's water shader
+  (CPlugBitmapRenderWater).
+- Pylon mesh raising (TranslateMeshVerticesAbove) is modelled in the
+  construction stream but not applied to the collision meshes.
+- Moving mobils (dedicated collision with archived item properties): their
+  triangles are in the static set with block defaults.
+- A larger oracle corpus (TMX replays in run3: respawns, water, Rally/Speed
+  water), optimized backend, public API, frametee integration.
 
-## Scene assembly (src/common/scene.c)
+## Tools
 
-- Explicit map blocks: block infos found by collector identifier (header
-  chunk 0x0301a003), ground/air variant, mobil selection, location, item
-  solids (following solid models), object links, tree transforms. On the
-  "fragmented" test map all 227 blocks resolve and all 125852 emitted
-  triangles are bit-identical to the reference static triangles
-  (`tools/dev/cmp_tris.py`, `tmuf_inspect scene`).
-- Terrain fill (default zone), helper mobils and the decoration scene are in:
-  the test map now matches the reference completely (206581/206581 triangles, bitwise).
-  Over 48 corpus maps: A04-Acrobatic exact; other Stadium maps within a few
-  hundred to a few thousand triangles (missing: clips via
-  CGameCtnApp::AddClipsToScene/UpdateClip, pylons via UpdatePylons; extra:
-  air-family helper mobils - open question for the oracle);
-  other environments need frontier zones, clips and pylons.
-- Start location (first start block spawn) matches the oracle's first state.
-- Ghidra project of TmForeverFixed.exe + PDB (full types):
-  `~/software/tmuf_oracle/ghidra` (`scripts/Decompile.java` dumps functions
-  matching regex lists).
+- `build-rel/tmuf_sim PACKS REPLAY ORACLE [--verbose] [--print]`, `--batch`.
+  `TMUF_SIM_TRACE=1` prints the car's contacts; `tools/dev/cmp_contacts.py`
+  compares them with an oracle physics trace
+  (`run_oracle.py --trace physics`).
+- `tmuf_inspect scene PACKS MAP OUT` dumps static triangles
+  (`TMUF_SCENE_BLOCKS` tags them, `TMUF_SCENE_DEBUG` traces assembly);
+  `tools/dev/cmp_tris.py` compares with a reference dump.
 
 ## Scene notes
 
