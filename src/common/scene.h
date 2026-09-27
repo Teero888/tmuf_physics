@@ -77,6 +77,7 @@ typedef struct tmuf_scene_catalog_entry {
 typedef struct tmuf_scene {
   tmuf_assets assets;
   const char *collection;
+  const char *default_vehicle; /* the collection's vehicle collector id */
   float square_size, square_height;
   uint32_t size[3];    /* map size in squares (decoration size) */
   uint32_t base_height; /* default zone height */

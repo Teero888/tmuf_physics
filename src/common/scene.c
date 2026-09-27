@@ -531,6 +531,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   }
   const tmuf_collection *coll = ca->root;
   s->collection = coll->name;
+  s->default_vehicle = coll->vehicle[0];
   s->square_size = coll->square_size;
   s->square_height = coll->square_height;
   load_material_remaps(s, ca, coll);

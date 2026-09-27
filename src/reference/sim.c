@@ -279,6 +279,16 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
     snprintf(err, err_size, "static world");
     return 0;
   }
+  if (getenv("TMUF_SIM_RECORDS"))
+    for (uint32_t i = 0; i < s->world.record_count; i++) {
+      const ref_static_record *rc = &s->world.records[i];
+      if (rc->corpus == (uint32_t)atoi(getenv("TMUF_SIM_RECORDS")))
+        fprintf(stderr, "record %u surf %p type %u tris %u box c=(%g %g %g) h=(%g %g %g) t=(%g %g %g)\n", i,
+                (const void *)rc->surf, rc->surf->type, rc->surf->triangle_count, (double)rc->bounds.center.x,
+                (double)rc->bounds.center.y, (double)rc->bounds.center.z, (double)rc->bounds.half.x,
+                (double)rc->bounds.half.y, (double)rc->bounds.half.z, (double)rc->iso.t.x, (double)rc->iso.t.y,
+                (double)rc->iso.t.z);
+    }
   if (getenv("TMUF_SIM_DEBUG"))
     for (uint32_t i = 0; i < s->triggers.record_count; i++) {
       const ref_static_record *rc = &s->triggers.records[i];

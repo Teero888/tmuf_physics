@@ -166,6 +166,11 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     goto done;
   }
   const char *vname = ghost->vehicle[0] && ghost->vehicle[0][0] ? ghost->vehicle[0] : "StadiumCar";
+  /* a vehicle the packs do not have (custom car ids): the game plays the
+     environment's own car */
+  if (!tmuf_vehicle_load(&vehicle, &scene.assets, vname, err, sizeof err) && scene.default_vehicle &&
+      scene.default_vehicle[0] && strcmp(scene.default_vehicle, vname) != 0)
+    vname = scene.default_vehicle;
   if (!tmuf_vehicle_load(&vehicle, &scene.assets, vname, err, sizeof err)) {
     printf("%s ERROR vehicle %s\n", name, err);
     goto done;
