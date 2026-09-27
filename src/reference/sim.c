@@ -120,9 +120,11 @@ static void iso_from_scene(gm_iso4 *iso, const tmuf_iso *t) {
 static gm_iso4 validation_spawn(const gm_iso4 *loc, uint32_t seed) {
   if (seed == 0)
     return *loc;
-  double normalized = (double)(seed % 100000u) / 100000.0;
-  float yaw_deg = (float)((normalized - 0.5) * 0.1000000014901161);
-  float yaw = (float)((double)(yaw_deg * 3.1415927410125732f) / 180.0);
+  /* every operation in binary32 (the game's x87 runs at 24-bit precision;
+     double intermediates differ, e.g. seed 3335649494) */
+  float normalized = (float)(seed % 100000u) / 100000.0f;
+  float yaw_deg = (normalized - 0.5f) * 0.1f;
+  float yaw = (yaw_deg * 3.1415927410125732f) / 180.0f;
   /* GmMat3::RotateY on identity, then LeftMult */
   float cs = tmuf_cosf(yaw), sn = tmuf_sinf(yaw);
   gm_mat3 r;
@@ -133,6 +135,13 @@ static gm_iso4 validation_spawn(const gm_iso4 *loc, uint32_t seed) {
   r.m[2][2] = cs;
   gm_iso4 out = *loc;
   out.r = mat3_compose(&r, &loc->r); /* LeftMult: the seed rotation first */
+  if (getenv("TMUF_SIM_DEBUG")) {
+    fprintf(stderr, "seed %u yaw %.9g cs %.9g sn %.9g\n", seed, (double)yaw, (double)cs, (double)sn);
+    for (int i = 0; i < 3; i++)
+      fprintf(stderr, "  spawn row %d: %.9g %.9g %.9g -> %.9g %.9g %.9g\n", i, (double)loc->r.m[i][0],
+              (double)loc->r.m[i][1], (double)loc->r.m[i][2], (double)out.r.m[i][0], (double)out.r.m[i][1],
+              (double)out.r.m[i][2]);
+  }
   return out;
 }
 
