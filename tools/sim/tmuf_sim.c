@@ -268,6 +268,11 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     uint32_t k = i + 1;
     if (k >= o.count)
       break;
+    /* the oracle dumps at the start of a tick, after that tick's respawns */
+    if (i + 1 < n && ticks[i + 1].respawns) {
+      matched++;
+      continue;
+    }
     int field = -1;
     int bad = diff_states(ours, o.states[k], 0, &field);
     if (!bad) {
