@@ -16,6 +16,7 @@ enum { SURF_SPHERE = 0, SURF_ELLIPSOID = 1, SURF_BOX = 6, SURF_MESH = 7 };
 /* A GmSurf (CPlugSurface geometry) with its material table. */
 typedef struct ref_surf {
   const void *key; /* surface node */
+  uint8_t materials; /* TMUF_MATERIALS_* its material ids were resolved with */
   uint32_t type;
   gm_box geom_box;          /* archived bounds */
   uint16_t material;        /* primitive's local material */

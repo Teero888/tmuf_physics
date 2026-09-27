@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "common/pack_classes.h"
@@ -172,6 +173,7 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->item_flags = s->current_item_flags;
   /* Helper trees hang below a new CHALLENGEHELPERTREE tree without the
      collision flag: never collided. Other mobils keep their item group. */
+  c->materials = s->current_materials;
   c->collision_group = s->helper_depth ? 0
                         : (s->force_static || !c->item_flags) ? 4
                                                                : (uint8_t)((c->item_flags >> 13) & 15u);
@@ -370,6 +372,13 @@ static void emit_install(tmuf_scene *s, const ctn_install *in) {
     return;
   s->current_block = in->tag;
   s->force_static = 1;
+  /* ReplaySceneBlockPlacement::MaterialVariant; clips and helpers use the
+     base materials unless remapped */
+  s->current_materials = in->material == CTN_MATERIAL_REPLACEMENT ? TMUF_MATERIALS_REPLACEMENT
+                         : in->material == CTN_MATERIAL_SKIN      ? TMUF_MATERIALS_SKIN
+                                                                  : TMUF_MATERIALS_OWN;
+  if (in->kind == CTN_INSTALL_PYLON)
+    s->current_materials = TMUF_MATERIALS_OWN;
   if (in->kind == CTN_INSTALL_CLIP) {
     for (unsigned side = 0; side < 4; side++) {
       if (!in->clip[side].node)
@@ -394,7 +403,93 @@ static void emit_install(tmuf_scene *s, const ctn_install *in) {
     s->helper_depth--;
   }
   s->force_static = 0;
+  s->current_materials = TMUF_MATERIALS_OWN;
   s->blocks_placed++;
+}
+
+static int ieq_prefix(const char *s, const char *prefix) {
+  for (; *prefix; s++, prefix++)
+    if (tolower((unsigned char)*s) != tolower((unsigned char)*prefix))
+      return 0;
+  return 1;
+}
+
+int tmuf_scene_remap_material(const tmuf_scene *s, uint8_t materials, const char *path, uint8_t *id) {
+  if (materials == TMUF_MATERIALS_OWN || !path || !path[0])
+    return 0;
+  for (uint32_t i = 0; i < s->material_remap_count; i++) {
+    const tmuf_material_remap *r = &s->material_remaps[i];
+    size_t n = strlen(r->source);
+    int hit = ieq(path, r->source) ||
+              (r->folder && ieq_prefix(path, r->source) && (r->source[n - 1] == '\\' || path[n] == '\\'));
+    if (!hit)
+      continue;
+    /* StaticSolidMaterialRemaps: the replacement's material, or the
+       default (concrete) material for a decoration skin */
+    *id = materials == TMUF_MATERIALS_REPLACEMENT ? r->replacement_id : 0;
+    return 1;
+  }
+  return 0;
+}
+
+static void dir_of(char *out, size_t size, const char *path) {
+  snprintf(out, size, "%s", path);
+  char *slash = strrchr(out, '\\');
+  if (slash)
+    slash[1] = 0;
+  else
+    out[0] = 0;
+}
+
+/* SkinMaterialRemapCatalog::Load: the CPlugGameSkin material rules of the
+   collection's terrain modifiers, in order. */
+static void load_material_remaps(tmuf_scene *s, tmuf_asset *ca, const tmuf_collection *coll) {
+  const tmuf_packset *set = s->assets.set;
+  for (uint32_t i = 0; i < coll->terrain_modifier_count; i++) {
+    char mpath[600], kpath[600], dir[600];
+    tmuf_pack_ref mr = tmuf_packset_resolve(set, &ca->gbx, coll->terrain_modifiers[i], ca->path, mpath, sizeof mpath);
+    tmuf_asset *ma = mr.pack >= 0 ? tmuf_assets_load(&s->assets, mr) : NULL;
+    if (debug_enabled())
+      fprintf(stderr, "terrain modifier %u: %s -> %s class %08x\n", i, mr.pack >= 0 ? mpath : "(unresolved)",
+              ma ? ma->path : "-", ma ? ma->class_id : 0);
+    if (!ma || !ma->root || ma->class_id != 0x0303c000u)
+      continue;
+    const tmuf_terrain_modifier *tm = ma->root;
+    tmuf_pack_ref kr = tmuf_packset_resolve(set, &ma->gbx, tm->skin, mpath, kpath, sizeof kpath);
+    tmuf_asset *ka = kr.pack >= 0 ? tmuf_assets_load(&s->assets, kr) : NULL;
+    if (!ka || !ka->root || ka->class_id != 0x03031000u || !tm->folder || !tm->folder[0])
+      continue;
+    const tmuf_game_skin *skin = ka->root;
+    if (debug_enabled())
+      fprintf(stderr, "  skin %s folder %s rules %u\n", kpath, tm->folder, skin->rule_count);
+    dir_of(dir, sizeof dir, kpath);
+    for (uint32_t k = 0; k < skin->rule_count; k++) {
+      const tmuf_skin_rule *rule = &skin->rules[k];
+      if (!rule->has_target || rule->class_id != 0x09079000u || !rule->prefix || !rule->prefix[0])
+        continue;
+      char target[600], repl[600];
+      tmuf_pack_ref tr = tmuf_packset_resolve(set, &ka->gbx, rule->target, kpath, target, sizeof target);
+      int folder = tr.pack < 0;
+      if (folder && !tmuf_gbx_external_path(&ka->gbx, rule->target, dir, target, sizeof target))
+        continue;
+      size_t fl = strlen(tm->folder);
+      snprintf(repl, sizeof repl, "%s%s%s%s", tm->folder, tm->folder[fl - 1] == '\\' ? "" : "\\", rule->prefix,
+               strstr(rule->prefix, ".Material.Gbx") ? "" : ".Material.Gbx");
+      /* only rules whose replacement material loads are installed */
+      tmuf_asset *ra = tmuf_assets_load_path(&s->assets, repl);
+      if (!ra || !ra->root || ra->class_id != 0x09079000u || !((tmuf_plug_material *)ra->root)->has_surface)
+        continue;
+      if (debug_enabled())
+        fprintf(stderr, "material remap %s%s -> %s (%u)\n", target, folder ? " (folder)" : "", repl,
+                ((tmuf_plug_material *)ra->root)->surface_id);
+      if (s->material_remap_count == TMUF_SCENE_MAX_MATERIAL_REMAPS)
+        return;
+      tmuf_material_remap *r = &s->material_remaps[s->material_remap_count++];
+      snprintf(r->source, sizeof r->source, "%s", target);
+      r->folder = folder;
+      r->replacement_id = ((tmuf_plug_material *)ra->root)->surface_id;
+    }
+  }
 }
 
 
@@ -411,6 +506,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->collection = coll->name;
   s->square_size = coll->square_size;
   s->square_height = coll->square_height;
+  load_material_remaps(s, ca, coll);
   build_catalog(s, coll->folders[0], NULL, CATALOG_BLOCK_INFO);
   build_catalog(s, coll->folders[2], ".TMDecoration.", CATALOG_DECORATION);
   tmuf_asset *da = tmuf_assets_load(&s->assets, find_collector(s, map->decoration[0], CATALOG_DECORATION));

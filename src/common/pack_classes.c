@@ -1950,9 +1950,18 @@ static void c0303301d(tmuf_gbx *g, void *node, uint32_t id) {
   for (uint32_t i = 0; i < c->surface_replacement_count && !g->error; i++) {
     tmuf_gbx_id(g, NULL);
     tmuf_gbx_id(g, NULL);
-    tmuf_gbx_u32(g);
   }
-  tmuf_gbx_skip(g, 8);
+  /* CFastBuffer of CGameCtnDecorationTerrainModifier: version, count, refs */
+  uint32_t version = tmuf_gbx_u32(g);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (version != 10u || n > 128u) {
+    tmuf_gbx_fail(g, "terrain modifier buffer %u/%u", version, n);
+    return;
+  }
+  c->terrain_modifier_count = n;
+  c->terrain_modifiers = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    c->terrain_modifiers[i] = tmuf_gbx_noderef(g);
 }
 
 static void c0303301e(tmuf_gbx *g, void *node, uint32_t id) {
@@ -1998,6 +2007,62 @@ static const tmuf_gbx_chunk COLLECTION_CHUNKS[] = {
 };
 static const tmuf_gbx_class COLLECTION = {0x03033000, "CGameCtnCollection", sizeof(tmuf_collection),
                                           COLLECTION_CHUNKS, COUNT(COLLECTION_CHUNKS), NULL};
+
+/* ---- CGameCtnDecorationTerrainModifier (0x0303c000) ---- */
+
+static void c0303c000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_terrain_modifier *m = node;
+  m->skin = tmuf_gbx_noderef(g);
+  m->folder = tmuf_gbx_string(g);
+}
+
+static void c0303c001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_terrain_modifier *)node)->name = id_text(g);
+}
+
+static const tmuf_gbx_chunk TERRAIN_MODIFIER_CHUNKS[] = {READ(0x0303c000, c0303c000), READ(0x0303c001, c0303c001)};
+static const tmuf_gbx_class TERRAIN_MODIFIER = {0x0303c000, "CGameCtnDecorationTerrainModifier",
+                                                sizeof(tmuf_terrain_modifier), TERRAIN_MODIFIER_CHUNKS,
+                                                COUNT(TERRAIN_MODIFIER_CHUNKS), NULL};
+
+/* ---- CPlugGameSkin (0x03031000) ---- */
+
+static void c03031003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_string(g);
+  tmuf_gbx_string(g);
+}
+
+static void c03031004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_game_skin *k = node;
+  uint8_t version = tmuf_gbx_u8(g);
+  if (version != 4u) {
+    tmuf_gbx_fail(g, "game skin version %u", version);
+    return;
+  }
+  for (int i = 0; i < 3; i++)
+    tmuf_gbx_string(g);
+  uint8_t n = tmuf_gbx_u8(g);
+  k->rules = TMUF_ARENA_ARRAY(g->arena, tmuf_skin_rule, n ? n : 1);
+  k->rule_count = 0;
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_skin_rule *r = &k->rules[k->rule_count++];
+    r->class_id = tmuf_gbx_u32(g);
+    r->prefix = tmuf_gbx_string(g);
+    r->has_target = tmuf_gbx_u32(g) != 0;
+    r->target = tmuf_gbx_noderef(g);
+    if (tmuf_gbx_u32(g) != 0u)
+      tmuf_gbx_fail(g, "game skin pack element index");
+  }
+}
+
+static const tmuf_gbx_chunk GAME_SKIN_CHUNKS[] = {READ(0x03031003, c03031003), READ(0x03031004, c03031004)};
+static const tmuf_gbx_class GAME_SKIN = {0x03031000, "CPlugGameSkin", sizeof(tmuf_game_skin), GAME_SKIN_CHUNKS,
+                                         COUNT(GAME_SKIN_CHUNKS), NULL};
 
 /* ---- CGameCtnDecoration (0x03038000) ---- */
 
@@ -2278,6 +2343,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL, &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
-    &TRAFFIC_GRAPH,   &VEHICLE_ENV,
+    &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

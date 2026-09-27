@@ -235,11 +235,34 @@ typedef struct tmuf_collection {
   const char *vehicle[3];
   tmuf_gbx_node *scene_refs[2];
   uint32_t surface_replacement_count;
+  uint32_t terrain_modifier_count;
+  tmuf_gbx_node **terrain_modifiers; /* CGameCtnDecorationTerrainModifier */
   float water_surface, water_secondary, water_render_cull;
   int default_water, has_water_heights;
   const char *folders[4]; /* block infos, ?, decorations, menu textures */
   const char *display_name;
 } tmuf_collection;
+
+/* CGameCtnDecorationTerrainModifier (0x0303c000): the skin applied to the
+   blocks of a terrain-modified column and where its materials live */
+typedef struct tmuf_terrain_modifier {
+  tmuf_gbx_node *skin; /* CPlugGameSkin */
+  const char *folder;  /* replacement material folder */
+  const char *name;    /* e.g. Fabric */
+} tmuf_terrain_modifier;
+
+/* CPlugGameSkin (0x03031000) remap rules (chunk 0x03031004) */
+typedef struct tmuf_skin_rule {
+  uint32_t class_id;  /* class of the replaced node (CPlugMaterial 0x09079000) */
+  const char *prefix; /* replacement name */
+  int has_target;
+  tmuf_gbx_node *target; /* replaced node: a material, or a folder when not loadable */
+} tmuf_skin_rule;
+
+typedef struct tmuf_game_skin {
+  uint32_t rule_count;
+  tmuf_skin_rule *rules;
+} tmuf_game_skin;
 
 typedef struct tmuf_decoration {
   const char *collector_ident[3];

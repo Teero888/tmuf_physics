@@ -38,6 +38,8 @@ typedef struct build_ctx {
   tmuf_assets *assets;
   uint32_t corpus;
   int error;
+  const tmuf_scene *scene;
+  uint8_t materials; /* TMUF_MATERIALS_* of the corpus */
 } build_ctx;
 
 static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *surface_node) {
@@ -45,9 +47,9 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
   tmuf_gbx_node *sn = tmuf_assets_follow(b->assets, owner, surface_node, &sa);
   if (!sn || !sn->data || sn->class_id != 0x0900c000u)
     return NULL;
-  /* one ref_surf per surface node */
+  /* one ref_surf per surface node and material mode */
   for (uint32_t i = b->w->surf_count; i-- > 0;)
-    if (b->w->surfs[i]->key == sn)
+    if (b->w->surfs[i]->key == sn && b->w->surfs[i]->materials == b->materials)
       return b->w->surfs[i];
   const tmuf_plug_surface *surf = sn->data;
   tmuf_asset *ga;
@@ -64,6 +66,7 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
     return NULL;
   }
   r->key = sn;
+  r->materials = b->materials;
   r->type = geom->type;
   r->geom_box.center = v3(geom->bbox[0], geom->bbox[1], geom->bbox[2]);
   r->geom_box.half = v3(geom->bbox[3], geom->bbox[4], geom->bbox[5]);
@@ -84,6 +87,13 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
       tmuf_gbx_node *mn = tmuf_assets_follow(b->assets, sa, m->ref, &ma);
       if (mn && mn->data && mn->class_id == 0x09079000u && ((tmuf_plug_material *)mn->data)->has_surface)
         id = ((tmuf_plug_material *)mn->data)->surface_id;
+      /* StaticSolidSurfaceAssembler::ApplyMaterialRemapToSurface */
+      char path[600];
+      uint8_t remapped;
+      if (b->materials != TMUF_MATERIALS_OWN && m->ref->external &&
+          tmuf_packset_resolve(b->assets->set, &sa->gbx, m->ref, sa->path, path, sizeof path).pack >= 0 &&
+          tmuf_scene_remap_material(b->scene, b->materials, path, &remapped))
+        id = remapped;
     }
     mats[i] = id;
   }
@@ -254,17 +264,18 @@ static uint32_t build_bintree(ref_world *w, const uint32_t *src, uint32_t n, int
 }
 
 ref_surf *ref_world_surface(ref_world *w, tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *surface) {
-  build_ctx b = {w, assets, 0, 0};
+  build_ctx b = {w, assets, 0, 0, NULL, TMUF_MATERIALS_OWN};
   return (ref_surf *)get_surf(&b, owner, surface);
 }
 
 int ref_world_build(ref_world *w, tmuf_scene *scene) {
   memset(w, 0, sizeof *w);
-  build_ctx b = {w, &scene->assets, 0, 0};
+  build_ctx b = {w, &scene->assets, 0, 0, scene, TMUF_MATERIALS_OWN};
   for (uint32_t i = 0; i < scene->corpus_count && !b.error; i++) {
     if (scene->corpora[i].trigger || scene->corpora[i].collision_group != 4)
       continue; /* race triggers and non-static items are not in the static group */
     b.corpus = i;
+    b.materials = scene->corpora[i].materials;
     gm_iso4 iso = iso_from_scene(&scene->corpora[i].iso);
     add_tree(&b, scene->corpora[i].owner, scene->corpora[i].tree, &iso, 0);
   }

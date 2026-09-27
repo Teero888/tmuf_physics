@@ -32,7 +32,22 @@ typedef struct tmuf_scene_corpus {
   uint8_t trigger; /* TriggerCheckpoint / TriggerFinishLine: not part of the static world */
   uint32_t item_flags; /* archived CHmsItem physics word of its mobil, 0 if none */
   uint8_t collision_group; /* CHmsItem::ECollisionGroup the game gives it (4: static) */
+  uint8_t materials;       /* TMUF_MATERIALS_* */
 } tmuf_scene_corpus;
+
+/* Which materials a mobil's solid uses (StaticSolidMaterialVariant): its
+   own, or remapped through the collection's terrain-modifier skins. */
+enum { TMUF_MATERIALS_OWN, TMUF_MATERIALS_REPLACEMENT, TMUF_MATERIALS_SKIN };
+
+/* A material the terrain-modifier skins replace, and the surface material
+   of its replacement. */
+typedef struct tmuf_material_remap {
+  char source[600]; /* plain path of the material, or of a folder of materials */
+  int folder;
+  uint8_t replacement_id;
+} tmuf_material_remap;
+
+#define TMUF_SCENE_MAX_MATERIAL_REMAPS 128
 
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
@@ -55,6 +70,9 @@ typedef struct tmuf_scene {
   int helper_depth;
   int force_static;
   uint32_t pylon_raise;
+  uint8_t current_materials;
+  uint32_t material_remap_count;
+  tmuf_material_remap material_remaps[TMUF_SCENE_MAX_MATERIAL_REMAPS];
   uint32_t frontier_count;
   const void *frontier_info[64]; /* block infos of frontier zones */
   uint32_t frontier_height[64];
@@ -70,6 +88,10 @@ typedef struct tmuf_scene {
 
 int tmuf_scene_build(tmuf_scene *scene, const tmuf_packset *set, const tmuf_challenge *map);
 void tmuf_scene_free(tmuf_scene *scene);
+
+/* Surface material id of the material at plain path `path` under the
+   corpus material mode `materials`; returns 0 if the material is kept. */
+int tmuf_scene_remap_material(const tmuf_scene *scene, uint8_t materials, const char *path, uint8_t *id);
 
 /* Game transform math (GmIso4), same operation order. */
 void tmuf_iso_identity(tmuf_iso *iso);
