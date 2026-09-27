@@ -1947,9 +1947,10 @@ static void c0303301d(tmuf_gbx *g, void *node, uint32_t id) {
     tmuf_gbx_fail(g, "surface replacement count %u", c->surface_replacement_count);
     return;
   }
+  c->surface_replacements = TMUF_ARENA_ARRAY(g->arena, const char *, 2 * c->surface_replacement_count + 1);
   for (uint32_t i = 0; i < c->surface_replacement_count && !g->error; i++) {
-    tmuf_gbx_id(g, NULL);
-    tmuf_gbx_id(g, NULL);
+    c->surface_replacements[2 * i] = id_text(g);
+    c->surface_replacements[2 * i + 1] = id_text(g);
   }
   /* CFastBuffer of CGameCtnDecorationTerrainModifier: version, count, refs */
   uint32_t version = tmuf_gbx_u32(g);

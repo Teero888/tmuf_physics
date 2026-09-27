@@ -235,6 +235,7 @@ typedef struct tmuf_collection {
   const char *vehicle[3];
   tmuf_gbx_node *scene_refs[2];
   uint32_t surface_replacement_count;
+  const char **surface_replacements; /* (source, target) surface id pairs */
   uint32_t terrain_modifier_count;
   tmuf_gbx_node **terrain_modifiers; /* CGameCtnDecorationTerrainModifier */
   float water_surface, water_secondary, water_render_cull;

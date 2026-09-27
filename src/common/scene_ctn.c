@@ -154,6 +154,7 @@ typedef struct ctn {
   ctn_mobil **mobils;
   uint32_t mobil_count, mobil_cap;
   ctn_result *out;
+  const tmuf_collection *coll;
   /* the installation stream keeps the mobil instances of each entry */
   ctn_mobil **inst_main, **inst_helper;
   uint32_t inst_cap;
@@ -975,9 +976,55 @@ static void create_mobil_for_clip(ctn *c, ctn_block *b) {
   }
 }
 
+/* CGameCtnCollection::SurfaceReplacementIndex != -1 */
+static int has_surface_replacement(ctn *c, const char *source, const char *target) {
+  for (uint32_t i = 0; i < c->coll->surface_replacement_count; i++)
+    if (id_eq(c->coll->surface_replacements[2 * i], source) && id_eq(c->coll->surface_replacements[2 * i + 1], target))
+      return 1;
+  return 0;
+}
+
+/* ReplaySceneSurfaceResolver::ReplacementRemapApplies for an authored
+   non-clip block: its ground surface differs from its column's zone and the
+   collection replaces one by the other. */
+static int block_replacement_applies(ctn *c, ctn_block *b) {
+  if (!b->ground || b->info->type <= BT_FRONTIER || b->info->type == BT_CLIP || b->unit_count == 0 ||
+      b->info->n[1] == 0)
+    return 0;
+  uint32_t uc[3];
+  bunit_coord(b->units[0], uc);
+  ctn_zone *rz = real_zone(c, uc);
+  const char *source = b->info->u[1][0].surface;
+  if (!rz || !source || !source[0] || id_eq(source, rz->id))
+    return 0;
+  return has_surface_replacement(c, source, rz->id);
+}
+
 /* CGameCtnChallenge::CreateMobilForBlock (materials are resolved later) */
 static void create_mobil_for_block(ctn *c, ctn_block *b) {
   if (b->info->type == BT_CLIP) {
+    /* a ground clip between its zone and a junction of another surface
+       uses the replacement materials */
+    int replacement = 0;
+    if (b->ground && b->unit_count) {
+      uint32_t uc[3];
+      bunit_coord(b->units[0], uc);
+      ctn_zone *rz = real_zone(c, uc);
+      if (rz) {
+        const char *target = rz->id, *source = rz->id;
+        for (uint32_t side = 0; side < 4; side++) {
+          ctn_info *j = neighbour_junction(c, b->coord, side);
+          if (!j || j->n[1] == 0)
+            continue;
+          const char *cand = j->u[1][0].surface;
+          if (!id_eq(cand, target))
+            source = cand;
+        }
+        if (!id_eq(source, target) && has_surface_replacement(c, source, target))
+          replacement = 1;
+      }
+    }
+    b->replacement_remap = replacement;
     create_mobil_for_clip(c, b);
     return;
   }
@@ -1414,6 +1461,7 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
   c->sq = s->square_size;
   c->sqh = s->square_height;
   const tmuf_collection *coll = ca->root;
+  c->coll = coll;
 
   /* zones */
   c->zones = calloc(coll->zones.count + 1, sizeof *c->zones);
@@ -1637,8 +1685,11 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
           i++;
         continue;
       }
-      if (pass != 0 && b->origin == ORIGIN_AUTHORED)
+      if (pass != 0 && b->origin == ORIGIN_AUTHORED) {
+        if (block_replacement_applies(c, b))
+          b->replacement_remap = 1;
         create_mobil_for_block(c, b);
+      }
       i++;
     }
   }

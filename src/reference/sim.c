@@ -526,7 +526,7 @@ static void collision_response(ref_sim *s) {
       for (uint32_t k = 0; k < s->car.wheel_count; k++)
         if (s->car.wheels[k].tree == ct.tree)
           w = (int)k;
-      fprintf(stderr, "  CON t=%u w%d n %.6g %.6g %.6g p %.6g %.6g %.6g v %.6g %.6g %.6g r %.6g %.6g %.6g mat %u\n",
+      fprintf(stderr, "  CON t=%u w%d n %.9g %.9g %.9g p %.9g %.9g %.9g v %.9g %.9g %.9g r %.9g %.9g %.9g mat %u\n",
               s->tick_ms, w, (double)ct.normal.x, (double)ct.normal.y, (double)ct.normal.z, (double)ct.point.x,
               (double)ct.point.y, (double)ct.point.z, (double)ct.speed.x, (double)ct.speed.y, (double)ct.speed.z,
               (double)ct.replacement.x, (double)ct.replacement.y, (double)ct.replacement.z, ct.peer_material);
