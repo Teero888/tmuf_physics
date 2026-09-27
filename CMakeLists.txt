@@ -43,6 +43,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/assets.h
   src/common/scene.c
   src/common/scene.h
+  src/common/scene_ctn.c
+  src/common/scene_ctn.h
   src/common/vehicle_tuning.c
   src/common/vehicle_tuning.h
   src/common/vehicle.c

@@ -332,8 +332,11 @@ static void c09015002(tmuf_gbx *g, void *node, uint32_t id) {
     tmuf_gbx_fail(g, "mip child count %u", n);
     return;
   }
-  t->children = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
-  t->child_count = 0;
+  /* the mip levels follow the children the CPlugTree chunks linked */
+  tmuf_gbx_node **children = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, t->child_count + n + 1);
+  if (t->child_count)
+    memcpy(children, t->children, sizeof *children * t->child_count);
+  t->children = children;
   for (uint32_t i = 0; i < n && !g->error; i++) {
     tmuf_gbx_skip(g, 4); /* distance */
     tmuf_gbx_node *c = tmuf_gbx_noderef(g);
@@ -1007,6 +1010,7 @@ static void c03036003(tmuf_gbx *g, void *node, uint32_t id) {
 static void c03036004(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   ((tmuf_block_unit *)node)->helper_mask = tmuf_gbx_u32(g);
+  ((tmuf_block_unit *)node)->has_helper_mask = 1;
 }
 
 static void c03036005(tmuf_gbx *g, void *node, uint32_t id) {

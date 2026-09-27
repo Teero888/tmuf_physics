@@ -116,6 +116,7 @@ typedef struct tmuf_block_unit {
   const char *junction;
   uint8_t junction_extra[8];
   uint32_t helper_mask;
+  int has_helper_mask;
   const char *terrain_modifier;
 } tmuf_block_unit;
 

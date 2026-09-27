@@ -1,4 +1,5 @@
 #include "common/scene.h"
+#include "common/scene_ctn.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,6 +92,8 @@ static void add_triangle(tmuf_scene *s, const float a[3], const float b[3], cons
 static void emit_surface(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *surface_node, const tmuf_iso *world) {
   tmuf_asset *sa;
   tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, owner, surface_node, &sa);
+  if (debug_enabled() && (!sn || !sn->data || sn->class_id != 0x0900c000u))
+    fprintf(stderr, "      surface %p class %08x data %p skipped\n", (void *)sn, sn ? sn->class_id : 0, sn ? sn->data : NULL);
   if (!sn || !sn->data || sn->class_id != 0x0900c000u)
     return;
   const tmuf_plug_surface *surf = sn->data;
@@ -169,7 +172,9 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->item_flags = s->current_item_flags;
   /* Helper trees hang below a new CHALLENGEHELPERTREE tree without the
      collision flag: never collided. Other mobils keep their item group. */
-  c->collision_group = s->helper_depth ? 0 : !c->item_flags ? 4 : (uint8_t)((c->item_flags >> 13) & 15u);
+  c->collision_group = s->helper_depth ? 0
+                        : (s->force_static || !c->item_flags) ? 4
+                                                               : (uint8_t)((c->item_flags >> 13) & 15u);
 }
 
 static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_node, const tmuf_iso *world, int depth) {
@@ -198,9 +203,10 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   tmuf_asset *ma;
   tmuf_gbx_node *mn = tmuf_assets_follow(&s->assets, owner, mobil_node, &ma);
   if (debug_enabled())
-    fprintf(stderr, "  %*smobil %p class %08x cls %s data %p item %d\n", depth * 2, "", (void *)mn, mn ? mn->class_id : 0,
-            mn && mn->cls ? mn->cls->name : "-", mn ? mn->data : NULL,
-            mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u ? ((tmuf_scene_object *)mn->data)->has_item : -1);
+    fprintf(stderr, "  %*smobil %p class %08x cls %s data %p item %d flags %08x\n", depth * 2, "", (void *)mn,
+            mn ? mn->class_id : 0, mn && mn->cls ? mn->cls->name : "-", mn ? mn->data : NULL,
+            mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u ? ((tmuf_scene_object *)mn->data)->has_item : -1,
+            mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u ? ((tmuf_scene_object *)mn->data)->item.physics_flags : 0);
   if (!mn || !mn->data)
     return;
   if (!mn->cls || mn->cls->id != 0x0a005000u)
@@ -271,14 +277,19 @@ static int ieq(const char *a, const char *b) {
 
 /* Appends every collector under folder whose file name contains kind (e.g.
    ".TMED", ".TMDecoration.") to the catalog. */
+/* CGameCtnBlockInfoFlat .. CGameCtnBlockInfoRectAsym (Rally stores the
+   latter as .EDRectAsym, the others as .TMED*) */
+static int is_block_info_class(uint32_t id) { return id >= 0x0304f000u && id <= 0x03056000u && !(id & 0xfffu); }
+
 static void build_catalog(tmuf_scene *s, const char *folder, const char *kind, uint8_t tag) {
   const tmuf_packset *set = s->assets.set;
   char path[512];
   size_t flen = strlen(folder);
   for (int p = 0; p < set->pack_count; p++)
     for (uint32_t f = 0; f < set->packs[p].file_count; f++) {
-      if (!tmuf_pack_file_path(&set->packs[p], f, path, sizeof path) || strncmp(path, folder, flen) != 0 ||
-          !strstr(path, kind))
+      if (!tmuf_pack_file_path(&set->packs[p], f, path, sizeof path) || strncmp(path, folder, flen) != 0)
+        continue;
+      if (kind ? !strstr(path, kind) : !is_block_info_class(set->packs[p].files[f].class_id))
         continue;
       const char *name = collector_name(s, (tmuf_pack_ref){p, f});
       if (!name)
@@ -321,51 +332,8 @@ static tmuf_asset *find_collection(tmuf_scene *s, const char *name) {
   return NULL;
 }
 
-static void block_size(tmuf_scene *s, tmuf_asset *bi_asset, const tmuf_block_info *bi, int ground, uint32_t size[3]) {
-  size[0] = size[1] = size[2] = 1;
-  const tmuf_node_list *units = &bi->units[ground ? 0 : 1];
-  for (uint32_t i = 0; i < units->count; i++) {
-    tmuf_asset *ua;
-    tmuf_gbx_node *un = tmuf_assets_follow(&s->assets, bi_asset, units->nodes[i], &ua);
-    if (!un || !un->data || un->class_id != 0x03036000u)
-      continue;
-    const tmuf_block_unit *u = un->data;
-    for (int k = 0; k < 3; k++)
-      if (u->offset[k] + 1 > size[k])
-        size[k] = u->offset[k] + 1;
-  }
-}
-
-/* CGameCtnBlock::GetMobilLoc. */
-static void block_location(const tmuf_scene *s, const tmuf_challenge_block *b, const uint32_t size[3], tmuf_iso *iso) {
-  float sq = s->square_size, h = s->square_height;
-  tmuf_iso_identity(iso);
-  iso->t[0] = (float)b->x * sq;
-  iso->t[1] = (float)b->y * h;
-  iso->t[2] = (float)b->z * sq;
-  unsigned quarter = 0;
-  switch (b->dir & 3) {
-  case 0: /* north */
-    break;
-  case 1: /* east */
-    iso->t[0] = (float)size[2] * sq + iso->t[0];
-    quarter = 1;
-    break;
-  case 2: /* south */
-    iso->t[0] = (float)size[0] * sq + iso->t[0];
-    iso->t[2] = (float)size[2] * sq + iso->t[2];
-    quarter = 2;
-    break;
-  case 3: /* west */
-    iso->t[2] = (float)size[0] * sq + iso->t[2];
-    quarter = 3;
-    break;
-  }
-  rotate_quarter_y(iso, quarter);
-}
-
 /* The game's rand() (MSVC LCG) as used by GmFunc::RandNat. */
-static uint32_t rand_nat(tmuf_scene *s, uint32_t lo, uint32_t hi) {
+uint32_t scene_rand_nat(tmuf_scene *s, uint32_t lo, uint32_t hi) {
   s->rand_state = s->rand_state * 214013u + 2531011u;
   uint32_t r = (s->rand_state >> 16) & 0x7fffu;
   float unit = (float)r / 32768.0f;
@@ -373,136 +341,62 @@ static uint32_t rand_nat(tmuf_scene *s, uint32_t lo, uint32_t hi) {
   return (uint32_t)(scaled + (float)lo);
 }
 
-enum { BT_FLAT, BT_FRONTIER, BT_CLASSIC, BT_ROAD, BT_CLIP, BT_SLOPE, BT_PYLON, BT_RECT_ASYM, BT_OTHER };
-
-static int block_type(uint32_t class_id) {
-  switch (class_id) {
-  case 0x0304f000u: return BT_FLAT;
-  case 0x03050000u: return BT_FRONTIER;
-  case 0x03051000u: return BT_CLASSIC;
-  case 0x03052000u: return BT_ROAD;
-  case 0x03053000u: return BT_CLIP;
-  case 0x03054000u: return BT_SLOPE;
-  case 0x03055000u: return BT_PYLON;
-  case 0x03056000u: return BT_RECT_ASYM;
-  default: return BT_OTHER;
-  }
-}
-
-typedef struct placed_block {
-  tmuf_challenge_block b; /* coord, dir, flags */
-  tmuf_asset *asset;
-  const tmuf_block_info *info;
-  int type;
-  uint32_t map_index; /* ~0 for automatic blocks */
-  int removed;
-} placed_block;
-
-/* Unit offsets of a block rotated into map axes (CGameCtnBlockInfo::
-   GetRotatedOffset). Returns the number of units written. */
-static uint32_t rotated_units(tmuf_scene *s, const placed_block *pb, int ground, uint32_t (*out)[3], uint32_t cap) {
-  uint32_t size[3];
-  block_size(s, pb->asset, pb->info, ground, size);
-  const tmuf_node_list *units = &pb->info->units[ground ? 0 : 1];
-  uint32_t n = 0;
-  for (uint32_t i = 0; i < units->count && n < cap; i++) {
-    tmuf_asset *ua;
-    tmuf_gbx_node *un = tmuf_assets_follow(&s->assets, pb->asset, units->nodes[i], &ua);
-    if (!un || !un->data || un->class_id != 0x03036000u)
-      continue;
-    const uint32_t *o = ((const tmuf_block_unit *)un->data)->offset;
-    uint32_t r[3];
-    switch (pb->b.dir & 3) {
-    case 0: r[0] = o[0]; r[2] = o[2]; break;
-    case 1: r[0] = size[2] - 1 - o[2]; r[2] = o[0]; break;
-    case 2: r[0] = size[0] - 1 - o[0]; r[2] = size[2] - 1 - o[2]; break;
-    default: r[0] = o[2]; r[2] = size[0] - 1 - o[0]; break;
-    }
-    r[1] = o[1];
-    out[n][0] = pb->b.x + r[0];
-    out[n][1] = pb->b.y + r[1];
-    out[n][2] = pb->b.z + r[2];
-    n++;
-  }
-  return n;
-}
-
-static const tmuf_node_list *mobil_list(const tmuf_block_info *bi, int ground, uint32_t variant) {
-  int f = ground ? 0 : 1;
-  if (variant >= bi->variant_count[f])
+tmuf_asset *scene_block_info(tmuf_scene *s, const char *name) {
+  tmuf_pack_ref r = find_collector(s, name, CATALOG_BLOCK_INFO);
+  if (r.pack < 0)
     return NULL;
-  const tmuf_node_list *l = &bi->variants[f][variant];
-  return l->count ? l : NULL;
+  tmuf_asset *a = tmuf_assets_load(&s->assets, r);
+  return a && a->root ? a : NULL;
 }
 
-/* CGameCtnBlock::CreateBlockMobil + CGameCtnBlockInfo::BuildBlockMobil. */
-static void place_block(tmuf_scene *s, placed_block *pb, uint32_t tag) {
-  uint32_t flags = pb->b.flags;
-  int ground = (flags & 0x1000u) != 0;
-  uint32_t variant = flags & 0x3fu;
-  uint32_t selection = (flags >> 6) & 0x3fu;
-  if (selection == 0x3fu) {
-    const tmuf_node_list *l = mobil_list(pb->info, ground, variant);
-    selection = l && l->count > 1 ? rand_nat(s, 0, l->count - 1) : 0;
-  }
-  const tmuf_node_list *mobils = mobil_list(pb->info, ground, variant);
-  if (!mobils) {
-    ground = !ground;
-    mobils = mobil_list(pb->info, ground, variant);
-  }
-  if (!mobils) {
-    s->blocks_missing++;
+int scene_debug(void) { return debug_enabled(); }
+
+/* GmMat3::SetRotateQuarterY(quarter) (rotate_quarter_y counts the other way) */
+void tmuf_iso_rotate_quarter_y(tmuf_iso *iso, unsigned quarter) { rotate_quarter_y(iso, (4u - quarter) & 3u); }
+
+/* ClipSideTransform */
+static void clip_side(unsigned side, float sq, tmuf_iso *out) {
+  static const unsigned QUARTER[4] = {0, 3, 2, 1};
+  tmuf_iso_identity(out);
+  tmuf_iso_rotate_quarter_y(out, QUARTER[side & 3]);
+  out->t[0] = (side == 1 || side == 2) ? sq : 0.0f;
+  out->t[1] = 0.0f;
+  out->t[2] = (side == 2 || side == 3) ? sq : 0.0f;
+}
+
+/* AppendBlockPlacementModels for one installation */
+static void emit_install(tmuf_scene *s, const ctn_install *in) {
+  if (!in->active || in->suppressed)
     return;
+  s->current_block = in->tag;
+  s->force_static = 1;
+  if (in->kind == CTN_INSTALL_CLIP) {
+    for (unsigned side = 0; side < 4; side++) {
+      if (!in->clip[side].node)
+        continue;
+      tmuf_iso local, world;
+      clip_side(side, s->square_size, &local);
+      tmuf_iso_mult(&world, &local, &in->iso);
+      emit_mobil(s, in->clip[side].asset, in->clip[side].node, &world, 0);
+    }
+  } else if (in->kind == CTN_INSTALL_PYLON) {
+    s->pylon_raise = in->pylon_raise;
+    emit_mobil(s, in->main.asset, in->main.node, &in->iso, 0);
+    s->pylon_raise = 0;
+  } else {
+    if (in->main.node)
+      emit_mobil(s, in->main.asset, in->main.node, &in->iso, 0);
+    s->force_static = 0;
+    s->helper_depth++;
+    for (int k = 0; k < 2; k++)
+      if (in->helper[k].node)
+        emit_mobil(s, in->helper[k].asset, in->helper[k].node, &in->iso, 0);
+    s->helper_depth--;
   }
-  if (selection >= mobils->count)
-    selection = 0;
-  uint32_t size[3];
-  block_size(s, pb->asset, pb->info, ground, size);
-  tmuf_iso loc;
-  block_location(s, &pb->b, size, &loc);
-  if (pb->type == BT_FRONTIER)
-    for (uint32_t i = 0; i < s->frontier_count; i++)
-      if (s->frontier_info[i] == pb->info) {
-        loc.t[1] += -(float)s->frontier_height[i] * s->square_height;
-        break;
-      }
-  s->current_block = tag;
-  if (debug_enabled())
-    fprintf(stderr, "place %s at %u %u %u dir %u ground %d variant %u mobil %u/%u\n", pb->b.name ? pb->b.name : "(auto)",
-            pb->b.x, pb->b.y, pb->b.z, pb->b.dir, ground, variant, selection, mobils->count);
-  emit_mobil(s, pb->asset, mobils->nodes[selection], &loc, 0);
-  /* CGameCtnBlockInfo::BuildBlockHelperMobil: family helper (by the
-     requested family), then the common helper */
-  int helper_ground = (flags & 0x1000u) != 0;
-  const tmuf_gbx_node *fh = pb->info->helpers[helper_ground ? 0 : 1];
-  uint32_t before = s->triangle_count;
-  s->helper_depth++;
-  if (fh)
-    emit_mobil(s, pb->asset, (tmuf_gbx_node *)fh, &loc, 0);
-  uint32_t mid = s->triangle_count;
-  if (pb->info->helpers[2])
-    emit_mobil(s, pb->asset, pb->info->helpers[2], &loc, 0);
-  s->helper_depth--;
-  if (debug_enabled() && (pb->info->helpers[0] || pb->info->helpers[1] || pb->info->helpers[2]))
-    fprintf(stderr, "helpers %s: g %p a %p c %p -> family %u common %u\n", pb->b.name ? pb->b.name : "(auto)",
-            (void *)pb->info->helpers[0], (void *)pb->info->helpers[1], (void *)pb->info->helpers[2], mid - before,
-            s->triangle_count - mid);
+  s->force_static = 0;
   s->blocks_placed++;
-  const char *probe = getenv("TMUF_SCENE_PROBE");
-  if (probe && pb->b.name && strcmp(pb->b.name, probe) == 0) {
-    for (int f = 0; f < 2; f++)
-      for (uint32_t v = 0; v < pb->info->variant_count[f]; v++)
-        for (uint32_t m = 0; m < pb->info->variants[f][v].count; m++) {
-          uint32_t sz2[3];
-          block_size(s, pb->asset, pb->info, f == 0, sz2);
-          block_location(s, &pb->b, sz2, &loc);
-          s->current_block = 0x40000000u | (uint32_t)f << 16 | v << 8 | m;
-          emit_mobil(s, pb->asset, pb->info->variants[f][v].nodes[m], &loc, 0);
-        }
-  }
 }
 
-#define MAX_UNITS 256
 
 int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challenge *map) {
   memset(s, 0, sizeof *s);
@@ -517,7 +411,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->collection = coll->name;
   s->square_size = coll->square_size;
   s->square_height = coll->square_height;
-  build_catalog(s, coll->folders[0], ".TMED", CATALOG_BLOCK_INFO);
+  build_catalog(s, coll->folders[0], NULL, CATALOG_BLOCK_INFO);
   build_catalog(s, coll->folders[2], ".TMDecoration.", CATALOG_DECORATION);
   tmuf_asset *da = tmuf_assets_load(&s->assets, find_collector(s, map->decoration[0], CATALOG_DECORATION));
   if (!da || da->class_id != 0x03038000u) {
@@ -557,165 +451,29 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
     fprintf(stderr, "no decoration scene\n");
   }
 
-  /* default zone: flat, clip and pylon block infos */
-  tmuf_asset *za;
-  tmuf_gbx_node *zn = tmuf_assets_follow(&s->assets, ca, coll->default_zone, &za);
-  const tmuf_zone *zone = zn && zn->data && zn->class_id == 0x0305d000u ? zn->data : NULL;
-  tmuf_asset *base_asset = NULL;
-  if (zone) {
-    tmuf_gbx_node *fn = tmuf_assets_follow(&s->assets, za, zone->block_infos[0], &base_asset);
-    if (!fn || !fn->data || !base_asset || fn != &base_asset->gbx.nodes[0])
-      base_asset = NULL;
-  }
-
-  /* frontier zones: their blocks' mobils are lowered by the zone height
-     (ReplaySceneBlockDefinition::UsesCollectionLandZoneHeight) */
-  for (uint32_t i = 0; i < coll->zones.count && s->frontier_count < 64; i++) {
-    tmuf_asset *fa;
-    tmuf_gbx_node *fz = tmuf_assets_follow(&s->assets, ca, coll->zones.nodes[i], &fa);
-    if (!fz || !fz->data || fz->class_id != 0x0305e000u)
-      continue;
-    const tmuf_zone *z = fz->data;
-    tmuf_asset *ia;
-    tmuf_gbx_node *in = z->block_infos[0] ? tmuf_assets_follow(&s->assets, fa, z->block_infos[0], &ia) : NULL;
-    if (in && in->data) {
-      s->frontier_info[s->frontier_count] = in->data;
-      s->frontier_height[s->frontier_count++] = z->height;
-    }
-  }
-
-  uint32_t sx = s->size[0], sy = s->size[1], sz = s->size[2];
-  size_t columns = (size_t)sx * sz;
-  uint8_t *zone_height = malloc(columns ? columns : 1);
-  uint8_t *has_terrain = calloc(columns ? columns : 1, 1);
-  int32_t *ground_block = malloc(sizeof(int32_t) * (columns ? columns : 1));
-  placed_block *blocks = calloc(map->block_count + columns + 1, sizeof *blocks);
-  uint32_t (*units)[3] = malloc(sizeof *units * MAX_UNITS);
-  if (!zone_height || !has_terrain || !ground_block || !blocks || !units) {
-    free(zone_height), free(has_terrain), free(ground_block), free(blocks), free(units);
-    snprintf(s->error, sizeof s->error, "out of memory");
+  /* the map's blocks, clips and pylons, in the game's add order */
+  ctn_result cr;
+  if (!ctn_build(s, map, ca, &cr)) {
+    snprintf(s->error, sizeof s->error, "challenge construction failed");
     return 0;
   }
-  for (size_t c = 0; c < columns; c++) {
-    zone_height[c] = (uint8_t)s->base_height;
-    ground_block[c] = -1;
-  }
-
-  uint32_t count = 0;
-  for (uint32_t i = 0; i < map->block_count; i++) {
-    const tmuf_challenge_block *b = &map->blocks[i];
-    tmuf_asset *ba = tmuf_assets_load(&s->assets, find_collector(s, b->name, CATALOG_BLOCK_INFO));
-    if (debug_enabled())
-      fprintf(stderr, "block %s flags %08x -> %s\n", b->name, b->flags, ba ? ba->path : "(none)");
-    if (!ba || !ba->root) {
-      s->blocks_missing++;
+  s->blocks_missing = cr.blocks_missing;
+  /* ReplaySceneBlockPlacements::FirstSurvivingStartLineSpawn:
+     CGameCtnBlock::SpawnLocation of the first start block */
+  for (uint32_t i = 0; i < cr.count && !s->has_start; i++) {
+    const ctn_install *in = &cr.items[i];
+    if (in->kind != CTN_INSTALL_BLOCK || !in->start_line)
       continue;
-    }
-    placed_block *pb = &blocks[count++];
-    pb->b = *b;
-    pb->asset = ba;
-    pb->info = ba->root;
-    pb->type = block_type(ba->class_id);
-    pb->map_index = i;
-  }
-
-  /* 1. terrain blocks: zone heights, then their mobils */
-  for (uint32_t i = 0; i < count; i++) {
-    placed_block *pb = &blocks[i];
-    if (pb->type > BT_FRONTIER || pb->b.x >= sx || pb->b.z >= sz)
-      continue;
-    size_t c = (size_t)pb->b.x * sz + pb->b.z;
-    zone_height[c] = pb->b.y;
-    has_terrain[c] = 1;
-  }
-  for (uint32_t i = 0; i < count; i++) {
-    placed_block *pb = &blocks[i];
-    if (pb->type > BT_FRONTIER)
-      continue;
-    if (pb->b.x < sx && pb->b.z < sz)
-      ground_block[(size_t)pb->b.x * sz + pb->b.z] = (int32_t)i;
-  }
-
-  /* 2. default zone fill of the remaining columns (x outer, z inner) */
-  uint32_t auto_first = count;
-  if (base_asset) {
-    for (uint32_t x = 0; x < sx; x++)
-      for (uint32_t z = 0; z < sz; z++) {
-        size_t c = (size_t)x * sz + z;
-        if (has_terrain[c])
-          continue;
-        placed_block *pb = &blocks[count];
-        memset(pb, 0, sizeof *pb);
-        pb->b.x = (uint8_t)x;
-        pb->b.y = (uint8_t)s->base_height;
-        pb->b.z = (uint8_t)z;
-        pb->b.flags = 0x1000u | 0xfc0u; /* ground, variant 0, automatic mobil */
-        pb->asset = base_asset;
-        pb->info = base_asset->root;
-        pb->type = BT_FLAT;
-        pb->map_index = ~0u;
-        ground_block[c] = (int32_t)count;
-        count++;
-      }
-  }
-
-  /* 3. other blocks: their ground-level units remove the terrain below */
-  for (uint32_t i = 0; i < auto_first; i++) {
-    placed_block *pb = &blocks[i];
-    if (pb->type <= BT_FRONTIER)
-      continue;
-    int ground = (pb->b.flags & 0x1000u) != 0;
-    uint32_t n = rotated_units(s, pb, ground, units, MAX_UNITS);
-    int inside = 1;
-    for (uint32_t k = 0; k < n; k++)
-      if (units[k][0] >= sx || units[k][1] >= sy || units[k][2] >= sz)
-        inside = 0;
-    if (!inside) {
-      if (debug_enabled())
-        fprintf(stderr, "removed %s at %u %u %u (outside)\n", pb->b.name, pb->b.x, pb->b.y, pb->b.z);
-      pb->removed = 1;
-      continue;
-    }
-    for (uint32_t k = 0; k < n; k++) {
-      size_t c = (size_t)units[k][0] * sz + units[k][2];
-      if (units[k][1] == (uint32_t)zone_height[c] + 1u && ground_block[c] >= 0)
-        blocks[ground_block[c]].removed = 1;
-    }
-  }
-
-  /* CGameCtnChallenge::GetStartLine(0): first start or start/finish block;
-     CGameCtnBlock::GetSpawnLoc: the block info's spawn location for the
-     block's family, then the block location. */
-  for (uint32_t i = 0; i < auto_first && !s->has_start; i++) {
-    placed_block *pb = &blocks[i];
-    if (pb->removed || !pb->info->has_way_type || (pb->info->way_type != 0 && pb->info->way_type != 4))
-      continue;
-    int ground = (pb->b.flags & 0x1000u) != 0;
-    uint32_t sz3[3];
-    block_size(s, pb->asset, pb->info, ground, sz3);
-    tmuf_iso loc, local;
-    block_location(s, &pb->b, sz3, &loc);
+    tmuf_iso local;
     tmuf_iso_identity(&local);
-    if (pb->info->has_spawn)
-      tmuf_iso_from_archive(&local, pb->info->spawn[ground ? 0 : 1]);
-    tmuf_iso_mult(&s->start, &local, &loc);
+    if (in->info->has_spawn)
+      tmuf_iso_from_archive(&local, in->info->spawn[in->ground ? 0 : 1]);
+    tmuf_iso_mult(&s->start, &local, &in->iso);
     s->has_start = 1;
   }
-
-  /* mobils in the game's add order (removed ones never make it into the
-     zone): terrain, fill, others */
-  for (uint32_t i = 0; i < auto_first; i++)
-    if (blocks[i].type <= BT_FRONTIER && !blocks[i].removed)
-      place_block(s, &blocks[i], blocks[i].map_index);
-  for (uint32_t i = auto_first; i < count; i++)
-    if (!blocks[i].removed)
-      place_block(s, &blocks[i], 0x80000000u | i);
-  for (uint32_t i = 0; i < auto_first; i++)
-    if (blocks[i].type > BT_FRONTIER && !blocks[i].removed)
-      place_block(s, &blocks[i], blocks[i].map_index);
-
-  free(zone_height), free(has_terrain), free(ground_block), free(blocks), free(units);
-
+  for (uint32_t i = 0; i < cr.count; i++)
+    emit_install(s, &cr.items[i]);
+  ctn_result_free(&cr);
   return 1;
 }
 
