@@ -99,7 +99,7 @@ typedef struct tmuf_scene {
   const void *frontier_info[64]; /* block infos of frontier zones */
   uint32_t frontier_height[64];
   int has_start;
-  tmuf_iso start; /* spawn location of the first start block */
+  tmuf_iso start; /* spawn location of the first start block, else identity */
   uint32_t rand_state;
   uint32_t catalog_count, catalog_cap;
   uint32_t corpus_count, corpus_cap;

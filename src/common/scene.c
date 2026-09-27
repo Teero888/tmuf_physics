@@ -596,6 +596,8 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->blocks_missing = cr.blocks_missing;
   /* ReplaySceneBlockPlacements::FirstSurvivingStartLineSpawn:
      CGameCtnBlock::SpawnLocation of the first start block */
+  /* without a start block the car spawns at the origin */
+  tmuf_iso_identity(&s->start);
   for (uint32_t i = 0; i < cr.count && !s->has_start; i++) {
     const ctn_install *in = &cr.items[i];
     if (in->kind != CTN_INSTALL_BLOCK || !in->start_line)
