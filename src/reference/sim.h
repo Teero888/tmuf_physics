@@ -20,8 +20,23 @@ typedef struct ref_tick {
   float gate_a, gate_b, steering;
 } ref_tick;
 
+/* CTrackManiaRace: checkpoint slots and the respawn location */
+typedef struct ref_race {
+  int has_spawn;
+  gm_iso4 current, previous; /* CTrackManiaPlayerInfo spawn locations */
+  uint32_t checkpoint_count, laps, lap_checkpoints, completed_laps, checkpoints_passed;
+  int completed;
+  uint8_t *passed; /* checkpoint_count + 1 slots (the last: finish) */
+  /* per scene corpus */
+  int32_t *slot; /* checkpoint slot, -1 if none */
+  uint8_t *role, *respawn_current;
+  gm_iso4 *spawn;
+} ref_race;
+
 typedef struct ref_sim {
   ref_world world;
+  ref_world triggers;
+  ref_race race;
   car_def def;
   car car;
   dyna body;
@@ -39,7 +54,7 @@ typedef struct ref_sim {
 } ref_sim;
 
 /* Builds the world from the scene and the car from the vehicle; spawns at
-   `spawn` rotated by the validation seed. */
+   `spawn` rotated by the validation seed. Races one lap (see race.laps). */
 int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *vehicle, const gm_iso4 *spawn, uint32_t seed,
                  const ref_tick *first, char *err, size_t err_size);
 void ref_sim_free(ref_sim *s);

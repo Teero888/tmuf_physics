@@ -136,11 +136,150 @@ static gm_iso4 validation_spawn(const gm_iso4 *loc, uint32_t seed) {
   return out;
 }
 
+/* ---- race (CTrackManiaRace) ---- */
+
+enum { GP_STATIC = 0, GP_TRIGGER = 1 };
+
+static int race_init(ref_race *r, const tmuf_scene *scene) {
+  uint32_t n = scene->corpus_count ? scene->corpus_count : 1;
+  r->laps = 1;
+  r->slot = malloc(sizeof *r->slot * n);
+  r->role = calloc(n, 1);
+  r->respawn_current = calloc(n, 1);
+  r->spawn = calloc(n, sizeof *r->spawn);
+  if (!r->slot || !r->role || !r->respawn_current || !r->spawn)
+    return 0;
+  /* ReplayStaticCorpusCollection: checkpoint slots in installation order */
+  for (uint32_t i = 0; i < scene->corpus_count; i++) {
+    const tmuf_scene_corpus *c = &scene->corpora[i];
+    r->slot[i] = -1;
+    if (!c->trigger || c->collision_group != 1)
+      continue;
+    r->role[i] = c->race_role;
+    r->respawn_current[i] = c->respawn_current;
+    iso_from_scene(&r->spawn[i], &c->spawn);
+    if (c->race_role == TMUF_RACE_CHECKPOINT)
+      r->slot[i] = (int32_t)r->checkpoint_count++;
+    if (getenv("TMUF_SIM_DEBUG"))
+      fprintf(stderr, "trigger corpus %u tag %08x role %u slot %d at %g %g %g spawn %g %g %g\n", i, c->tag, c->race_role,
+              r->slot[i], (double)c->iso.t[0], (double)c->iso.t[1], (double)c->iso.t[2], (double)c->spawn.t[0],
+              (double)c->spawn.t[1], (double)c->spawn.t[2]);
+  }
+  r->passed = calloc(r->checkpoint_count + 1, 1);
+  return r->passed != NULL;
+}
+
+/* CTrackManiaRace::SetInitialSpawnLocation */
+static void race_set_initial_spawn(ref_race *r, const gm_iso4 *spawn) {
+  r->current = r->previous = *spawn;
+  r->has_spawn = 1;
+}
+
+/* CTrackManiaRace::ClearVehicleFreewheelState */
+static void race_clear_freewheel(ref_sim *s) { s->car.controls.forced_low_speed_friction = 0; }
+
+/* CTrackManiaRace::InternalOnCheckpoint */
+static int race_internal_checkpoint(ref_sim *s, uint32_t index, uint32_t slot, const gm_iso4 *spawn) {
+  ref_race *r = &s->race;
+  if (index > r->checkpoint_count || slot > r->checkpoint_count || r->passed[slot])
+    return 0;
+  r->passed[slot] = 1;
+  if (index != r->checkpoint_count) {
+    r->lap_checkpoints++;
+    r->checkpoints_passed++;
+  }
+  if (spawn) {
+    gm_iso4 at = *spawn;
+    r->current = at; /* StoreSpawnLocation: SetSpawnLoc(spawn, 0) */
+    r->has_spawn = 1;
+  } else {
+    r->current = r->previous;
+  }
+  race_clear_freewheel(s);
+  return 1;
+}
+
+/* CTrackManiaRace::OnCheckpointContact for a trigger corpus the car touched */
+static void race_trigger(ref_sim *s, uint32_t corpus) {
+  ref_race *r = &s->race;
+  if (corpus >= s->corpus_count)
+    return;
+  if (getenv("TMUF_SIM_DEBUG"))
+    fprintf(stderr, "t=%u trigger corpus %u role %u slot %d lap checkpoints %u\n", s->tick_ms, corpus, r->role[corpus],
+            r->slot[corpus], r->lap_checkpoints);
+  switch (r->role[corpus]) {
+  case TMUF_RACE_CHECKPOINT: {
+    /* OnCheckpoint */
+    if (r->respawn_current[corpus])
+      race_clear_freewheel(s);
+    if (r->slot[corpus] < 0)
+      return;
+    gm_iso4 current = r->current;
+    const gm_iso4 *spawn = r->respawn_current[corpus] ? &current : &r->spawn[corpus];
+    race_internal_checkpoint(s, r->lap_checkpoints, (uint32_t)r->slot[corpus], spawn);
+    return;
+  }
+  case TMUF_RACE_FINISH:
+  case TMUF_RACE_START_FINISH:
+    /* OnFinishLine */
+    if (r->completed || r->lap_checkpoints < r->checkpoint_count)
+      return;
+    if (!race_internal_checkpoint(s, r->checkpoint_count, r->checkpoint_count, NULL))
+      return;
+    r->completed_laps++;
+    if (r->laps != 0 && r->completed_laps >= r->laps) {
+      r->completed = 1;
+      return;
+    }
+    memset(r->passed, 0, r->checkpoint_count + 1);
+    r->lap_checkpoints = 0;
+    return;
+  default:
+    return;
+  }
+}
+
+/* ReplayVehicleSimulation::Respawn */
+static void respawn(ref_sim *s) {
+  if (!s->race.has_spawn)
+    return;
+  car *c = &s->car;
+  float a = c->controls.gate_a, b = c->controls.gate_b, st = c->controls.steering;
+  car_reset(c);
+  dyna *d = &s->body;
+  dyna_state *states[3] = {&d->temp, &d->write, &d->state};
+  for (int i = 0; i < 3; i++) {
+    dyna_state *x = states[i];
+    x->lin = x->lin_corr = x->ang = x->force = x->torque = v3(0.0f, 0.0f, 0.0f);
+    x->tweaked_valid = 0;
+    x->tweaked_lin = v3(0.0f, 0.0f, 0.0f);
+  }
+  d->replacement_count = 0;
+  c->integration.speed_blocked2 = 0;
+  car_default_dyna_params(c, &d->params);
+  gm_iso4 at = s->race.current;
+  dyna_set_location(d, &at);
+  car_set_controls(c, a, b, st);
+}
+
 int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_iso4 *spawn, uint32_t seed,
                  const ref_tick *first, char *err, size_t err_size) {
   memset(s, 0, sizeof *s);
-  if (!ref_world_build(&s->world, scene)) {
+  if (!ref_world_build(&s->world, scene, REF_WORLD_STATIC) ||
+      !ref_world_build(&s->triggers, scene, REF_WORLD_TRIGGERS)) {
     snprintf(err, err_size, "static world");
+    return 0;
+  }
+  if (getenv("TMUF_SIM_DEBUG"))
+    for (uint32_t i = 0; i < s->triggers.record_count; i++) {
+      const ref_static_record *rc = &s->triggers.records[i];
+      fprintf(stderr, "trigger record %u corpus %u surf type %u tris %u mats %u flags %x box c=(%g %g %g) h=(%g %g %g)\n", i,
+              rc->corpus, rc->surf->type, rc->surf->triangle_count, rc->surf->material_count, rc->tree_flags,
+              (double)rc->bounds.center.x, (double)rc->bounds.center.y, (double)rc->bounds.center.z,
+              (double)rc->bounds.half.x, (double)rc->bounds.half.y, (double)rc->bounds.half.z);
+    }
+  if (!race_init(&s->race, scene)) {
+    snprintf(err, err_size, "race");
     return 0;
   }
   s->corpus_count = scene->corpus_count;
@@ -243,6 +382,7 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
   if (first->establish_spawn) {
     gm_iso4 cur = {s->body.state.rot, s->body.state.pos};
     car_establish_spawn(c, &cur);
+    race_set_initial_spawn(&s->race, &cur);
   }
   if (first->enable_race)
     car_begin_race(c);
@@ -256,6 +396,12 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
 }
 
 void ref_sim_free(ref_sim *s) {
+  free(s->race.passed);
+  free(s->race.slot);
+  free(s->race.role);
+  free(s->race.respawn_current);
+  free(s->race.spawn);
+  ref_world_free(&s->triggers);
   ref_cbuf_free(&s->buf);
   for (uint32_t i = 0; i < s->tree_count; i++)
     ref_cbuf_free(&s->trees[i].sphere);
@@ -496,6 +642,12 @@ static void collision_response(ref_sim *s) {
   dyna *d = &s->body;
   for (uint32_t i = 0; i < s->buf.count; i++) {
     ref_collision *col = &s->buf.items[i];
+    if (col->group_pair == GP_TRIGGER) {
+      /* pair (3, 1): no impulse, only the trigger absorbs the contact */
+      if (col->corpus_b >= 0)
+        race_trigger(s, (uint32_t)col->corpus_b);
+      continue;
+    }
     const gm_mat3 *rot = &d->state.rot;
     /* InitForCollisionAResponse (the car asks for local contacts) */
     car_contact ct;
@@ -540,9 +692,23 @@ static void collision_response(ref_sim *s) {
   }
 }
 
+/* SZone::DetectCollisionsCorpus: the car's group (3) against the triggers
+   (group 1), then the static items (group 4); one sphere contact merge */
 static void detect(ref_sim *s) {
   s->buf.count = 0;
   gm_iso4 iso = {s->body.state.rot, s->body.state.pos};
+  s->det.world = &s->triggers;
+  s->det.group_pair = GP_TRIGGER;
+  ref_detect_static(&s->det, s->def.root, &iso);
+  if (getenv("TMUF_SIM_TRIG")) {
+    uint32_t sph = 0;
+    for (uint32_t i = 0; i < s->tree_count; i++)
+      sph += s->trees[i].sphere.count;
+    if (s->buf.count || sph)
+      fprintf(stderr, "t=%u trigger detection: %u direct, %u sphere\n", s->tick_ms, s->buf.count, sph);
+  }
+  s->det.world = &s->world;
+  s->det.group_pair = GP_STATIC;
   ref_detect_static(&s->det, s->def.root, &iso);
   ref_detect_merge(&s->det);
 }
@@ -598,6 +764,7 @@ void ref_sim_step(ref_sim *s, const ref_tick *t) {
     if (t->establish_spawn) {
       gm_iso4 cur = {s->body.state.rot, s->body.state.pos};
       car_establish_spawn(c, &cur);
+      race_set_initial_spawn(&s->race, &cur);
     }
     if (t->enable_race)
       car_begin_race(c);
@@ -614,7 +781,12 @@ void ref_sim_step(ref_sim *s, const ref_tick *t) {
   }
   s->tick_ms = t->time_ms;
   s->period_ms = t->period_ms;
-  /* respawns: not implemented yet */
+  for (uint32_t k = 0; k < t->respawns; k++) {
+    if (getenv("TMUF_SIM_DEBUG"))
+      fprintf(stderr, "t=%u respawn (has spawn %d) at %g %g %g\n", t->time_ms, s->race.has_spawn,
+              (double)s->race.current.t.x, (double)s->race.current.t.y, (double)s->race.current.t.z);
+    respawn(s);
+  }
   physics_step2(s);
   s->first_step = 0;
 }
@@ -681,8 +853,11 @@ uint32_t ref_control_ticks(const tmuf_ghost *g, ref_tick **out) {
   if (!ticks)
     return 0;
   int kinds[256] = {0};
-  for (uint32_t i = 0; i < g->action_count && i < 256; i++)
+  for (uint32_t i = 0; i < g->action_count && i < 256; i++) {
     kinds[i] = action_kind(g->actions[i]);
+    if (getenv("TMUF_SIM_DEBUG"))
+      fprintf(stderr, "action %u %s -> %d\n", i, g->actions[i] ? g->actions[i] : "?", kinds[i]);
+  }
   ctl_state st;
   memset(&st, 0, sizeof st);
   uint32_t cursor = 0, n = 0;
@@ -696,6 +871,12 @@ uint32_t ref_control_ticks(const tmuf_ghost *g, ref_tick **out) {
       int k = kinds[e->action];
       int active = e->value != 0;
       int32_t et = (int32_t)e->time;
+      if (getenv("TMUF_SIM_EVENTS"))
+        fprintf(stderr, "event time %u action %u kind %d value %08x running %d sample %d\n", e->time, e->action, k,
+                e->value, st.running, (int)sample);
+      if (k == ACT_RESPAWN && getenv("TMUF_SIM_DEBUG"))
+        fprintf(stderr, "respawn event time %u value %08x running %d sample %d\n", e->time, e->value, st.running,
+                (int)sample);
       if (k == ACT_RESPAWN && st.running && active)
         respawns++;
       if (k == ACT_FINISH && e->value == 1)

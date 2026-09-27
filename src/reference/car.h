@@ -215,6 +215,8 @@ void car_init(car *c, car_def *def, dyna *body);
 void car_reset(car *c);
 /* CSceneVehicleCar::UpdateParamsFromTuning; also installs the dyna params */
 void car_update_params(car *c);
+/* The dyna parameters the car installs on a respawn (BuildDynaParameters). */
+void car_default_dyna_params(const car *c, dyna_params *p);
 void car_begin_race(car *c);
 void car_set_controls(car *c, float gate_a, float gate_b, float steering);
 void car_establish_spawn(car *c, const gm_iso4 *spawn);

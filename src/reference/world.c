@@ -113,7 +113,8 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
 
 /* CHmsCollisionManager::SGroup::AddStaticSurfacesFromTree: children first,
    then the tree's own surface. */
-static void add_tree(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, const gm_iso4 *parent, int depth) {
+static void add_tree(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, const gm_iso4 *parent, int depth,
+                     uint32_t force_flags) {
   if (depth > 64 || b->error)
     return;
   tmuf_asset *ta;
@@ -124,7 +125,8 @@ static void add_tree(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, 
   if (cls != 0x0904f000u && cls != 0x09015000u && cls != 0x09062000u)
     return;
   const tmuf_plug_tree *t = tn->data;
-  if (!(t->flags & TREE_COLLISION))
+  uint32_t flags = t->flags | force_flags;
+  if (!(flags & TREE_COLLISION))
     return;
   gm_iso4 iso = *parent;
   if (t->has_iso) {
@@ -132,7 +134,7 @@ static void add_tree(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, 
     iso = iso4_mult(&local, parent);
   }
   for (uint32_t i = 0; i < t->child_count; i++)
-    add_tree(b, ta, t->children[i], &iso, depth + 1);
+    add_tree(b, ta, t->children[i], &iso, depth + 1, 0);
   if (!t->surface)
     return;
   const ref_surf *surf = get_surf(b, ta, t->surface);
@@ -149,7 +151,7 @@ static void add_tree(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, 
   rec->bounds = box_transform(&surf->geom_box, &iso);
   rec->iso = iso;
   rec->surf = surf;
-  rec->tree_flags = t->flags;
+  rec->tree_flags = flags;
   rec->corpus = b->corpus;
 }
 
@@ -268,16 +270,21 @@ ref_surf *ref_world_surface(ref_world *w, tmuf_assets *assets, tmuf_asset *owner
   return (ref_surf *)get_surf(&b, owner, surface);
 }
 
-int ref_world_build(ref_world *w, tmuf_scene *scene) {
+int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
   memset(w, 0, sizeof *w);
   build_ctx b = {w, &scene->assets, 0, 0, scene, TMUF_MATERIALS_OWN};
   for (uint32_t i = 0; i < scene->corpus_count && !b.error; i++) {
-    if (scene->corpora[i].trigger || scene->corpora[i].collision_group != 4)
-      continue; /* race triggers and non-static items are not in the static group */
+    const tmuf_scene_corpus *c = &scene->corpora[i];
+    /* the static group holds the static items; the trigger group the race
+       triggers (ReplayStaticCorpus::InstallRaceTriggerHook forces their
+       collision tree on) */
+    int trigger = group == REF_WORLD_TRIGGERS;
+    if (c->collision_group != (trigger ? 1 : 4) || (c->trigger != 0) != trigger || (trigger && !c->race_role))
+      continue;
     b.corpus = i;
-    b.materials = scene->corpora[i].materials;
-    gm_iso4 iso = iso_from_scene(&scene->corpora[i].iso);
-    add_tree(&b, scene->corpora[i].owner, scene->corpora[i].tree, &iso, 0);
+    b.materials = c->materials;
+    gm_iso4 iso = iso_from_scene(&c->iso);
+    add_tree(&b, c->owner, c->tree, &iso, 0, trigger ? TREE_COLLISION : 0);
   }
   if (b.error)
     return 0;

@@ -918,6 +918,13 @@ static void c0304e007(tmuf_gbx *g, void *node, uint32_t id) {
   b->has_spawn = 1;
 }
 
+/* CGameCtnBlockInfo: respawn at the car's current spawn instead of the
+   block's (checkpoints that must not move the respawn point) */
+static void c0304e00f(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_block_info *)node)->respawn_current = tmuf_gbx_u32(g) != 0;
+}
+
 /* 0x0304e00a/00b/00e: u32, then helper mobils: ground, air(, common). */
 static void c0304e00e(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_block_info *b = node;
@@ -964,7 +971,7 @@ static const tmuf_gbx_chunk BLOCK_INFO_CHUNKS[] = {
     READ(0x0304e00c, c0304e007),
     READ(0x0304e00d, skip4),
     READ(0x0304e00e, c0304e00e),
-    READ(0x0304e00f, skip4),
+    READ(0x0304e00f, c0304e00f),
     READ(0x03052000, c03052000),
     READ(0x03053002, c03053002),
     READ(0x03055000, c03055000),

@@ -52,7 +52,10 @@ typedef struct ref_world {
   ref_static_cell *cells;
 } ref_world;
 
-int ref_world_build(ref_world *w, tmuf_scene *scene);
+enum { REF_WORLD_STATIC, REF_WORLD_TRIGGERS };
+
+/* The static items of collision group 4, or the race triggers (group 1). */
+int ref_world_build(ref_world *w, tmuf_scene *scene, int group);
 /* Surface of another (moving) item; owned by the world. */
 ref_surf *ref_world_surface(ref_world *w, tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *surface);
 void ref_world_free(ref_world *w);

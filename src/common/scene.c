@@ -177,6 +177,16 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->collision_group = s->helper_depth ? 0
                         : (s->force_static || !c->item_flags) ? 4
                                                                : (uint8_t)((c->item_flags >> 13) & 15u);
+  c->race_role = TMUF_RACE_NONE;
+  c->respawn_current = c->has_spawn = 0;
+  if (c->trigger && !s->helper_depth) {
+    /* checkpoint triggers keep their archived item properties */
+    c->collision_group = (uint8_t)((c->item_flags >> 13) & 15u);
+    c->race_role = s->current_race_role;
+    c->respawn_current = s->current_respawn_current;
+    c->has_spawn = s->current_has_spawn;
+    c->spawn = s->current_spawn;
+  }
 }
 
 static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_node, const tmuf_iso *world, int depth) {
@@ -379,6 +389,22 @@ static void emit_install(tmuf_scene *s, const ctn_install *in) {
                                                                   : TMUF_MATERIALS_OWN;
   if (in->kind == CTN_INSTALL_PYLON)
     s->current_materials = TMUF_MATERIALS_OWN;
+  /* CGameCtnBlock::SpawnLocation(0, 0) and the block's race role */
+  s->current_race_role = TMUF_RACE_NONE;
+  s->current_respawn_current = s->current_has_spawn = 0;
+  if (in->kind == CTN_INSTALL_BLOCK && in->info) {
+    static const uint8_t ROLE[5] = {TMUF_RACE_START, TMUF_RACE_FINISH, TMUF_RACE_CHECKPOINT, TMUF_RACE_NONE,
+                                    TMUF_RACE_START_FINISH};
+    if (in->info->has_way_type && in->info->way_type < 5)
+      s->current_race_role = ROLE[in->info->way_type];
+    s->current_respawn_current = (uint8_t)in->info->respawn_current;
+    tmuf_iso local;
+    tmuf_iso_identity(&local);
+    if (in->info->has_spawn)
+      tmuf_iso_from_archive(&local, in->info->spawn[in->ground ? 0 : 1]);
+    tmuf_iso_mult(&s->current_spawn, &local, &in->iso);
+    s->current_has_spawn = 1;
+  }
   if (in->kind == CTN_INSTALL_CLIP) {
     for (unsigned side = 0; side < 4; side++) {
       if (!in->clip[side].node)

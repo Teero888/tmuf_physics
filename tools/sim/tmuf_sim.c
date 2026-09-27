@@ -182,6 +182,11 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     goto done;
   }
   sim_built = 1;
+  /* ConfigureReplayRace: the map's laps for a lap race, else one */
+  sim.race.laps = map.has_laps && map.lap_race ? map.laps : 1;
+  if (!op->summary)
+    printf("race: %u checkpoints, %u laps, %u trigger records\n", sim.race.checkpoint_count, sim.race.laps,
+           sim.triggers.record_count);
   if (getenv("TMUF_SIM_CORPUS")) {
     uint32_t ci = (uint32_t)atoi(getenv("TMUF_SIM_CORPUS"));
     if (ci < scene.corpus_count) {
@@ -200,6 +205,23 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     printf("%s ERROR oracle\n", name);
     goto done;
   }
+  /* A replay the game rejects ("Wrong Simu") ends its run early: the car is
+     put back at its spawn and stays there. Compare up to that point. */
+  uint32_t oracle_stop = 0;
+  for (uint32_t k = o.count; k-- > 262;) {
+    const float *a = o.states[k], *s0 = o.states[1];
+    int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
+    if (!still || memcmp(&a[13], &s0[13], 12) != 0)
+      break;
+    oracle_stop = k;
+  }
+  /* only an abort before the recorded finish */
+  if (oracle_stop && ghost->has_race_time && ghost->race_time != UINT32_MAX &&
+      (uint64_t)oracle_stop * 10u < 2600u + (uint64_t)ghost->race_time)
+    o.count = oracle_stop;
+  else
+    oracle_stop = 0;
+  uint32_t finish_ms = 0;
   uint32_t ext_count = 0, ext_bad = 0;
   ext_rec *ext = op->ext ? load_ext(op->ext, &ext_count) : NULL;
   uint32_t n = tick_count < op->max_ticks ? tick_count : op->max_ticks;
@@ -212,6 +234,8 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   int diverged = 0;
   for (uint32_t i = 0; i < n; i++) {
     ref_sim_step(&sim, &ticks[i]);
+    if (sim.race.completed && !finish_ms)
+      finish_ms = ticks[i].time_ms;
     float ours[45];
     memset(ours, 0, sizeof ours);
     memcpy(ours, &sim.body.state, sizeof(float) * 44);
@@ -261,9 +285,15 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     if (!op->verbose && !op->print)
       break;
   }
+  char finish[96];
+  if (ghost->has_race_time && ghost->race_time != UINT32_MAX)
+    snprintf(finish, sizeof finish, finish_ms == 2600u + ghost->race_time ? "finish ok" : "finish %u race %u",
+             finish_ms ? finish_ms - 2600u : 0u, ghost->race_time);
+  else
+    snprintf(finish, sizeof finish, "finish %u", finish_ms ? finish_ms - 2600u : 0u);
   if (o.count && !diverged)
-    printf("%s%sMATCH %s %u/%u ticks (oracle %u states)\n", op->summary ? name : "", op->summary ? " " : "", vname,
-           matched, n, o.count);
+    printf("%s%sMATCH %s %u/%u ticks (oracle %u states%s) %s\n", op->summary ? name : "", op->summary ? " " : "",
+           vname, matched, n, o.count, oracle_stop ? ", game stopped the run" : "", finish);
   rc = 0;
 done:
   if (sim_built)

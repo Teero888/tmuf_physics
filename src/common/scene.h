@@ -33,7 +33,15 @@ typedef struct tmuf_scene_corpus {
   uint32_t item_flags; /* archived CHmsItem physics word of its mobil, 0 if none */
   uint8_t collision_group; /* CHmsItem::ECollisionGroup the game gives it (4: static) */
   uint8_t materials;       /* TMUF_MATERIALS_* */
+  /* race triggers: the block's race role, spawn location and respawn mode */
+  uint8_t race_role;       /* TMUF_RACE_* */
+  uint8_t respawn_current; /* respawns keep the car's current spawn */
+  uint8_t has_spawn;
+  tmuf_iso spawn;
 } tmuf_scene_corpus;
+
+/* CGameCtnBlockInfo race role (way type) */
+enum { TMUF_RACE_NONE, TMUF_RACE_START, TMUF_RACE_CHECKPOINT, TMUF_RACE_FINISH, TMUF_RACE_START_FINISH };
 
 /* Which materials a mobil's solid uses (StaticSolidMaterialVariant): its
    own, or remapped through the collection's terrain-modifier skins. */
@@ -71,6 +79,8 @@ typedef struct tmuf_scene {
   int force_static;
   uint32_t pylon_raise;
   uint8_t current_materials;
+  uint8_t current_race_role, current_respawn_current, current_has_spawn;
+  tmuf_iso current_spawn;
   uint32_t material_remap_count;
   tmuf_material_remap material_remaps[TMUF_SCENE_MAX_MATERIAL_REMAPS];
   uint32_t frontier_count;

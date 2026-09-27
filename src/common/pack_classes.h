@@ -101,6 +101,7 @@ typedef struct tmuf_block_info {
   tmuf_gbx_node *helpers[3]; /* helper mobils: ground, air, common */
   uint32_t way_type; /* 0 start, 1 finish, 2 checkpoint, 3 none, 4 start/finish (0x0304e00a/b/e) */
   int has_way_type;
+  int respawn_current; /* 0x0304e00f */
   int has_spawn;
   float spawn[2][12]; /* spawn locations: ground, air (rotation rows, translation) */
 } tmuf_block_info;

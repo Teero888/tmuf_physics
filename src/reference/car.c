@@ -270,6 +270,56 @@ void car_refresh_dyna_params(car *c) {
   p->force_scale = c->contact_feedback_scale;
 }
 
+/* ReplayVehicleSimulation::BuildDynaParameters */
+void car_default_dyna_params(const car *c, dyna_params *p) {
+  if (c->wheel_count == 0)
+    return;
+  const tmuf_vehicle_tuning *t = c->t;
+  gm_vec3 mn = v3(0, 0, 0), mx = v3(0, 0, 0);
+  float bottom_sum = 0.0f;
+  for (uint32_t i = 0; i < c->wheel_count; i++) {
+    const car_wheel *w = &c->wheels[i];
+    gm_vec3 q = w->rest_iso.t;
+    float bottom = q.y - w->rolling_radius;
+    if (i == 0) {
+      mn = mx = q;
+      bottom_sum = bottom;
+    } else {
+      if (q.x < mn.x)
+        mn.x = q.x;
+      if (q.y < mn.y)
+        mn.y = q.y;
+      if (q.z < mn.z)
+        mn.z = q.z;
+      if (mx.x < q.x)
+        mx.x = q.x;
+      if (mx.y < q.y)
+        mx.y = q.y;
+      if (mx.z < q.z)
+        mx.z = q.z;
+      bottom_sum = bottom_sum + bottom;
+    }
+  }
+  gm_box b = box_from_min_max(mn, mx);
+  p->mass = t->body_air_response.solid_physical_mass;
+  p->linear_damping_scale = 0.0f;
+  p->angular_damping_scale = 0.0f;
+  p->max_step_distance = t->body_air_response.solid_physical_response_coef_b;
+  p->force_scale = t->body_air_response.grounded_solid_feedback1;
+  p->com = b.center;
+  p->com.y = (1.0f / (float)c->wheel_count) * bottom_sum + t->body_air_response.solid_center_y_offset;
+  p->com.z = b.center.z + t->body_air_response.solid_center_z_half_extent_scale * b.half.z;
+  const float *box = t->body_air_response.solid_inertia_box_size;
+  float width = box[0] * 2.0f, height = box[1] * 2.0f, length = 2.0f * box[2];
+  float scale = (1.0f / t->body_air_response.solid_inertia_mass) * 12.0f;
+  for (int r = 0; r < 3; r++)
+    for (int k = 0; k < 3; k++)
+      p->inv_inertia_local.m[r][k] = 0.0f;
+  p->inv_inertia_local.m[0][0] = scale / (height * height + length * length);
+  p->inv_inertia_local.m[1][1] = scale / (length * length + width * width);
+  p->inv_inertia_local.m[2][2] = scale / (width * width + height * height);
+}
+
 void car_update_params(car *c) {
   if (c->wheel_count == 0)
     return;
