@@ -1982,6 +1982,13 @@ static void c0303301e(tmuf_gbx *g, void *node, uint32_t id) {
   c->default_water = tmuf_gbx_bool(g);
 }
 
+static void c03033022(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  c->has_geometry_water = 1;
+  c->geometry_water_planes = tmuf_gbx_u32(g) != 0;
+}
+
 static void c03033020(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_collection *c = node;
@@ -2011,7 +2018,7 @@ static const tmuf_gbx_chunk COLLECTION_CHUNKS[] = {
     READ(0x0303300e, skip4),     READ(0x03033011, skip4),   READ(0x03033019, skip4),
     READ(0x0303301a, skip48),    READ(0x0303301d, c0303301d), READ(0x0303301e, c0303301e),
     READ(0x0303301f, count4_array), READ(0x03033020, c03033020), READ(0x03033021, c03033021),
-    READ(0x03033022, skip4),     READ(0x03033023, skip4),   READ(0x03033024, skip28),
+    READ(0x03033022, c03033022),     READ(0x03033023, skip4),   READ(0x03033024, skip28),
 };
 static const tmuf_gbx_class COLLECTION = {0x03033000, "CGameCtnCollection", sizeof(tmuf_collection),
                                           COLLECTION_CHUNKS, COUNT(COLLECTION_CHUNKS), NULL};

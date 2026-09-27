@@ -57,6 +57,17 @@ typedef struct tmuf_material_remap {
 
 #define TMUF_SCENE_MAX_MATERIAL_REMAPS 128
 
+/* CSceneVehicleWaterZone: where the car floats. A grid over the map's
+   columns (1: water) and the water surface height. */
+typedef struct tmuf_scene_water {
+  int enabled;
+  float cell_size[2], origin[2]; /* x, z */
+  uint32_t dims[2];
+  uint8_t outside;
+  uint8_t *cells; /* dims[0] * dims[1], x fastest */
+  float surface_height, secondary_cull_height;
+} tmuf_scene_water;
+
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
   tmuf_pack_ref ref;
@@ -93,6 +104,7 @@ typedef struct tmuf_scene {
   uint32_t corpus_count, corpus_cap;
   tmuf_scene_corpus *corpora; /* in the order the game adds them */
   tmuf_scene_catalog_entry *catalog;
+  tmuf_scene_water water;
   char error[600];
 } tmuf_scene;
 
@@ -102,6 +114,10 @@ void tmuf_scene_free(tmuf_scene *scene);
 /* Surface material id of the material at plain path `path` under the
    corpus material mode `materials`; returns 0 if the material is kept. */
 int tmuf_scene_remap_material(const tmuf_scene *scene, uint8_t materials, const char *path, uint8_t *id);
+
+/* CSceneVehicleWaterZone::AcceptsRegion for a box spanning [lower, upper]
+   in height around the column at (x, z). */
+int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower, float upper);
 
 /* Game transform math (GmIso4), same operation order. */
 void tmuf_iso_identity(tmuf_iso *iso);

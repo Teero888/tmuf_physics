@@ -282,6 +282,15 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
     snprintf(err, err_size, "race");
     return 0;
   }
+  s->water = scene->water;
+  s->water.cells = NULL;
+  if (scene->water.enabled) {
+    size_t n = (size_t)scene->water.dims[0] * scene->water.dims[1];
+    s->water.cells = malloc(n ? n : 1);
+    if (!s->water.cells)
+      return 0;
+    memcpy(s->water.cells, scene->water.cells, n);
+  }
   s->corpus_count = scene->corpus_count;
   s->corpus_iso = calloc(s->corpus_count ? s->corpus_count : 1, sizeof *s->corpus_iso);
   if (!s->corpus_iso)
@@ -370,6 +379,7 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
 
   car *c = &s->car;
   car_init(c, d, &s->body);
+  c->water = s->water.enabled ? &s->water : NULL;
   c->linear_speed_cap = d->linear_speed_cap;
   c->reverse_gear_speed_threshold = d->reverse_gear_speed_threshold;
   /* BuildVehicleDynaDefinition, then OnEnterScene (UpdateParamsFromTuning) */
@@ -396,6 +406,7 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
 }
 
 void ref_sim_free(ref_sim *s) {
+  free(s->water.cells);
   free(s->race.passed);
   free(s->race.slot);
   free(s->race.role);

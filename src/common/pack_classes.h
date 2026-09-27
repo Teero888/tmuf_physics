@@ -241,6 +241,7 @@ typedef struct tmuf_collection {
   tmuf_gbx_node **terrain_modifiers; /* CGameCtnDecorationTerrainModifier */
   float water_surface, water_secondary, water_render_cull;
   int default_water, has_water_heights;
+  int has_geometry_water, geometry_water_planes; /* 0x03033022: water from block water planes */
   const char *folders[4]; /* block infos, ?, decorations, menu textures */
   const char *display_name;
 } tmuf_collection;

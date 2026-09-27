@@ -55,6 +55,7 @@ typedef struct ctn_zone {
   uint32_t height, depth;
   ctn_info *info, *clip, *pylon;
   const char *parent, *child;
+  int has_water;
 } ctn_zone;
 
 typedef struct ctn_field {
@@ -976,6 +977,65 @@ static void create_mobil_for_clip(ctn *c, ctn_block *b) {
   }
 }
 
+/* BuildReplayWaterDefinition: the water grid of collections whose water
+   follows the zones (wet zones); collections with geometry water planes
+   (Rally, Speed) are not done yet. */
+static void build_water(ctn *c) {
+  const tmuf_collection *coll = c->coll;
+  tmuf_scene_water *wt = &c->s->water;
+  free(wt->cells);
+  memset(wt, 0, sizeof *wt);
+  if (!(coll->has_water_heights || coll->has_geometry_water) || coll->geometry_water_planes)
+    return;
+  if (!(c->sq > 0.0f) || !(c->sqh > 0.0f) || c->w == 0 || c->d == 0)
+    return;
+  int playfield = 0;
+  for (uint32_t z = 0; z < c->d && !playfield; z++)
+    for (uint32_t x = 0; x < c->w; x++) {
+      uint32_t p[3] = {x, 0, z};
+      if (block_at(c, p)) {
+        playfield = 1;
+        break;
+      }
+    }
+  uint8_t *cells = calloc((size_t)c->w * c->d, 1);
+  if (!cells)
+    return;
+  int any = 0;
+  for (uint32_t z = 0; z < c->d; z++)
+    for (uint32_t x = 0; x < c->w; x++) {
+      uint32_t p[3] = {x, 0, z};
+      ctn_block *b = block_at(c, p);
+      if (!b && playfield) {
+        free(cells);
+        return;
+      }
+      ctn_zone *zone = b ? real_zone_for_block(c, b) : cell_zone(c, p);
+      if (!zone) {
+        free(cells);
+        return;
+      }
+      cells[x + c->w * z] = zone->has_water ? 1 : 0;
+      any |= zone->has_water;
+    }
+  if (!any) {
+    free(cells);
+    return;
+  }
+  float base = (float)(c->default_height + 1u) * c->sqh;
+  wt->enabled = 1;
+  wt->cell_size[0] = wt->cell_size[1] = c->sq;
+  wt->dims[0] = c->w;
+  wt->dims[1] = c->d;
+  wt->outside = coll->default_water ? 1 : 0;
+  wt->cells = cells;
+  wt->surface_height = base + coll->water_surface;
+  wt->secondary_cull_height = base + coll->water_secondary;
+  if (scene_debug())
+    fprintf(stderr, "water grid %ux%u surface %g secondary %g outside %u\n", c->w, c->d,
+            (double)wt->surface_height, (double)wt->secondary_cull_height, wt->outside);
+}
+
 /* CGameCtnCollection::SurfaceReplacementIndex != -1 */
 static int has_surface_replacement(ctn *c, const char *source, const char *target) {
   for (uint32_t i = 0; i < c->coll->surface_replacement_count; i++)
@@ -1481,6 +1541,7 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
     cz->old = z->old_zone;
     cz->height = z->height;
     cz->depth = z->depth;
+    cz->has_water = z->has_water;
     cz->info = z->block_infos[0] ? info_from_node(c, za, z->block_infos[0]) : NULL;
     if (!cz->frontier) {
       cz->clip = z->block_infos[1] ? info_from_node(c, za, z->block_infos[1]) : NULL;
@@ -1756,6 +1817,7 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
       update_block_mobils(c);
   }
   out->blocks_placed = c->block_count;
+  build_water(c);
 
   /* cleanup */
   free(infos);

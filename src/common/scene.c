@@ -1,6 +1,7 @@
 #include "common/scene.h"
 #include "common/scene_ctn.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -552,6 +553,11 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->size[2] = dsize->size[2];
   s->base_height = dsize->base_height;
   if (debug_enabled())
+    fprintf(stderr, "water: heights %d surface %g secondary %g cull %g default %d geometry %d/%d; size %u %u %u base %u sq %g %g\n",
+            coll->has_water_heights, (double)coll->water_surface, (double)coll->water_secondary,
+            (double)coll->water_render_cull, coll->default_water, coll->has_geometry_water, coll->geometry_water_planes,
+            s->size[0], s->size[1], s->size[2], s->base_height, (double)s->square_size, (double)s->square_height);
+  if (debug_enabled())
     fprintf(stderr, "collection %s folders %s | %s | %s | %s; decoration %s %s %s\n", coll->name, coll->folders[0],
             coll->folders[1], coll->folders[2], coll->folders[3], map->decoration[0], map->decoration[1],
             map->decoration[2]);
@@ -599,7 +605,32 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   return 1;
 }
 
+/* Binary32::TruncateToUint32Modulo */
+static uint32_t trunc_u32_mod(float v) {
+  if (!isfinite(v) || fabs((double)v) >= 18446744073709551616.0)
+    return 0u;
+  double t = trunc((double)v);
+  uint32_t mag = (uint32_t)fmod(fabs(t), 4294967296.0);
+  return signbit(v) ? 0u - mag : mag;
+}
+
+int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower, float upper) {
+  if (!w->enabled)
+    return 0;
+  /* GmMap2::CellAt */
+  uint32_t cx = trunc_u32_mod((x - w->origin[0]) / w->cell_size[0]);
+  uint32_t cz = trunc_u32_mod((z - w->origin[1]) / w->cell_size[1]);
+  int inside = cx < w->dims[0] && cz < w->dims[1];
+  if (!inside && w->outside == 1 && w->surface_height > lower)
+    return 1;
+  if (!(upper > w->secondary_cull_height) || !(w->surface_height > lower))
+    return 0;
+  uint8_t v = inside ? w->cells[cx + w->dims[0] * cz] : w->outside;
+  return v == 1;
+}
+
 void tmuf_scene_free(tmuf_scene *s) {
+  free(s->water.cells);
   free(s->triangles);
   free(s->catalog);
   free(s->corpora);

@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include "common/scene.h"
 #include "common/vehicle_tuning.h"
 #include "reference/collide.h"
 #include "reference/dyna.h"
@@ -202,6 +203,7 @@ typedef struct car {
   uint32_t last_forces_tick;
   int water_splash_events;
   gm_vec3 water_splash_speed;
+  const tmuf_scene_water *water; /* the zone's water, NULL if none */
   /* frame state used by the race and replays */
   struct {
     float forward_speed, side_speed;

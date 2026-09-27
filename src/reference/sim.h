@@ -37,6 +37,7 @@ typedef struct ref_sim {
   ref_world world;
   ref_world triggers;
   ref_race race;
+  tmuf_scene_water water; /* copy of the scene's (cells owned here) */
   car_def def;
   car car;
   dyna body;

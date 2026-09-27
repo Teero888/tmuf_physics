@@ -543,10 +543,70 @@ static void compute_air_control(car *c, gm_vec3 ang, uint32_t tick, int ground, 
   }
 }
 
+/* CSceneVehicleCar::ApplyWaterSplashImpulse (speed: the world speed the
+   caller calls local) */
+static void water_splash_impulse(car *c, gm_vec3 speed, float input) {
+  float v = tmuf_curve_eval(&c->t->curves.splash_vertical_impulse, input);
+  float h = tmuf_curve_eval(&c->t->curves.splash_horizontal_impulse, input);
+  gm_vec3 imp = v3(-h * speed.x, -v * speed.y, -h * speed.z);
+  imp = mat3_tmul_vec(&c->body->state.rot, imp);
+  /* CSceneVehicle::WaterSplash */
+  c->water_splash_events++;
+  c->water_splash_speed = speed;
+  car_add_impulse(c, imp);
+}
+
+/* CSceneVehicleCar::ApplyWaterForces */
 int car_apply_water_forces(car *c, gm_vec3 force_to_subtract) {
-  (void)c;
-  (void)force_to_subtract;
-  return 0; /* no water zone yet */
+  const tmuf_scene_water *wz = c->water;
+  if (!wz || !wz->enabled)
+    return 0;
+  const dyna_state *st = &c->body->state;
+  gm_iso4 iso = {st->rot, st->pos};
+  gm_box wb = box_transform(&c->def->water_box, &iso);
+  float half_y = fabsf(wb.half.y);
+  float lower = wb.center.y - half_y, upper = wb.center.y + half_y;
+  if (!tmuf_water_accepts(wz, wb.center.x, wb.center.z, lower, upper))
+    return 0;
+  float depth = wz->surface_height - lower;
+  if (!(depth > 0.5f))
+    return 0;
+  const tmuf_vt_water *tw = &c->t->water;
+  gm_vec3 lin = body_lin_local(c);          /* GetLinearSpeed: local */
+  gm_vec3 speed = mat3_mul_vec(&st->rot, lin); /* back to world */
+  float h2 = speed.x * speed.x + speed.z * speed.z;
+  if (!c->air.refresh_memory && depth < 0.9f && (wz->surface_height - upper) < 0.0f && speed.y < -1.0e-5f) {
+    float ht = tw->splash_horizontal_speed_threshold;
+    if (h2 > ht * ht) {
+      float hs = tmuf_sqrtf(h2);
+      float input = -hs / speed.y;
+      if (input != input)
+        return 0;
+      if (!(input < 0.0f)) {
+        water_splash_impulse(c, speed, input);
+        return 0;
+      }
+    } else {
+      float tt = tw->splash_total_speed_threshold;
+      if (v3_len2(lin) > tt * tt) {
+        water_splash_impulse(c, speed, 0.0f);
+        return 0;
+      }
+    }
+  }
+  gm_vec3 drag = v3(0.0f, 0.0f, 0.0f);
+  float slen = tmuf_sqrtf(v3_len2(lin));
+  if (1.0e-5f < slen)
+    drag = v3_scale(lin, -tn_water_friction(c, slen));
+  gm_vec3 ang = body_ang_local(c);
+  gm_vec3 torque = v3_scale(ang, -tw->angular_linear_damping);
+  float alen = tmuf_sqrtf(v3_len2(ang));
+  torque = v3_add(torque, v3_scale(ang, -alen * tw->angular_speed_damping));
+  gm_vec3 buoyancy = mat3_tmul_vec(&st->rot, v3(0.0f, -tw->buoyancy_force, 0.0f));
+  gm_vec3 central = v3_sub(v3_add(buoyancy, drag), force_to_subtract);
+  car_add_force(c, central);
+  car_add_torque(c, torque);
+  return 1;
 }
 
 static void clamp_linear_speed(car *c, gm_vec3 *lin) {
