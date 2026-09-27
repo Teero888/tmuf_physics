@@ -524,7 +524,14 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   memset(s, 0, sizeof *s);
   s->rand_state = 1;
   tmuf_assets_init(&s->assets, set);
-  tmuf_asset *ca = find_collection(s, map->decoration[1]);
+  /* the map's own collection holds its blocks and zones; the decoration
+     may come from another one (e.g. a Stadium map on a Bay decoration) */
+  tmuf_asset *ca = map->map[1] && map->map[1][0] ? find_collection(s, map->map[1]) : NULL;
+  if (!ca)
+    ca = find_collection(s, map->decoration[1]);
+  tmuf_asset *dca = find_collection(s, map->decoration[1]);
+  if (!dca)
+    dca = ca;
   if (!ca) {
     snprintf(s->error, sizeof s->error, "no collection %s", map->decoration[1]);
     return 0;
@@ -536,7 +543,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->square_height = coll->square_height;
   load_material_remaps(s, ca, coll);
   build_catalog(s, coll->folders[0], NULL, CATALOG_BLOCK_INFO);
-  build_catalog(s, coll->folders[2], ".TMDecoration.", CATALOG_DECORATION);
+  build_catalog(s, ((const tmuf_collection *)dca->root)->folders[2], ".TMDecoration.", CATALOG_DECORATION);
   tmuf_asset *da = tmuf_assets_load(&s->assets, find_collector(s, map->decoration[0], CATALOG_DECORATION));
   if (!da || da->class_id != 0x03038000u) {
     snprintf(s->error, sizeof s->error, "no decoration %s", map->decoration[0]);

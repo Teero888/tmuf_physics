@@ -1576,8 +1576,11 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
     return 0;
   for (uint32_t i = 0; i < nb; i++) {
     infos[i] = info_for(c, scene_block_info(s, map->blocks[i].name));
-    if (!infos[i])
+    if (!infos[i]) {
       out->blocks_missing++;
+      if (scene_debug())
+        fprintf(stderr, "missing block info %s\n", map->blocks[i].name ? map->blocks[i].name : "?");
+    }
   }
 
   /* ChallengeFieldUnits::Build: terrain top markers, then the units of the

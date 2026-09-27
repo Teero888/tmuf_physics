@@ -147,6 +147,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   ref_tick *ticks = NULL;
   oracle o = {0};
   int scene_built = 0, sim_built = 0;
+  ext_rec *ext = NULL;
   if (!tmuf_replay_parse(data, size, &arena, &r, err, sizeof err) || !r.challenge || r.ghost_count == 0) {
     printf("%s ERROR replay %s\n", name, err);
     goto done;
@@ -162,7 +163,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   }
   scene_built = 1;
   if (!tmuf_scene_build(&scene, set, &map) || !scene.has_start) {
-    printf("%s ERROR scene %s\n", name, scene.error);
+    printf("%s ERROR scene %s\n", name, scene.error[0] ? scene.error : "no start block");
     goto done;
   }
   const char *vname = ghost->vehicle[0] && ghost->vehicle[0][0] ? ghost->vehicle[0] : "StadiumCar";
@@ -228,7 +229,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     oracle_stop = 0;
   uint32_t finish_ms = 0;
   uint32_t ext_count = 0, ext_bad = 0;
-  ext_rec *ext = op->ext ? load_ext(op->ext, &ext_count) : NULL;
+  ext = op->ext ? load_ext(op->ext, &ext_count) : NULL;
   uint32_t n = tick_count < op->max_ticks ? tick_count : op->max_ticks;
   /* the game restarts the race once it is finished: compare up to the
      recorded race time */
