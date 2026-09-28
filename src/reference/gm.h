@@ -13,28 +13,15 @@
 #include <math.h>
 #include <stdint.h>
 
+#include <tmuf_physics/tmuf_physics.h>
+
 #include "reference/fmath.h"
 
-typedef struct gm_vec3 {
-  float x, y, z;
-} gm_vec3;
-
-typedef struct gm_quat {
-  float w, x, y, z;
-} gm_quat;
-
-typedef struct gm_mat3 {
-  float m[3][3];
-} gm_mat3;
-
-typedef struct gm_iso4 {
-  gm_mat3 r;
-  gm_vec3 t;
-} gm_iso4;
-
-typedef struct gm_box {
-  gm_vec3 center, half;
-} gm_box;
+typedef tmuf_vec3 gm_vec3;
+typedef tmuf_quat gm_quat;
+typedef tmuf_mat3 gm_mat3;
+typedef tmuf_iso4 gm_iso4;
+typedef tmuf_box gm_box;
 
 static inline gm_vec3 v3(float x, float y, float z) {
   gm_vec3 v = {x, y, z};

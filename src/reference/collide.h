@@ -32,13 +32,13 @@ void ref_cbuf_clear(ref_cbuf *b);
 void ref_cbuf_free(ref_cbuf *b);
 
 /* A tree of the moving body (car): surfaces with local transforms. */
-typedef struct ref_mtree {
+typedef struct tmuf_collision_tree {
   uint32_t flags; /* CPlugTree flags: 0x80 collision, 0x4 local transform */
   gm_iso4 local;
   const ref_surf *surf;
   gm_box box; /* CPlugTree::Box, in the parent frame */
   uint32_t child_count;
-  struct ref_mtree **children;
+  struct tmuf_collision_tree **children;
   /* per-tree sphere contact buffer (SHmsSphereBufferContact) */
   ref_cbuf sphere;
   int queued;

@@ -238,6 +238,7 @@ static void race_trigger(ref_sim *s, uint32_t corpus) {
     r->completed_laps++;
     if (r->laps != 0 && r->completed_laps >= r->laps) {
       r->completed = 1;
+      r->finish_time = s->tick_ms - TMUF_CONTROL_RACE_START_MS;
       return;
     }
     memset(r->passed, 0, r->checkpoint_count + 1);
@@ -252,6 +253,7 @@ static void race_trigger(ref_sim *s, uint32_t corpus) {
 static void respawn(ref_sim *s) {
   if (!s->race.has_spawn)
     return;
+  s->race.respawns++;
   car *c = &s->car;
   float a = c->controls.gate_a, b = c->controls.gate_b, st = c->controls.steering;
   car_reset(c);
@@ -492,6 +494,46 @@ int ref_sim_clone(ref_sim *dst, const ref_sim *tpl) {
   dst->det.out = &dst->buf;
   dst->det.queued_count = 0;
   return 1;
+}
+
+/* dst takes src's state; both are clones of one template (or the template) */
+void ref_sim_copy_state(ref_sim *dst, const ref_sim *src) {
+  car_def *def = dst->car.def;
+  tmuf_vehicle_tuning *t = dst->car.t;
+  dyna *body = dst->car.body;
+  const tmuf_scene_water *water = dst->car.water;
+  ref_mtree *wheel_trees[CAR_MAX_WHEELS];
+  for (uint32_t i = 0; i < CAR_MAX_WHEELS; i++)
+    wheel_trees[i] = dst->car.wheels[i].tree;
+  dst->car = src->car;
+  dst->car.def = def;
+  dst->car.t = t;
+  dst->car.body = body;
+  dst->car.water = water;
+  for (uint32_t i = 0; i < CAR_MAX_WHEELS; i++)
+    dst->car.wheels[i].tree = wheel_trees[i];
+  gm_vec3 *rep = dst->body.replacements;
+  uint32_t rep_cap = dst->body.replacement_cap;
+  dst->body = src->body;
+  dst->body.replacements = rep;
+  dst->body.replacement_cap = rep_cap;
+  dst->body.replacement_count = 0;
+  uint8_t *passed = dst->race.passed;
+  dst->race = src->race;
+  dst->race.passed = passed;
+  memcpy(passed, src->race.passed, src->race.checkpoint_count + 1);
+  dst->tick_ms = src->tick_ms;
+  dst->period_ms = src->period_ms;
+  dst->substeps = src->substeps;
+  dst->first_step = src->first_step;
+  const tmuf_curve *from = (const tmuf_curve *)&src->def.tuning.curves;
+  tmuf_curve *to = (tmuf_curve *)&dst->def.tuning.curves;
+  for (size_t i = 0; i < sizeof(tmuf_vt_curves) / sizeof(tmuf_curve); i++)
+    to[i].constant = from[i].constant;
+  for (uint32_t i = 0; i < dst->car.wheel_count; i++)
+    if (dst->car.wheels[i].tree)
+      dst->car.wheels[i].tree->local = dst->car.wheels[i].cur_iso;
+  ref_mtree_update_box(dst->def.root);
 }
 
 /* the curves' interpolation mode changes the first time some are read */
@@ -953,154 +995,4 @@ void ref_sim_step(ref_sim *s, const ref_tick *t) {
   }
   physics_step2(s);
   s->first_step = 0;
-}
-
-/* ---- control ticks (ReplayControlPlan, input-only validation) ---- */
-
-enum { ACT_NONE, ACT_ACCEL, ACT_GAS, ACT_BRAKE, ACT_STEER, ACT_LEFT, ACT_RIGHT, ACT_RUNNING, ACT_FINISH, ACT_RESPAWN };
-
-static int action_kind(const char *name) {
-  static const struct {
-    const char *n;
-    int k;
-  } T[] = {{"Accelerate", ACT_ACCEL}, {"Gas", ACT_GAS},         {"Brake", ACT_BRAKE},
-           {"Steer", ACT_STEER},      {"SteerLeft", ACT_LEFT},  {"SteerRight", ACT_RIGHT},
-           {"_FakeIsRaceRunning", ACT_RUNNING}, {"_FakeFinishLine", ACT_FINISH}, {"Respawn", ACT_RESPAWN}};
-  for (size_t i = 0; i < sizeof T / sizeof T[0]; i++)
-    if (name && strcmp(name, T[i].n) == 0)
-      return T[i].k;
-  return ACT_NONE;
-}
-
-static int32_t signed24(uint32_t e) {
-  e &= 0x00ffffffu;
-  return (e & 0x00800000u) ? (int32_t)(e | 0xff000000u) : (int32_t)e;
-}
-
-typedef struct ctl_state {
-  int running, accel, brake, left, right;
-  int32_t left_t, right_t, steer_t, accel_t, brake_t, gas_t;
-  int32_t steer, gas;
-} ctl_state;
-
-static void controls_from(const ctl_state *st, float *a, float *b, float *steer) {
-  *steer = 0.0f;
-  int32_t dt = st->left_t > st->right_t ? st->left_t : st->right_t;
-  int analog = st->steer_t > dt || (st->steer_t == dt && !st->left && !st->right && abs(st->steer) > 655);
-  if (analog)
-    *steer = (float)st->steer / 65536.0f;
-  else if (st->left)
-    *steer = -1.0f;
-  else if (st->right)
-    *steer = 1.0f;
-  *a = 0.0f;
-  *b = 0.0f;
-  int32_t gt = st->accel_t > st->brake_t ? st->accel_t : st->brake_t;
-  int analog_gas = st->gas_t > gt || (st->gas_t == gt && !st->accel && !st->brake);
-  if (analog_gas) {
-    if (st->gas <= -19661)
-      *a = 1.0f;
-    else if (st->gas >= 19661)
-      *b = 1.0f;
-  } else {
-    *a = st->accel ? 1.0f : 0.0f;
-    *b = st->brake ? 1.0f : 0.0f;
-  }
-}
-
-uint32_t ref_control_ticks(const tmuf_ghost *g, ref_tick **out) {
-  const uint32_t tick_ms = 10, prestart = 2600, base = 100000;
-  *out = NULL;
-  int32_t final_target = (int32_t)prestart + (int32_t)g->input_duration;
-  uint32_t cap = (uint32_t)(final_target / (int32_t)tick_ms) + 2;
-  ref_tick *ticks = calloc(cap, sizeof *ticks);
-  if (!ticks)
-    return 0;
-  int kinds[256] = {0};
-  for (uint32_t i = 0; i < g->action_count && i < 256; i++) {
-    kinds[i] = action_kind(g->actions[i]);
-    if (getenv("TMUF_SIM_DEBUG"))
-      fprintf(stderr, "action %u %s -> %d\n", i, g->actions[i] ? g->actions[i] : "?", kinds[i]);
-  }
-  ctl_state st;
-  memset(&st, 0, sizeof st);
-  uint32_t cursor = 0, n = 0;
-  int prev_running = 0, reset_done = 0, spawn_done = 0;
-  for (int32_t t = (int32_t)tick_ms; t <= final_target; t += (int32_t)tick_ms) {
-    uint32_t sample = base - prestart + (uint32_t)t;
-    uint32_t respawns = 0;
-    int finish = 0;
-    while (cursor < g->event_count && g->events[cursor].time <= sample) {
-      const tmuf_input_event *e = &g->events[cursor];
-      int k = kinds[e->action];
-      int active = e->value != 0;
-      int32_t et = (int32_t)e->time;
-      if (getenv("TMUF_SIM_EVENTS"))
-        fprintf(stderr, "event time %u action %u kind %d value %08x running %d sample %d\n", e->time, e->action, k,
-                e->value, st.running, (int)sample);
-      if (k == ACT_RESPAWN && getenv("TMUF_SIM_DEBUG"))
-        fprintf(stderr, "respawn event time %u value %08x running %d sample %d\n", e->time, e->value, st.running,
-                (int)sample);
-      if (k == ACT_RESPAWN && st.running && active)
-        respawns++;
-      if (k == ACT_FINISH && e->value == 1)
-        finish = 1;
-      switch (k) {
-      case ACT_ACCEL:
-        st.accel = active, st.accel_t = et;
-        break;
-      case ACT_GAS:
-        st.gas = -signed24(e->value), st.gas_t = et;
-        break;
-      case ACT_BRAKE:
-        st.brake = active, st.brake_t = et;
-        break;
-      case ACT_STEER:
-        st.steer = -signed24(e->value), st.steer_t = et;
-        break;
-      case ACT_LEFT:
-        st.left = active, st.left_t = et;
-        break;
-      case ACT_RIGHT:
-        st.right = active, st.right_t = et;
-        break;
-      case ACT_RUNNING:
-        st.running = active;
-        break;
-      default:
-        break;
-      }
-      cursor++;
-    }
-    ref_tick *tk = &ticks[n++];
-    tk->period_ms = tick_ms;
-    tk->time_ms = (uint32_t)t;
-    tk->finish_race = finish;
-    if (!spawn_done && t >= 0) {
-      tk->establish_spawn = 1;
-      spawn_done = 1;
-    }
-    if (t >= (int32_t)prestart) {
-      tk->enable_race = 1;
-      tk->respawns = respawns;
-      if (!reset_done && !prev_running && st.running) {
-        tk->reset_at_race_start = 1;
-        reset_done = 1;
-      }
-    }
-    prev_running = st.running;
-    controls_from(&st, &tk->gate_a, &tk->gate_b, &tk->steering);
-  }
-  /* appendUnobservedTrailingTick (race mode) */
-  if (n > 0) {
-    ticks[n] = ticks[n - 1];
-    ticks[n].time_ms += ticks[n].period_ms;
-    ticks[n].establish_spawn = 0;
-    ticks[n].reset_at_race_start = 0;
-    ticks[n].finish_race = 0;
-    ticks[n].respawns = 0;
-    n++;
-  }
-  *out = ticks;
-  return n;
 }

@@ -176,7 +176,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     printf("%s ERROR vehicle %s\n", name, err);
     goto done;
   }
-  uint32_t tick_count = ref_control_ticks(ghost, &ticks);
+  uint32_t tick_count = tmuf_control_ticks(ghost, &ticks);
   gm_iso4 spawn;
   for (int i = 0; i < 3; i++)
     for (int k = 0; k < 3; k++)

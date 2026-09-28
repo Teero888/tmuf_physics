@@ -20,6 +20,8 @@ endif()
 
 # Parsing shared by both backends: GBX, packs, replays -> plain data.
 set(TMUF_PHYSICS_COMMON_SOURCES
+  src/common/api.c
+  src/common/api_common.h
   src/common/arena.c
   src/common/arena.h
   src/common/gbx.c
@@ -38,6 +40,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/packset.h
   src/common/blowfish_tables.h
   src/common/challenge.c
+  src/common/controls.c
+  src/common/controls.h
   src/common/challenge.h
   src/common/assets.c
   src/common/assets.h
@@ -144,6 +148,8 @@ if(TMUF_PHYSICS_TOOLS)
   add_executable(tmuf_inspect tools/inspect/tmuf_inspect.c)
   target_include_directories(tmuf_inspect PRIVATE src)
   target_link_libraries(tmuf_inspect PRIVATE tmuf_physics)
+  add_executable(tmuf_api_check tools/sim/tmuf_api_check.c)
+  target_link_libraries(tmuf_api_check PRIVATE tmuf_physics)
   add_executable(tmuf_sim tools/sim/tmuf_sim.c)
   target_include_directories(tmuf_sim PRIVATE src)
   target_link_libraries(tmuf_sim PRIVATE tmuf_physics)
