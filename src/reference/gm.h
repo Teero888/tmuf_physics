@@ -99,9 +99,9 @@ static inline gm_mat3 mat3_mul_transpose(const gm_mat3 *left, const gm_mat3 *rig
    float rounding. */
 static inline double x87_r24(double x) {
   const double ax = fabs(x);
-  if (ax >= 0x1p-126 || ax == 0.0)
+  if (ax >= 1.1754943508222875e-38 /* 2^-126 */ || ax == 0.0)
     return (double)(float)x;
-  return (double)(float)(x * 0x1p100) * 0x1p-100;
+  return (double)(float)(x * 1.2676506002282294e+30 /* 2^100 */) * 7.888609052210118e-31 /* 2^-100 */;
 }
 
 /* (a0 b0 + a1 b1) + a2 b2 on the x87 stack, stored as a float */

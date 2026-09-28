@@ -669,11 +669,11 @@ static inline int tri_rejects(const gm_vec3 v[3], float nx, float ny, float nz) 
   const double tx = -(double)v[0].x * n0, ty = -(double)v[0].y * n1, tz = -(double)v[0].z * n2;
   const double d = (tx + ty) + tz;
   const double nn = (n0 * n0 + n1 * n1) + n2 * n2;
-  const double m = 0x1p-20 * ((fabs(tx) + fabs(ty)) + fabs(tz)) + 0x1p-130 * (nn > 1.0 ? nn : 1.0);
+  const double m = 9.5367431640625e-07 /* 2^-20 */ * ((fabs(tx) + fabs(ty)) + fabs(tz)) + 7.346839692639297e-40 /* 2^-130 */ * (nn > 1.0 ? nn : 1.0);
   if (d + m < 0.0)
     return 1;
   const double l = d - m;
-  if (l > 0.0 && l * l > nn * (1.0 + 0x1p-20))
+  if (l > 0.0 && l * l > nn * (1.0 + 9.5367431640625e-07 /* 2^-20 */))
     return 1;
   double p[3][3], vmax = 0.0;
   for (int k = 0; k < 3; k++) {
@@ -683,9 +683,9 @@ static inline int tri_rejects(const gm_vec3 v[3], float nx, float ny, float nz) 
     const double a1 = (fabs(p[k][0]) + fabs(p[k][1])) + fabs(p[k][2]);
     vmax = a1 > vmax ? a1 : vmax;
   }
-  const double me = 0x1p-14 * (2.0 * vmax + 2.0);
+  const double me = 6.103515625e-05 /* 2^-14 */ * (2.0 * vmax + 2.0);
   /* |n|^2 times an upper bound of (r + me)^2 (r <= 1) */
-  const double reach = (nn - d * d) * (1.0 + 0x1p-20) + (0x1p-15 * (vmax + 1.0) + 2.1 * me + me * me) * nn;
+  const double reach = (nn - d * d) * (1.0 + 9.5367431640625e-07 /* 2^-20 */) + (3.0517578125e-05 /* 2^-15 */ * (vmax + 1.0) + 2.1 * me + me * me) * nn;
   const double inside = me * me * nn;
   for (int e = 0; e < 3; e++) {
     const double *a = p[e], *b = p[e == 2 ? 0 : e + 1];
@@ -715,7 +715,7 @@ typedef struct tri_ctx {
   int have_world, hit;
 } tri_ctx;
 
-static inline __attribute__((always_inline)) void tri_test(tri_ctx *x, const gm_vec3 v[3], float nx, float ny,
+TMUF_ALWAYS_INLINE void tri_test(tri_ctx *x, const gm_vec3 v[3], float nx, float ny,
                                                            float nz, float n2, uint16_t material) {
   const gm_vec3 zero = v3(0.0f, 0.0f, 0.0f);
   float in = 1.0f / tmuf_sqrtf(n2);
@@ -743,7 +743,7 @@ static inline __attribute__((always_inline)) void tri_test(tri_ctx *x, const gm_
   x->hit = 1;
 }
 
-static inline __attribute__((always_inline)) void tri_ctx_init(tri_ctx *x, const ref_surf *a, const gm_iso4 *im,
+TMUF_ALWAYS_INLINE void tri_ctx_init(tri_ctx *x, const ref_surf *a, const gm_iso4 *im,
                                                                const gm_iso4 *to_mesh, ref_cbuf *out) {
   x->a = a;
   x->im = im;
@@ -886,13 +886,13 @@ __attribute__((target("avx"))) static int ellipsoid_mesh_tris_avx(const ref_surf
                                        _mm256_mul_pd(nn2, nn2));
       const __m256d sabs = _mm256_add_pd(_mm256_add_pd(_mm256_and_pd(tx, absmask), _mm256_and_pd(ty, absmask)),
                                          _mm256_and_pd(tz, absmask));
-      const __m256d mg = _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(0x1p-20), sabs),
-                                       _mm256_mul_pd(_mm256_set1_pd(0x1p-130), _mm256_max_pd(nn, one)));
+      const __m256d mg = _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(9.5367431640625e-07 /* 2^-20 */), sabs),
+                                       _mm256_mul_pd(_mm256_set1_pd(7.346839692639297e-40 /* 2^-130 */), _mm256_max_pd(nn, one)));
       const __m256d l = _mm256_sub_pd(d, mg);
       __m256d rej = _mm256_cmp_pd(_mm256_add_pd(d, mg), zero, _CMP_LT_OQ);
       rej = _mm256_or_pd(rej, _mm256_and_pd(_mm256_cmp_pd(l, zero, _CMP_GT_OQ),
                                             _mm256_cmp_pd(_mm256_mul_pd(l, l),
-                                                          _mm256_mul_pd(nn, _mm256_set1_pd(1.0 + 0x1p-20)),
+                                                          _mm256_mul_pd(nn, _mm256_set1_pd(1.0 + 9.5367431640625e-07 /* 2^-20 */)),
                                                           _CMP_GT_OQ)));
       __m256d vmax = zero;
       for (int k = 0; k < 3; k++) {
@@ -902,15 +902,15 @@ __attribute__((target("avx"))) static int ellipsoid_mesh_tris_avx(const ref_surf
         vmax = _mm256_max_pd(a1, vmax);
       }
       /* me = 2^-14 (2 vmax + 2) */
-      const __m256d me = _mm256_mul_pd(_mm256_set1_pd(0x1p-14),
+      const __m256d me = _mm256_mul_pd(_mm256_set1_pd(6.103515625e-05 /* 2^-14 */),
                                        _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(2.0), vmax), _mm256_set1_pd(2.0)));
       /* (nn - d d)(1 + 2^-20) + (2^-15 (vmax + 1) + 2.1 me + me me) nn */
       const __m256d slack = _mm256_add_pd(
-          _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(0x1p-15), _mm256_add_pd(vmax, one)),
+          _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(3.0517578125e-05 /* 2^-15 */), _mm256_add_pd(vmax, one)),
                         _mm256_mul_pd(_mm256_set1_pd(2.1), me)),
           _mm256_mul_pd(me, me));
       const __m256d reach =
-          _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(nn, _mm256_mul_pd(d, d)), _mm256_set1_pd(1.0 + 0x1p-20)),
+          _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(nn, _mm256_mul_pd(d, d)), _mm256_set1_pd(1.0 + 9.5367431640625e-07 /* 2^-20 */)),
                         _mm256_mul_pd(slack, nn));
       const __m256d inside = _mm256_mul_pd(_mm256_mul_pd(me, me), nn);
       const __m256d lmin = _mm256_set1_pd(4.0 * (double)DIR_EPS2);
@@ -1009,7 +1009,7 @@ static void at_finish(ref_detect *d, ref_mtree *tree, const ref_static_record *r
 
 /* one world (d->world) for the gathered trees; any limit reached before a
    collision is made: the reference walk instead */
-static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect *d, ref_mtree *root,
+TMUF_ALWAYS_INLINE void at_walk_world_impl(ref_detect *d, ref_mtree *root,
                                                                       const gm_iso4 *moving_iso, const at_tree *trees,
                                                                       uint32_t nt, const int avx) {
   const ref_world *w = d->world;
@@ -1052,7 +1052,7 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
         re->rec = (uint32_t)cell->record;
         re->lanes = m;
         for (uint32_t k = m; k; k &= k - 1u) {
-          uint32_t t = (uint32_t)__builtin_ctz(k);
+          uint32_t t = tmuf_ctz32(k);
           if (nrec[t] == AT_RECS) {
             ref_detect_static(d, root, moving_iso);
             return;
@@ -1102,7 +1102,7 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
       at_boxes e;
       memset(&e, 0, sizeof e);
       for (uint32_t kk = lanes; kk; kk &= kk - 1u) {
-        const uint32_t t = (uint32_t)__builtin_ctz(kk);
+        const uint32_t t = tmuf_ctz32(kk);
         const uint32_t k = re->slot[t];
         slot[t] = k;
         to_mesh[t][k] = iso4_mult_inverse(&trees[t].local, &rec->iso);
@@ -1133,7 +1133,7 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
         memcpy(&tri, cr + 28, 4);
         if (tri >= 0 && (uint32_t)tri < m->triangle_count)
           for (uint32_t k = mm; k; k &= k - 1u) {
-            uint32_t t = (uint32_t)__builtin_ctz(k);
+            uint32_t t = tmuf_ctz32(k);
             if (nl[t] == 256) {
               ref_detect_static(d, root, moving_iso);
               return;
@@ -1152,7 +1152,7 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
         ci++;
       }
       for (uint32_t k = lanes; k; k &= k - 1u) {
-        uint32_t t = (uint32_t)__builtin_ctz(k);
+        uint32_t t = tmuf_ctz32(k);
         if (ntris + nl[t] > AT_TRIS) {
           ref_detect_static(d, root, moving_iso);
           return;

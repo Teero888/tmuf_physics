@@ -17,6 +17,20 @@
 
 #include "optimized/fmath.h"
 
+/* compiler portability: forced inlining, count trailing zeros */
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <intrin.h>
+#define TMUF_ALWAYS_INLINE static __forceinline
+static __forceinline uint32_t tmuf_ctz32(uint32_t v) {
+  unsigned long i;
+  _BitScanForward(&i, v);
+  return (uint32_t)i;
+}
+#else
+#define TMUF_ALWAYS_INLINE static inline __attribute__((always_inline))
+#define tmuf_ctz32(v) ((uint32_t)__builtin_ctz(v))
+#endif
+
 typedef tmuf_vec3 gm_vec3;
 typedef tmuf_quat gm_quat;
 typedef tmuf_mat3 gm_mat3;
@@ -99,9 +113,9 @@ static inline gm_mat3 mat3_mul_transpose(const gm_mat3 *left, const gm_mat3 *rig
    float rounding. */
 static inline double x87_r24(double x) {
   const double ax = fabs(x);
-  if (ax >= 0x1p-126 || ax == 0.0)
+  if (ax >= 1.1754943508222875e-38 /* 2^-126 */ || ax == 0.0)
     return (double)(float)x;
-  return (double)(float)(x * 0x1p100) * 0x1p-100;
+  return (double)(float)(x * 1.2676506002282294e+30 /* 2^100 */) * 7.888609052210118e-31 /* 2^-100 */;
 }
 
 /* (a0 b0 + a1 b1) + a2 b2 on the x87 stack, stored as a float */
@@ -118,7 +132,7 @@ static inline int mat3_has_tiny(const gm_mat3 *m) {
   int tiny = 0;
   for (int r = 0; r < 3; r++)
     for (int c = 0; c < 3; c++)
-      tiny |= m->m[r][c] != 0.0f && fabsf(m->m[r][c]) < 0x1p-60f;
+      tiny |= m->m[r][c] != 0.0f && fabsf(m->m[r][c]) < 8.6736173798840355e-19f /* 2^-60 */;
   return tiny;
 }
 
