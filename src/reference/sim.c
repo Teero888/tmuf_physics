@@ -425,6 +425,7 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
 }
 
 void ref_sim_free(ref_sim *s) {
+  dyna_free(&s->body);
   free(s->water.cells);
   free(s->race.passed);
   free(s->race.slot);

@@ -1,5 +1,7 @@
 #include "reference/dyna.h"
 
+#include <stdlib.h>
+
 #include <string.h>
 
 static const float VECTOR_EPS2 = 1.0e-10f;
@@ -151,8 +153,21 @@ void dyna_pre_collision(dyna *d, float dt) {
 
 void dyna_add_replacement(dyna *d, gm_vec3 r) {
   d->active = 1;
-  if (d->replacement_count < DYNA_MAX_REPLACEMENTS)
-    d->replacements[d->replacement_count++] = r;
+  if (d->replacement_count == d->replacement_cap) {
+    uint32_t cap = d->replacement_cap ? d->replacement_cap * 2 : 64;
+    gm_vec3 *v = realloc(d->replacements, sizeof *v * cap);
+    if (!v)
+      return;
+    d->replacements = v;
+    d->replacement_cap = cap;
+  }
+  d->replacements[d->replacement_count++] = r;
+}
+
+void dyna_free(dyna *d) {
+  free(d->replacements);
+  d->replacements = NULL;
+  d->replacement_count = d->replacement_cap = 0;
 }
 
 /* CHmsDyna::ComputeSynthetizedReplacement + ApplyReplacement */

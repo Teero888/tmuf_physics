@@ -34,7 +34,6 @@ typedef struct dyna_params {
   float force_scale; /* scales the force fields (gravity) */
 } dyna_params;
 
-#define DYNA_MAX_REPLACEMENTS 64
 
 typedef struct dyna {
   dyna_params params;
@@ -45,11 +44,12 @@ typedef struct dyna {
   int active;
   int has_max_ang;
   float max_ang;
-  uint32_t replacement_count;
-  gm_vec3 replacements[DYNA_MAX_REPLACEMENTS];
+  uint32_t replacement_count, replacement_cap;
+  gm_vec3 *replacements; /* pending collision replacements (grown, freed by dyna_free) */
 } dyna;
 
 void dyna_set_location(dyna *d, const gm_iso4 *loc);
+void dyna_free(dyna *d);
 void dyna_integrate(const dyna *d, const dyna_state *src, dyna_state *dst, float dt);
 void dyna_pre_collision(dyna *d, float dt);
 void dyna_post_collision(dyna *d);
