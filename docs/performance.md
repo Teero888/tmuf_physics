@@ -2,28 +2,31 @@
 
 Single-threaded throughput of `tmuf_world_tick` on the Nations campaign map
 **A01-Race** (Stadium, StadiumCar), measured with `tools/sim/tmuf_bench`
-(commit 34d6e1f, 2026-09-28).
+(commit fde7407, 2026-09-28).
 
 ## Results
 
-| backend   | random inputs (ticks/s) | author replay (ticks/s) | per tick (random) |
-|-----------|-------------------------|-------------------------|-------------------|
-| reference | **90 200**              | 45 200 (best run 47 000) | 11.1 µs          |
-| optimized | 141 400                 | 75 400 (best run 79 000) | 7.1 µs           |
+| backend   | random inputs (ticks/s) | author replay (ticks/s)  | per tick (random) |
+|-----------|-------------------------|--------------------------|-------------------|
+| reference | **90 600**              | 45 300 (best run 46 900) | 11.0 µs           |
+| optimized | **182 900**             | 90 600 (best run 94 600) | 5.5 µs            |
 
-One tick is 10 ms of game time, so the reference runs about 900× real time
-on one core with random inputs, about 450× on the author's run.
+One tick is 10 ms of game time, so on one core the reference runs about
+900× real time with random inputs (450× on the author's run), the optimized
+backend about 1 800× (900×).
 
 - Random inputs: five runs of 1 000 000 ticks (seeds 1–5), each an episode
   of 3 000 ticks (30 s, countdown included) from the start, restarted with
   `tmuf_world_copy` of the time-0 world. Inputs are held for 1–20 ticks:
   accelerate 80 %, brake 15 %, steering full left / full right / straight /
-  analog. The five runs agree within 1 % (reference: 89 761–90 955 ticks/s).
+  analog. The five runs agree within 1 % (reference 90 100–91 000, optimized
+  181 500–184 300 ticks/s).
 - Author replay: the A01-Race.Replay.gbx shipped with the game (24.54 s,
   2 715 ticks), run 369 times; it finishes at the recorded time. It is
-  slower per tick than random inputs: the car stays on the road at speed,
-  so its body touches more road triangles and needs more substeps.
-- Random inputs average 1.04 substeps per tick, the replay more (faster car).
+  slower per tick than random inputs: the car is fast, and the game splits
+  a tick into more substeps the faster the car goes (3.3 per tick on
+  average here, 1.04 with random inputs); each substep runs the whole
+  collision detection.
 
 Other costs (both backends):
 
@@ -49,17 +52,33 @@ Measured with `perf record -e task-clock` on the random-input benchmark:
 ## Optimized backend
 
 `src/optimized` produces bit-identical states (checked with
-`tools/sim/run_api_corpus.sh` on all 4 748 oracle replays). The speed-up
+`tools/sim/run_api_corpus.sh` on all 5 322 oracle replays that the game itself can simulate). The speed-up
 comes from doing the same work with less overhead, not from different
 arithmetic:
 
 - all car trees walk the static tree and each reached mesh once, every
-  cell tested against all trees at once (SSE; same operations as the
+  cell tested against all trees at once (SSE/AVX; same operations as the
   game's box test), collisions then made in the reference's order;
-- ellipsoid transforms built only when a triangle is reached;
-- no debug hooks in the tick path; mesh cells read in place; the trees'
-  world locations computed once per substep; single-precision `sqrtf`
-  (provably the same result as the reference's double root rounded).
+- ellipsoid–triangle tests four triangles at a time (AVX: vertices and
+  normal with the float operations per lane); a triangle is skipped without
+  a root or division when a double-precision test shows, with a margin far
+  above the float rounding error, that the float test finds no contact
+  (86 % of the triangles on A01-Race; `-DTMUF_TRI_CHECK` runs the float
+  test on every skipped triangle and aborts on a contact: none on the whole
+  corpus);
+- sin, cos, atan2, exp evaluate their series by Horner; a result within
+  2^8 double ulps of a float rounding midpoint falls back to the
+  reference's series, so the float results are the same
+  (`tools/dev/fmath_check.sh` compares all 2^32 inputs);
+- ellipsoid transforms built only when a triangle is reached; no debug
+  hooks in the tick path; mesh cells read in place; single-precision
+  `sqrtf` (provably the same result as the reference's double root
+  rounded); the backend compiles as one unit (`unity.c`) so the small
+  helpers inline across files.
+
+Per tick (random inputs) the optimized backend spends about half its time
+in collision detection (walks and triangles), the rest in car forces,
+collision response and integration.
 
 ## Setup
 
