@@ -221,6 +221,20 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
       break;
     oracle_stop = k;
   }
+  /* or it puts the car on the start block's spawn (without the validation
+     seed's yaw) at rest, without a respawn input */
+  if (!oracle_stop) {
+    const float st[3] = {spawn.t.x, spawn.t.y, spawn.t.z};
+    for (uint32_t k = 262; k < o.count && k < tick_count; k++) {
+      const float *a = o.states[k], *p = o.states[k - 1];
+      int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
+      int moved = p[16] != 0.0f || p[17] != 0.0f || p[18] != 0.0f;
+      if (still && moved && memcmp(&a[13], st, 12) == 0 && !ticks[k].respawns && !ticks[k - 1].respawns) {
+        oracle_stop = k;
+        break;
+      }
+    }
+  }
   /* only an abort before the recorded finish */
   if (oracle_stop && ghost->has_race_time && ghost->race_time != UINT32_MAX &&
       (uint64_t)oracle_stop * 10u < 2600u + (uint64_t)ghost->race_time)
