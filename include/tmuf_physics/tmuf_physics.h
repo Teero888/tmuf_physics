@@ -131,6 +131,9 @@ typedef struct tmuf_input {
   uint8_t accelerate; /* 0 or 1 */
   uint8_t brake;      /* 0 or 1 */
   uint8_t respawn;    /* 1: respawn at the last checkpoint */
+  uint8_t input_event; /* 1: a driving key or axis event this tick that left the input as it was
+                          (e.g. a second steering key held); a stunt in the air is only a master
+                          jump without input events, and a change of the fields above is one */
   int32_t steer;      /* -65536 (full left) .. 65536 (full right); keys steer +-65536 */
 } tmuf_input;
 
@@ -172,6 +175,13 @@ TMUF_API uint32_t tmuf_replay_laps(const tmuf_replay *replay);
 TMUF_API uint32_t tmuf_replay_seed(const tmuf_replay *replay);
 /* Recorded race time in ms, UINT32_MAX if the ghost did not finish. */
 TMUF_API uint32_t tmuf_replay_race_time(const tmuf_replay *replay);
+/* The ghost's recorded respawns and stunt score (UINT32_MAX if not recorded). */
+TMUF_API uint32_t tmuf_replay_respawns(const tmuf_replay *replay);
+TMUF_API uint32_t tmuf_replay_stunt_score(const tmuf_replay *replay);
+/* The ghost's recorded checkpoint crossings (finish lines included): race
+   time and stunt score at each (arrays owned by the replay). Returns the
+   count, 0 if not recorded. */
+TMUF_API uint32_t tmuf_replay_checkpoints(const tmuf_replay *replay, const uint32_t **times, const uint32_t **scores);
 /* The ghost's input for every tick from time 0: inputs[i] drives tick i.
    Returns the count; the array is owned by the replay. */
 TMUF_API uint32_t tmuf_replay_inputs(const tmuf_replay *replay, const tmuf_input **inputs);
@@ -187,16 +197,15 @@ typedef struct tmuf_replay_write_options {
    tick i, as tmuf_replay_inputs gives them), which the game plays and its
    validator accepts. The run is simulated: it ends at the finish or after
    the last input, and the replay records the map, the inputs, the race time
-   (none if the run does not finish), respawns, checkpoint times and the
-   car's samples. The track's seed and laps (tmuf_track_options) are the
+   (none if the run does not finish), respawns, stunt score, checkpoint times
+   and the car's samples. The track's seed and laps (tmuf_track_options) are the
    run's validation seed and race settings.
    A replay has no input before the race starts: inputs[i] for
    i < TMUF_RACE_START_MS / TMUF_TICK_MS - 1 are ignored (the car is held
    during the countdown; the run starts with the input of that tick), so
    count must be larger. options may be NULL.
-   Stunts maps: the validator also checks the stunt score, which this
-   library does not compute (written as 0), so those replays play but
-   validate as invalid.
+   On Stunts maps the validator also checks the stunt score, which the
+   replay records as the run scored it.
    Returns the file's bytes (free them with tmuf_free) and their count in
    *size, or NULL. */
 TMUF_API void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inputs, uint32_t count,

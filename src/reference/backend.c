@@ -47,6 +47,8 @@ tmuf_track *tmuf_track_load(const tmuf_packs *packs, const void *map, size_t siz
     return NULL;
   }
   t->tpl.race.laps = t->base.laps;
+  t->tpl.race.stunts_mode = t->base.map.play_mode == 5;
+  t->tpl.race.time_limit = t->base.map.time_limit;
   return t;
 }
 
@@ -115,6 +117,7 @@ void tmuf_world_tick(tmuf_world *w) {
   ref_sim *s = &w->sim;
   const tmuf_input *in = &w->input;
   ref_tick tk = tmuf_control_tick_at(w->tick, in->accelerate, in->brake, in->steer, in->respawn);
+  tk.input_event = in->input_event;
   /* the first tick's controls are installed as the car is created
      (ReplayVehicleSimulation::Start) */
   if (s->first_step)

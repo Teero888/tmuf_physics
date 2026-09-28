@@ -19,6 +19,7 @@ typedef struct tmuf_control_tick {
   uint32_t respawns;
   /* the input as the game reads it, and the car controls it sets */
   uint8_t accelerate, brake;
+  uint8_t input_event; /* a driving input event this tick (it may leave the input as it was) */
   int32_t steer; /* -65536 .. 65536 */
   float gate_a, gate_b, steering;
 } tmuf_control_tick;

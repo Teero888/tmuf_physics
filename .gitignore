@@ -4,4 +4,4 @@
 __pycache__/
 *.Replay.Gbx
 *.Challenge.Gbx
-/tools/oracle/build/
+/tools/oracle/build*/

@@ -477,6 +477,7 @@ static void model5_longitudinal(car *c, force_request *r, m5_state *s) {
 static void model5(car *c, force_request *r) {
   m5_state s = {0};
   s.water = car_apply_water_forces(c, r->current_force);
+  c->frame.in_water = s.water;
   s.was_slipping = c->slip.active;
   c->controls.no_ground_friction_guard = s.water != 0;
   model5_contact_forces(c, r);
@@ -973,6 +974,7 @@ static void model6(car *c, force_request *r) {
   m6_state s = {0};
   s.frame_y = c->geared.frame_iso.r.m[1][1];
   s.water = car_apply_water_forces(c, r->current_force);
+  c->frame.in_water = s.water;
   c->controls.no_ground_friction_guard = s.water != 0;
   s.dirt_slide = all_wheels_material(c, MAT_DIRT);
   if (c->geared.burnout_phase == BURNOUT_CIRCLE) {

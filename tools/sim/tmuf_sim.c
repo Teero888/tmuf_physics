@@ -196,6 +196,8 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   uint32_t snap_checks = 0, snap_bad = 0;
   /* ConfigureReplayRace: the race settings' laps, else the map's for a lap race, else one */
   sim.race.laps = ghost->settings_laps ? ghost->settings_laps : map.has_laps && map.lap_race ? map.laps : 1;
+  sim.race.stunts_mode = map.play_mode == 5;
+  sim.race.time_limit = map.time_limit;
   if (!op->summary)
     printf("race: %u checkpoints, %u laps, %u trigger records\n", sim.race.checkpoint_count, sim.race.laps,
            sim.triggers.record_count);
@@ -375,6 +377,10 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     printf("checkpoints (%u respawns):", sim.race.respawns);
     for (uint32_t i = 0; i < sim.race.checkpoint_time_count; i++)
       printf(" %u", sim.race.checkpoint_times[i]);
+    printf("\n");
+    printf("stunts %u%s:", sim.race.stunts.score, sim.race.stunts_mode ? " (stunts mode)" : "");
+    for (uint32_t i = 0; i < sim.race.checkpoint_time_count; i++)
+      printf(" %u", sim.race.checkpoint_scores[i]);
     printf("\n");
   }
   rc = 0;

@@ -13,4 +13,8 @@ for p in "$OUT"/part.*; do
 done
 wait
 cat "$OUT"/out.* | grep -E " MATCH | DIVERGE | ERROR " | sort > "$OUT/all.txt"
+cat "$OUT"/out.* | grep -E " DETAILS " | sort > "$OUT/details.txt" || true
 awk '{print $2}' "$OUT/all.txt" | sort | uniq -c
+# race details (respawns, checkpoint times, Stunts mode scores) of valid runs
+cat "$OUT"/out.* | sed -n 's/.*(race details: \([0-9]*\) ok, \([0-9]*\) bad, \([0-9]*\) .*/\1 \2 \3/p' |
+  awk '{o+=$1; b+=$2; r+=$3} END {printf "race details: %d ok, %d bad (%d Race mode ghosts keep another stunt score)\n", o, b, r}'

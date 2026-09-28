@@ -57,6 +57,7 @@ static const tmuf_gbx_class COLLECTOR_LIST = {0x0301b000, "CGameCtnCollectorList
 
 typedef struct params {
   uint32_t bronze, silver, gold, author_time, time_limit, author_score;
+  int has_time_limit;
 } params;
 
 static void c0305b001(tmuf_gbx *g, void *node, uint32_t id) {
@@ -81,6 +82,7 @@ static void c0305b008(tmuf_gbx *g, void *node, uint32_t id) {
   params *p = node;
   p->time_limit = tmuf_gbx_u32(g);
   p->author_score = tmuf_gbx_u32(g);
+  p->has_time_limit = 1;
 }
 
 static void c0305b00d(tmuf_gbx *g, void *node, uint32_t id) {
@@ -152,6 +154,7 @@ static void c03043011(tmuf_gbx *g, void *node, uint32_t id) {
     c->author_time = pp->author_time;
     c->time_limit = pp->time_limit;
     c->author_score = pp->author_score;
+    c->has_time_limit = pp->has_time_limit;
   }
   c->kind = tmuf_gbx_u32(g);
 }
@@ -217,6 +220,24 @@ static const tmuf_gbx_class CHALLENGE = {
     sizeof CHALLENGE_CHUNKS / sizeof CHALLENGE_CHUNKS[0], NULL,
 };
 
+/* the play mode of the description header chunk (0x03043002, version 6+) */
+static uint32_t header_play_mode(const tmuf_gbx *g) {
+  for (uint32_t i = 0; i < g->header_chunk_count; i++) {
+    const tmuf_gbx_header_chunk *h = &g->header_chunks[i];
+    if (h->id != 0x03043002u || h->size < 1)
+      continue;
+    const uint8_t *d = h->data;
+    const uint8_t version = d[0];
+    if (version < 6)
+      return 0;
+    size_t at = 1 + 4 + 16 + 4 + 4; /* need unlock, 4 times, cost, lap race */
+    if (h->size < at + 4)
+      return 0;
+    return (uint32_t)d[at] | (uint32_t)d[at + 1] << 8 | (uint32_t)d[at + 2] << 16 | (uint32_t)d[at + 3] << 24;
+  }
+  return 0;
+}
+
 static const tmuf_gbx_class *const CHALLENGE_CLASSES[] = {&CHALLENGE, &COLLECTOR_LIST, &PARAMS, &SKIN};
 
 int tmuf_challenge_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_challenge *out, char *err,
@@ -237,5 +258,8 @@ int tmuf_challenge_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tm
     return 0;
   }
   *out = *c;
+  if (!out->has_time_limit)
+    out->time_limit = 60000; /* CGameCtnChallengeParameters' default */
+  out->play_mode = header_play_mode(&g);
   return 1;
 }

@@ -37,8 +37,8 @@ Last updated 2026-09-28.
   when the next tick respawns) and stops the run ("Wrong Simu") when they
   differ; nothing else in a sample is checked. Of the ghost's fields it
   checks the race time and the respawn count (every respawn press while
-  racing counts) and, on Stunts maps, the stunt score; checkpoint times are
-  not checked. It accepts uncompressed bodies, zero security keys and any
+  racing counts) and, on Stunts maps, the stunt score; checkpoint times and
+  their stunt scores are not checked. It accepts uncompressed bodies, zero security keys and any
   exe hash.
 
 ## Parsing (src/common)
@@ -130,12 +130,29 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
   finish time, and `checkpoint_times` (every checkpoint crossing, the finish
   line of each lap included). They equal the ghosts' checkpoint lists on
   300 of 300 sampled valid replays (up to 480 crossings).
+- Stunts (src/common/stunts.c, `tmuf_race.stunts`): CTrackManiaRace's
+  UpdateStunts / ComputeStunt / ResetStunts, the respawn penalty and the
+  Stunts mode time limit, ported from the exe. The game scores stunts in
+  every mode; the validator checks the score on Stunts maps. Details that
+  took the game's own trace to find (`run_oracle.py --trace stunts`, a hook
+  in ComputeStunt): the car's location the stunts read lags the body by one
+  step (the contact flags do not); the first rotation in the air is measured
+  from the oldest of the last 20 locations; a master jump means no input
+  event in the air, also one that leaves the input as it was (a second
+  steering key), which `tmuf_input.input_event` carries. The score matches
+  the ghosts of all 137 valid Stunts mode replays and the game's per-jump
+  trace; on Race maps a ghost keeps the score of the live drive, which the
+  validation does not always reproduce (it does not check it there).
+- The whole corpus through the public API (both backends): respawns,
+  checkpoint times and Stunts mode scores equal the recorded ones on all
+  6 812 valid finished runs (ghosts keep the first 1 000 checkpoint
+  crossings); 5 Race mode ghosts keep a live-drive stunt score.
 - `tmuf_replay_write` (src/common/replay_write.c) saves a run as a replay in
   the game's layout (one CGameCtnGhost, uncompressed body, samples in stored
   zlib blocks). Both backends write identical bytes. `tmuf_rewrite` writes a
   replay's inputs anew; in the game, 136 of 138 rewritten corpus replays
-  validate, the other two are Stunts maps (the stunt score is not
-  computed).
+  validated before the stunt score was computed (the other two were Stunts
+  maps); since then, 24 of 24 rewritten Stunts mode replays validate.
 
 ## Optimized backend (src/optimized)
 
@@ -170,6 +187,11 @@ optimization with its measured gain: docs/performance.md.
   rewritten from our simulation so the game plays them to the end; run them
   through `run_oracle.py` like any replay. `--resample` keeps the inputs
   (rebased to the game's clock) and only rewrites the samples.
+- `run_oracle.py --trace stunts --build DIR` (a dumper built with `make
+  OUT=DIR`) logs every stunt the game scores (figure, points, multiplier,
+  the race's stunt state); `TMUF_STUNTS_DEBUG=1 tmuf_sim ...` prints ours.
+- `tmuf_api_check` also compares the race details a valid run recorded
+  (respawns, checkpoint times, Stunts mode scores) with ours.
 - `run_oracle.py --trace cells` dumps the game's static collision octree
   (compare with `TMUF_SIM_CELLS=FILE tmuf_sim ...`).
 - `tools/dev/fmath_check.sh`: the optimized backend's sin/cos/tan/atan/exp

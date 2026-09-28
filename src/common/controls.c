@@ -82,7 +82,7 @@ uint32_t tmuf_control_ticks(const tmuf_ghost *g, tmuf_control_tick **out) {
   for (int32_t t = (int32_t)tick_ms; t <= final_target; t += (int32_t)tick_ms) {
     uint32_t sample = base - prestart + (uint32_t)t;
     uint32_t respawns = 0;
-    int finish = 0;
+    int finish = 0, input_event = 0;
     while (cursor < g->event_count && g->events[cursor].time <= sample) {
       const tmuf_input_event *e = &g->events[cursor];
       int k = kinds[e->action];
@@ -98,6 +98,8 @@ uint32_t tmuf_control_ticks(const tmuf_ghost *g, tmuf_control_tick **out) {
         respawns++;
       if (k == ACT_FINISH && e->value == 1)
         finish = 1;
+      if (k == ACT_ACCEL || k == ACT_GAS || k == ACT_BRAKE || k == ACT_STEER || k == ACT_LEFT || k == ACT_RIGHT)
+        input_event = 1;
       switch (k) {
       case ACT_ACCEL:
         st.accel = active, st.accel_t = et;
@@ -129,6 +131,7 @@ uint32_t tmuf_control_ticks(const tmuf_ghost *g, tmuf_control_tick **out) {
     tk->period_ms = tick_ms;
     tk->time_ms = (uint32_t)t;
     tk->finish_race = finish;
+    tk->input_event = (uint8_t)input_event;
     if (!spawn_done && t >= 0) {
       tk->establish_spawn = 1;
       spawn_done = 1;
@@ -152,6 +155,7 @@ uint32_t tmuf_control_ticks(const tmuf_ghost *g, tmuf_control_tick **out) {
     ticks[n].reset_at_race_start = 0;
     ticks[n].finish_race = 0;
     ticks[n].respawns = 0;
+    ticks[n].input_event = 0;
     n++;
   }
   *out = ticks;

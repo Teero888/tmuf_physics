@@ -361,13 +361,14 @@ void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inputs, uint3
   wb_f32(&b, 0.0f);
   skippable_end(&b, c);
   c = skippable_begin(&b, 0x0309200au); /* stunt score */
-  wb_u32(&b, 0);
+  wb_u32(&b, w.sim.race.stunts.score);
   skippable_end(&b, c);
-  c = skippable_begin(&b, 0x0309200bu); /* checkpoint times (and stunt score) */
-  wb_u32(&b, w.sim.race.checkpoint_time_count);
-  for (uint32_t i = 0; i < w.sim.race.checkpoint_time_count; i++) {
+  c = skippable_begin(&b, 0x0309200bu); /* checkpoint times (and stunt score): the first 1000, as the game */
+  const uint32_t ncp = w.sim.race.checkpoint_time_count < 1000u ? w.sim.race.checkpoint_time_count : 1000u;
+  wb_u32(&b, ncp);
+  for (uint32_t i = 0; i < ncp; i++) {
     wb_u32(&b, w.sim.race.checkpoint_times[i]);
-    wb_u32(&b, 0);
+    wb_u32(&b, w.sim.race.checkpoint_scores[i]);
   }
   skippable_end(&b, c);
   wb_u32(&b, 0x0309200cu);
@@ -425,6 +426,10 @@ void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inputs, uint3
       wb_event(&b, t, ACT_BRAKE, in->brake != 0), nev++;
     if (in->steer != prev.steer)
       wb_event(&b, t, ACT_STEER, steer_value(in->steer)), nev++;
+    int any = i == RACE_TICK && (in->accelerate || in->brake || in->steer);
+    any |= !!in->accelerate != !!prev.accelerate || !!in->brake != !!prev.brake || in->steer != prev.steer;
+    if (in->input_event && !any) /* an event that leaves the input as it was */
+      wb_event(&b, t, ACT_ACCEL, in->accelerate != 0), nev++;
     if (in->respawn)
       wb_event(&b, t, ACT_RESPAWN, 1), nev++;
     prev = *in;
@@ -461,8 +466,9 @@ void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inputs, uint3
   char xml[512];
   snprintf(xml, sizeof xml,
            "<header type=\"replay\" version=\"TMr.7\" exever=\"2.11.26\"><challenge uid=\"%s\"/><times best=\"%d\" "
-           "respawns=\"%u\" stuntscore=\"0\" validable=\"1\"/></header>",
-           base->map.map[0] ? base->map.map[0] : "", finished ? (int)race_time : -1, respawns);
+           "respawns=\"%u\" stuntscore=\"%u\" validable=\"1\"/></header>",
+           base->map.map[0] ? base->map.map[0] : "", finished ? (int)race_time : -1, respawns,
+           w.sim.race.stunts.score);
   wb_str(&h1, xml);
 
   wbuf f = {0};

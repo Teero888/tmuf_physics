@@ -612,6 +612,10 @@ typedef struct tmuf_car {
   struct {
     float forward_speed, side_speed;
     int has_wheel_contact, has_body_contact;
+    /* the body contacts' mean normal as angles from the car's down axis
+       (0..1, x 180 degrees), sideways and lengthways */
+    float body_angle_side, body_angle_length;
+    int in_water; /* ApplyWaterForces of the last step */
   } frame;
 } tmuf_car;
 
@@ -634,6 +638,36 @@ typedef struct tmuf_car_def {
 
 /* ---- the race (CTrackManiaRace) ---- */
 
+#define TMUF_STUNT_HISTORY 20
+#define TMUF_STUNT_FIGURES 40
+
+/* CTrackManiaRace's stunt figures (UpdateStunts, ComputeStunt): jumps are
+   scored on landing from the rotation in the air, the air time, the landing
+   and chains of jumps. The game computes them in every mode; the stunt
+   score only counts in Stunts mode, where it has a time limit. */
+typedef struct tmuf_stunts {
+  uint32_t score;        /* the player's stunt score */
+  uint32_t frozen_score; /* the score when the time limit passed (Stunts mode) */
+  int in_air;
+  uint32_t takeoff_time, landing_time, previous_landing_time; /* tick times, UINT32_MAX: none */
+  int crash;               /* the body touched down upside down */
+  float landing_angle;     /* heading of the speed at landing, radians */
+  tmuf_vec3 rotation;      /* rotation in the air, car frame (radians) */
+  tmuf_mat3 last_rotation; /* the car's rotation at the previous update */
+  tmuf_iso4 takeoff;       /* the car at takeoff */
+  tmuf_iso4 seen; /* the body's location at the last update (the car's location lags it by a step) */
+  int has_seen;
+  uint32_t chain, chain_window; /* jumps chained; ms a next takeoff may follow the landing */
+  uint32_t history_start, history_count;
+  tmuf_mat3 history[TMUF_STUNT_HISTORY]; /* the car's rotation at the last updates */
+  uint32_t figure_points[TMUF_STUNT_FIGURES]; /* points scored per figure (repeats count less) */
+  /* the latest input change at the last 16 ticks (master jumps: no input
+     change in the air) */
+  uint32_t input_change[16];
+  uint8_t last_accelerate, last_brake;
+  int32_t last_steer;
+} tmuf_stunts;
+
 /* CTrackManiaRace: checkpoint slots and the respawn location */
 typedef struct tmuf_race {
   int has_spawn;
@@ -646,7 +680,11 @@ typedef struct tmuf_race {
      each lap included: checkpoint_time_count entries (the ghost's
      checkpoint list; the array grows as the race goes) */
   uint32_t *checkpoint_times;
+  uint32_t *checkpoint_scores; /* the stunt score at each of them */
   uint32_t checkpoint_time_count, checkpoint_time_cap;
+  int stunts_mode;     /* the map's mode is Stunts */
+  uint32_t time_limit; /* ms: stunts landed later do not count */
+  tmuf_stunts stunts;
   uint8_t *passed; /* checkpoint_count + 1 slots (the last: finish) */
   /* per scene corpus */
   int32_t *slot; /* checkpoint slot, -1 if none */

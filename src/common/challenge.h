@@ -37,6 +37,8 @@ typedef struct tmuf_challenge {
   uint32_t laps;
   uint32_t bronze, silver, gold, author_time; /* ms, from the parameters */
   uint32_t time_limit, author_score;          /* stunts */
+  int has_time_limit;
+  uint32_t play_mode; /* header 0x03043002: 0 race, 1 platform, 2 puzzle, 3 crazy, 4 shortcut, 5 stunts */
 } tmuf_challenge;
 
 int tmuf_challenge_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_challenge *out, char *err,

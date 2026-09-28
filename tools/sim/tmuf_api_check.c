@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   if (!list)
     return 1;
   char line[4096];
-  unsigned ok = 0, bad = 0;
+  unsigned ok = 0, bad = 0, details_ok = 0, details_bad = 0, race_stunts_differ = 0;
   /* TMUF_API_COPY_EVERY=N: continue in the other world every N ticks (0: never) */
   const char *ce = getenv("TMUF_API_COPY_EVERY");
   uint32_t copy_every = ce ? (uint32_t)atoi(ce) : 50u;
@@ -208,6 +208,32 @@ int main(int argc, char **argv) {
                      (rc->completed ? (uint64_t)ocount_all * 10u <= 2600u + (uint64_t)rc->finish_time + 3000u
                                     : (uint64_t)ocount_all * 10u >= 2600u + (uint64_t)race);
     int finish_ok = race == UINT32_MAX || oracle_stop || rejected || (invalid ? invalid_ok : finished);
+    /* the race details a valid run recorded: respawns, checkpoint times
+       and, in Stunts mode, the stunt scores (the validator checks them
+       there; elsewhere a ghost keeps the score of the live run, which the
+       validation may not reproduce: counted apart) */
+    if (!invalid && !rejected && finished && diverged == UINT32_MAX) {
+      const uint32_t *ct, *cs;
+      const uint32_t nc = tmuf_replay_checkpoints(r, &ct, &cs);
+      const uint32_t gs = tmuf_replay_stunt_score(r), gr = tmuf_replay_respawns(r);
+      /* a ghost keeps the first 1000 crossings */
+      int same = (gr == UINT32_MAX || gr == rc->respawns) &&
+                 (nc == 0 || nc == rc->checkpoint_time_count || (nc == 1000 && rc->checkpoint_time_count > 1000));
+      int scores = gs == UINT32_MAX || gs == rc->stunts.score;
+      for (uint32_t k = 0; same && nc && k < nc; k++) {
+        same = ct[k] == rc->checkpoint_times[k];
+        scores &= cs[k] == rc->checkpoint_scores[k];
+      }
+      if (!rc->stunts_mode && !scores && same)
+        race_stunts_differ++;
+      else if (same && scores)
+        details_ok++;
+      else {
+        details_bad++;
+        printf("%s DETAILS stunts %u/%u respawns %u/%u checkpoints %u/%u\n", name, rc->stunts.score, gs,
+               rc->respawns, gr, rc->checkpoint_time_count, nc);
+      }
+    }
     if (diverged == UINT32_MAX && finish_ok) {
       ok++;
       printf("%s MATCH %s %u ticks, %u copies, finish %u\n", name, tmuf_track_vehicle(t), n, copies,
@@ -225,6 +251,7 @@ int main(int argc, char **argv) {
   }
   fclose(list);
   tmuf_packs_close(packs);
-  printf("%u ok, %u bad\n", ok, bad);
+  printf("%u ok, %u bad (race details: %u ok, %u bad, %u Race mode stunt scores not the live run's)\n", ok, bad,
+         details_ok, details_bad, race_stunts_differ);
   return bad != 0;
 }

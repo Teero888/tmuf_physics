@@ -17,6 +17,9 @@ typedef struct tmuf_input_event {
 typedef struct tmuf_ghost {
   int has_race_time, has_respawns, has_stunt_score;
   uint32_t race_time, respawns, stunt_score;
+  /* checkpoint crossings (0x0309200b): race time and stunt score */
+  uint32_t checkpoint_count;
+  uint32_t *checkpoint_times, *checkpoint_scores;
   const char *vehicle[3]; /* id, collection, author */
   const char *login;
 

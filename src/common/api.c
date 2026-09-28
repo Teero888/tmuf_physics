@@ -74,6 +74,7 @@ tmuf_replay *tmuf_replay_load(const void *data, size_t size, char *err, size_t e
       r->inputs[i].brake = ticks[i].brake;
       r->inputs[i].steer = ticks[i].steer;
       r->inputs[i].respawn = ticks[i].respawns != 0;
+      r->inputs[i].input_event = ticks[i].input_event;
     }
     r->input_count = n;
     free(ticks);
@@ -106,6 +107,22 @@ uint32_t tmuf_replay_seed(const tmuf_replay *r) {
 
 uint32_t tmuf_replay_race_time(const tmuf_replay *r) {
   return r->ghost->has_race_time ? r->ghost->race_time : UINT32_MAX;
+}
+
+uint32_t tmuf_replay_respawns(const tmuf_replay *r) {
+  return r->ghost->has_respawns ? r->ghost->respawns : UINT32_MAX;
+}
+
+uint32_t tmuf_replay_stunt_score(const tmuf_replay *r) {
+  return r->ghost->has_stunt_score ? r->ghost->stunt_score : UINT32_MAX;
+}
+
+uint32_t tmuf_replay_checkpoints(const tmuf_replay *r, const uint32_t **times, const uint32_t **scores) {
+  if (times)
+    *times = r->ghost->checkpoint_times;
+  if (scores)
+    *scores = r->ghost->checkpoint_scores;
+  return r->ghost->checkpoint_count;
 }
 
 uint32_t tmuf_replay_inputs(const tmuf_replay *r, const tmuf_input **inputs) {

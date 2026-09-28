@@ -69,6 +69,30 @@ static void c0309200a(tmuf_gbx *g, void *node, uint32_t id) {
   skip_u32_value(g, &gh->stunt_score, &gh->has_stunt_score);
 }
 
+static void c0309200b(tmuf_gbx *g, void *node, uint32_t id) {
+  (void)id;
+  tmuf_ghost *gh = node;
+  const uint32_t size = g->chunk_size;
+  const uint32_t count = tmuf_gbx_u32(g);
+  /* the layout of the game's own ghosts (older ones differ: skipped) */
+  if (size == 0xffffffffu || (uint64_t)count * 8u + 4u != size) {
+    if (size != 0xffffffffu && size >= 4u)
+      tmuf_gbx_skip(g, size - 4u);
+    return;
+  }
+  gh->checkpoint_times = TMUF_ARENA_ARRAY(g->arena, uint32_t, count ? count : 1);
+  gh->checkpoint_scores = TMUF_ARENA_ARRAY(g->arena, uint32_t, count ? count : 1);
+  if (!gh->checkpoint_times || !gh->checkpoint_scores) {
+    tmuf_gbx_fail(g, "out of memory");
+    return;
+  }
+  for (uint32_t i = 0; i < count && !g->error; i++) {
+    gh->checkpoint_times[i] = tmuf_gbx_u32(g);
+    gh->checkpoint_scores[i] = tmuf_gbx_u32(g);
+  }
+  gh->checkpoint_count = count;
+}
+
 static void c0309200c(tmuf_gbx *g, void *node, uint32_t id) {
   (void)node;
   (void)id;
@@ -186,7 +210,7 @@ static void c03092019(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static const tmuf_gbx_chunk CTN_GHOST_CHUNKS[] = {
-    {0x03092005, 1, c03092005}, {0x03092008, 1, c03092008}, {0x0309200a, 1, c0309200a},
+    {0x03092005, 1, c03092005}, {0x03092008, 1, c03092008}, {0x0309200a, 1, c0309200a}, {0x0309200b, 1, c0309200b},
     {0x0309200c, 0, c0309200c}, {0x0309200d, 0, c0309200d}, {0x0309200e, 0, c_one_id},
     {0x0309200f, 0, c0309200f}, {0x03092010, 0, c_one_id},  {0x03092011, 0, c03092011},
     {0x03092012, 0, c03092012}, {0x03092015, 0, c_one_id},  {0x03092018, 0, c03092018},

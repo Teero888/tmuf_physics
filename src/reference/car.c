@@ -258,6 +258,8 @@ void car_reset(car *c) {
   c->linear_fluid_friction = 0.0f;
   c->frame.forward_speed = c->frame.side_speed = 0.0f;
   c->frame.has_wheel_contact = c->frame.has_body_contact = 0;
+  c->frame.body_angle_side = c->frame.body_angle_length = 0.0f;
+  c->frame.in_water = 0;
 }
 
 void car_refresh_dyna_params(car *c) {
@@ -744,12 +746,38 @@ void car_create_fake_contacts(car *c) {
 
 /* ---- AfterContacts ---- */
 
+/* |atan2(|a|, -b)| / pi of (a, b) normalized: how far from the down axis
+   (0) a body contact normal leans in one plane (1: straight up) */
+static float lean(float a, float b) {
+  const float len2 = a * a + b * b;
+  if (1e-10f < len2) {
+    const float inv = 1.0f / tmuf_sqrtf(len2);
+    a = a * inv;
+    b = b * inv;
+  }
+  return (float)((double)fabsf(tmuf_atan2f(fabsf(a), -b)) / 3.1415927410125732);
+}
+
 void car_after_contacts(car *c) {
   gm_vec3 lin = body_lin_local(c);
   c->frame.forward_speed = lin.z;
   c->frame.side_speed = lin.x;
   c->frame.has_body_contact = c->contacts.body_contact_count != 0;
   c->frame.has_wheel_contact = c->contacts.wheel_contact_count != 0;
+  /* the body contacts' mean normal, reversed, as two angles (the race's
+     stunts read them) */
+  c->frame.body_angle_side = c->frame.body_angle_length = 0.0f;
+  if (c->contacts.body_contact_count) {
+    gm_vec3 n = c->contacts.body_normal_sum;
+    const float len2 = (n.x * n.x + n.y * n.y) + n.z * n.z;
+    if (1e-10f < len2) {
+      const float inv = 1.0f / tmuf_sqrtf(len2);
+      n = v3(n.x * inv, n.y * inv, n.z * inv);
+    }
+    n = v3(-n.x, -n.y, -n.z);
+    c->frame.body_angle_side = lean(n.x, n.y);
+    c->frame.body_angle_length = lean(n.z, n.y);
+  }
   /* ResetContactAccumulators */
   c->contacts.wheel_contact_count = 0;
   c->contacts.body_contact_count = 0;

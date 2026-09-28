@@ -38,6 +38,12 @@
  *   u32 group u32 count, then count cells of 0x58 bytes (SColOctreeCell:
  *   +0x04 bounds center/half, +0x1c location, +0x4c surface, +0x50 corpus,
  *   +0x54 tree)
+ *
+ * TMUF_ORACLE_TRACE=stunts additionally writes TMUF_ORACLE_OUT.stunts, a
+ * text line per scored stunt (CTrackManiaRace::ComputeStunt right before the
+ * stunt event, the points final): "S step figure angle points" then the
+ * pushed event arguments (the multiplier's float bits first) and the race's
+ * dwords 0x124..0x17c (stunt state), all hex.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -271,6 +277,27 @@ static void on_static_cells(void *self, const uint32_t *stack) {
   fflush(g_cells);
 }
 
+static FILE *g_stunts;
+
+/* in CTrackManiaRace::ComputeStunt before the event call: edi figure, eax
+   angle (degrees), ebx points, esi the race; [esp] the multiplier (float) */
+static void on_stunt(void *self, const uint32_t *stack) {
+  (void)self;
+  const uint8_t *race = (const uint8_t *)(uintptr_t)stack[2];
+  const uint32_t *esp = stack + 9;
+  fprintf(g_stunts, "S %u %u %u %u", g_step, stack[1], stack[8], stack[5]);
+  for (int i = 0; i < 5; i++)
+    fprintf(g_stunts, " %08x", esp[i]);
+  for (uint32_t off = 0x124; off < 0x180; off += 4)
+    fprintf(g_stunts, " %08x", *(const uint32_t *)(race + off));
+  fputc('\n', g_stunts);
+  fflush(g_stunts);
+}
+
+static hook g_stunt_hooks[] = {
+    {"CTrackManiaRace::ComputeStunt/event", 0x004b3ce1, {0x53, 0x50, 0x57, 0x8b, 0xce}, 5, on_stunt},
+};
+
 static hook g_cells_hooks[] = {
     {"SGroup::UpdateStaticCollisionTrees/Build", 0x0053ad75, {0xd9, 0xee, 0x8b, 0x44, 0x24, 0x20}, 6, on_static_cells},
 };
@@ -400,6 +427,16 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
         if (!install(&g_cells_hooks[i]))
           return FALSE;
     }
+    if (n > 0 && n < sizeof trace && strstr(trace, "stunts")) {
+      char stunts_path[MAX_PATH + 16];
+      snprintf(stunts_path, sizeof stunts_path, "%s.stunts", path);
+      g_stunts = fopen(stunts_path, "w");
+      if (!g_stunts)
+        return FALSE;
+      for (size_t i = 0; i < sizeof g_stunt_hooks / sizeof g_stunt_hooks[0]; i++)
+        if (!install(&g_stunt_hooks[i]))
+          return FALSE;
+    }
     if (n > 0 && n < sizeof trace && strstr(trace, "physics"))
       for (size_t i = 0; i < sizeof g_physics_hooks / sizeof g_physics_hooks[0]; i++)
         if (!install(&g_physics_hooks[i]))
@@ -443,6 +480,10 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
     if (g_cells) {
       fclose(g_cells);
       g_cells = NULL;
+    }
+    if (g_stunts) {
+      fclose(g_stunts);
+      g_stunts = NULL;
     }
     char steps[16];
     snprintf(steps, sizeof steps, "%u", g_step);
