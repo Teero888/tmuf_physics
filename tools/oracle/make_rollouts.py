@@ -62,7 +62,8 @@ def rewrite(path, off, positions, end_ms):
 
 
 def positions_of(tmuf_sim, packs, replay):
-    out = subprocess.run([tmuf_sim, packs, replay, '--print'], capture_output=True, text=True).stdout
+    out = subprocess.run([tmuf_sim, packs, replay, '--print'], capture_output=True, text=True,
+                         errors='replace').stdout
     pos = {}
     for l in out.splitlines():
         if not l.startswith('t='):
@@ -92,11 +93,14 @@ def main():
         for k in range(a.per):
             seed = rng.randrange(1, 1 << 30)
             dst = os.path.join(a.out, '%s_r%d.Replay.Gbx' % (stem, seed))
-            r = subprocess.run([roll, src, dst, str(seed)], capture_output=True, text=True)
+            if os.path.exists(dst):
+                continue
+            r = subprocess.run([roll, src, dst, str(seed)], capture_output=True, text=True, errors='replace')
             if r.returncode:
                 print(stem, 'skip:', r.stderr.strip()); break
             frm, length, nev = map(int, r.stdout.split())
-            off = int(subprocess.run([roll, dst, dst + '.tmp', '--plain'], capture_output=True, text=True).stdout)
+            off = int(subprocess.run([roll, dst, dst + '.tmp', '--plain'], capture_output=True, text=True,
+                                     errors='replace').stdout)
             os.remove(dst + '.tmp')
             pos = positions_of(sim, a.packs, dst)
             if not pos or not rewrite(dst, off, pos, 2600 + frm + length):
