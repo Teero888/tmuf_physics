@@ -14,7 +14,6 @@ static const double HALF_PI_1 = 1.57079632673412561417;
 static const double HALF_PI_2 = 6.07710050650619224932e-11;
 static const double HALF_PI_3 = 2.02226624879595063154e-21;
 
-float tmuf_sqrtf(float x) { return (float)sqrt((double)x); }
 
 static double sin_poly(double r) {
   double r2 = r * r, t = r, s = r;

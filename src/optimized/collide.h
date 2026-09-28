@@ -26,6 +26,9 @@ int ref_surface_collide(const ref_surf *a, const gm_iso4 *iso_a, const ref_surf 
 /* SZone::DetectCollisionBetweenTreeAndStaticCollisionTree for one moving
    tree hierarchy, then MergeQueuedSphereContacts. */
 void ref_detect_static(ref_detect *d, ref_mtree *tree, const gm_iso4 *moving_iso);
+/* the same, all trees of the root walking each tree once (same collisions,
+   same order) */
+void ref_detect_static_all(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso);
 void ref_detect_merge(ref_detect *d);
 
 /* CPlugTree::UpdateBoundingBox for moving trees (surfaces only). */

@@ -152,9 +152,18 @@ static void validation_inputs(tmuf_gbx *g, tmuf_ghost *gh, int has_seed) {
   tmuf_gbx_string(g); /* exe version */
   tmuf_gbx_skip(g, 12);
   gh->race_settings = tmuf_gbx_string(g);
+  /* the number as the game formats it: digit groups separated by spaces
+     ("10 000") */
   const char *lp = gh->race_settings ? strstr(gh->race_settings, "<laps>") : NULL;
-  if (lp)
-    gh->settings_laps = (uint32_t)strtoul(lp + 6, NULL, 10);
+  if (lp) {
+    uint64_t v = 0;
+    for (const char *c = lp + 6; *c && *c != '<'; c++)
+      if (*c >= '0' && *c <= '9')
+        v = v * 10u + (uint64_t)(*c - '0');
+      else if (*c != ' ')
+        break;
+    gh->settings_laps = v > UINT32_MAX ? UINT32_MAX : (uint32_t)v;
+  }
   if (has_seed)
     gh->validation_seed = tmuf_gbx_u32(g);
 }

@@ -1,7 +1,8 @@
 /* Drives replays through the public API and compares the car with oracle
    dumps (tools/oracle), switching worlds with tmuf_world_copy on the way.
 
-   tmuf_api_check PACKS LIST   (LIST: lines "REPLAY ORACLE") */
+   tmuf_api_check PACKS LIST   (LIST: lines "REPLAY ORACLE [VERDICT]", VERDICT the
+                                 game's first word, e.g. Wrong for Wrong Simu) */
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
@@ -91,9 +92,12 @@ int main(int argc, char **argv) {
   const char *ce = getenv("TMUF_API_COPY_EVERY");
   uint32_t copy_every = ce ? (uint32_t)atoi(ce) : 50u;
   while (fgets(line, sizeof line, list)) {
-    char rp[2048], op[2048];
-    if (sscanf(line, "%2047s %2047s", rp, op) != 2)
+    char rp[2048], op[2048], verdict[64] = "";
+    if (sscanf(line, "%2047s %2047s %63s", rp, op, verdict) < 2)
       continue;
+    /* optional third column: the game's verdict; a run it rejects ("Wrong
+       Simu") need not finish at its recorded time */
+    int rejected = strcmp(verdict, "Wrong") == 0;
     const char *name = strrchr(rp, '/') ? strrchr(rp, '/') + 1 : rp;
     size_t size;
     unsigned char *data = read_file(rp, &size);
@@ -183,7 +187,7 @@ int main(int argc, char **argv) {
       }
     }
     const tmuf_race *rc = &worlds[cur].sim.race;
-    int finish_ok = race == UINT32_MAX || oracle_stop || (rc->completed && rc->finish_time == race);
+    int finish_ok = race == UINT32_MAX || oracle_stop || rejected || (rc->completed && rc->finish_time == race);
     if (diverged == UINT32_MAX && finish_ok) {
       ok++;
       printf("%s MATCH %s %u ticks, %u copies, finish %u\n", name, tmuf_track_vehicle(t), n, copies,

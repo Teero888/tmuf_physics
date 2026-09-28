@@ -8,9 +8,14 @@
    with fixed polynomials (no libm, so results are identical on every
    platform) and rounded once to float. */
 
+#include <math.h>
 #include <stdint.h>
 
-float tmuf_sqrtf(float x);
+/* IEEE sqrt in single precision. The same as the reference's
+   (float)sqrt((double)x): rounding a square root to double and then to float
+   is innocuous (53 >= 2 * 24 + 2 bits), so both are the correctly rounded
+   float root; this one is a single instruction, inlined. */
+static inline float tmuf_sqrtf(float x) { return sqrtf(x); }
 float tmuf_sinf(float x);
 float tmuf_cosf(float x);
 float tmuf_tanf(float x);
