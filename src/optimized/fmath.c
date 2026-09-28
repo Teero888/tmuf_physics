@@ -217,22 +217,3 @@ float tmuf_expf(float xf) {
   return (float)ldexp(s, (int)k);
 }
 
-float tmuf_mul_fd(float xf, double c) {
-  /* exact product = x*ch + x*cl (Dekker split of c; both products exact) */
-  double x = (double)xf;
-  double big = c * 134217729.0; /* 2^27 + 1 */
-  double ch = big - (big - c), cl = c - ch;
-  double hi = x * ch, lo = x * cl;
-  double s = hi + lo;
-  double e = (hi - s) + lo; /* exact error of s (|hi| >= |lo|) */
-  float f = (float)s;
-  double d = s - (double)f;
-  if (d == 0.0 || e == 0.0)
-    return f;
-  float g = nextafterf(f, d > 0 ? INFINITY : -INFINITY);
-  double mid = ((double)f + (double)g) * 0.5;
-  if (s != mid)
-    return f;
-  /* s is exactly halfway; the true product lies on the side of e. */
-  return (e > 0) == (d > 0) ? g : f;
-}
