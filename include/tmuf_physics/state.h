@@ -642,6 +642,11 @@ typedef struct tmuf_race {
   int completed;
   uint32_t finish_time; /* race time of the finish, ms */
   uint32_t respawns;    /* respawns done */
+  /* race time (ms) of every checkpoint taken, in order, the finish line of
+     each lap included: checkpoint_time_count entries (the ghost's
+     checkpoint list; the array grows as the race goes) */
+  uint32_t *checkpoint_times;
+  uint32_t checkpoint_time_count, checkpoint_time_cap;
   uint8_t *passed; /* checkpoint_count + 1 slots (the last: finish) */
   /* per scene corpus */
   int32_t *slot; /* checkpoint slot, -1 if none */

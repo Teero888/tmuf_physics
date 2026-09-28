@@ -32,7 +32,7 @@ int ref_sim_clone(ref_sim *dst, const ref_sim *tpl);
 
 /* Snapshots: everything that changes while simulating, as a flat buffer that
    can be loaded into any simulation cloned from the same template. */
-void ref_sim_copy_state(ref_sim *dst, const ref_sim *src);
+int ref_sim_copy_state(ref_sim *dst, const ref_sim *src);
 size_t ref_sim_snapshot_size(const ref_sim *s);
 void ref_sim_save(const ref_sim *s, void *buf);
 void ref_sim_load(ref_sim *s, const void *buf);

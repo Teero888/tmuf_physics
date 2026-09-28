@@ -75,10 +75,20 @@ for (uint32_t i = 0; i < n; i++) {
   tmuf_world_tick(&world); /* one 10 ms tick */
 }
 /* world.sim.body.state (the game's CHmsDyna state), world.sim.car,
-   world.sim.race.completed / finish_time, ... */
+   world.sim.race: completed, finish_time, respawns, checkpoint_times[] (every
+   checkpoint crossing, finish lines of each lap included), ... */
 
 tmuf_world copy = tmuf_world_empty();
 tmuf_world_copy(&copy, &world); /* about a microsecond: branch a search here */
+```
+
+Any run can be saved as a replay the game plays and validates:
+
+```c
+size_t size;
+void *gbx = tmuf_replay_write(track, inputs, count, NULL, &size, err, sizeof err);
+/* write gbx to a .Replay.Gbx file */
+tmuf_free(gbx);
 ```
 
 A world starts at time 0 on the start block and is held for the countdown;

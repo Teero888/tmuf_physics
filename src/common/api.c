@@ -125,6 +125,8 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     return 0;
   }
   memcpy(b->map_data, map, size);
+  b->map_size = size;
+  b->seed = options ? options->seed : 0;
   char e[600] = "";
   if (!tmuf_challenge_parse(b->map_data, size, &b->arena, &b->map, e, sizeof e)) {
     tmuf_set_error(err, err_size, "map: %s", e);

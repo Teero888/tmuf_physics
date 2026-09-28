@@ -276,6 +276,10 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   for (uint32_t i = 0; i < n; i++) {
     int check = snap && i % 13 == 5;
     if (check) {
+      void *grown = realloc(snap, ref_sim_snapshot_size(&sim)); /* grows with the checkpoint times */
+      if (!grown)
+        break;
+      snap = grown;
       ref_sim_save(&sim, snap);
       ref_sim_load(&clone, snap);
     }
@@ -367,6 +371,12 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   if (o.count && !diverged)
     printf("%s%sMATCH %s %u/%u ticks (oracle %u states%s) %s\n", op->summary ? name : "", op->summary ? " " : "",
            vname, matched, n, o.count, oracle_stop ? ", game stopped the run" : "", finish);
+  if (!op->summary) {
+    printf("checkpoints (%u respawns):", sim.race.respawns);
+    for (uint32_t i = 0; i < sim.race.checkpoint_time_count; i++)
+      printf(" %u", sim.race.checkpoint_times[i]);
+    printf("\n");
+  }
   rc = 0;
   if (snap)
     printf("snapshot test: %u checks, %u bad\n", snap_checks, snap_bad);

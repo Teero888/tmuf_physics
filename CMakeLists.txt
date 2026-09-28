@@ -27,6 +27,7 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/gbx.c
   src/common/gbx.h
   src/common/replay.c
+  src/common/replay_write.c
   src/common/replay.h
   src/common/compress.c
   src/common/compress.h
@@ -177,6 +178,8 @@ if(TMUF_PHYSICS_TOOLS)
   target_link_libraries(tmuf_inspect PRIVATE tmuf_physics)
   add_executable(tmuf_api_check tools/sim/tmuf_api_check.c)
   target_link_libraries(tmuf_api_check PRIVATE tmuf_physics)
+  add_executable(tmuf_rewrite tools/sim/tmuf_rewrite.c)
+  target_link_libraries(tmuf_rewrite PRIVATE tmuf_physics)
   add_executable(tmuf_bench tools/sim/tmuf_bench.c)
   target_link_libraries(tmuf_bench PRIVATE tmuf_physics)
   if(TMUF_PHYSICS_BACKEND STREQUAL "reference")

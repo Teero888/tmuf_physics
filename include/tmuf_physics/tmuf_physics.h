@@ -53,7 +53,7 @@ extern "C" {
 #endif
 
 #define TMUF_PHYSICS_VERSION_MAJOR 0
-#define TMUF_PHYSICS_VERSION_MINOR 2
+#define TMUF_PHYSICS_VERSION_MINOR 3
 
 #define TMUF_TICK_MS 10u
 #define TMUF_RACE_START_MS 2600u
@@ -175,6 +175,35 @@ TMUF_API uint32_t tmuf_replay_race_time(const tmuf_replay *replay);
 /* The ghost's input for every tick from time 0: inputs[i] drives tick i.
    Returns the count; the array is owned by the replay. */
 TMUF_API uint32_t tmuf_replay_inputs(const tmuf_replay *replay, const tmuf_input **inputs);
+
+/* ---- writing replays ---- */
+
+typedef struct tmuf_replay_write_options {
+  const char *login;    /* the ghost's player login; NULL: "tmuf_physics" */
+  const char *nickname; /* NULL: the login */
+} tmuf_replay_write_options;
+
+/* A .Replay.Gbx of the run inputs[0..count) drive on track (inputs[i] drives
+   tick i, as tmuf_replay_inputs gives them), which the game plays and its
+   validator accepts. The run is simulated: it ends at the finish or after
+   the last input, and the replay records the map, the inputs, the race time
+   (none if the run does not finish), respawns, checkpoint times and the
+   car's samples. The track's seed and laps (tmuf_track_options) are the
+   run's validation seed and race settings.
+   A replay has no input before the race starts: inputs[i] for
+   i < TMUF_RACE_START_MS / TMUF_TICK_MS - 1 are ignored (the car is held
+   during the countdown; the run starts with the input of that tick), so
+   count must be larger. options may be NULL.
+   Stunts maps: the validator also checks the stunt score, which this
+   library does not compute (written as 0), so those replays play but
+   validate as invalid.
+   Returns the file's bytes (free them with tmuf_free) and their count in
+   *size, or NULL. */
+TMUF_API void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inputs, uint32_t count,
+                                 const tmuf_replay_write_options *options, size_t *size, char *err,
+                                 size_t err_size);
+/* Frees memory the library returned (tmuf_replay_write). */
+TMUF_API void tmuf_free(void *p);
 
 #ifdef __cplusplus
 }

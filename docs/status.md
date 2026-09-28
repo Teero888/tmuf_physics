@@ -26,12 +26,20 @@ Last updated 2026-09-28.
 - The game validates at ~0.7 ms per tick under Wine (~1 400 ticks/s, our
   dumper included) plus ~19 s to start per replay (one launch per replay:
   ~21 s each, ~21 h for 3 500 replays on one worker).
-- TAS replays (tmtas.exchange) are rejected by the game's validation right
-  at race start (no trajectory), so they need an input-injecting oracle.
+- TAS replays (tmtas.exchange) record their events on another clock (the
+  race starts at `_FakeIsRaceRunning`, 165535 instead of 100000). The
+  controls start the race at that event. The validator samples the ghost on
+  the game's own clock and stops TAS replays right after the start, so they
+  go to the oracle rebased and resampled (`make_rollouts.py --resample`):
+  the events moved to 100000 and the samples rewritten from our simulation.
 - The validator compares the car's position every 100 ms with the ghost's
   samples (sample i: the car at 2 590 + 100 i ms, or the respawn location
   when the next tick respawns) and stops the run ("Wrong Simu") when they
-  differ; nothing else in a sample is checked.
+  differ; nothing else in a sample is checked. Of the ghost's fields it
+  checks the race time and the respawn count (every respawn press while
+  racing counts) and, on Stunts maps, the stunt score; checkpoint times are
+  not checked. It accepts uncompressed bodies, zero security keys and any
+  exe hash.
 
 ## Parsing (src/common)
 
@@ -116,6 +124,19 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
   octree (`run_oracle.py --trace cells`) on maps with up to 1 066 animated
   mobils: the same records.
 
+## Race details and writing replays
+
+- `tmuf_race` holds the race's progress: checkpoints taken, laps, respawns,
+  finish time, and `checkpoint_times` (every checkpoint crossing, the finish
+  line of each lap included). They equal the ghosts' checkpoint lists on
+  300 of 300 sampled valid replays (up to 480 crossings).
+- `tmuf_replay_write` (src/common/replay_write.c) saves a run as a replay in
+  the game's layout (one CGameCtnGhost, uncompressed body, samples in stored
+  zlib blocks). Both backends write identical bytes. `tmuf_rewrite` writes a
+  replay's inputs anew; in the game, 136 of 138 rewritten corpus replays
+  validate, the other two are Stunts maps (the stunt score is not
+  computed).
+
 ## Optimized backend (src/optimized)
 
 Bit-identical to the reference on the same 6 929 oracle replays and 1 464
@@ -141,11 +162,14 @@ optimization with its measured gain: docs/performance.md.
   parallel (`TMUF_API_CHECK` selects the binary, e.g. the optimized build's).
 - `tmuf_bench PACKS MAP [--ticks N] [--seed S] [--replay R]`: single-thread
   ticks per second (thread CPU time).
+- `tmuf_rewrite PACKS IN OUT`: a replay's inputs through
+  `tmuf_replay_write` (the writer's round trip, for the game to validate).
 - Rollouts: `tools/oracle/make_rollouts.py --packs PACKS --build build-rel
   --out DIR --per N LIST` makes replays that keep a replay's inputs up to a
   random time, then drive randomly (`tmuf_rollout`), with the ghost samples
   rewritten from our simulation so the game plays them to the end; run them
-  through `run_oracle.py` like any replay.
+  through `run_oracle.py` like any replay. `--resample` keeps the inputs
+  (rebased to the game's clock) and only rewrites the samples.
 - `run_oracle.py --trace cells` dumps the game's static collision octree
   (compare with `TMUF_SIM_CELLS=FILE tmuf_sim ...`).
 - `tools/dev/fmath_check.sh`: the optimized backend's sin/cos/tan/atan/exp

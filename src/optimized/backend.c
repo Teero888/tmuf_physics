@@ -72,6 +72,8 @@ uint32_t tmuf_track_triangles(const tmuf_track *t, const tmuf_triangle **triangl
   return t->base.triangle_count;
 }
 
+const tmuf_track_base *tmuf_track_base_of(const tmuf_track *t) { return &t->base; }
+
 const tmuf_sim *tmuf_track_sim(const tmuf_track *t) { return &t->tpl; }
 
 /* ---- worlds ---- */
@@ -102,7 +104,8 @@ int tmuf_world_copy(tmuf_world *to, const tmuf_world *from) {
     if (!tmuf_world_init(to, from->track))
       return 0;
   }
-  ref_sim_copy_state(&to->sim, &from->sim);
+  if (!ref_sim_copy_state(&to->sim, &from->sim))
+    return 0;
   to->tick = from->tick;
   to->input = from->input;
   return 1;

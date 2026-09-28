@@ -32,6 +32,8 @@ struct tmuf_replay {
 typedef struct tmuf_track_base {
   tmuf_arena arena;
   uint8_t *map_data;
+  size_t map_size;
+  uint32_t seed; /* validation seed the track runs with */
   tmuf_challenge map;
   tmuf_scene scene;
   tmuf_vehicle vehicle;
@@ -45,5 +47,7 @@ void tmuf_set_error(char *err, size_t err_size, const char *fmt, ...);
 int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void *map, size_t size,
                          const tmuf_track_options *options, char *err, size_t err_size);
 void tmuf_track_base_free(tmuf_track_base *b);
+/* the backend's track's base */
+const tmuf_track_base *tmuf_track_base_of(const tmuf_track *track);
 
 #endif

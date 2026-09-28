@@ -176,12 +176,29 @@ static void race_set_initial_spawn(ref_race *r, const gm_iso4 *spawn) {
 /* CTrackManiaRace::ClearVehicleFreewheelState */
 static void race_clear_freewheel(ref_sim *s) { s->car.controls.forced_low_speed_friction = 0; }
 
+/* room for n checkpoint times */
+static int race_times_reserve(ref_race *r, uint32_t n) {
+  if (n <= r->checkpoint_time_cap)
+    return 1;
+  uint32_t cap = r->checkpoint_time_cap ? r->checkpoint_time_cap : r->checkpoint_count + 1;
+  while (cap < n)
+    cap *= 2;
+  uint32_t *t = realloc(r->checkpoint_times, sizeof *t * cap);
+  if (!t)
+    return 0;
+  r->checkpoint_times = t;
+  r->checkpoint_time_cap = cap;
+  return 1;
+}
+
 /* CTrackManiaRace::InternalOnCheckpoint */
 static int race_internal_checkpoint(ref_sim *s, uint32_t index, uint32_t slot, const gm_iso4 *spawn) {
   ref_race *r = &s->race;
   if (index > r->checkpoint_count || slot > r->checkpoint_count || r->passed[slot])
     return 0;
   r->passed[slot] = 1;
+  if (race_times_reserve(r, r->checkpoint_time_count + 1))
+    r->checkpoint_times[r->checkpoint_time_count++] = s->tick_ms - TMUF_CONTROL_RACE_START_MS;
   if (index != r->checkpoint_count) {
     r->lap_checkpoints++;
     r->checkpoints_passed++;
@@ -379,6 +396,7 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
 void ref_sim_free(ref_sim *s) {
   dyna_free(&s->body);
   free(s->race.passed);
+  free(s->race.checkpoint_times);
   ref_cbuf_free(&s->buf);
   for (uint32_t i = 0; i < s->tree_count; i++)
     ref_cbuf_free(&s->trees[i].sphere);
@@ -413,6 +431,8 @@ int ref_sim_clone(ref_sim *dst, const ref_sim *tpl) {
     nchild += tpl->trees[i].child_count;
   dst->child_ptrs = calloc(nchild ? nchild : 1, sizeof *dst->child_ptrs);
   dst->race.passed = calloc(tpl->race.checkpoint_count + 1, 1);
+  dst->race.checkpoint_times = NULL;
+  dst->race.checkpoint_time_count = dst->race.checkpoint_time_cap = 0;
   dst->body.replacements = NULL;
   dst->body.replacement_count = dst->body.replacement_cap = 0;
   memset(&dst->buf, 0, sizeof dst->buf);
@@ -424,6 +444,17 @@ int ref_sim_clone(ref_sim *dst, const ref_sim *tpl) {
     return 0;
   }
   memcpy(dst->race.passed, tpl->race.passed, tpl->race.checkpoint_count + 1);
+  if (!race_times_reserve(&dst->race, tpl->race.checkpoint_time_count)) {
+    free(dst->trees);
+    free(dst->child_ptrs);
+    free(dst->race.passed);
+    memset(dst, 0, sizeof *dst);
+    return 0;
+  }
+  if (tpl->race.checkpoint_time_count)
+    memcpy(dst->race.checkpoint_times, tpl->race.checkpoint_times,
+           sizeof(uint32_t) * tpl->race.checkpoint_time_count);
+  dst->race.checkpoint_time_count = tpl->race.checkpoint_time_count;
   for (uint32_t i = 0; i < tpl->tree_count; i++) {
     dst->trees[i] = tpl->trees[i];
     memset(&dst->trees[i].sphere, 0, sizeof dst->trees[i].sphere);
@@ -447,8 +478,11 @@ int ref_sim_clone(ref_sim *dst, const ref_sim *tpl) {
   return 1;
 }
 
-/* dst takes src's state; both are clones of one template (or the template) */
-void ref_sim_copy_state(ref_sim *dst, const ref_sim *src) {
+/* dst takes src's state; both are clones of one template (or the template).
+   Fails (dst unchanged) only when out of memory. */
+int ref_sim_copy_state(ref_sim *dst, const ref_sim *src) {
+  if (!race_times_reserve(&dst->race, src->race.checkpoint_time_count))
+    return 0;
   car_def *def = dst->car.def;
   tmuf_vehicle_tuning *t = dst->car.t;
   dyna *body = dst->car.body;
@@ -470,9 +504,14 @@ void ref_sim_copy_state(ref_sim *dst, const ref_sim *src) {
   dst->body.replacement_cap = rep_cap;
   dst->body.replacement_count = 0;
   uint8_t *passed = dst->race.passed;
+  uint32_t *times = dst->race.checkpoint_times, times_cap = dst->race.checkpoint_time_cap;
   dst->race = src->race;
   dst->race.passed = passed;
+  dst->race.checkpoint_times = times;
+  dst->race.checkpoint_time_cap = times_cap;
   memcpy(passed, src->race.passed, src->race.checkpoint_count + 1);
+  if (src->race.checkpoint_time_count)
+    memcpy(times, src->race.checkpoint_times, sizeof(uint32_t) * src->race.checkpoint_time_count);
   dst->tick_ms = src->tick_ms;
   dst->period_ms = src->period_ms;
   dst->substeps = src->substeps;
@@ -488,6 +527,7 @@ void ref_sim_copy_state(ref_sim *dst, const ref_sim *src) {
     dst->trees[i].local = src->trees[i].local;
     dst->trees[i].box = src->trees[i].box;
   }
+  return 1;
 }
 
 /* the curves' interpolation mode changes the first time some are read */
@@ -502,15 +542,16 @@ typedef struct snap_head {
   uint8_t curve_constant[CURVE_COUNT];
 } snap_head;
 
-/* snapshot: snap_head, the race's checkpoint flags, then each collision
-   tree's location and box */
+/* snapshot: snap_head, the race's checkpoint flags and checkpoint times,
+   then each collision tree's location and box */
 typedef struct snap_tree {
   gm_iso4 local;
   gm_box box;
 } snap_tree;
 
 size_t ref_sim_snapshot_size(const ref_sim *s) {
-  return sizeof(snap_head) + s->race.checkpoint_count + 1 + sizeof(snap_tree) * s->tree_count;
+  return sizeof(snap_head) + s->race.checkpoint_count + 1 + sizeof(uint32_t) * s->race.checkpoint_time_count +
+         sizeof(snap_tree) * s->tree_count;
 }
 
 void ref_sim_save(const ref_sim *s, void *buf) {
@@ -529,8 +570,12 @@ void ref_sim_save(const ref_sim *s, void *buf) {
   for (size_t i = 0; i < CURVE_COUNT; i++)
     h.curve_constant[i] = (uint8_t)cv[i].constant;
   memcpy(buf, &h, sizeof h);
-  memcpy((uint8_t *)buf + sizeof h, s->race.passed, s->race.checkpoint_count + 1);
-  uint8_t *tp = (uint8_t *)buf + sizeof h + s->race.checkpoint_count + 1;
+  uint8_t *p = (uint8_t *)buf + sizeof h;
+  memcpy(p, s->race.passed, s->race.checkpoint_count + 1);
+  p += s->race.checkpoint_count + 1;
+  if (s->race.checkpoint_time_count)
+    memcpy(p, s->race.checkpoint_times, sizeof(uint32_t) * s->race.checkpoint_time_count);
+  uint8_t *tp = p + sizeof(uint32_t) * s->race.checkpoint_time_count;
   for (uint32_t i = 0; i < s->tree_count; i++) {
     snap_tree st;
     st.local = s->trees[i].local;
@@ -564,16 +609,27 @@ void ref_sim_load(ref_sim *s, const void *buf) {
   s->body.replacement_cap = rep_cap;
   s->body.replacement_count = 0;
   uint8_t *passed = s->race.passed;
+  uint32_t *times = s->race.checkpoint_times, times_cap = s->race.checkpoint_time_cap;
   int32_t *slot = s->race.slot;
   uint8_t *role = s->race.role, *respawn_current = s->race.respawn_current;
   gm_iso4 *spawn = s->race.spawn;
   s->race = h.race;
   s->race.passed = passed;
+  s->race.checkpoint_times = times;
+  s->race.checkpoint_time_cap = times_cap;
   s->race.slot = slot;
   s->race.role = role;
   s->race.respawn_current = respawn_current;
   s->race.spawn = spawn;
-  memcpy(s->race.passed, (const uint8_t *)buf + sizeof h, s->race.checkpoint_count + 1);
+  const uint8_t *p = (const uint8_t *)buf + sizeof h;
+  memcpy(s->race.passed, p, s->race.checkpoint_count + 1);
+  p += s->race.checkpoint_count + 1;
+  const uint32_t ntimes = s->race.checkpoint_time_count;
+  if (!race_times_reserve(&s->race, ntimes))
+    s->race.checkpoint_time_count = s->race.checkpoint_time_cap; /* out of memory: the first ones */
+  if (s->race.checkpoint_time_count)
+    memcpy(s->race.checkpoint_times, p, sizeof(uint32_t) * s->race.checkpoint_time_count);
+  p += sizeof(uint32_t) * ntimes;
   s->tick_ms = h.tick_ms;
   s->period_ms = h.period_ms;
   s->substeps = h.substeps;
@@ -581,7 +637,7 @@ void ref_sim_load(ref_sim *s, const void *buf) {
   tmuf_curve *cv = (tmuf_curve *)&s->def.tuning.curves;
   for (size_t i = 0; i < CURVE_COUNT; i++)
     cv[i].constant = h.curve_constant[i];
-  const uint8_t *tp = (const uint8_t *)buf + sizeof h + s->race.checkpoint_count + 1;
+  const uint8_t *tp = p;
   for (uint32_t i = 0; i < s->tree_count; i++) {
     snap_tree st;
     memcpy(&st, tp + sizeof st * i, sizeof st);
