@@ -650,27 +650,148 @@ __attribute__((target("avx"))) static inline uint32_t at_test_avx(const at_boxes
 }
 #endif
 
+/* Decides, without roots or divisions, that sphere_triangle on the unit
+   sphere at the origin returns 0 for the triangle v with unnormalized normal
+   n (the float cross product). Exact values in double; the float test is
+   within a few dozen ulp of them, so a decision is taken only with a margin
+   far above that, otherwise the float test runs.
+   - plane: the centre's distance -v0 . n / |n| below 0 or above 1. The float
+     one is within 8 ulp * S / |n| (S = sum |v0_i n_i|) plus underflow.
+   - edges, in the test's order: the edge distance ed = (proj - a) . (dir x n)
+     is exactly -a . ((b - a) x n) / (|b - a| |n|) (proj - a = -n D / |n|^2 - a
+     and n . ((b - a) x n) = 0), the reach r = sqrt(1 - plane^2). The float
+     ed is within ~40 ulp * (V + 2) of it (V: largest vertex L1 norm), the
+     float r^2 within ~20 ulp * (V + 1) of r^2. An edge with ed clearly <= 0
+     passes on to the next; the first other edge decides: clearly ed > r
+     rejects, anything else is left to the float test. */
+static inline int tri_rejects(const gm_vec3 v[3], float nx, float ny, float nz) {
+  const double n0 = nx, n1 = ny, n2 = nz;
+  const double tx = -(double)v[0].x * n0, ty = -(double)v[0].y * n1, tz = -(double)v[0].z * n2;
+  const double d = (tx + ty) + tz;
+  const double nn = (n0 * n0 + n1 * n1) + n2 * n2;
+  const double m = 0x1p-20 * ((fabs(tx) + fabs(ty)) + fabs(tz)) + 0x1p-130 * (nn > 1.0 ? nn : 1.0);
+  if (d + m < 0.0)
+    return 1;
+  const double l = d - m;
+  if (l > 0.0 && l * l > nn * (1.0 + 0x1p-20))
+    return 1;
+  double p[3][3], vmax = 0.0;
+  for (int k = 0; k < 3; k++) {
+    p[k][0] = v[k].x;
+    p[k][1] = v[k].y;
+    p[k][2] = v[k].z;
+    const double a1 = (fabs(p[k][0]) + fabs(p[k][1])) + fabs(p[k][2]);
+    vmax = a1 > vmax ? a1 : vmax;
+  }
+  const double me = 0x1p-14 * (2.0 * vmax + 2.0);
+  /* |n|^2 times an upper bound of (r + me)^2 (r <= 1) */
+  const double reach = (nn - d * d) * (1.0 + 0x1p-20) + (0x1p-15 * (vmax + 1.0) + 2.1 * me + me * me) * nn;
+  const double inside = me * me * nn;
+  for (int e = 0; e < 3; e++) {
+    const double *a = p[e], *b = p[e == 2 ? 0 : e + 1];
+    const double ex = b[0] - a[0], ey = b[1] - a[1], ez = b[2] - a[2];
+    const double ll = (ex * ex + ey * ey) + ez * ez;
+    if (!(ll > 4.0 * (double)DIR_EPS2))
+      return 0;
+    const double cx = ey * n2 - ez * n1, cy = ez * n0 - ex * n2, cz = ex * n1 - ey * n0;
+    const double g = -((a[0] * cx + a[1] * cy) + a[2] * cz);
+    const double g2 = g * g;
+    if (g > 0.0 && g2 > reach * ll)
+      return 1;
+    if (!(g < 0.0 && g2 > inside * ll))
+      return 0;
+  }
+  return 0;
+}
+
+/* A triangle that passed the reject tests: the float test and, on contact,
+   the contacts to world space (the transforms built on the first). */
+typedef struct tri_ctx {
+  const ref_surf *a;
+  const gm_iso4 *im;
+  ref_cbuf *out;
+  gm_vec3 radii, inv;
+  gm_iso4 mesh_to_ell, mesh_to_unit, contact_to_world, normal_to_world;
+  int have_world, hit;
+} tri_ctx;
+
+static inline __attribute__((always_inline)) void tri_test(tri_ctx *x, const gm_vec3 v[3], float nx, float ny,
+                                                           float nz, float n2, uint16_t material) {
+  const gm_vec3 zero = v3(0.0f, 0.0f, 0.0f);
+  float in = 1.0f / tmuf_sqrtf(n2);
+  gm_vec3 un = v3(nx * in, ny * in, in * nz);
+  ref_cbuf *out = x->out;
+  uint32_t first = out->count;
+  sphere_tri st = {out, zero, 1.0f, x->a->material, un, material};
+  if (!sphere_triangle(&st, v))
+    return;
+  if (!x->have_world) {
+    x->contact_to_world = iso4_scale_trans(x->radii, zero);
+    x->contact_to_world = iso4_mult_inverse(&x->contact_to_world, &x->mesh_to_ell);
+    x->contact_to_world = iso4_mult(&x->contact_to_world, x->im);
+    x->normal_to_world = iso4_scale_trans(x->inv, zero);
+    x->normal_to_world = iso4_mult_inverse(&x->normal_to_world, &x->mesh_to_ell);
+    x->normal_to_world = iso4_mult(&x->normal_to_world, x->im);
+    x->have_world = 1;
+  }
+  for (uint32_t i = first; i < out->count; i++) {
+    ref_collision *c = &out->items[i];
+    c->point = iso4_mul_point(&x->contact_to_world, c->point);
+    c->normal = normalize_eps(mat3_mul_vec(&x->normal_to_world.r, c->normal), DIR_EPS2);
+    c->separation = mat3_mul_vec(&x->contact_to_world.r, c->separation);
+  }
+  x->hit = 1;
+}
+
+static inline __attribute__((always_inline)) void tri_ctx_init(tri_ctx *x, const ref_surf *a, const gm_iso4 *im,
+                                                               const gm_iso4 *to_mesh, ref_cbuf *out) {
+  x->a = a;
+  x->im = im;
+  x->out = out;
+  x->radii = ellipsoid_radii(a);
+  x->inv = v3(1.0f / x->radii.x, 1.0f / x->radii.y, 1.0f / x->radii.z);
+  x->mesh_to_ell = iso4_inverse(to_mesh);
+  x->mesh_to_unit = x->mesh_to_ell;
+  scale_rows(&x->mesh_to_unit, x->inv);
+  x->have_world = x->hit = 0;
+  memset(&x->contact_to_world, 0, sizeof x->contact_to_world);
+  memset(&x->normal_to_world, 0, sizeof x->normal_to_world);
+}
+
+#if defined(TMUF_TRI_CHECK)
+#include <stdio.h>
+/* development check (-DTMUF_TRI_CHECK): a triangle the reject tests skip
+   has no contact in the float test */
+static void tri_check_rejected(const gm_vec3 v[3], float nx, float ny, float nz, float n2) {
+  static unsigned long long checked;
+  ref_cbuf scratch = {0};
+  float in = 1.0f / tmuf_sqrtf(n2);
+  sphere_tri st = {&scratch, v3(0.0f, 0.0f, 0.0f), 1.0f, 0, v3(nx * in, ny * in, in * nz), 0};
+  if (sphere_triangle(&st, v)) {
+    fprintf(stderr, "tri_rejects: rejected triangle has a contact: %a %a %a / %a %a %a / %a %a %a\n", (double)v[0].x,
+            (double)v[0].y, (double)v[0].z, (double)v[1].x, (double)v[1].y, (double)v[1].z, (double)v[2].x,
+            (double)v[2].y, (double)v[2].z);
+    abort();
+  }
+  ref_cbuf_free(&scratch);
+  if ((++checked & ((1ull << 24) - 1)) == 0)
+    fprintf(stderr, "tri_rejects: %llu rejections checked\n", checked);
+}
+#endif
+
 /* the triangles an ellipsoid's walk of mesh m uses, with its to_mesh: the
    rest of ellipsoid_mesh */
 static int ellipsoid_mesh_tris(const ref_surf *a, const ref_surf *m, const gm_iso4 *im, const gm_iso4 *to_mesh,
                                const uint32_t *tris, uint32_t ntris, ref_cbuf *out) {
-  gm_vec3 radii = ellipsoid_radii(a);
-  gm_vec3 zero = v3(0.0f, 0.0f, 0.0f);
-  gm_vec3 inv = zero;
-  gm_iso4 mesh_to_ell, mesh_to_unit, contact_to_world, normal_to_world;
-  int have_world = 0;
-  int hit = 0;
   if (ntris == 0)
     return 0;
-  inv = v3(1.0f / radii.x, 1.0f / radii.y, 1.0f / radii.z);
-  mesh_to_ell = iso4_inverse(to_mesh);
-  mesh_to_unit = mesh_to_ell;
-  scale_rows(&mesh_to_unit, inv);
+  tri_ctx x;
+  tri_ctx_init(&x, a, im, to_mesh, out);
   for (uint32_t k = 0; k < ntris; k++) {
     mesh_tri t = read_tri(m, tris[k]);
     gm_vec3 v[3];
     for (int j = 0; j < 3; j++)
-      v[j] = iso4_mul_point(&mesh_to_unit, ref_mesh_vertex(m, t.idx[j]));
+      v[j] = iso4_mul_point(&x.mesh_to_unit, ref_mesh_vertex(m, t.idx[j]));
     gm_vec3 e1 = v3_sub(v[1], v[0]), e2 = v3_sub(v[2], v[0]);
     float nx = e2.z * e1.y - e2.y * e1.z;
     float ny = e1.z * e2.x - e2.z * e1.x;
@@ -678,31 +799,185 @@ static int ellipsoid_mesh_tris(const ref_surf *a, const ref_surf *m, const gm_is
     float n2 = (ny * ny + nx * nx) + nz * nz;
     if (!(n2 > DIR_EPS2))
       continue;
-    float in = 1.0f / tmuf_sqrtf(n2);
-    gm_vec3 un = v3(nx * in, ny * in, in * nz);
-    uint32_t first = out->count;
-    sphere_tri st = {out, zero, 1.0f, a->material, un, t.material};
-    if (!sphere_triangle(&st, v))
+    if (tri_rejects(v, nx, ny, nz)) {
+#if defined(TMUF_TRI_CHECK)
+      tri_check_rejected(v, nx, ny, nz, n2);
+#endif
       continue;
-    if (!have_world) {
-      contact_to_world = iso4_scale_trans(radii, zero);
-      contact_to_world = iso4_mult_inverse(&contact_to_world, &mesh_to_ell);
-      contact_to_world = iso4_mult(&contact_to_world, im);
-      normal_to_world = iso4_scale_trans(inv, zero);
-      normal_to_world = iso4_mult_inverse(&normal_to_world, &mesh_to_ell);
-      normal_to_world = iso4_mult(&normal_to_world, im);
-      have_world = 1;
     }
-    for (uint32_t i = first; i < out->count; i++) {
-      ref_collision *c = &out->items[i];
-      c->point = iso4_mul_point(&contact_to_world, c->point);
-      c->normal = normalize_eps(mat3_mul_vec(&normal_to_world.r, c->normal), DIR_EPS2);
-      c->separation = mat3_mul_vec(&contact_to_world.r, c->separation);
-    }
-    hit = 1;
+    tri_test(&x, v, nx, ny, nz, n2, t.material);
   }
-  return hit;
+  return x.hit;
 }
+
+#if defined(AT_HAVE_AVX)
+#define TRI_HAVE_AVX 1
+/* ellipsoid_mesh_tris four triangles at a time: vertices, normal and
+   tri_rejects in vectors (the same operations per lane), the float test on
+   the others in order */
+__attribute__((target("avx"))) static int ellipsoid_mesh_tris_avx(const ref_surf *a, const ref_surf *m,
+                                                                  const gm_iso4 *im, const gm_iso4 *to_mesh,
+                                                                  const uint32_t *tris, uint32_t ntris,
+                                                                  ref_cbuf *out) {
+  if (ntris == 0)
+    return 0;
+  tri_ctx x;
+  tri_ctx_init(&x, a, im, to_mesh, out);
+  const gm_mat3 *r = &x.mesh_to_unit.r;
+  const __m128 r00 = _mm_set1_ps(r->m[0][0]), r01 = _mm_set1_ps(r->m[0][1]), r02 = _mm_set1_ps(r->m[0][2]);
+  const __m128 r10 = _mm_set1_ps(r->m[1][0]), r11 = _mm_set1_ps(r->m[1][1]), r12 = _mm_set1_ps(r->m[1][2]);
+  const __m128 r20 = _mm_set1_ps(r->m[2][0]), r21 = _mm_set1_ps(r->m[2][1]), r22 = _mm_set1_ps(r->m[2][2]);
+  const __m128 t0 = _mm_set1_ps(x.mesh_to_unit.t.x), t1 = _mm_set1_ps(x.mesh_to_unit.t.y),
+               t2 = _mm_set1_ps(x.mesh_to_unit.t.z);
+  const __m256d absmask = _mm256_castsi256_pd(_mm256_set1_epi64x(INT64_MAX));
+  const __m256d zero = _mm256_setzero_pd(), one = _mm256_set1_pd(1.0);
+  for (uint32_t k0 = 0; k0 < ntris; k0 += 4) {
+    const uint32_t lanes = ntris - k0 < 4 ? ntris - k0 : 4;
+    uint16_t mat[4];
+    float sx[3][4], sy[3][4], sz[3][4];
+    for (uint32_t j = 0; j < 4; j++) {
+      const uint8_t *tr = m->triangles + (size_t)tris[k0 + (j < lanes ? j : 0)] * 32;
+      uint32_t idx[3];
+      memcpy(idx, tr + 16, 12);
+      memcpy(&mat[j], tr + 28, 2);
+      for (int k = 0; k < 3; k++) {
+        const float *p = m->vertices + (size_t)idx[k] * 3;
+        sx[k][j] = p[0];
+        sy[k][j] = p[1];
+        sz[k][j] = p[2];
+      }
+    }
+    __m128 vx[3], vy[3], vz[3];
+    for (int k = 0; k < 3; k++) {
+      const __m128 px = _mm_loadu_ps(sx[k]), py = _mm_loadu_ps(sy[k]), pz = _mm_loadu_ps(sz[k]);
+      /* ((r0 . p) + t): ((r00 x + r01 y) + r02 z) + t0 */
+      vx[k] = _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(r00, px), _mm_mul_ps(r01, py)), _mm_mul_ps(r02, pz)), t0);
+      vy[k] = _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(r10, px), _mm_mul_ps(r11, py)), _mm_mul_ps(r12, pz)), t1);
+      vz[k] = _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(r20, px), _mm_mul_ps(r21, py)), _mm_mul_ps(r22, pz)), t2);
+    }
+    const __m128 e1x = _mm_sub_ps(vx[1], vx[0]), e1y = _mm_sub_ps(vy[1], vy[0]), e1z = _mm_sub_ps(vz[1], vz[0]);
+    const __m128 e2x = _mm_sub_ps(vx[2], vx[0]), e2y = _mm_sub_ps(vy[2], vy[0]), e2z = _mm_sub_ps(vz[2], vz[0]);
+    const __m128 nx = _mm_sub_ps(_mm_mul_ps(e2z, e1y), _mm_mul_ps(e2y, e1z));
+    const __m128 ny = _mm_sub_ps(_mm_mul_ps(e1z, e2x), _mm_mul_ps(e2z, e1x));
+    const __m128 nz = _mm_sub_ps(_mm_mul_ps(e1x, e2y), _mm_mul_ps(e2x, e1y));
+    const __m128 n2 =
+        _mm_add_ps(_mm_add_ps(_mm_mul_ps(ny, ny), _mm_mul_ps(nx, nx)), _mm_mul_ps(nz, nz));
+    unsigned todo = (unsigned)_mm_movemask_ps(_mm_cmpgt_ps(n2, _mm_set1_ps(DIR_EPS2))) & ((1u << lanes) - 1u);
+#if defined(TMUF_TRI_CHECK)
+    unsigned rejected = 0;
+#endif
+    if (!todo)
+      continue;
+    /* tri_rejects per lane */
+    {
+      const __m256d n0 = _mm256_cvtps_pd(nx), n1 = _mm256_cvtps_pd(ny), nn2 = _mm256_cvtps_pd(nz);
+      __m256d px[3], py[3], pz[3];
+      for (int k = 0; k < 3; k++) {
+        px[k] = _mm256_cvtps_pd(vx[k]);
+        py[k] = _mm256_cvtps_pd(vy[k]);
+        pz[k] = _mm256_cvtps_pd(vz[k]);
+      }
+      const __m256d sgn = _mm256_set1_pd(-0.0);
+      const __m256d tx = _mm256_mul_pd(_mm256_xor_pd(px[0], sgn), n0);
+      const __m256d ty = _mm256_mul_pd(_mm256_xor_pd(py[0], sgn), n1);
+      const __m256d tz = _mm256_mul_pd(_mm256_xor_pd(pz[0], sgn), nn2);
+      const __m256d d = _mm256_add_pd(_mm256_add_pd(tx, ty), tz);
+      const __m256d nn = _mm256_add_pd(_mm256_add_pd(_mm256_mul_pd(n0, n0), _mm256_mul_pd(n1, n1)),
+                                       _mm256_mul_pd(nn2, nn2));
+      const __m256d sabs = _mm256_add_pd(_mm256_add_pd(_mm256_and_pd(tx, absmask), _mm256_and_pd(ty, absmask)),
+                                         _mm256_and_pd(tz, absmask));
+      const __m256d mg = _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(0x1p-20), sabs),
+                                       _mm256_mul_pd(_mm256_set1_pd(0x1p-130), _mm256_max_pd(nn, one)));
+      const __m256d l = _mm256_sub_pd(d, mg);
+      __m256d rej = _mm256_cmp_pd(_mm256_add_pd(d, mg), zero, _CMP_LT_OQ);
+      rej = _mm256_or_pd(rej, _mm256_and_pd(_mm256_cmp_pd(l, zero, _CMP_GT_OQ),
+                                            _mm256_cmp_pd(_mm256_mul_pd(l, l),
+                                                          _mm256_mul_pd(nn, _mm256_set1_pd(1.0 + 0x1p-20)),
+                                                          _CMP_GT_OQ)));
+      __m256d vmax = zero;
+      for (int k = 0; k < 3; k++) {
+        const __m256d a1 = _mm256_add_pd(
+            _mm256_add_pd(_mm256_and_pd(px[k], absmask), _mm256_and_pd(py[k], absmask)),
+            _mm256_and_pd(pz[k], absmask));
+        vmax = _mm256_max_pd(a1, vmax);
+      }
+      /* me = 2^-14 (2 vmax + 2) */
+      const __m256d me = _mm256_mul_pd(_mm256_set1_pd(0x1p-14),
+                                       _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(2.0), vmax), _mm256_set1_pd(2.0)));
+      /* (nn - d d)(1 + 2^-20) + (2^-15 (vmax + 1) + 2.1 me + me me) nn */
+      const __m256d slack = _mm256_add_pd(
+          _mm256_add_pd(_mm256_mul_pd(_mm256_set1_pd(0x1p-15), _mm256_add_pd(vmax, one)),
+                        _mm256_mul_pd(_mm256_set1_pd(2.1), me)),
+          _mm256_mul_pd(me, me));
+      const __m256d reach =
+          _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(nn, _mm256_mul_pd(d, d)), _mm256_set1_pd(1.0 + 0x1p-20)),
+                        _mm256_mul_pd(slack, nn));
+      const __m256d inside = _mm256_mul_pd(_mm256_mul_pd(me, me), nn);
+      const __m256d lmin = _mm256_set1_pd(4.0 * (double)DIR_EPS2);
+      __m256d pass = _mm256_andnot_pd(rej, _mm256_castsi256_pd(_mm256_set1_epi64x(-1)));
+      for (int e = 0; e < 3; e++) {
+        const int f = e == 2 ? 0 : e + 1;
+        const __m256d ex = _mm256_sub_pd(px[f], px[e]), ey = _mm256_sub_pd(py[f], py[e]),
+                      ez = _mm256_sub_pd(pz[f], pz[e]);
+        const __m256d ll = _mm256_add_pd(_mm256_add_pd(_mm256_mul_pd(ex, ex), _mm256_mul_pd(ey, ey)),
+                                         _mm256_mul_pd(ez, ez));
+        const __m256d cx = _mm256_sub_pd(_mm256_mul_pd(ey, nn2), _mm256_mul_pd(ez, n1));
+        const __m256d cy = _mm256_sub_pd(_mm256_mul_pd(ez, n0), _mm256_mul_pd(ex, nn2));
+        const __m256d cz = _mm256_sub_pd(_mm256_mul_pd(ex, n1), _mm256_mul_pd(ey, n0));
+        const __m256d g = _mm256_xor_pd(
+            _mm256_add_pd(_mm256_add_pd(_mm256_mul_pd(px[e], cx), _mm256_mul_pd(py[e], cy)), _mm256_mul_pd(pz[e], cz)),
+            sgn);
+        const __m256d g2 = _mm256_mul_pd(g, g);
+        const __m256d ok = _mm256_cmp_pd(ll, lmin, _CMP_GT_OQ);
+        const __m256d out_e = _mm256_and_pd(_mm256_cmp_pd(g, zero, _CMP_GT_OQ),
+                                            _mm256_cmp_pd(g2, _mm256_mul_pd(reach, ll), _CMP_GT_OQ));
+        const __m256d in_e = _mm256_and_pd(_mm256_cmp_pd(g, zero, _CMP_LT_OQ),
+                                           _mm256_cmp_pd(g2, _mm256_mul_pd(inside, ll), _CMP_GT_OQ));
+        rej = _mm256_or_pd(rej, _mm256_and_pd(_mm256_and_pd(pass, ok), out_e));
+        pass = _mm256_and_pd(pass, _mm256_and_pd(ok, in_e));
+      }
+#if defined(TMUF_TRI_CHECK)
+      rejected = todo & (unsigned)_mm256_movemask_pd(rej);
+#endif
+      todo &= ~(unsigned)_mm256_movemask_pd(rej);
+    }
+#if defined(TMUF_TRI_CHECK)
+    if (!todo && !rejected)
+#else
+    if (!todo)
+#endif
+      continue;
+    float fx[3][4], fy[3][4], fz[3][4], fnx[4], fny[4], fnz[4], fn2[4];
+    for (int k = 0; k < 3; k++) {
+      _mm_storeu_ps(fx[k], vx[k]);
+      _mm_storeu_ps(fy[k], vy[k]);
+      _mm_storeu_ps(fz[k], vz[k]);
+    }
+    _mm_storeu_ps(fnx, nx);
+    _mm_storeu_ps(fny, ny);
+    _mm_storeu_ps(fnz, nz);
+    _mm_storeu_ps(fn2, n2);
+#if defined(TMUF_TRI_CHECK)
+    for (uint32_t j = 0; j < 4; j++)
+      if (rejected & (1u << j)) {
+        gm_vec3 v[3];
+        for (int k = 0; k < 3; k++)
+          v[k] = v3(fx[k][j], fy[k][j], fz[k][j]);
+        tri_check_rejected(v, fnx[j], fny[j], fnz[j], fn2[j]);
+      }
+#endif
+    for (uint32_t j = 0; todo; j++, todo >>= 1) {
+      if (!(todo & 1u))
+        continue;
+      gm_vec3 v[3];
+      for (int k = 0; k < 3; k++)
+        v[k] = v3(fx[k][j], fy[k][j], fz[k][j]);
+      tri_test(&x, v, fnx[j], fny[j], fnz[j], fn2[j], mat[j]);
+    }
+  }
+  return x.hit;
+}
+#endif
 
 /* one tree's collision with one record, after the fact (as in
    ref_detect_static) */
@@ -893,8 +1168,15 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
       uint32_t first = buf->count;
       int hit;
       if (tri_off[t][k] != NONE)
+#if defined(TRI_HAVE_AVX)
+        hit = avx ? ellipsoid_mesh_tris_avx(tree->surf, rec->surf, &rec->iso, &to_mesh[t][k], tris + tri_off[t][k],
+                                            tri_n[t][k], buf)
+                  : ellipsoid_mesh_tris(tree->surf, rec->surf, &rec->iso, &to_mesh[t][k], tris + tri_off[t][k],
+                                        tri_n[t][k], buf);
+#else
         hit = ellipsoid_mesh_tris(tree->surf, rec->surf, &rec->iso, &to_mesh[t][k], tris + tri_off[t][k], tri_n[t][k],
                                   buf);
+#endif
       else
         hit = dispatch(tree->surf, &trees[t].local, rec->surf, &rec->iso, buf);
       at_finish(d, tree, rec, buf, first, hit);

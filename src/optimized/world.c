@@ -24,7 +24,7 @@ static gm_iso4 iso_from_archive(const float v[12]) {
   return iso;
 }
 
-static gm_iso4 iso_from_scene(const tmuf_iso *s) {
+static gm_iso4 world_iso_from_scene(const tmuf_iso *s) {
   gm_iso4 iso;
   for (int r = 0; r < 3; r++)
     for (int c = 0; c < 3; c++)
@@ -287,7 +287,7 @@ int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
       continue;
     b.corpus = i;
     b.materials = c->materials;
-    gm_iso4 iso = iso_from_scene(&c->iso);
+    gm_iso4 iso = world_iso_from_scene(&c->iso);
     add_tree(&b, c->owner, c->tree, &iso, 0, trigger ? TREE_COLLISION : 0);
   }
   if (b.error)

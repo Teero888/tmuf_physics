@@ -76,23 +76,29 @@ set(TMUF_PHYSICS_REFERENCE_SOURCES
   src/reference/sim.c
   src/reference/sim.h
 )
-set(TMUF_PHYSICS_OPTIMIZED_SOURCES
+# the optimized backend compiles as one unit (unity.c includes the others)
+set(TMUF_PHYSICS_OPTIMIZED_UNITY
   src/optimized/backend.c
   src/optimized/fmath.c
-  src/optimized/fmath.h
-  src/optimized/gm.h
   src/optimized/dyna.c
-  src/optimized/dyna.h
   src/optimized/world.c
-  src/optimized/world.h
   src/optimized/collide.c
-  src/optimized/collide.h
   src/optimized/car.c
-  src/optimized/car.h
-  src/optimized/car_util.h
   src/optimized/car_forces.c
   src/optimized/car_models.c
   src/optimized/sim.c
+)
+set_source_files_properties(${TMUF_PHYSICS_OPTIMIZED_UNITY} PROPERTIES HEADER_FILE_ONLY ON)
+set(TMUF_PHYSICS_OPTIMIZED_SOURCES
+  src/optimized/unity.c
+  ${TMUF_PHYSICS_OPTIMIZED_UNITY}
+  src/optimized/fmath.h
+  src/optimized/gm.h
+  src/optimized/dyna.h
+  src/optimized/world.h
+  src/optimized/collide.h
+  src/optimized/car.h
+  src/optimized/car_util.h
   src/optimized/sim.h
 )
 
@@ -154,6 +160,11 @@ else()
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(i.86|x86)$")
     target_compile_options(tmuf_physics PRIVATE -msse2 -mfpmath=sse)
   endif()
+endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" AND NOT TMUF_PHYSICS_BACKEND STREQUAL "reference")
+  # the one-unit optimized backend: let GCC inline the gm.h helpers there
+  # as it does in separate files
+  set_source_files_properties(src/optimized/unity.c PROPERTIES COMPILE_OPTIONS "--param=inline-unit-growth=100")
 endif()
 
 if(NOT WIN32)
