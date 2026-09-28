@@ -84,15 +84,11 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
 
 ## Not done yet
 
-- Water for collections with geometry water planes (Rally, Speed): the
-  plane of each wet column comes from the block's water shader
-  (CPlugBitmapRenderWater).
 - Pylon mesh raising (TranslateMeshVerticesAbove) is modelled in the
   construction stream but not applied to the collision meshes.
 - Moving mobils (dedicated collision with archived item properties): their
   triangles are in the static set with block defaults.
-- A larger oracle corpus (TMX replays in run3: respawns, water, Rally/Speed
-  water), optimized backend, public API, frametee integration.
+- Optimized backend, rendering data export, frametee integration.
 
 ## Tools
 
