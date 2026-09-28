@@ -834,7 +834,9 @@ __attribute__((target("avx"))) static int ellipsoid_mesh_tris_avx(const ref_surf
   for (uint32_t k0 = 0; k0 < ntris; k0 += 4) {
     const uint32_t lanes = ntris - k0 < 4 ? ntris - k0 : 4;
     uint16_t mat[4];
-    float sx[3][4], sy[3][4], sz[3][4];
+    /* each vertex as (x, y, z, 0) (no read past its 12 bytes), four of them
+       transposed into x, y, z vectors */
+    __m128 pv[3][4];
     for (uint32_t j = 0; j < 4; j++) {
       const uint8_t *tr = m->triangles + (size_t)tris[k0 + (j < lanes ? j : 0)] * 32;
       uint32_t idx[3];
@@ -842,14 +844,14 @@ __attribute__((target("avx"))) static int ellipsoid_mesh_tris_avx(const ref_surf
       memcpy(&mat[j], tr + 28, 2);
       for (int k = 0; k < 3; k++) {
         const float *p = m->vertices + (size_t)idx[k] * 3;
-        sx[k][j] = p[0];
-        sy[k][j] = p[1];
-        sz[k][j] = p[2];
+        pv[k][j] = _mm_movelh_ps(_mm_castpd_ps(_mm_load_sd((const double *)p)), _mm_load_ss(p + 2));
       }
     }
     __m128 vx[3], vy[3], vz[3];
     for (int k = 0; k < 3; k++) {
-      const __m128 px = _mm_loadu_ps(sx[k]), py = _mm_loadu_ps(sy[k]), pz = _mm_loadu_ps(sz[k]);
+      __m128 px = pv[k][0], py = pv[k][1], pz = pv[k][2], pw = pv[k][3];
+      _MM_TRANSPOSE4_PS(px, py, pz, pw);
+      (void)pw;
       /* ((r0 . p) + t): ((r00 x + r01 y) + r02 z) + t0 */
       vx[k] = _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(r00, px), _mm_mul_ps(r01, py)), _mm_mul_ps(r02, pz)), t0);
       vy[k] = _mm_add_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(r10, px), _mm_mul_ps(r11, py)), _mm_mul_ps(r12, pz)), t1);

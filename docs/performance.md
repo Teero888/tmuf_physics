@@ -80,6 +80,56 @@ Per tick (random inputs) the optimized backend spends about half its time
 in collision detection (walks and triangles), the rest in car forces,
 collision response and integration.
 
+## Optimization log (optimized backend)
+
+Each change was measured with `bench_ab` style interleaved runs (A01-Race,
+random inputs, thread CPU time, best of 4–6 runs, the benchmark alone on
+one physical core). The gain is the speed ratio against the build just
+before the change; the absolute numbers drift a little between sessions
+(background load), so only ratios are comparable. Every kept change is
+bit-exact: the whole oracle corpus matches.
+
+| # | change | gain | ticks/s after |
+|---|--------|------|---------------|
+| 1 | copy of the reference; debug hooks (`getenv`) out of the tick path; ellipsoid transforms in `ellipsoid_mesh` built only when a triangle is reached | +16 % over the reference | 106 k |
+| 2 | skip worlds without records (triggers, non-static) | +0.3 % | 106 k |
+| 3 | mesh cells tested in place (no `mesh_cell` copy per cell) | +2.7 % | 108 k |
+| 4 | cell fields read with direct scalar loads (`ld_f32`) | +3.1 % | 111 k |
+| 5 | `sqrtf` inline instead of `(float)sqrt((double)x)` (same result, proven) | +1.1 % | 112 k |
+| 6 | combined detection: all car trees walk the static tree once and each reached mesh once, every cell tested against all trees with SSE; collisions made afterwards in the reference's order | +19 % | 133 k |
+| 7 | the trees' world locations and boxes gathered once per substep for all three worlds | +7.2 % | 144 k |
+| 8 | 8-lane AVX cell test (runtime dispatch) | +4.0 % | 150 k |
+| 9 | `tmuf_mul_fd` inline (constant splits fold) | +0.3 % | 150 k |
+| 10 | triangle plane reject in double without root/division (`plane_rejects`) | +1.0 % | 152 k |
+| 11 | full triangle reject test (`tri_rejects`: plane, then edges via the exact triple product), 86 % of triangles skip the float test | +2.9 % | 157 k |
+| 12 | four triangles per step in AVX (vertices, normal, reject test per lane) | +8.5 % | 171 k |
+| 13 | the AVX triangle batch inlined into the walk | +4.8 % | 180 k |
+| 14 | sin/cos/tan/atan2/exp by Horner with a near-midpoint fallback to the reference series; `sin(0)` shortcut | +3–4 % (measured under load) | 183 k |
+| 15 | the backend as one translation unit (`unity.c`, GCC `inline-unit-growth=100`): helpers inline across files, same as LTO | +2.9 % (LTO A/B; unity equal to LTO) | 188 k (199 k once the oracle stopped) |
+| 16 | triangle vertices loaded as vectors and transposed (no store-forwarding stalls) | +2.0 % | 203 k |
+
+Tried and dropped (slower or no gain, all exact):
+
+| change | result |
+|--------|--------|
+| shared static traversal first version (per-cell scalar loop over trees) | 0.85× |
+| uniform grid / packed leaf index over mesh triangles instead of the octree walk (several variants) | 0.24–0.87× |
+| branch-free cell test (`&` instead of short-circuit), other axis orders | 0.96×, 0.98× |
+| SIMD vertex transform per triangle (before batching) | 0.985× |
+| active-lane mask in the cell test | 0.98× |
+| per-pair vertex cache (shared vertices transformed once) | 1.00× |
+| `to_mesh` and ellipsoid boxes for all trees at once (SoA, vectorized) | 0.985× |
+| prefetching the reached records | 1.00× |
+| memoizing tree boxes whose location did not change | est. 1 %, not done |
+| `-march=native` | 1.015× (not used: portability) |
+| profile-guided optimization | 1.00× |
+
+Where the optimized tick goes now (random inputs, 18 500 TSC cycles per
+tick at 3.5 GHz, cycle counters): triangle groups 3 800 (about 230 per
+group of four), float triangle tests of the survivors 1 800, mesh walks
+2 300, `to_mesh` and query boxes 1 500, static walk 1 000, rest of the
+collision phase 800; car forces, response and integration about 7 000.
+
 ## Setup
 
 Intel Xeon E3-1240 v5 (Skylake, 3.5 GHz, turbo 3.9 GHz), Linux 7.3, GCC 16.2,
