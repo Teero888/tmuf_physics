@@ -837,20 +837,12 @@ static void collision_response(ref_sim *s) {
 static void detect(ref_sim *s) {
   s->buf.count = 0;
   gm_iso4 iso = {s->body.state.rot, s->body.state.pos};
-  /* a world without records collides with nothing: skip its walk */
-  s->det.world = &s->triggers;
-  s->det.group_pair = GP_TRIGGER;
-  if (s->triggers.cell_count > 1)
-    ref_detect_static_all(&s->det, s->def.root, &iso);
-  s->det.world = &s->world;
-  s->det.group_pair = GP_STATIC;
-  if (s->world.cell_count > 1)
-    ref_detect_static_all(&s->det, s->def.root, &iso);
-  /* the group's non-static corpora (collided per corpus by the game; none
-     of the verified runs touch one) */
-  s->det.world = &s->nonstatic;
-  if (s->nonstatic.cell_count > 1)
-    ref_detect_static_all(&s->det, s->def.root, &iso);
+  /* the triggers, the static items, then the group's non-static corpora
+     (collided per corpus by the game; none of the verified runs touch one);
+     a world without records collides with nothing */
+  const ref_world *const worlds[3] = {&s->triggers, &s->world, &s->nonstatic};
+  const uint32_t pairs[3] = {GP_TRIGGER, GP_STATIC, GP_STATIC};
+  ref_detect_worlds(&s->det, s->def.root, &iso, worlds, pairs, 3);
   ref_detect_merge(&s->det);
 }
 

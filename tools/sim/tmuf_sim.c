@@ -231,7 +231,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
      seed's yaw) at rest, without a respawn input */
   if (!oracle_stop) {
     const float st[3] = {spawn.t.x, spawn.t.y, spawn.t.z};
-    for (uint32_t k = 262; k < o.count && k < tick_count; k++) {
+    for (uint32_t k = 261; k < o.count && k < tick_count; k++) {
       const float *a = o.states[k], *p = o.states[k - 1];
       int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
       int moved = p[16] != 0.0f || p[17] != 0.0f || p[18] != 0.0f;

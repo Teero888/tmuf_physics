@@ -702,18 +702,13 @@ static void at_finish(ref_detect *d, ref_mtree *tree, const ref_static_record *r
   }
 }
 
-void ref_detect_static_all(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso) {
+/* one world (d->world) for the gathered trees; any limit reached before a
+   collision is made: the reference walk instead */
+static void at_walk_world(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso, const at_tree *trees,
+                          uint32_t nt) {
   const ref_world *w = d->world;
-  if (w->cell_count <= 1)
+  if (w->cell_count <= 1 || nt == 0)
     return;
-  at_tree trees[AT_TREES];
-  uint32_t nt = at_gather(root, moving_iso, trees, 0);
-  if (nt == 0)
-    return;
-  if (nt > AT_TREES) {
-    ref_detect_static(d, root, moving_iso);
-    return;
-  }
   uint32_t groups = (nt + 3u) / 4u;
   uint32_t all = nt == 32 ? 0xffffffffu : (1u << nt) - 1u;
   at_boxes q;
@@ -873,6 +868,29 @@ void ref_detect_static_all(ref_detect *d, ref_mtree *root, const gm_iso4 *moving
         hit = dispatch(tree->surf, &trees[t].local, rec->surf, &rec->iso, buf);
       at_finish(d, tree, rec, buf, first, hit);
     }
+  }
+}
+
+void ref_detect_static_all(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso) {
+  const ref_world *const worlds[1] = {d->world};
+  const uint32_t pairs[1] = {d->group_pair};
+  ref_detect_worlds(d, root, moving_iso, worlds, pairs, 1);
+}
+
+void ref_detect_worlds(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso, const ref_world *const *worlds,
+                       const uint32_t *pairs, uint32_t count) {
+  /* the trees' locations once for all the worlds */
+  at_tree trees[AT_TREES];
+  uint32_t nt = at_gather(root, moving_iso, trees, 0);
+  for (uint32_t i = 0; i < count; i++) {
+    d->world = worlds[i];
+    d->group_pair = pairs[i];
+    if (worlds[i]->cell_count <= 1)
+      continue;
+    if (nt > AT_TREES)
+      ref_detect_static(d, root, moving_iso);
+    else
+      at_walk_world(d, root, moving_iso, trees, nt);
   }
 }
 

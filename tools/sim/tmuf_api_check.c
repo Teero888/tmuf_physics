@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
       if (!oracle_stop) {
         const tmuf_vec3 *sp = &tmuf_track_sim(t)->race.current.t;
         const float st[3] = {sp->x, sp->y, sp->z};
-        for (uint32_t k = 262; k < ocount && k < n; k++) {
+        for (uint32_t k = 261; k < ocount && k < n; k++) {
           const float *a = o[k], *pv = o[k - 1];
           int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
           int moved = pv[16] != 0.0f || pv[17] != 0.0f || pv[18] != 0.0f;

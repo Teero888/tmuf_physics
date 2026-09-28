@@ -29,6 +29,10 @@ void ref_detect_static(ref_detect *d, ref_mtree *tree, const gm_iso4 *moving_iso
 /* the same, all trees of the root walking each tree once (same collisions,
    same order) */
 void ref_detect_static_all(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso);
+/* several worlds in turn (d->world and d->group_pair set for each), the
+   trees located once */
+void ref_detect_worlds(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso, const ref_world *const *worlds,
+                       const uint32_t *pairs, uint32_t count);
 void ref_detect_merge(ref_detect *d);
 
 /* CPlugTree::UpdateBoundingBox for moving trees (surfaces only). */
