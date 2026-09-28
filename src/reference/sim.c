@@ -426,21 +426,154 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
 
 void ref_sim_free(ref_sim *s) {
   dyna_free(&s->body);
-  free(s->water.cells);
   free(s->race.passed);
-  free(s->race.slot);
-  free(s->race.role);
-  free(s->race.respawn_current);
-  free(s->race.spawn);
-  ref_world_free(&s->triggers);
   ref_cbuf_free(&s->buf);
   for (uint32_t i = 0; i < s->tree_count; i++)
     ref_cbuf_free(&s->trees[i].sphere);
   free(s->trees);
   free(s->child_ptrs);
-  free(s->corpus_iso);
-  ref_world_free(&s->world);
+  if (!s->shared) {
+    free(s->water.cells);
+    free(s->race.slot);
+    free(s->race.role);
+    free(s->race.respawn_current);
+    free(s->race.spawn);
+    ref_world_free(&s->triggers);
+    free(s->corpus_iso);
+    ref_world_free(&s->world);
+  }
   memset(s, 0, sizeof *s);
+}
+
+/* ---- clones and snapshots ---- */
+
+static ref_mtree *rebase_tree(const ref_sim *from, ref_sim *to, const ref_mtree *t) {
+  return t ? to->trees + (t - from->trees) : NULL;
+}
+
+int ref_sim_clone(ref_sim *dst, const ref_sim *tpl) {
+  *dst = *tpl;
+  dst->shared = 1;
+  dst->trees = calloc(tpl->tree_count ? tpl->tree_count : 1, sizeof *dst->trees);
+  uint32_t nchild = 0;
+  for (uint32_t i = 0; i < tpl->tree_count; i++)
+    nchild += tpl->trees[i].child_count;
+  dst->child_ptrs = calloc(nchild ? nchild : 1, sizeof *dst->child_ptrs);
+  dst->race.passed = calloc(tpl->race.checkpoint_count + 1, 1);
+  dst->body.replacements = NULL;
+  dst->body.replacement_count = dst->body.replacement_cap = 0;
+  memset(&dst->buf, 0, sizeof dst->buf);
+  if (!dst->trees || !dst->child_ptrs || !dst->race.passed) {
+    free(dst->trees);
+    free(dst->child_ptrs);
+    free(dst->race.passed);
+    memset(dst, 0, sizeof *dst);
+    return 0;
+  }
+  memcpy(dst->race.passed, tpl->race.passed, tpl->race.checkpoint_count + 1);
+  for (uint32_t i = 0; i < tpl->tree_count; i++) {
+    dst->trees[i] = tpl->trees[i];
+    memset(&dst->trees[i].sphere, 0, sizeof dst->trees[i].sphere);
+    dst->trees[i].queued = 0;
+    if (tpl->trees[i].children)
+      dst->trees[i].children = dst->child_ptrs + (tpl->trees[i].children - tpl->child_ptrs);
+  }
+  for (uint32_t i = 0; i < nchild; i++)
+    dst->child_ptrs[i] = rebase_tree(tpl, dst, tpl->child_ptrs[i]);
+  dst->def.root = rebase_tree(tpl, dst, tpl->def.root);
+  for (uint32_t i = 0; i < CAR_MAX_WHEELS; i++) {
+    dst->def.wheels[i].tree = rebase_tree(tpl, dst, tpl->def.wheels[i].tree);
+    dst->car.wheels[i].tree = dst->def.wheels[i].tree;
+  }
+  dst->car.def = &dst->def;
+  dst->car.t = &dst->def.tuning;
+  dst->car.body = &dst->body;
+  dst->car.water = dst->water.enabled ? &dst->water : NULL;
+  dst->det.out = &dst->buf;
+  dst->det.queued_count = 0;
+  return 1;
+}
+
+/* the curves' interpolation mode changes the first time some are read */
+#define CURVE_COUNT (sizeof(tmuf_vt_curves) / sizeof(tmuf_curve))
+
+typedef struct snap_head {
+  car car;
+  dyna body;
+  ref_race race;
+  uint32_t tick_ms, period_ms, substeps;
+  int first_step;
+  uint8_t curve_constant[CURVE_COUNT];
+} snap_head;
+
+size_t ref_sim_snapshot_size(const ref_sim *s) { return sizeof(snap_head) + s->race.checkpoint_count + 1; }
+
+void ref_sim_save(const ref_sim *s, void *buf) {
+  snap_head h;
+  memset(&h, 0, sizeof h);
+  h.car = s->car;
+  h.body = s->body;
+  h.body.replacements = NULL;
+  h.body.replacement_count = h.body.replacement_cap = 0;
+  h.race = s->race;
+  h.tick_ms = s->tick_ms;
+  h.period_ms = s->period_ms;
+  h.substeps = s->substeps;
+  h.first_step = s->first_step;
+  const tmuf_curve *cv = (const tmuf_curve *)&s->def.tuning.curves;
+  for (size_t i = 0; i < CURVE_COUNT; i++)
+    h.curve_constant[i] = (uint8_t)cv[i].constant;
+  memcpy(buf, &h, sizeof h);
+  memcpy((uint8_t *)buf + sizeof h, s->race.passed, s->race.checkpoint_count + 1);
+}
+
+void ref_sim_load(ref_sim *s, const void *buf) {
+  snap_head h;
+  memcpy(&h, buf, sizeof h);
+  /* the car's links stay those of this simulation */
+  car_def *def = s->car.def;
+  tmuf_vehicle_tuning *t = s->car.t;
+  dyna *body = s->car.body;
+  const tmuf_scene_water *water = s->car.water;
+  ref_mtree *wheel_trees[CAR_MAX_WHEELS];
+  for (uint32_t i = 0; i < CAR_MAX_WHEELS; i++)
+    wheel_trees[i] = s->car.wheels[i].tree;
+  s->car = h.car;
+  s->car.def = def;
+  s->car.t = t;
+  s->car.body = body;
+  s->car.water = water;
+  for (uint32_t i = 0; i < CAR_MAX_WHEELS; i++)
+    s->car.wheels[i].tree = wheel_trees[i];
+  gm_vec3 *rep = s->body.replacements;
+  uint32_t rep_cap = s->body.replacement_cap;
+  s->body = h.body;
+  s->body.replacements = rep;
+  s->body.replacement_cap = rep_cap;
+  s->body.replacement_count = 0;
+  uint8_t *passed = s->race.passed;
+  int32_t *slot = s->race.slot;
+  uint8_t *role = s->race.role, *respawn_current = s->race.respawn_current;
+  gm_iso4 *spawn = s->race.spawn;
+  s->race = h.race;
+  s->race.passed = passed;
+  s->race.slot = slot;
+  s->race.role = role;
+  s->race.respawn_current = respawn_current;
+  s->race.spawn = spawn;
+  memcpy(s->race.passed, (const uint8_t *)buf + sizeof h, s->race.checkpoint_count + 1);
+  s->tick_ms = h.tick_ms;
+  s->period_ms = h.period_ms;
+  s->substeps = h.substeps;
+  s->first_step = h.first_step;
+  tmuf_curve *cv = (tmuf_curve *)&s->def.tuning.curves;
+  for (size_t i = 0; i < CURVE_COUNT; i++)
+    cv[i].constant = h.curve_constant[i];
+  /* the wheels' collision trees follow their suspension */
+  for (uint32_t i = 0; i < s->car.wheel_count; i++)
+    if (s->car.wheels[i].tree)
+      s->car.wheels[i].tree->local = s->car.wheels[i].cur_iso;
+  ref_mtree_update_box(s->def.root);
 }
 
 /* ---- zone ---- */

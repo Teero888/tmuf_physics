@@ -188,6 +188,12 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     goto done;
   }
   sim_built = 1;
+  /* TMUF_SIM_SNAPTEST: a clone that keeps loading the running simulation's
+     snapshots must step identically */
+  static ref_sim clone;
+  int clone_built = getenv("TMUF_SIM_SNAPTEST") && ref_sim_clone(&clone, &sim);
+  void *snap = clone_built ? malloc(ref_sim_snapshot_size(&sim)) : NULL;
+  uint32_t snap_checks = 0, snap_bad = 0;
   /* ConfigureReplayRace: the map's laps for a lap race, else one */
   sim.race.laps = map.has_laps && map.lap_race ? map.laps : 1;
   if (!op->summary)
@@ -260,7 +266,28 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   uint32_t matched = 0;
   int diverged = 0;
   for (uint32_t i = 0; i < n; i++) {
+    int check = snap && i % 97 == 5;
+    if (check) {
+      ref_sim_save(&sim, snap);
+      ref_sim_load(&clone, snap);
+    }
     ref_sim_step(&sim, &ticks[i]);
+    if (check) {
+      ref_sim_step(&clone, &ticks[i]);
+      snap_checks++;
+      int wheels_equal = 1;
+      for (uint32_t w = 0; w < sim.car.wheel_count; w++) {
+        const car_wheel *a = &sim.car.wheels[w], *b = &clone.car.wheels[w];
+        wheels_equal &= memcmp(&a->cur_iso, &b->cur_iso, sizeof a->cur_iso) == 0 &&
+                        memcmp(&a->damper_absorb, &b->damper_absorb, sizeof(float) * 3) == 0 &&
+                        memcmp(&a->angular_speed, &b->angular_speed, sizeof(float)) == 0;
+      }
+      if (memcmp(&clone.body.state, &sim.body.state, sizeof sim.body.state) != 0 || !wheels_equal) {
+        if (!snap_bad)
+          printf("snapshot test: clone differs after tick %u\n", i);
+        snap_bad++;
+      }
+    }
     if (sim.race.completed && !finish_ms)
       finish_ms = ticks[i].time_ms;
     float ours[45];
@@ -327,7 +354,13 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     printf("%s%sMATCH %s %u/%u ticks (oracle %u states%s) %s\n", op->summary ? name : "", op->summary ? " " : "",
            vname, matched, n, o.count, oracle_stop ? ", game stopped the run" : "", finish);
   rc = 0;
+  if (snap)
+    printf("snapshot test: %u checks, %u bad\n", snap_checks, snap_bad);
 done:
+  if (snap) {
+    free(snap);
+    ref_sim_free(&clone);
+  }
   if (sim_built)
     ref_sim_free(&sim);
   if (scene_built)

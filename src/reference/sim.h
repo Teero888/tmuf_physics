@@ -52,6 +52,7 @@ typedef struct ref_sim {
   uint32_t tick_ms, period_ms;
   int first_step;
   uint32_t substeps; /* of the last step */
+  int shared; /* a clone: the static world, triggers, race tables and water belong to the template */
 } ref_sim;
 
 /* Builds the world from the scene and the car from the vehicle; spawns at
@@ -59,6 +60,17 @@ typedef struct ref_sim {
 int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *vehicle, const gm_iso4 *spawn, uint32_t seed,
                  const ref_tick *first, char *err, size_t err_size);
 void ref_sim_free(ref_sim *s);
+
+/* A simulation equal to `tpl` that shares its immutable parts (static world,
+   triggers, race tables, water); `tpl` must outlive it. Returns 0 on
+   allocation failure. */
+int ref_sim_clone(ref_sim *dst, const ref_sim *tpl);
+
+/* Snapshots: everything that changes while simulating, as a flat buffer that
+   can be loaded into any simulation cloned from the same template. */
+size_t ref_sim_snapshot_size(const ref_sim *s);
+void ref_sim_save(const ref_sim *s, void *buf);
+void ref_sim_load(ref_sim *s, const void *buf);
 void ref_sim_step(ref_sim *s, const ref_tick *tick);
 
 /* Control ticks of a replay (ReplayControlPlan for input-only validation).
