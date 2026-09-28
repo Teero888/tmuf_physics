@@ -4,6 +4,9 @@
 
    tmuf_rollout IN.Replay.Gbx OUT.Replay.Gbx SEED [FROM_MS [LENGTH_MS]]
    tmuf_rollout IN OUT --plain   (uncompressed copy; prints the ghost samples' offset)
+   tmuf_rollout IN - --events    (prints the inputs)
+   tmuf_rollout IN OUT --rebase  (--plain with the event clock moved to the game's
+                                  own: the race starts at 100000)
      FROM_MS: race time the random inputs start at (default: random within
      the run), LENGTH_MS: how long they last (default: random 2-20 s).
    Prints "FROM LENGTH EVENTS" on success. */
@@ -54,6 +57,16 @@ typedef struct ev {
 
 static void put32(uint8_t *p, uint32_t v) { memcpy(p, &v, 4); }
 
+/* the events' clock at the race start: where _FakeIsRaceRunning turns on
+   (100000 in the game's own replays, 165535 in replays of TAS tools) */
+static uint32_t race_base(const tmuf_ghost *g) {
+  const int running = find_action(g, "_FakeIsRaceRunning");
+  for (uint32_t i = 0; i < g->event_count; i++)
+    if ((int)g->events[i].action == running && g->events[i].value != 0)
+      return g->events[i].time;
+  return 100000u;
+}
+
 int main(int argc, char **argv) {
   if (argc < 4) {
     fprintf(stderr, "usage: tmuf_rollout IN OUT SEED [FROM_MS [LENGTH_MS]]\n");
@@ -75,9 +88,34 @@ int main(int argc, char **argv) {
     return 1;
   }
   const tmuf_ghost *g = r.ghosts[0];
-  if (strcmp(argv[3], "--plain") == 0) {
+  if (strcmp(argv[3], "--events") == 0) {
+    /* the raw inputs: duration, actions, events (time action value) */
+    printf("race_time %u duration %u version %u seed %u events %u extra %08x %08x %08x settings %s\n", g->race_time,
+           g->input_duration, g->input_version, g->validation_seed, g->event_count, g->input_extra[0], g->input_extra[1],
+           g->input_extra[2], g->race_settings ? g->race_settings : "");
+    for (uint32_t i = 0; i < g->action_count; i++)
+      printf("action %u %s\n", i, g->actions[i]);
+    for (uint32_t i = 0; i < g->event_count; i++)
+      printf("event %u %u %08x\n", g->events[i].time, g->events[i].action, g->events[i].value);
+    return 0;
+  }
+  if (strcmp(argv[3], "--plain") == 0 || strcmp(argv[3], "--rebase") == 0) {
     /* the same replay with an uncompressed body; prints the ghost samples'
        offset in the output file */
+    const uint64_t base = r.body_compressed ? 0 : r.body_offset;
+    uint8_t *body = malloc(r.body_size);
+    memcpy(body, r.body, r.body_size);
+    if (argv[3][2] == 'r') {
+      const uint32_t shift = race_base(g) - 100000u;
+      for (uint32_t i = 0; i < g->event_count; i++) {
+        const uint64_t p = g->events_pos - base + (uint64_t)i * 9u;
+        if (p + 4 > r.body_size || g->events[i].time < shift) {
+          fprintf(stderr, "%s: cannot rebase the events\n", argv[1]);
+          return 1;
+        }
+        put32(body + p, g->events[i].time - shift);
+      }
+    }
     FILE *f = fopen(argv[2], "wb");
     if (!f)
       return 1;
@@ -85,9 +123,8 @@ int main(int argc, char **argv) {
     memcpy(head, data, (size_t)r.body_offset);
     head[7] = 'U';
     fwrite(head, 1, (size_t)r.body_offset, f);
-    fwrite(r.body, 1, r.body_size, f);
+    fwrite(body, 1, r.body_size, f);
     fclose(f);
-    const uint64_t base = r.body_compressed ? 0 : r.body_offset;
     printf("%llu\n", (unsigned long long)(r.body_offset + g->samples_pos - base));
     return 0;
   }
@@ -109,8 +146,7 @@ int main(int argc, char **argv) {
   }
   const uint32_t from = argc > 4 ? (uint32_t)atoi(argv[4]) : rnd(g->race_time / 10u) * 10u;
   const uint32_t length = argc > 5 ? (uint32_t)atoi(argv[5]) : (200u + rnd(1801u)) * 10u;
-  /* event times: 100000 at the race start (the controls' sample clock) */
-  const uint32_t start = 100000u + from, end = start + length;
+  const uint32_t start = race_base(g) + from, end = start + length;
   ev *evs = malloc(sizeof *evs * (g->event_count + 3u * (length / 20u + 2u)));
   uint32_t n = 0;
   for (uint32_t i = 0; i < g->event_count; i++)

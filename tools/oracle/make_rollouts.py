@@ -54,7 +54,9 @@ def rewrite(path, off, positions, end_ms):
         t = 2590 + 100 * i
         x, y, z = positions.get(t if t <= last else last)
         buf += struct.pack('<3f', x, y, z) + tmpl[12:]
-    raw = s['head'] + struct.pack('<I', len(buf)) + bytes(buf) + struct.pack('<iii', n, 0, len(tmpl)) + s['tail']
+    head = bytearray(s['head'])
+    struct.pack_into('<i', head, 12, 100)  # sample period 100 ms (TAS tools may record every 50 ms)
+    raw = bytes(head) + struct.pack('<I', len(buf)) + bytes(buf) + struct.pack('<iii', n, 0, len(tmpl)) + s['tail']
     c = zlib.compress(raw, 9)
     out = data[:off] + struct.pack('<II', len(raw), len(c)) + c + data[off + 8 + s['psize']:]
     open(path, 'wb').write(out)
@@ -91,6 +93,8 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--per', type=int, default=1, help='rollouts per replay')
     ap.add_argument('--seed', type=int, default=1)
+    ap.add_argument('--resample', action='store_true',
+                    help='no rollout: keep the inputs, only rewrite the ghost samples from our simulation')
     ap.add_argument('list')
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -101,6 +105,21 @@ def main():
             continue
         src = line.split()[0]
         stem = os.path.basename(src).split('.')[0]
+        if a.resample:
+            dst = os.path.join(a.out, '%s_rs.Replay.Gbx' % stem)
+            if os.path.exists(dst):
+                continue
+            r = subprocess.run([roll, src, dst, '--rebase'], capture_output=True, text=True, errors='replace')
+            if r.returncode:
+                print(stem, 'skip:', r.stderr.strip()); continue
+            off = int(r.stdout)
+            ev = subprocess.run([roll, dst, '-', '--events'], capture_output=True, text=True, errors='replace').stdout
+            race = int(ev.split()[1])
+            pos = positions_of(sim, a.packs, dst)
+            if not pos or not rewrite(dst, off, pos, 2600 + race):
+                print(stem, 'skip: samples'); os.remove(dst); continue
+            print(os.path.basename(dst), race, flush=True)
+            continue
         for k in range(a.per):
             seed = rng.randrange(1, 1 << 30)
             dst = os.path.join(a.out, '%s_r%d.Replay.Gbx' % (stem, seed))

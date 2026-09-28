@@ -156,7 +156,8 @@ static void validation_inputs(tmuf_gbx *g, tmuf_ghost *gh, int has_seed) {
   }
   gh->events_end = g->pos;
   tmuf_gbx_string(g); /* exe version */
-  tmuf_gbx_skip(g, 12);
+  for (int i = 0; i < 3; i++)
+    gh->input_extra[i] = tmuf_gbx_u32(g);
   gh->race_settings = tmuf_gbx_string(g);
   /* the number as the game formats it: digit groups separated by spaces
      ("10 000") */

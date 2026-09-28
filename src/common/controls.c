@@ -53,7 +53,16 @@ static void controls_from(const ctl_state *st, tmuf_control_tick *tk) {
 }
 
 uint32_t tmuf_control_ticks(const tmuf_ghost *g, tmuf_control_tick **out) {
-  const uint32_t tick_ms = 10, prestart = 2600, base = 100000;
+  const uint32_t tick_ms = 10, prestart = 2600;
+  /* the events' clock: the race starts where _FakeIsRaceRunning turns on
+     (100000 in the game's own replays, other values in replays of TAS tools) */
+  uint32_t base = 100000;
+  for (uint32_t i = 0; i < g->event_count; i++)
+    if (g->events[i].action < g->action_count && action_kind(g->actions[g->events[i].action]) == ACT_RUNNING &&
+        g->events[i].value != 0) {
+      base = g->events[i].time;
+      break;
+    }
   *out = NULL;
   int32_t final_target = (int32_t)prestart + (int32_t)g->input_duration;
   uint32_t cap = (uint32_t)(final_target / (int32_t)tick_ms) + 2;
