@@ -35,6 +35,11 @@ typedef struct tmuf_ghost {
   const char *race_settings;
   uint32_t settings_laps; /* <laps>, 0 if none */
 
+  /* body offsets of the fields above (tools rewrite the inputs):
+     race time, input duration, event count, first event, end of events */
+  uint64_t race_time_pos, duration_pos, event_count_pos, events_pos, events_end;
+  uint64_t samples_pos; /* the samples' size fields */
+
   /* CGameGhost state samples (zlib). */
   const uint8_t *samples;
   uint32_t samples_size, samples_packed_size;
@@ -47,6 +52,13 @@ typedef struct tmuf_replay_file {
   uint32_t ghost_count;
   tmuf_ghost **ghosts;
   int deprecated_ghost_chunk; /* TMr.6 layout (0x03093004) */
+  /* layout for tools that rewrite a replay: the body starts at body_offset in
+     the file; compressed bodies are the decompressed body_size bytes (the
+     ghost offsets are relative to the body) */
+  uint64_t body_offset;
+  int body_compressed;
+  const uint8_t *body;
+  size_t body_size;
 } tmuf_replay_file;
 
 /* Everything is allocated from arena. On failure returns 0 and writes a

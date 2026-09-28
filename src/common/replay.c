@@ -11,6 +11,7 @@
 /* ---- CGameGhost (0x0303f000) ---- */
 
 static void ghost_samples(tmuf_gbx *g, tmuf_ghost *gh) {
+  gh->samples_pos = g->pos;
   gh->samples_size = tmuf_gbx_u32(g);
   gh->samples_packed_size = tmuf_gbx_u32(g);
   if (gh->samples_packed_size > (64u << 20)) {
@@ -52,6 +53,7 @@ static void skip_u32_value(tmuf_gbx *g, uint32_t *out, int *has) {
 static void c03092005(tmuf_gbx *g, void *node, uint32_t id) {
   (void)id;
   tmuf_ghost *gh = node;
+  gh->race_time_pos = g->pos;
   skip_u32_value(g, &gh->race_time, &gh->has_race_time);
 }
 
@@ -118,6 +120,7 @@ static void c03092018(tmuf_gbx *g, void *node, uint32_t id) {
 
 static void validation_inputs(tmuf_gbx *g, tmuf_ghost *gh, int has_seed) {
   gh->has_validation_seed = has_seed;
+  gh->duration_pos = g->pos;
   gh->input_duration = tmuf_gbx_u32(g);
   if (gh->input_duration == 0)
     return;
@@ -133,8 +136,10 @@ static void validation_inputs(tmuf_gbx *g, tmuf_ghost *gh, int has_seed) {
     const char *s = tmuf_gbx_id(g, NULL);
     gh->actions[i] = s ? s : "";
   }
+  gh->event_count_pos = g->pos;
   gh->event_count = tmuf_gbx_u32(g);
   tmuf_gbx_u32(g); /* capacity */
+  gh->events_pos = g->pos;
   if (gh->event_count > MAX_COUNT) {
     tmuf_gbx_fail(g, "input event count %u", gh->event_count);
     return;
@@ -149,6 +154,7 @@ static void validation_inputs(tmuf_gbx *g, tmuf_ghost *gh, int has_seed) {
     gh->events[i].action = tmuf_gbx_u8(g);
     gh->events[i].value = tmuf_gbx_u32(g);
   }
+  gh->events_end = g->pos;
   tmuf_gbx_string(g); /* exe version */
   tmuf_gbx_skip(g, 12);
   gh->race_settings = tmuf_gbx_string(g);
@@ -299,5 +305,9 @@ int tmuf_replay_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_
   }
   *out = *r;
   out->class_id = g.class_id;
+  out->body_offset = g.body_offset;
+  out->body_compressed = g.format[2] == 'C';
+  out->body = g.format[2] == 'C' ? g.body : data + g.body_offset;
+  out->body_size = g.format[2] == 'C' ? g.body_size : size - g.body_offset;
   return 1;
 }

@@ -621,6 +621,7 @@ int tmuf_gbx_read_header(tmuf_gbx *g) {
   if (g->error)
     return 0;
 
+  g->body_offset = g->pos;
   if (g->format[2] == 'C') {
     uint32_t size = tmuf_gbx_u32(g), csize = tmuf_gbx_u32(g);
     if (g->error || size > (256u << 20) || csize > (256u << 20)) {

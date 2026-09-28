@@ -127,6 +127,7 @@ struct tmuf_gbx {
   tmuf_mem_source body_src;
   uint8_t *body; /* arena */
   size_t body_size;
+  uint64_t body_offset; /* file offset of the body (of its size fields when compressed) */
 };
 
 void tmuf_gbx_init(tmuf_gbx *g, tmuf_source *src, tmuf_arena *arena, const tmuf_gbx_class *const *classes,
