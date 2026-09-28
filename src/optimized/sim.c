@@ -481,10 +481,13 @@ void ref_sim_copy_state(ref_sim *dst, const ref_sim *src) {
   tmuf_curve *to = (tmuf_curve *)&dst->def.tuning.curves;
   for (size_t i = 0; i < sizeof(tmuf_vt_curves) / sizeof(tmuf_curve); i++)
     to[i].constant = from[i].constant;
-  for (uint32_t i = 0; i < dst->car.wheel_count; i++)
-    if (dst->car.wheels[i].tree)
-      dst->car.wheels[i].tree->local = dst->car.wheels[i].cur_iso;
-  ref_mtree_update_box(dst->def.root);
+  /* the collision trees as they are: a box is refreshed once per step and
+     can lag its tree's location (the wheels follow the suspension after
+     the refresh) */
+  for (uint32_t i = 0; i < dst->tree_count && i < src->tree_count; i++) {
+    dst->trees[i].local = src->trees[i].local;
+    dst->trees[i].box = src->trees[i].box;
+  }
 }
 
 /* the curves' interpolation mode changes the first time some are read */
@@ -499,7 +502,16 @@ typedef struct snap_head {
   uint8_t curve_constant[CURVE_COUNT];
 } snap_head;
 
-size_t ref_sim_snapshot_size(const ref_sim *s) { return sizeof(snap_head) + s->race.checkpoint_count + 1; }
+/* snapshot: snap_head, the race's checkpoint flags, then each collision
+   tree's location and box */
+typedef struct snap_tree {
+  gm_iso4 local;
+  gm_box box;
+} snap_tree;
+
+size_t ref_sim_snapshot_size(const ref_sim *s) {
+  return sizeof(snap_head) + s->race.checkpoint_count + 1 + sizeof(snap_tree) * s->tree_count;
+}
 
 void ref_sim_save(const ref_sim *s, void *buf) {
   snap_head h;
@@ -518,6 +530,13 @@ void ref_sim_save(const ref_sim *s, void *buf) {
     h.curve_constant[i] = (uint8_t)cv[i].constant;
   memcpy(buf, &h, sizeof h);
   memcpy((uint8_t *)buf + sizeof h, s->race.passed, s->race.checkpoint_count + 1);
+  uint8_t *tp = (uint8_t *)buf + sizeof h + s->race.checkpoint_count + 1;
+  for (uint32_t i = 0; i < s->tree_count; i++) {
+    snap_tree st;
+    st.local = s->trees[i].local;
+    st.box = s->trees[i].box;
+    memcpy(tp + sizeof st * i, &st, sizeof st);
+  }
 }
 
 void ref_sim_load(ref_sim *s, const void *buf) {
@@ -562,11 +581,13 @@ void ref_sim_load(ref_sim *s, const void *buf) {
   tmuf_curve *cv = (tmuf_curve *)&s->def.tuning.curves;
   for (size_t i = 0; i < CURVE_COUNT; i++)
     cv[i].constant = h.curve_constant[i];
-  /* the wheels' collision trees follow their suspension */
-  for (uint32_t i = 0; i < s->car.wheel_count; i++)
-    if (s->car.wheels[i].tree)
-      s->car.wheels[i].tree->local = s->car.wheels[i].cur_iso;
-  ref_mtree_update_box(s->def.root);
+  const uint8_t *tp = (const uint8_t *)buf + sizeof h + s->race.checkpoint_count + 1;
+  for (uint32_t i = 0; i < s->tree_count; i++) {
+    snap_tree st;
+    memcpy(&st, tp + sizeof st * i, sizeof st);
+    s->trees[i].local = st.local;
+    s->trees[i].box = st.box;
+  }
 }
 
 /* ---- zone ---- */
