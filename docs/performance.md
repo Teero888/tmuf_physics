@@ -120,6 +120,7 @@ Tried and dropped (slower or no gain, all exact):
 | per-pair vertex cache (shared vertices transformed once) | 1.00× |
 | `to_mesh` and ellipsoid boxes for all trees at once (SoA, vectorized) | 0.985× |
 | prefetching the reached records | 1.00× |
+| exact detection cache: walks with query boxes inflated by the recent movement, reused while the car stays inside; rejected triangles sleep while the ellipsoid moves less than their gap; contacts checked against the exact walk | 0.68–0.78× random, 0.60–0.69× replay: the inflated candidate sets are 7–15× the exact ones, and even with sleeping more triangles stay awake than the exact walk tests |
 | memoizing tree boxes whose location did not change | est. 1 %, not done |
 | `-march=native` | 1.015× (not used: portability) |
 | profile-guided optimization | 1.00× |
