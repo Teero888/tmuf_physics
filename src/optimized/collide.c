@@ -626,6 +626,30 @@ static inline uint32_t at_test(const at_boxes *q, uint32_t groups, float cx, flo
   return pass;
 }
 
+#if defined(__x86_64__) || defined(__i386__)
+#define AT_HAVE_AVX 1
+#include <immintrin.h>
+/* at_test for up to eight trees in one 256-bit test (same per-lane
+   operations) */
+__attribute__((target("avx"))) static inline uint32_t at_test_avx(const at_boxes *q, uint32_t groups, float cx,
+                                                                   float cy, float cz, float hx, float hy, float hz) {
+  const __m256 sign = _mm256_set1_ps(-0.0f);
+  const __m256 bc[3] = {_mm256_set1_ps(cx), _mm256_set1_ps(cy), _mm256_set1_ps(cz)};
+  const __m256 bh[3] = {_mm256_set1_ps(hx), _mm256_set1_ps(hy), _mm256_set1_ps(hz)};
+  uint32_t pass = 0;
+  for (uint32_t g = 0; g < groups; g += 2) {
+    __m256 fail = _mm256_setzero_ps();
+    for (int k = 0; k < 3; k++) {
+      __m256 dist = _mm256_andnot_ps(sign, _mm256_sub_ps(bc[k], _mm256_loadu_ps(&q->c[k][g * 4])));
+      __m256 sum = _mm256_add_ps(bh[k], _mm256_loadu_ps(&q->h[k][g * 4]));
+      fail = _mm256_or_ps(fail, _mm256_cmp_ps(sum, dist, _CMP_LT_OQ));
+    }
+    pass |= ((uint32_t)(~_mm256_movemask_ps(fail)) & 255u) << (g * 4);
+  }
+  return pass;
+}
+#endif
+
 /* the triangles an ellipsoid's walk of mesh m uses, with its to_mesh: the
    rest of ellipsoid_mesh */
 static int ellipsoid_mesh_tris(const ref_surf *a, const ref_surf *m, const gm_iso4 *im, const gm_iso4 *to_mesh,
@@ -702,10 +726,17 @@ static void at_finish(ref_detect *d, ref_mtree *tree, const ref_static_record *r
   }
 }
 
+#if defined(AT_HAVE_AVX)
+#define AT_TEST(...) (avx ? at_test_avx(__VA_ARGS__) : at_test(__VA_ARGS__))
+#else
+#define AT_TEST(...) ((void)avx, at_test(__VA_ARGS__))
+#endif
+
 /* one world (d->world) for the gathered trees; any limit reached before a
    collision is made: the reference walk instead */
-static void at_walk_world(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso, const at_tree *trees,
-                          uint32_t nt) {
+static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect *d, ref_mtree *root,
+                                                                      const gm_iso4 *moving_iso, const at_tree *trees,
+                                                                      uint32_t nt, const int avx) {
   const ref_world *w = d->world;
   if (w->cell_count <= 1 || nt == 0)
     return;
@@ -728,7 +759,7 @@ static void at_walk_world(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_
         cur = mask_stack[--depth];
       const ref_static_cell *cell = &w->cells[ci];
       const gm_box *b = &cell->bounds;
-      uint32_t m = cur & at_test(&q, groups, b->center.x, b->center.y, b->center.z, b->half.x, b->half.y, b->half.z);
+      uint32_t m = cur & AT_TEST(&q, groups, b->center.x, b->center.y, b->center.z, b->half.x, b->half.y, b->half.z);
       if (!m) {
         ci += cell->subtree_count;
         continue;
@@ -809,7 +840,7 @@ static void at_walk_world(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_
         const uint8_t *cr = cells + (size_t)ci * 32;
         uint32_t subtree;
         memcpy(&subtree, cr, 4);
-        uint32_t mm = cur & at_test(&e, groups, ld_f32(cr + 4), ld_f32(cr + 8), ld_f32(cr + 12), ld_f32(cr + 16),
+        uint32_t mm = cur & AT_TEST(&e, groups, ld_f32(cr + 4), ld_f32(cr + 8), ld_f32(cr + 12), ld_f32(cr + 16),
                                     ld_f32(cr + 20), ld_f32(cr + 24));
         if (!mm) {
           ci += subtree;
@@ -871,6 +902,19 @@ static void at_walk_world(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_
   }
 }
 
+static void at_walk_world(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso, const at_tree *trees,
+                          uint32_t nt) {
+  at_walk_world_impl(d, root, moving_iso, trees, nt, 0);
+}
+
+#if defined(AT_HAVE_AVX)
+__attribute__((target("avx"))) static void at_walk_world_avx(ref_detect *d, ref_mtree *root,
+                                                             const gm_iso4 *moving_iso, const at_tree *trees,
+                                                             uint32_t nt) {
+  at_walk_world_impl(d, root, moving_iso, trees, nt, 1);
+}
+#endif
+
 void ref_detect_static_all(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso) {
   const ref_world *const worlds[1] = {d->world};
   const uint32_t pairs[1] = {d->group_pair};
@@ -889,6 +933,10 @@ void ref_detect_worlds(ref_detect *d, ref_mtree *root, const gm_iso4 *moving_iso
       continue;
     if (nt > AT_TREES)
       ref_detect_static(d, root, moving_iso);
+#if defined(AT_HAVE_AVX)
+    else if (nt > 4 && __builtin_cpu_supports("avx"))
+      at_walk_world_avx(d, root, moving_iso, trees, nt);
+#endif
     else
       at_walk_world(d, root, moving_iso, trees, nt);
   }
