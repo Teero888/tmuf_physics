@@ -227,6 +227,13 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     o.count = oracle_stop;
   else
     oracle_stop = 0;
+  /* a run that ends before the finish without that (the game gave up, e.g.
+     TMUnlimiter maps): its last states are the teardown, not physics */
+  if (!oracle_stop && o.count > 4 && ghost->has_race_time && ghost->race_time != UINT32_MAX &&
+      (uint64_t)o.count * 10u + 100u < 2600u + (uint64_t)ghost->race_time) {
+    o.count -= 3;
+    oracle_stop = o.count;
+  }
   uint32_t finish_ms = 0;
   uint32_t ext_count = 0, ext_bad = 0;
   ext = op->ext ? load_ext(op->ext, &ext_count) : NULL;

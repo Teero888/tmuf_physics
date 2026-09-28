@@ -192,19 +192,13 @@ static void c0304301f(tmuf_gbx *g, void *node, uint32_t id) {
     b->y = tmuf_gbx_u8(g);
     b->z = tmuf_gbx_u8(g);
     b->flags = tmuf_gbx_u32(g);
-    if (b->flags == 0xffffffffu) {
-      /* TMUnlimiter maps start with a pseudo block whose name is a
-         "TMUnlimiter is required" message. */
-      tmuf_gbx_fail(g, "unsupported TMUnlimiter map");
-      return;
-    }
+    /* CGameCtnBlock::ArchiveBlock reads nothing else. TMUnlimiter maps
+       start with a pseudo block (flags 0xffffffff, so with a skin) whose
+       name is a "TMUnlimiter is required" message; the game finds no block
+       info for it and skips it, and ignores TMUnlimiter's own chunks. */
     if (b->flags & TMUF_BLOCK_FLAG_SKIN) {
       b->skin_author = id_text(g);
       tmuf_gbx_noderef(g);
-    }
-    if (b->flags & TMUF_BLOCK_FLAG_WAYPOINT) {
-      tmuf_gbx_fail(g, "block %u has waypoint properties", i);
-      return;
     }
   }
   /* Everything after the blocks (MediaTracker clips, music, ...) is not
