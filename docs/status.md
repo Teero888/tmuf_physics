@@ -82,13 +82,20 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
   a start block spawn at the origin; custom vehicle ids use the collection's
   car.
 
+- Pylon columns built from pieces: the middle piece's mesh is raised as
+  CreateNewPylonMobil does (vertices above half a square moved up, planes
+  recomputed, archived octree kept). No pylon in the shipped packs has a
+  middle piece (Snow and Desert use one mesh per height), so no map in the
+  corpus uses it.
+- Animated block parts (a mobil with a motion, e.g. Rally trees) collide as
+  static at their initial location: block mobils are static in the game
+  whatever their archived item flags say. Checked against the game's static
+  octree (`run_oracle.py --trace cells`) on maps with up to 1 066 animated
+  mobils: the same records.
+
 ## Not done yet
 
-- Pylon mesh raising (TranslateMeshVerticesAbove) is modelled in the
-  construction stream but not applied to the collision meshes.
-- Moving mobils (dedicated collision with archived item properties): their
-  triangles are in the static set with block defaults.
-- Optimized backend, rendering data export, frametee integration.
+- Rendering data export, frametee integration.
 
 ## Tools
 

@@ -161,6 +161,7 @@ typedef struct tmuf_hms_item {
 
 typedef struct tmuf_scene_object {
   const char *name;
+  tmuf_gbx_node *motion; /* 0x0a005003: an animated object's CMotion */
   tmuf_node_list children;
   int has_item;
   tmuf_hms_item item;

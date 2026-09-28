@@ -1307,6 +1307,11 @@ static void c0a005001(tmuf_gbx *g, void *node, uint32_t id) {
   ((tmuf_scene_object *)node)->name = id_text(g);
 }
 
+static void c0a005003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_scene_object *)node)->motion = tmuf_gbx_noderef(g);
+}
+
 static void c0a011003(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   read_node_list(g, &((tmuf_scene_object *)node)->children);
@@ -1405,7 +1410,7 @@ static const tmuf_gbx_chunk SCENE_OBJECT_CHUNKS[] = {
     NOPAY(0x0a02b00e),              NOPAY(0x0a02b00f),             NOPAY(0x0a02b010),
     NOPAY(0x0a02b011),              NOPAY(0x0a02b012),             READ(0x0a02b014, c0a02b014),
     NOPAY(0x01001000),          NOPAY(0x0a005000),         READ(0x0a005001, c0a005001),
-    READ(0x0a005002, skip4),    READ(0x0a005003, skip_noderef), READ(0x0a005004, skip4),
+    READ(0x0a005002, skip4),    READ(0x0a005003, c0a005003), READ(0x0a005004, skip4),
     READ(0x0a009000, skip4),    READ(0x0a00b000, c0a00b000), READ(0x0a00e000, c0a00e000),
     NOPAY(0x0a011000),          NOPAY(0x0a011001),         NOPAY(0x0a011002),
     READ(0x0a011003, c0a011003), NOPAY(0x0a011004),        READ(0x0a011005, c0a011005),

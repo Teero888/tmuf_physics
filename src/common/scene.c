@@ -288,10 +288,11 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   tmuf_asset *ma;
   tmuf_gbx_node *mn = tmuf_assets_follow(&s->assets, owner, mobil_node, &ma);
   if (debug_enabled())
-    fprintf(stderr, "  %*smobil %p class %08x cls %s data %p item %d flags %08x\n", depth * 2, "", (void *)mn,
+    fprintf(stderr, "  %*smobil %p class %08x cls %s data %p item %d flags %08x motion %d\n", depth * 2, "", (void *)mn,
             mn ? mn->class_id : 0, mn && mn->cls ? mn->cls->name : "-", mn ? mn->data : NULL,
             mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u ? ((tmuf_scene_object *)mn->data)->has_item : -1,
-            mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u ? ((tmuf_scene_object *)mn->data)->item.physics_flags : 0);
+            mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u ? ((tmuf_scene_object *)mn->data)->item.physics_flags : 0,
+            mn && mn->data && mn->cls && mn->cls->id == 0x0a005000u && ((tmuf_scene_object *)mn->data)->motion != NULL);
   if (!mn || !mn->data)
     return;
   if (!mn->cls || mn->cls->id != 0x0a005000u)
