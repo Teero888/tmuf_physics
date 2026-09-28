@@ -106,6 +106,7 @@ struct ctn_block {
   float mobil_y;
   const char *modifier;
   int replacement_remap, skin_remap;
+  int custom_size; /* block flag 0x4000 */
   ctn_mobil *main, *helper;
   ctn_source clip_src[4], clip_helper[4];
   int active;
@@ -896,8 +897,17 @@ static void create_block_mobil(ctn *c, ctn_block *b) {
     helper->src2.asset = ci->asset;
     helper->src2.node = ch;
   }
-  if (!main.node && (ci->type != BT_RECT_ASYM || b->variant != 0))
+  if (!main.node && (ci->type != BT_RECT_ASYM || !b->custom_size || b->variant != 0))
     main = info_mobil(ci, !family, b->variant, b->sel);
+  if (scene_debug()) {
+    fprintf(stderr, "create block mobil tag %08x %s family %d variant %u sel %u -> %p (variants ground %u air %u:",
+            b->tag, ci->bi->name, family, b->variant, b->sel, (void *)main.node, ci->bi->variant_count[0],
+            ci->bi->variant_count[1]);
+    for (int f = 0; f < 2; f++)
+      for (uint32_t v = 0; v < ci->bi->variant_count[f] && v < 4; v++)
+        { fprintf(stderr, " %c%u:%u[", f ? 'a' : 'g', v, ci->bi->variants[f][v].count); for (uint32_t q = 0; q < ci->bi->variants[f][v].count; q++) fprintf(stderr, "%c", ci->bi->variants[f][v].nodes[q] ? 'x' : '-'); fprintf(stderr, "]"); }
+    fprintf(stderr, ")\n");
+  }
   ctn_mobil *mm = NULL;
   if (main.node) {
     mm = new_mobil(c, 0);
@@ -1145,6 +1155,8 @@ static int remove_block(ctn *c, ctn_block *b) {
       idx = i;
   if (idx == UINT32_MAX)
     return 0;
+  if (scene_debug())
+    fprintf(stderr, "remove block tag %08x %s\n", b->tag, b->info->bi->name);
   uint32_t n = b->unit_count;
   uint32_t (*coords)[3] = calloc(n ? n : 1, sizeof *coords);
   if (!coords)
@@ -1217,6 +1229,9 @@ static void register_suppression(ctn *c, ctn_block *target, const ctn_block *sup
     suppression sp = {target, suppressor};
     ARR_PUSH(c->supps, c->supp_count, c->supp_cap, sp);
   }
+  if (scene_debug())
+    fprintf(stderr, "suppress %08x %s by %08x %s\n", target->tag, target->info->bi->name, suppressor->tag,
+            suppressor->info->bi->name);
   if (!target->suppressed_by)
     target->suppressed_by = suppressor;
 }
@@ -1643,6 +1658,7 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
     uint32_t coord[3] = {pb->x, pb->y, pb->z};
     ctn_block *b = new_block(c, infos[i], coord, pb->dir, (pb->flags & 0x1000u) != 0, pb->flags & 0x3fu, sel != 0x3fu,
                              sel, ORIGIN_AUTHORED, i);
+    b->custom_size = (pb->flags & 0x4000u) != 0;
     /* UsesCollectionLandZoneHeight */
     if (b->info->type == BT_FRONTIER) {
       ctn_zone *z = zone_from_land(c, b->info);
@@ -1744,6 +1760,9 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
         continue;
       }
       int attached = update_field_units(c, b);
+      if (scene_debug())
+        fprintf(stderr, "pass %d block %08x %s at %u %u %u attached %d\n", pass, b->tag, b->info->bi->name, b->coord[0],
+                b->coord[1], b->coord[2], attached);
       if (pass != 0 && !attached) {
         if (!remove_block(c, b))
           i++;

@@ -379,6 +379,9 @@ static void clip_side(unsigned side, float sq, tmuf_iso *out) {
 
 /* AppendBlockPlacementModels for one installation */
 static void emit_install(tmuf_scene *s, const ctn_install *in) {
+  if (debug_enabled())
+    fprintf(stderr, "install tag %08x kind %d active %d suppressed %d main %p\n", in->tag, in->kind, in->active,
+            in->suppressed, (void *)in->main.node);
   if (!in->active || in->suppressed)
     return;
   s->current_block = in->tag;
