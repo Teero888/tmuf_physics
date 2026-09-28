@@ -2,7 +2,8 @@
    dumps (tools/oracle), switching worlds with tmuf_world_copy on the way.
 
    tmuf_api_check PACKS LIST   (LIST: lines "REPLAY ORACLE [VERDICT]", VERDICT the
-                                 game's first word, e.g. Wrong for Wrong Simu) */
+                                 game's verdict with '_' for spaces: Is_Valid,
+                                 Is_Invalid, Wrong_Simu) */
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
@@ -95,9 +96,12 @@ int main(int argc, char **argv) {
     char rp[2048], op[2048], verdict[64] = "";
     if (sscanf(line, "%2047s %2047s %63s", rp, op, verdict) < 2)
       continue;
-    /* optional third column: the game's verdict; a run it rejects ("Wrong
-       Simu") need not finish at its recorded time */
-    int rejected = strcmp(verdict, "Wrong") == 0;
+    /* optional third column: the game's verdict. A run it rejects ("Wrong
+       Simu") need not finish at its recorded time. One it finds invalid
+       (a Stunts score, or no finish) finishes as the game did: the game
+       stops dumping shortly after a finish. */
+    int rejected = strncmp(verdict, "Wrong", 5) == 0;
+    int invalid = strcmp(verdict, "Is_Invalid") == 0;
     const char *name = strrchr(rp, '/') ? strrchr(rp, '/') + 1 : rp;
     size_t size;
     unsigned char *data = read_file(rp, &size);
@@ -128,6 +132,7 @@ int main(int argc, char **argv) {
        at its spawn and stays there, or the dump ends with teardown states.
        Compare up to there (as tmuf_sim does). */
     uint32_t oracle_stop = 0;
+    int game_finished = !o || race == UINT32_MAX || (uint64_t)ocount * 10u < 2600u + (uint64_t)race + 3000u;
     if (o && ocount > 1) {
       for (uint32_t k = ocount; k-- > 262;) {
         const float *a = o[k], *s0 = o[1];
@@ -187,7 +192,8 @@ int main(int argc, char **argv) {
       }
     }
     const tmuf_race *rc = &worlds[cur].sim.race;
-    int finish_ok = race == UINT32_MAX || oracle_stop || rejected || (rc->completed && rc->finish_time == race);
+    int finished = rc->completed && rc->finish_time == race;
+    int finish_ok = race == UINT32_MAX || oracle_stop || rejected || (invalid ? finished == game_finished : finished);
     if (diverged == UINT32_MAX && finish_ok) {
       ok++;
       printf("%s MATCH %s %u ticks, %u copies, finish %u\n", name, tmuf_track_vehicle(t), n, copies,
