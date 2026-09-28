@@ -15,11 +15,23 @@ Last updated 2026-09-28.
 - `symmap.py` maps 48.6k PDB functions (TmForeverFixed.exe) to the TMUF exe.
 - Game setup: `~/software/tmuf_oracle/{game,pfx}` (copy of the Steam TMUF
   install, activated profile `steamuser`).
-- Ground truth: 300 valid local replays (all campaign envs) and 3103 valid
-  TMX replays (tmnf + tmuf exchange), full per-tick trajectories
-  (`~/software/tmuf_oracle/run2`, `run3`; 369 "Wrong Simu", 135 no verdict).
+- Ground truth (per-tick trajectories, `~/software/tmuf_oracle/run2..4`,
+  `roll1`): 300 local replays (all campaign environments), 3 103 valid TMX
+  replays (tmnf + tmuf exchange), 4 611 replays from TMX searches for kacky,
+  press-forward, trial, maze, offroad and similar maps
+  (`tools/corpus/fetch_corpus.py --query`), and 1 464 random rollouts
+  (see Tools). 411 replays the game itself cannot simulate are left out:
+  "Wrong Simu" or no verdict on maps with block infos the stock game lacks
+  (348 need the TMUnlimiter mod).
+- The game validates at ~0.7 ms per tick under Wine (~1 400 ticks/s, our
+  dumper included) plus ~19 s to start per replay (one launch per replay:
+  ~21 s each, ~21 h for 3 500 replays on one worker).
 - TAS replays (tmtas.exchange) are rejected by the game's validation right
   at race start (no trajectory), so they need an input-injecting oracle.
+- The validator compares the car's position every 100 ms with the ghost's
+  samples (sample i: the car at 2 590 + 100 i ms, or the respawn location
+  when the next tick respawns) and stops the run ("Wrong Simu") when they
+  differ; nothing else in a sample is checked.
 
 ## Parsing (src/common)
 
@@ -29,8 +41,10 @@ Last updated 2026-09-28.
 - GBX reader following CMwNod::Archive exactly, with chunk flags generated
   from the game's GetChunkInfo (Unicorn emulation) and class tables
   (hierarchy, id wrap/unwrap) extracted from the exe.
-- Replays (inputs, ghosts, embedded map) and maps (blocks): all 1878 corpus
-  replays parse except 18 TMUnlimiter maps.
+- Replays (inputs, ghosts, embedded map) and maps (blocks): every corpus
+  replay parses. Ids follow CMwId::Archive: only values with the
+  0x40000000/0x80000000 name flag are names (28-bit lookback index), others
+  stay numeric (edited maps store 0xfffffffe).
 - Pack classes, verified byte- and feedback-exact against traces from one
   replay per environment (4926 files, 3646 exact): solids 2363/2368,
   materials 560/560, every block info variant, zones, vehicle tunings and
@@ -38,11 +52,12 @@ Last updated 2026-09-28.
 
 ## Reference backend (src/reference)
 
-Matches the game bit for bit on all 307 local oracle replays and on all 3472
-TMX replays (`tools/sim/run_corpus.sh`, all environments). Replays the
-game itself rejects ("Wrong Simu", including all TMUnlimiter maps) are
-compared up to where the game aborts them. Includes an hour-long 60-lap
-replay with respawns (360855 ticks, 11 s).
+Matches the game bit for bit on all 6 929 oracle replays (all environments,
+`tools/sim/run_api_corpus.sh`) and on 1 464 random rollouts (1.48 million
+ticks of random driving). Replays the game itself rejects ("Wrong Simu") are
+compared up to where the game stops them (it puts the car back at the spawn,
+also right at the race start). Includes an hour-long 60-lap replay with
+respawns (360855 ticks, 11 s).
 
 Water: zone water grids (Coast, Bay, Island, Alpine) and geometry water planes
 (Speed, Rally): CHmsCorpus::WaterGetPlaneEqInZone over the scene's corpora
@@ -60,7 +75,15 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
 - CSceneVehicleCar: all handling models, wheels, engine/gears, steering,
   turbo, fake contacts, air control, water (buoyancy, drag, splash).
 - Race: checkpoint/finish triggers (collision group 1), checkpoint slots,
-  laps, spawn locations, respawn, freewheel reset.
+  laps, spawn locations, respawn, freewheel reset. Laps come from the
+  ghost's race settings (`<laps>`, digit groups as the game writes them),
+  else the map's for a lap race, else 1 (InitNbLapsAndCheckpoints); the
+  checkpoint count is the number of blocks with way type 2 and a
+  TriggerCheckpoint/TriggerFinishLine child mobil (PrepareCheckpoints).
+- x87 arithmetic: the game computes with 24-bit precision control, which
+  equals float math except below the float range; the world inverse inertia
+  (GmMat3::Mult/SetMult/MultTranspose) is computed with the x87's unbounded
+  exponent (an almost axis-aligned car produces subnormal products there).
 
 ## Scene (src/common/scene.c, scene_ctn.c)
 
@@ -93,16 +116,42 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
   octree (`run_oracle.py --trace cells`) on maps with up to 1 066 animated
   mobils: the same records.
 
+## Optimized backend (src/optimized)
+
+Bit-identical to the reference on the same 6 929 oracle replays and 1 464
+rollouts, about 2.2x faster on one core (A01-Race: 208 000 ticks/s with
+random inputs, 100 500 on the author's replay). What it does and every
+optimization with its measured gain: docs/performance.md.
+
 ## Not done yet
 
 - Rendering data export, frametee integration.
 
 ## Tools
 
-- `build-rel/tmuf_sim PACKS REPLAY ORACLE [--verbose] [--print]`, `--batch`.
-  `TMUF_SIM_TRACE=1` prints the car's contacts; `tools/dev/cmp_contacts.py`
-  compares them with an oracle physics trace
-  (`run_oracle.py --trace physics`).
+- `build-rel/tmuf_sim PACKS REPLAY ORACLE [--verbose] [--print]`, `--batch`
+  (reference build, `-DTMUF_PHYSICS_TOOLS=ON`). `TMUF_SIM_TRACE=1` prints the
+  car's contacts; `tools/dev/cmp_contacts.py` compares them with an oracle
+  physics trace (`run_oracle.py --trace physics`). `TMUF_SIM_SNAPTEST=1`
+  checks snapshots (a clone restored from them must step identically).
+- `tmuf_api_check PACKS LIST` drives replays through the public API with
+  world copies and compares every tick with the oracle; LIST lines are
+  `REPLAY ORACLE VERDICT` (the game's verdict, `Is_Valid`, `Is_Invalid`,
+  `Wrong_Simu`). `tools/sim/run_api_corpus.sh LIST OUT JOBS` runs it in
+  parallel (`TMUF_API_CHECK` selects the binary, e.g. the optimized build's).
+- `tmuf_bench PACKS MAP [--ticks N] [--seed S] [--replay R]`: single-thread
+  ticks per second (thread CPU time).
+- Rollouts: `tools/oracle/make_rollouts.py --packs PACKS --build build-rel
+  --out DIR --per N LIST` makes replays that keep a replay's inputs up to a
+  random time, then drive randomly (`tmuf_rollout`), with the ghost samples
+  rewritten from our simulation so the game plays them to the end; run them
+  through `run_oracle.py` like any replay.
+- `run_oracle.py --trace cells` dumps the game's static collision octree
+  (compare with `TMUF_SIM_CELLS=FILE tmuf_sim ...`).
+- `tools/dev/fmath_check.sh`: the optimized backend's sin/cos/tan/atan/exp
+  against the reference's on all 2^32 floats. `-DTMUF_TRI_CHECK`: the
+  optimized backend runs the float triangle test on every triangle its
+  reject test skips and aborts on a contact.
 - `tmuf_inspect scene PACKS MAP OUT` dumps static triangles
   (`TMUF_SCENE_BLOCKS` tags them, `TMUF_SCENE_DEBUG` traces assembly);
   `tools/dev/cmp_tris.py` compares with a reference dump.

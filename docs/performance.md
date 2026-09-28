@@ -2,25 +2,28 @@
 
 Single-threaded throughput of `tmuf_world_tick` on the Nations campaign map
 **A01-Race** (Stadium, StadiumCar), measured with `tools/sim/tmuf_bench`
-(commit fde7407, 2026-09-28).
+(commit d48dfcc, 2026-09-28).
 
 ## Results
 
-| backend   | random inputs (ticks/s) | author replay (ticks/s)  | per tick (random) |
-|-----------|-------------------------|--------------------------|-------------------|
-| reference | **90 600**              | 45 300 (best run 46 900) | 11.0 µs           |
-| optimized | **182 900**             | 90 600 (best run 94 600) | 5.5 µs            |
+| backend   | random inputs (ticks/s) | author replay (ticks/s)   | per tick (random) |
+|-----------|-------------------------|---------------------------|-------------------|
+| reference | **95 000**              | 48 000 (best run 48 400)  | 10.5 µs           |
+| optimized | **208 000**             | 100 500 (best run 102 300)| 4.8 µs            |
 
 One tick is 10 ms of game time, so on one core the reference runs about
-900× real time with random inputs (450× on the author's run), the optimized
-backend about 1 800× (900×).
+950× real time with random inputs (480× on the author's run), the optimized
+backend about 2 100× (1 000×). For comparison, the game itself validates a
+replay at about 1 400 ticks/s under Wine (see the oracle numbers in
+docs/status.md).
 
-- Random inputs: five runs of 1 000 000 ticks (seeds 1–5), each an episode
-  of 3 000 ticks (30 s, countdown included) from the start, restarted with
+- Random inputs: runs of 1 000 000 ticks (seeds 1–5), each an episode of
+  3 000 ticks (30 s, countdown included) from the start, restarted with
   `tmuf_world_copy` of the time-0 world. Inputs are held for 1–20 ticks:
   accelerate 80 %, brake 15 %, steering full left / full right / straight /
-  analog. The five runs agree within 1 % (reference 90 100–91 000, optimized
-  181 500–184 300 ticks/s).
+  analog. The runs agree within 2–3 % (reference 93 100–96 600, optimized
+  204 200–209 300 ticks/s); single runs can be lower when other programs
+  start on the machine.
 - Author replay: the A01-Race.Replay.gbx shipped with the game (24.54 s,
   2 715 ticks), run 369 times; it finishes at the recorded time. It is
   slower per tick than random inputs: the car is fast, and the game splits
@@ -32,10 +35,10 @@ Other costs (both backends):
 
 | what                          | cost          |
 |-------------------------------|---------------|
-| `tmuf_world_copy` (same track) | 1.1 µs       |
+| `tmuf_world_copy` (same track) | 0.4–1.1 µs   |
 | `sizeof(tmuf_world)`          | 19 888 bytes  |
 | `tmuf_packs_open`             | 0.06–0.09 s   |
-| `tmuf_track_load` (A01-Race)  | 0.25 s        |
+| `tmuf_track_load` (A01-Race)  | 0.24 s        |
 
 ## Where the time goes (reference)
 
@@ -52,19 +55,22 @@ Measured with `perf record -e task-clock` on the random-input benchmark:
 ## Optimized backend
 
 `src/optimized` produces bit-identical states (checked with
-`tools/sim/run_api_corpus.sh` on all 5 322 oracle replays that the game itself can simulate). The speed-up
+`tools/sim/run_api_corpus.sh` on all 6 929 oracle replays the game itself
+can simulate and on 1 464 random rollouts, see docs/status.md). The speed-up
 comes from doing the same work with less overhead, not from different
 arithmetic:
 
 - all car trees walk the static tree and each reached mesh once, every
   cell tested against all trees at once (SSE/AVX; same operations as the
-  game's box test), collisions then made in the reference's order;
+  game's box test); the static walk records which trees reach each record,
+  and the collisions are made afterwards in the reference's order;
 - ellipsoid–triangle tests four triangles at a time (AVX: vertices and
-  normal with the float operations per lane); a triangle is skipped without
-  a root or division when a double-precision test shows, with a margin far
-  above the float rounding error, that the float test finds no contact
-  (86 % of the triangles on A01-Race; `-DTMUF_TRI_CHECK` runs the float
-  test on every skipped triangle and aborts on a contact: none on the whole
+  normal with the float operations per lane, the vertices read from a
+  per-mesh packed copy built at load); a triangle is skipped without a root
+  or division when a double-precision test shows, with a margin far above
+  the float rounding error, that the float test finds no contact (86 % of
+  the triangles on A01-Race; `-DTMUF_TRI_CHECK` runs the float test on
+  every skipped triangle and aborts on a contact: none on the whole
   corpus);
 - sin, cos, atan2, exp evaluate their series by Horner; a result within
   2^8 double ulps of a float rounding midpoint falls back to the
@@ -74,7 +80,10 @@ arithmetic:
   hooks in the tick path; mesh cells read in place; single-precision
   `sqrtf` (provably the same result as the reference's double root
   rounded); the backend compiles as one unit (`unity.c`) so the small
-  helpers inline across files.
+  helpers inline across files;
+- the few places where the game's x87 arithmetic differs from float math
+  (the world inverse inertia: products below the float range) take the
+  float path unless a matrix entry is tiny.
 
 Per tick (random inputs) the optimized backend spends about half its time
 in collision detection (walks and triangles), the rest in car forces,
