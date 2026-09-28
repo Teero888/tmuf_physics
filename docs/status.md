@@ -38,11 +38,16 @@ Last updated 2026-09-28.
 
 ## Reference backend (src/reference)
 
-Matches the game bit for bit on all 307 local oracle replays (every
-environment; `tools/sim/run_corpus.sh`): 302 run to the finish and finish at
-the recorded race time, the other 5 are replays the game rejects ("Wrong
-Simu") and match up to where the game aborts them. Includes an hour-long
-60-lap replay with respawns (360855 ticks, 11 s).
+Matches the game bit for bit on all 307 local oracle replays and on 3467 of
+3472 TMX replays (`tools/sim/run_corpus.sh`, all environments). Replays the
+game itself rejects ("Wrong Simu", including all TMUnlimiter maps) are
+compared up to where the game aborts them. Includes an hour-long 60-lap
+replay with respawns (360855 ticks, 11 s).
+
+Open TMX cases: stacked blocks on one cell (the order in which the game
+collides coincident surfaces: 13604480, 13596002, 7205523), an Alpine tunnel
+under snow terrain whose terrain the game removes (7248700), and a Coast
+body-water contact point (7075288).
 
 - CHmsDyna integration, substeps, collision detection (static octree,
   sphere/ellipsoid/box/mesh), sphere contact merge, collision response.
@@ -64,6 +69,12 @@ Simu") and match up to where the game aborts them. Includes an hour-long
   / CPlugGameSkin) for decoration-skin and replacement blocks; collection
   surface replacement pairs decide replacement for ground blocks and clips.
 - Water grid (CSceneVehicleWaterZone) from the zones' water flags.
+- Decoration decorator (CPlugDecoratorSolid): per-tree collision of the
+  decoration's Warp mobil (Stadium: only the Low LOD collides).
+- Maps: the map's collection supplies blocks, the decoration may come from
+  another; TMUnlimiter pseudo blocks are skipped like the game; maps without
+  a start block spawn at the origin; custom vehicle ids use the collection's
+  car.
 
 ## Not done yet
 
