@@ -574,10 +574,61 @@ static const tmuf_gbx_chunk LIGHT_CHUNKS[] = {
 };
 static const tmuf_gbx_class LIGHT = {0x04001000, "GxLight", 1, LIGHT_CHUNKS, COUNT(LIGHT_CHUNKS), NULL};
 
-/* ---- CPlugDecoratorSolid (0x090a3000) ---- */
+/* ---- CPlugDecoratorSolid (0x090a3000), CPlugDecoratorTree (0x090a2000) ---- */
 
-static const tmuf_gbx_chunk DECORATOR_SOLID_CHUNKS[] = {READ(0x090a3000, skip_noderef_buffer)};
-static const tmuf_gbx_class DECORATOR_SOLID = {0x090a3000, "CPlugDecoratorSolid", 1, DECORATOR_SOLID_CHUNKS, 1, NULL};
+static const char *id_text(tmuf_gbx *g);
+static void read_node_list(tmuf_gbx *g, tmuf_node_list *l);
+
+static void c090a3000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gbx_u32(g); /* version */
+  read_node_list(g, &((tmuf_decorator_solid *)node)->trees);
+}
+
+/* Each chunk of a decorator tree is a complete declaration of one of its
+   archived versions (the chunk id selects the layout). */
+static void decorator_tree(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_decorator_tree *d = node;
+  d->show = d->visible = d->caster = 6u;
+  d->collision = 0u;
+  if (id == 0x090a2001u) {
+    tmuf_gbx_bool(g);
+    tmuf_gbx_bool(g);
+    return;
+  }
+  d->tree_id = id_text(g);
+  if (id == 0x090a2004u || id == 0x090a2005u)
+    tmuf_gbx_u32(g);
+  tmuf_gbx_noderef(g); /* material */
+  tmuf_gbx_noderef(g); /* visual (root: node pointer) */
+  if (id <= 0x090a2005u) {
+    tmuf_gbx_bool(g);
+    tmuf_gbx_bool(g); /* surface from visual */
+    return;
+  }
+  d->show = tmuf_gbx_u32(g);
+  d->visible = tmuf_gbx_u32(g);
+  tmuf_gbx_bool(g); /* visible to children */
+  d->caster = tmuf_gbx_u32(g);
+  tmuf_gbx_bool(g); /* caster to children */
+  tmuf_gbx_bool(g); /* surface from visual */
+  if (id >= 0x090a2008u)
+    tmuf_gbx_bool(g); /* nearly-equal-identity gate */
+  if (id == 0x090a2009u)
+    d->collision = tmuf_gbx_u32(g);
+}
+
+static const tmuf_gbx_chunk DECORATOR_SOLID_CHUNKS[] = {READ(0x090a3000, c090a3000)};
+static const tmuf_gbx_class DECORATOR_SOLID = {0x090a3000, "CPlugDecoratorSolid", sizeof(tmuf_decorator_solid),
+                                               DECORATOR_SOLID_CHUNKS, 1, NULL};
+static const tmuf_gbx_chunk DECORATOR_TREE_CHUNKS[] = {
+    READ(0x090a2000, decorator_tree), READ(0x090a2001, decorator_tree), READ(0x090a2002, decorator_tree),
+    READ(0x090a2003, decorator_tree), READ(0x090a2004, decorator_tree), READ(0x090a2005, decorator_tree),
+    READ(0x090a2006, decorator_tree), READ(0x090a2007, decorator_tree), READ(0x090a2008, decorator_tree),
+    READ(0x090a2009, decorator_tree),
+};
+static const tmuf_gbx_class DECORATOR_TREE = {0x090a2000, "CPlugDecoratorTree", sizeof(tmuf_decorator_tree),
+                                              DECORATOR_TREE_CHUNKS, COUNT(DECORATOR_TREE_CHUNKS), NULL};
 
 
 /* ---- CPlugMaterial (0x09079000) ---- */
@@ -2353,7 +2404,7 @@ static const tmuf_gbx_class VEHICLE_ENV = {0x0a033000, "CSceneVehicleEnvironment
 
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
-    &LIGHT,           &DECORATOR_SOLID, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
+    &LIGHT,           &DECORATOR_SOLID, &DECORATOR_TREE, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL, &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,

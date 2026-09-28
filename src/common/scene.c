@@ -520,6 +520,89 @@ static void load_material_remaps(tmuf_scene *s, tmuf_asset *ca, const tmuf_colle
 }
 
 
+/* CPlugDecoratorTreeArchivePayload::IsConditionEnabled */
+static int decorator_condition(uint32_t condition, uint32_t quality) {
+  switch (condition) {
+  case 1: return quality == 0;
+  case 2: return quality <= 1;
+  case 3: return quality == 1;
+  case 4: return quality == 1 || quality == 2;
+  case 5: return quality == 2;
+  case 6: return 1;
+  default: return 0;
+  }
+}
+
+/* CPlugTree::GetPlugFromId: the tree itself, then its children in order */
+static tmuf_plug_tree *find_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const char *id,
+                                 int root, int depth) {
+  tmuf_asset *ta;
+  tmuf_gbx_node *tn = tmuf_assets_follow(&s->assets, owner, tree_node, &ta);
+  if (!tn || !tn->data || !tn->cls || depth > 64)
+    return NULL;
+  uint32_t cls = tn->cls->id;
+  if (cls != 0x0904f000u && cls != 0x09015000u && cls != 0x09062000u)
+    return NULL;
+  tmuf_plug_tree *t = tn->data;
+  if ((id && id[0] && t->name && strcmp(t->name, id) == 0) || ((!id || !id[0]) && root))
+    return t;
+  for (uint32_t i = 0; i < t->child_count; i++) {
+    tmuf_plug_tree *f = find_tree(s, ta, t->children[i], id, 0, depth + 1);
+    if (f)
+      return f;
+  }
+  return NULL;
+}
+
+/* The decoration's CPlugDecoratorSolid (.DecoSolid.Gbx) sets which trees of
+   its Warp mobil collide (StaticSolidDecoratorAssembler, highest quality).
+   The decoration's chunk naming it is crypted; its reference table is not. */
+static void apply_decorator(tmuf_scene *s, tmuf_asset *da, tmuf_asset *owner, tmuf_gbx_node *mobil_node) {
+  const tmuf_decorator_solid *dec = NULL;
+  tmuf_asset *deca = NULL;
+  for (uint32_t i = 1; i <= da->gbx.node_count && !dec; i++) {
+    const tmuf_gbx_node *n = &da->gbx.nodes[i];
+    size_t len = n->external && n->file ? strlen(n->file) : 0;
+    if (len < 14 || !ieq(n->file + len - 14, ".DecoSolid.Gbx"))
+      continue;
+    tmuf_gbx_node *dn = tmuf_assets_follow(&s->assets, da, &da->gbx.nodes[i], &deca);
+    if (dn && dn->data && dn->class_id == 0x090a3000u)
+      dec = dn->data;
+  }
+  if (!dec)
+    return;
+  /* the mobil's solid tree */
+  tmuf_asset *ma, *sa;
+  tmuf_gbx_node *mn = tmuf_assets_follow(&s->assets, owner, mobil_node, &ma);
+  if (!mn || !mn->data || !mn->cls || mn->cls->id != 0x0a005000u)
+    return;
+  const tmuf_scene_object *m = mn->data;
+  if (!m->name || strcmp(m->name, "Warp") != 0 || !m->has_item || !m->item.solid)
+    return;
+  tmuf_gbx_node *soln = tmuf_assets_follow(&s->assets, ma, m->item.solid, &sa);
+  for (int k = 0; k < 8 && soln && soln->data && soln->class_id == 0x09005000u &&
+                  ((const tmuf_plug_solid *)soln->data)->use_model;
+       k++)
+    soln = tmuf_assets_follow(&s->assets, sa, ((const tmuf_plug_solid *)soln->data)->model, &sa);
+  if (!soln || !soln->data || soln->class_id != 0x09005000u)
+    return;
+  tmuf_gbx_node *root = ((const tmuf_plug_solid *)soln->data)->tree;
+  for (uint32_t i = 0; i < dec->trees.count; i++) {
+    tmuf_asset *xa;
+    tmuf_gbx_node *xn = tmuf_assets_follow(&s->assets, deca, dec->trees.nodes[i], &xa);
+    if (!xn || !xn->data || xn->class_id != 0x090a2000u)
+      continue;
+    const tmuf_decorator_tree *d = xn->data;
+    tmuf_plug_tree *t = find_tree(s, sa, root, d->tree_id, 1, 0);
+    if (!t)
+      continue;
+    int collide = decorator_condition(d->show, 2) && decorator_condition(d->collision, 2);
+    t->flags = collide ? (t->flags | 0x80u) : (t->flags & ~0x80u);
+    if (debug_enabled())
+      fprintf(stderr, "decorator: tree %s collision %d\n", d->tree_id ? d->tree_id : "(root)", collide);
+  }
+}
+
 int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challenge *map) {
   memset(s, 0, sizeof *s);
   s->rand_state = 1;
@@ -578,6 +661,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
     for (uint32_t i = 0; i < sc->mobil_count && i < sc->loc_count; i++) {
       if (!sc->mobils[i] || !sc->mobils[i]->model)
         continue;
+      apply_decorator(s, da, sa, sc->mobils[i]->model);
       tmuf_iso loc;
       tmuf_iso_from_archive(&loc, sc->locs[i].iso);
       s->current_block = 0xc0000000u | i;

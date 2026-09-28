@@ -273,6 +273,18 @@ typedef struct tmuf_decoration {
 } tmuf_decoration;
 
 /* A mobil created from a model (CSceneMobil::InternalDoMobilPtr). */
+/* CPlugDecoratorTree: per-tree decoration settings; conditions are
+   quality masks (0 never, 1 q0, 2 q<=1, 3 q1, 4 q1|q2, 5 q2, 6 always) */
+typedef struct tmuf_decorator_tree {
+  const char *tree_id; /* target tree name ("" or NULL: the root) */
+  uint32_t show, visible, caster, collision;
+} tmuf_decorator_tree;
+
+/* CPlugDecoratorSolid (a decoration's .DecoSolid.Gbx) */
+typedef struct tmuf_decorator_solid {
+  tmuf_node_list trees; /* CPlugDecoratorTree */
+} tmuf_decorator_solid;
+
 typedef struct tmuf_mobil_instance {
   tmuf_gbx_node *model;
   const char *name;
