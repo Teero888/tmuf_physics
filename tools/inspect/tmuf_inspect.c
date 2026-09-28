@@ -511,7 +511,7 @@ static int cmd_scene(const char *packs, const char *in, const char *out) {
     return 1;
   }
   tmuf_scene scene;
-  int ok = tmuf_scene_build(&scene, &set, &map);
+  int ok = tmuf_scene_build(&scene, &set, &map, TMUF_SCENE_TRIANGLES);
   if (scene.has_start)
     printf("start: rot %g %g %g / %g %g %g / %g %g %g pos %.9g %.9g %.9g\n", scene.start.m[0][0], scene.start.m[0][1],
            scene.start.m[0][2], scene.start.m[1][0], scene.start.m[1][1], scene.start.m[1][2], scene.start.m[2][0],

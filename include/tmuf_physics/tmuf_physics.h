@@ -83,9 +83,16 @@ TMUF_API void tmuf_packs_close(tmuf_packs *packs);
 
 typedef struct tmuf_track tmuf_track;
 
+enum {
+  /* keep the world-space triangle list for tmuf_track_triangles (large: every
+     static triangle of the map, up to gigabytes on maps with 10k+ blocks) */
+  TMUF_TRACK_TRIANGLES = 1u << 0,
+};
+
 typedef struct tmuf_track_options {
   const char *vehicle; /* vehicle id; NULL: the map's, else the environment's car */
   uint32_t seed;       /* validation seed (tmuf_replay_seed), 0 for none */
+  uint32_t flags;      /* TMUF_TRACK_* */
 } tmuf_track_options;
 
 /* map: .Challenge.Gbx bytes (copied). options may be NULL. The packs must
@@ -101,7 +108,9 @@ TMUF_API uint32_t tmuf_track_checkpoints(const tmuf_track *track);    /* per lap
 TMUF_API uint32_t tmuf_track_laps(const tmuf_track *track);
 
 /* Static triangles in world space: every surface of the map's blocks and
-   decoration (also ones the car never touches, e.g. editor helpers). */
+   decoration (also ones the car never touches, e.g. editor helpers). Only
+   for tracks loaded with TMUF_TRACK_TRIANGLES, else 0. The collision itself
+   is tmuf_track_sim(track)->world (records reference shared surfaces). */
 typedef struct tmuf_triangle {
   float v[3][3];
   uint32_t block; /* the map block that placed it, or a tag with the top bit set */

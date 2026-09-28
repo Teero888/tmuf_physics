@@ -74,8 +74,9 @@ typedef struct tmuf_scene {
   float square_size, square_height;
   uint32_t size[3];    /* map size in squares (decoration size) */
   uint32_t base_height; /* default zone height */
+  int collect_triangles;
   uint32_t triangle_count, triangle_cap;
-  tmuf_static_triangle *triangles;
+  tmuf_static_triangle *triangles; /* only with TMUF_SCENE_TRIANGLES */
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
   uint8_t current_trigger;
@@ -102,7 +103,10 @@ typedef struct tmuf_scene {
   char error[600];
 } tmuf_scene;
 
-int tmuf_scene_build(tmuf_scene *scene, const tmuf_packset *set, const tmuf_challenge *map);
+/* flags */
+enum { TMUF_SCENE_TRIANGLES = 1 }; /* collect the world-space triangle list (scene.triangles) */
+
+int tmuf_scene_build(tmuf_scene *scene, const tmuf_packset *set, const tmuf_challenge *map, unsigned flags);
 void tmuf_scene_free(tmuf_scene *scene);
 
 /* Surface material id of the material at plain path `path` under the

@@ -73,6 +73,8 @@ static int debug_enabled(void) {
 /* ---- output ---- */
 
 static void add_triangle(tmuf_scene *s, const float a[3], const float b[3], const float c[3], uint16_t material) {
+  if (!s->collect_triangles)
+    return;
   if (s->triangle_count == s->triangle_cap) {
     uint32_t cap = s->triangle_cap ? s->triangle_cap * 2 : 4096;
     tmuf_static_triangle *t = realloc(s->triangles, sizeof *t * cap);
@@ -606,8 +608,9 @@ static void apply_decorator(tmuf_scene *s, tmuf_asset *da, tmuf_asset *owner, tm
   }
 }
 
-int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challenge *map) {
+int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challenge *map, unsigned flags) {
   memset(s, 0, sizeof *s);
+  s->collect_triangles = (flags & TMUF_SCENE_TRIANGLES) != 0;
   s->rand_state = 1;
   tmuf_assets_init(&s->assets, set);
   /* the map's own collection holds its blocks and zones; the decoration

@@ -38,16 +38,17 @@ Last updated 2026-09-28.
 
 ## Reference backend (src/reference)
 
-Matches the game bit for bit on all 307 local oracle replays and on 3467 of
+Matches the game bit for bit on all 307 local oracle replays and on 3469 of
 3472 TMX replays (`tools/sim/run_corpus.sh`, all environments). Replays the
 game itself rejects ("Wrong Simu", including all TMUnlimiter maps) are
 compared up to where the game aborts them. Includes an hour-long 60-lap
 replay with respawns (360855 ticks, 11 s).
 
-Open TMX cases: stacked blocks on one cell (the order in which the game
-collides coincident surfaces: 13604480, 13596002, 7205523), an Alpine tunnel
-under snow terrain whose terrain the game removes (7248700), and a Coast
-body-water contact point (7075288).
+Open TMX cases: stacked blocks on one cell (13604480, 13596002: the game
+lists the later of two coincident blocks first in the static collision
+corpora, which decides the order of equal contacts in the collision sort;
+the game's bintree build matches ours, the reordering happens while blocks
+enter the scene) and a Coast body-water contact point (7075288).
 
 - CHmsDyna integration, substeps, collision detection (static octree,
   sphere/ellipsoid/box/mesh), sphere contact merge, collision response.

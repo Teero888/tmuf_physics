@@ -1486,7 +1486,15 @@ typedef struct marker {
   ctn_block *block;
 } marker;
 
-static int markers_contain(const marker *m, uint32_t n, int32_t x, int32_t y, int32_t z) {
+/* coordinate inside the map (IsEditableCoord) */
+static int editable(const ctn *c, int32_t x, int32_t y, int32_t z) {
+  return x >= 0 && y >= 0 && z >= 0 && (uint32_t)x < c->w && (uint32_t)y < c->h && (uint32_t)z < c->d;
+}
+
+/* GetTerrainFromPlayField == Ground, against the top markers */
+static int markers_contain(const ctn *c, const marker *m, uint32_t n, int32_t x, int32_t y, int32_t z) {
+  if (!editable(c, x, y, z))
+    return 0;
   for (uint32_t i = n; i-- > 0;)
     if (m[i].x == x && m[i].z == z && m[i].y >= y)
       return m[i].y == y;
@@ -1494,7 +1502,8 @@ static int markers_contain(const marker *m, uint32_t n, int32_t x, int32_t y, in
 }
 
 /* replay_challenge_field_units.cpp IsBlockOnGround (against top markers) */
-static int on_ground_markers(const ctn_info *ci, const marker *m, uint32_t n, const tmuf_challenge_block *pb) {
+static int on_ground_markers(const ctn *c, const ctn_info *ci, const marker *m, uint32_t n,
+                             const tmuf_challenge_block *pb) {
   if (ci->type <= BT_FRONTIER)
     return 1;
   if (ci->n[1] == 0)
@@ -1515,7 +1524,7 @@ static int on_ground_markers(const ctn_info *ci, const marker *m, uint32_t n, co
       continue;
     uint32_t o[3];
     rotated_offset(ci, u, pb->dir, 1, o);
-    if (!markers_contain(m, n, (int32_t)pb->x + (int32_t)o[0], (int32_t)pb->y + (int32_t)o[1],
+    if (!markers_contain(c, m, n, (int32_t)pb->x + (int32_t)o[0], (int32_t)pb->y + (int32_t)o[1],
                          (int32_t)pb->z + (int32_t)o[2]))
       return 0;
   }
@@ -1615,6 +1624,10 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
     int ground = 1; /* terrain blocks */
     if (ci->n[ground] == 0)
       continue;
+    /* UpdateFieldUnits fails on a block outside the map before writing any
+       field unit (the block keeps its mobil, the column gets no terrain) */
+    if (!editable(c, pb->x, pb->y, pb->z))
+      continue;
     field_unit_rec r = {{pb->x, pb->y, pb->z}, ci->type, i};
     ARR_PUSH(fus, fu_count, fu_cap, r);
   }
@@ -1635,7 +1648,16 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
     if (!ci || ci->type <= BT_FRONTIER)
       continue;
     const tmuf_challenge_block *pb = &map->blocks[i];
-    int ground = on_ground_markers(ci, mk, mk_count, pb);
+    int ground = on_ground_markers(c, ci, mk, mk_count, pb);
+    int inside = 1;
+    for (uint32_t k = 0; k < ci->n[ground]; k++) {
+      uint32_t o[3];
+      rotated_offset(ci, &ci->u[ground][k], pb->dir, ground, o);
+      if (!editable(c, (int32_t)pb->x + (int32_t)o[0], (int32_t)pb->y + (int32_t)o[1], (int32_t)pb->z + (int32_t)o[2]))
+        inside = 0;
+    }
+    if (!inside)
+      continue;
     for (uint32_t k = 0; k < ci->n[ground]; k++) {
       uint32_t o[3];
       rotated_offset(ci, &ci->u[ground][k], pb->dir, ground, o);

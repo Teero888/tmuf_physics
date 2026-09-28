@@ -128,7 +128,8 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     tmuf_set_error(err, err_size, "map: %s", e);
     return 0;
   }
-  if (!tmuf_scene_build(&b->scene, &packs->set, &b->map)) {
+  if (!tmuf_scene_build(&b->scene, &packs->set, &b->map,
+                        options && (options->flags & TMUF_TRACK_TRIANGLES) ? TMUF_SCENE_TRIANGLES : 0u)) {
     tmuf_set_error(err, err_size, "scene: %s", b->scene.error);
     return 0;
   }
@@ -156,6 +157,9 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     memcpy(b->triangles[i].v, b->scene.triangles[i].v, sizeof b->triangles[i].v);
     b->triangles[i].block = b->scene.triangles[i].block;
   }
+  free(b->scene.triangles);
+  b->scene.triangles = NULL;
+  b->scene.triangle_count = b->scene.triangle_cap = 0;
   return 1;
 }
 

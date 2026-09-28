@@ -162,7 +162,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     goto done;
   }
   scene_built = 1;
-  if (!tmuf_scene_build(&scene, set, &map)) {
+  if (!tmuf_scene_build(&scene, set, &map, 0)) {
     printf("%s ERROR scene %s\n", name, scene.error);
     goto done;
   }

@@ -281,6 +281,37 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
     snprintf(err, err_size, "static world");
     return 0;
   }
+  if (getenv("TMUF_SIM_LEAVES")) {
+    /* leaf order of the records of the given corpora (comma separated) */
+    const char *list = getenv("TMUF_SIM_LEAVES");
+    for (uint32_t ci = 0; ci < s->world.cell_count; ci++) {
+      const ref_static_cell *cell = &s->world.cells[ci];
+      if (cell->record < 0)
+        continue;
+      const ref_static_record *rc = &s->world.records[cell->record];
+      char key[16];
+      snprintf(key, sizeof key, "%u", rc->corpus);
+      const char *hit = strstr(list, key);
+      if (hit && (hit == list || hit[-1] == ',') && (hit[strlen(key)] == 0 || hit[strlen(key)] == ','))
+        fprintf(stderr, "leaf cell %u record %d corpus %u tris %u box c=(%g %g %g)\n", ci, cell->record, rc->corpus,
+                rc->surf->triangle_count, (double)rc->bounds.center.x, (double)rc->bounds.center.y,
+                (double)rc->bounds.center.z);
+    }
+  }
+  if (getenv("TMUF_SIM_AT")) {
+    /* records whose bounds contain the point x,y,z */
+    float px = 0, py = 0, pz = 0;
+    sscanf(getenv("TMUF_SIM_AT"), "%f,%f,%f", &px, &py, &pz);
+    for (uint32_t i = 0; i < s->world.record_count; i++) {
+      const ref_static_record *rc = &s->world.records[i];
+      const gm_box *b = &rc->bounds;
+      if (fabsf(px - b->center.x) <= b->half.x + 0.5f && fabsf(py - b->center.y) <= b->half.y + 0.5f &&
+          fabsf(pz - b->center.z) <= b->half.z + 0.5f)
+        fprintf(stderr, "at: record %u corpus %u surf %p tris %u box c=(%g %g %g) h=(%g %g %g)\n", i, rc->corpus,
+                (const void *)rc->surf, rc->surf->triangle_count, (double)b->center.x, (double)b->center.y,
+                (double)b->center.z, (double)b->half.x, (double)b->half.y, (double)b->half.z);
+    }
+  }
   if (getenv("TMUF_SIM_RECORDS"))
     for (uint32_t i = 0; i < s->world.record_count; i++) {
       const ref_static_record *rc = &s->world.records[i];
