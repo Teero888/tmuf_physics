@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "reference/car_util.h"
+#include "optimized/car_util.h"
 
 /* ---- tuning curves (CFuncKeysReal::GetValue, CSceneVehicleCarTuning) ---- */
 

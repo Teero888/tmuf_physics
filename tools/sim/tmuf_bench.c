@@ -38,6 +38,13 @@ static double now(void) {
   return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
 }
 
+/* CPU time of this thread: unaffected by other processes taking the core */
+static double cpu(void) {
+  struct timespec ts;
+  clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
+  return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
+}
+
 static uint64_t rng_state;
 static uint32_t rnd(void) {
   rng_state ^= rng_state << 13;
@@ -130,25 +137,25 @@ int main(int argc, char **argv) {
     int runs = 0;
     while (done < ticks || runs < 3) {
       tmuf_world_copy(&w, &start);
-      double a = now();
+      double a = cpu();
       for (uint32_t i = 0; i < n; i++) {
         w.input = in[i];
         tmuf_world_tick(&w);
       }
-      double b = now() - a;
+      double b = cpu() - a;
       total += b;
       if (b < best)
         best = b;
       done += n;
       runs++;
     }
-    printf("replay %u ticks, finish %u ms (recorded %u): %d runs, %.0f ticks/s mean, %.0f best\n", n,
+    printf("replay %u ticks, finish %u ms (recorded %u): %d runs, %.0f ticks/s cpu mean, %.0f best\n", n,
            w.sim.race.completed ? w.sim.race.finish_time : UINT32_MAX, tmuf_replay_race_time(r), runs,
            (double)done / total, (double)n / best);
     tmuf_replay_free(r);
   } else {
     uint64_t done = 0, copies = 0, substeps = 0;
-    double tick_time = 0, copy_time = 0;
+    double tick_time = 0, copy_time = 0, tick_cpu = 0;
     while (done < ticks) {
       double a = now();
       tmuf_world_copy(&w, &start);
@@ -157,7 +164,7 @@ int main(int argc, char **argv) {
       copies++;
       uint32_t hold = 0;
       tmuf_input in = {0, 0, 0, 0};
-      double c = now();
+      double c = now(), cc = cpu();
       for (uint32_t i = 0; i < episode && done < ticks; i++, done++) {
         if (hold == 0) {
           in = random_input();
@@ -169,10 +176,13 @@ int main(int argc, char **argv) {
         substeps += w.sim.substeps;
       }
       tick_time += now() - c;
+      tick_cpu += cpu() - cc;
     }
-    printf("random: %llu ticks in %.3f s: %.0f ticks/s (%.2f us/tick, %.2f substeps/tick); %llu copies, %.2f us each\n",
-           (unsigned long long)done, tick_time, (double)done / tick_time, tick_time * 1e6 / (double)done,
-           (double)substeps / (double)done, (unsigned long long)copies, copy_time * 1e6 / (double)copies);
+    printf("random: %llu ticks in %.3f s: %.0f ticks/s wall, %.0f ticks/s cpu (%.2f us/tick cpu, %.2f substeps/tick); "
+           "%llu copies, %.2f us each\n",
+           (unsigned long long)done, tick_time, (double)done / tick_time, (double)done / tick_cpu,
+           tick_cpu * 1e6 / (double)done, (double)substeps / (double)done, (unsigned long long)copies,
+           copy_time * 1e6 / (double)copies);
   }
   tmuf_world_free(&w);
   tmuf_world_free(&start);

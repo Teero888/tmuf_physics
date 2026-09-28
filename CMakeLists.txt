@@ -78,6 +78,22 @@ set(TMUF_PHYSICS_REFERENCE_SOURCES
 )
 set(TMUF_PHYSICS_OPTIMIZED_SOURCES
   src/optimized/backend.c
+  src/optimized/fmath.c
+  src/optimized/fmath.h
+  src/optimized/gm.h
+  src/optimized/dyna.c
+  src/optimized/dyna.h
+  src/optimized/world.c
+  src/optimized/world.h
+  src/optimized/collide.c
+  src/optimized/collide.h
+  src/optimized/car.c
+  src/optimized/car.h
+  src/optimized/car_util.h
+  src/optimized/car_forces.c
+  src/optimized/car_models.c
+  src/optimized/sim.c
+  src/optimized/sim.h
 )
 
 if(TMUF_PHYSICS_BACKEND STREQUAL "reference")
@@ -152,9 +168,12 @@ if(TMUF_PHYSICS_TOOLS)
   target_link_libraries(tmuf_api_check PRIVATE tmuf_physics)
   add_executable(tmuf_bench tools/sim/tmuf_bench.c)
   target_link_libraries(tmuf_bench PRIVATE tmuf_physics)
-  add_executable(tmuf_sim tools/sim/tmuf_sim.c)
-  target_include_directories(tmuf_sim PRIVATE src)
-  target_link_libraries(tmuf_sim PRIVATE tmuf_physics)
+  if(TMUF_PHYSICS_BACKEND STREQUAL "reference")
+    # the oracle harness drives the reference backend's internals
+    add_executable(tmuf_sim tools/sim/tmuf_sim.c)
+    target_include_directories(tmuf_sim PRIVATE src)
+    target_link_libraries(tmuf_sim PRIVATE tmuf_physics)
+  endif()
 endif()
 
 if(BUILD_TESTING)
