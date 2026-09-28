@@ -277,7 +277,8 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
                  const ref_tick *first, char *err, size_t err_size) {
   memset(s, 0, sizeof *s);
   if (!ref_world_build(&s->world, scene, REF_WORLD_STATIC) ||
-      !ref_world_build(&s->triggers, scene, REF_WORLD_TRIGGERS)) {
+      !ref_world_build(&s->triggers, scene, REF_WORLD_TRIGGERS) ||
+      !ref_world_build(&s->nonstatic, scene, REF_WORLD_NONSTATIC)) {
     snprintf(err, err_size, "static world");
     return 0;
   }
@@ -297,6 +298,18 @@ int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_
                 rc->surf->triangle_count, (double)rc->bounds.center.x, (double)rc->bounds.center.y,
                 (double)rc->bounds.center.z);
     }
+  }
+  if (getenv("TMUF_SIM_CELLS")) {
+    /* static records in insertion order (compare with the oracle's .cells):
+       per record u32 corpus, float center[3], half[3] */
+    FILE *f = fopen(getenv("TMUF_SIM_CELLS"), "wb");
+    for (uint32_t i = 0; f && i < s->world.record_count; i++) {
+      const ref_static_record *rc = &s->world.records[i];
+      fwrite(&rc->corpus, 4, 1, f);
+      fwrite(&rc->bounds, sizeof rc->bounds, 1, f);
+    }
+    if (f)
+      fclose(f);
   }
   if (getenv("TMUF_SIM_AT")) {
     /* records whose bounds contain the point x,y,z */
@@ -472,6 +485,7 @@ void ref_sim_free(ref_sim *s) {
     free(s->race.respawn_current);
     free(s->race.spawn);
     ref_world_free(&s->triggers);
+    ref_world_free(&s->nonstatic);
     free(s->corpus_iso);
     ref_world_free(&s->world);
   }
@@ -930,7 +944,8 @@ static void collision_response(ref_sim *s) {
 }
 
 /* SZone::DetectCollisionsCorpus: the car's group (3) against the triggers
-   (group 1), then the static items (group 4); one sphere contact merge */
+   (group 1), then the static items (group 4) and the group's non-static
+   corpora; one sphere contact merge */
 static void detect(ref_sim *s) {
   s->buf.count = 0;
   gm_iso4 iso = {s->body.state.rot, s->body.state.pos};
@@ -947,14 +962,32 @@ static void detect(ref_sim *s) {
   s->det.world = &s->world;
   s->det.group_pair = GP_STATIC;
   ref_detect_static(&s->det, s->def.root, &iso);
+  /* the group's non-static corpora (collided per corpus by the game; none
+     of the verified runs touch one) */
+  s->det.world = &s->nonstatic;
+  ref_detect_static(&s->det, s->def.root, &iso);
   ref_detect_merge(&s->det);
 }
 
+static void trace_state(const ref_sim *s, const char *what) {
+  const tmuf_dyna_state *d = &s->body.state;
+  fprintf(stderr, "  %s t=%u lin %.9g %.9g %.9g ang %.9g %.9g %.9g pos %.9g %.9g %.9g force %.9g %.9g %.9g\n", what,
+          s->tick_ms, (double)d->lin.x, (double)d->lin.y, (double)d->lin.z, (double)d->ang.x, (double)d->ang.y,
+          (double)d->ang.z, (double)d->pos.x, (double)d->pos.y, (double)d->pos.z, (double)d->force.x,
+          (double)d->force.y, (double)d->force.z);
+}
+
 static void substep(ref_sim *s, float dt) {
+  /* TMUF_SIM_SUBSTEPS: the states the oracle's PRE and POST records hold */
+  int trace = getenv("TMUF_SIM_SUBSTEPS") != NULL;
   corpus_forces(s, dt);
+  if (trace)
+    trace_state(s, "PRE");
   dyna_pre_collision(&s->body, dt);
   detect(s);
   collision_response(s);
+  if (trace)
+    trace_state(s, "POST");
   dyna_post_collision(&s->body);
 }
 

@@ -31,6 +31,13 @@
  *   'O' u32 zlib u32 source 0 0                       zlib buffer opens
  *   'C' u32 stream u32 count 0 bytes[count]           BlowfishCBC_Read output
  *   'Z' u32 zlib u32 count 0 bytes[count]             CClassicBufferZlib::Read
+ *
+ * TMUF_ORACLE_TRACE=cells additionally writes TMUF_ORACLE_OUT.cells, the
+ * static collision cells of every CHmsCollisionManager::SGroup in the order
+ * GmOctree::Build receives them (SGroup::UpdateStaticCollisionTrees):
+ *   u32 group u32 count, then count cells of 0x58 bytes (SColOctreeCell:
+ *   +0x04 bounds center/half, +0x1c location, +0x4c surface, +0x50 corpus,
+ *   +0x54 tree)
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -61,6 +68,7 @@ typedef struct hook {
 static FILE *g_out;
 static FILE *g_trace;
 static FILE *g_plain;
+static FILE *g_cells;
 static uint32_t g_step;
 static uint32_t g_dyna_records;
 
@@ -246,6 +254,27 @@ static void on_crypted_write(void *stream, const uint32_t *stack) {
   fputc('\n', g_trace);
 }
 
+#define COL_CELL_SIZE 0x58
+
+/* SGroup::UpdateStaticCollisionTrees right before GmOctree::Build: the
+   collected cells are the local CFastBuffer at [esp+0x1c] (count, data);
+   ebp is the group. */
+static void on_static_cells(void *self, const uint32_t *stack) {
+  (void)self;
+  const uint32_t *esp = stack + 9;
+  uint32_t group = stack[3], count = esp[7];
+  const uint8_t *cells = (const uint8_t *)(uintptr_t)esp[8];
+  fwrite(&group, 4, 1, g_cells);
+  fwrite(&count, 4, 1, g_cells);
+  if (count && cells)
+    fwrite(cells, COL_CELL_SIZE, count, g_cells);
+  fflush(g_cells);
+}
+
+static hook g_cells_hooks[] = {
+    {"SGroup::UpdateStaticCollisionTrees/Build", 0x0053ad75, {0xd9, 0xee, 0x8b, 0x44, 0x24, 0x20}, 6, on_static_cells},
+};
+
 static hook g_hooks[] = {
     {"CHmsZoneDynamic::PhysicsStep2", 0x00549b60, {0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8}, 6, on_physics_step},
     {"CHmsDyna::CopyTempToState",
@@ -361,6 +390,16 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
     n = GetEnvironmentVariableA("TMUF_ORACLE_TRACE", trace, sizeof trace);
     int want_feedback = n > 0 && n < sizeof trace && strstr(trace, "feedback");
     int want_plain = n > 0 && n < sizeof trace && strstr(trace, "plain");
+    if (n > 0 && n < sizeof trace && strstr(trace, "cells")) {
+      char cells_path[MAX_PATH + 16];
+      snprintf(cells_path, sizeof cells_path, "%s.cells", path);
+      g_cells = fopen(cells_path, "wb");
+      if (!g_cells)
+        return FALSE;
+      for (size_t i = 0; i < sizeof g_cells_hooks / sizeof g_cells_hooks[0]; i++)
+        if (!install(&g_cells_hooks[i]))
+          return FALSE;
+    }
     if (n > 0 && n < sizeof trace && strstr(trace, "physics"))
       for (size_t i = 0; i < sizeof g_physics_hooks / sizeof g_physics_hooks[0]; i++)
         if (!install(&g_physics_hooks[i]))
@@ -400,6 +439,10 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved) {
     if (g_plain) {
       fclose(g_plain);
       g_plain = NULL;
+    }
+    if (g_cells) {
+      fclose(g_cells);
+      g_cells = NULL;
     }
     char steps[16];
     snprintf(steps, sizeof steps, "%u", g_step);

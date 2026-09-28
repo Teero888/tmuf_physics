@@ -21,7 +21,7 @@ typedef tmuf_static_cell ref_static_cell;
 typedef tmuf_static_record ref_static_record;
 typedef tmuf_static_world ref_world;
 
-enum { REF_WORLD_STATIC, REF_WORLD_TRIGGERS };
+enum { REF_WORLD_STATIC, REF_WORLD_TRIGGERS, REF_WORLD_NONSTATIC };
 
 /* The static items of collision group 4, or the race triggers (group 1). */
 int ref_world_build(ref_world *w, tmuf_scene *scene, int group);

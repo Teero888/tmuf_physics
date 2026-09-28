@@ -34,6 +34,8 @@ typedef struct tmuf_scene_corpus {
   uint8_t trigger; /* TriggerCheckpoint / TriggerFinishLine: not part of the static world */
   uint32_t item_flags; /* archived CHmsItem physics word of its mobil, 0 if none */
   uint8_t collision_group; /* CHmsItem::ECollisionGroup the game gives it (4: static) */
+  uint8_t is_static;       /* item flag 0x80000: in its group's static tree, else a
+                              non-static corpus of the group (e.g. StadiumWarpFlags) */
   uint8_t materials;       /* TMUF_MATERIALS_* */
   /* race triggers: the block's race role, spawn location and respawn mode */
   uint8_t race_role;       /* TMUF_RACE_* */

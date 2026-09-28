@@ -180,6 +180,7 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->collision_group = s->helper_depth ? 0
                         : (s->force_static || !c->item_flags) ? 4
                                                                : (uint8_t)((c->item_flags >> 13) & 15u);
+  c->is_static = s->helper_depth || s->force_static || !c->item_flags || (c->item_flags & 0x80000u) != 0;
   c->race_role = TMUF_RACE_NONE;
   c->respawn_current = c->has_spawn = 0;
   if (c->trigger && !s->helper_depth) {
@@ -412,9 +413,15 @@ static void emit_install(tmuf_scene *s, const ctn_install *in) {
     s->current_has_spawn = 1;
   }
   if (in->kind == CTN_INSTALL_CLIP) {
-    for (unsigned side = 0; side < 4; side++) {
-      if (!in->clip[side].node)
-        continue;
+    /* CreateMobilForClip builds the side mobils in side order, takes the
+       first as the block's mobil and removes it from the list with
+       ReplaceByLastAt: the scene gets the first, the last, then the rest */
+    unsigned present[4], n = 0;
+    for (unsigned side = 0; side < 4; side++)
+      if (in->clip[side].node)
+        present[n++] = side;
+    for (unsigned k = 0; k < n; k++) {
+      unsigned side = k == 0 ? present[0] : k == 1 ? present[n - 1] : present[k - 1];
       tmuf_iso local, world;
       clip_side(side, s->square_size, &local);
       tmuf_iso_mult(&world, &local, &in->iso);

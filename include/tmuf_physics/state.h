@@ -649,8 +649,9 @@ typedef struct tmuf_race {
 
 /* The simulation of one car on one track (the world's state). */
 typedef struct tmuf_sim {
-  tmuf_static_world world;
-  tmuf_static_world triggers;
+  tmuf_static_world world;     /* static corpora of group 4 (the game's static octree) */
+  tmuf_static_world triggers;  /* race triggers (group 1) */
+  tmuf_static_world nonstatic; /* non-static corpora of group 4 (decoration items without the static flag) */
   tmuf_race race;
   tmuf_scene_water water; /* copy of the scene's (cells owned here) */
   tmuf_car_def def;
@@ -667,7 +668,7 @@ typedef struct tmuf_sim {
   uint32_t tick_ms, period_ms;
   int first_step;
   uint32_t substeps; /* of the last step */
-  int shared; /* a clone: the static world, triggers, race tables and water belong to the template */
+  int shared; /* a clone: the static worlds, race tables and water belong to the template */
 } tmuf_sim;
 
 #ifdef __cplusplus

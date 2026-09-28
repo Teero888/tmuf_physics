@@ -281,6 +281,10 @@ int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
     int trigger = group == REF_WORLD_TRIGGERS;
     if (c->collision_group != (trigger ? 1 : 4) || (c->trigger != 0) != trigger || (trigger && !c->race_role))
       continue;
+    /* SGroup::UpdateStaticCollisionTrees takes only the static corpora
+       (item flag 0x80000) into the octree */
+    if (!trigger && !c->is_static != (group == REF_WORLD_NONSTATIC))
+      continue;
     b.corpus = i;
     b.materials = c->materials;
     gm_iso4 iso = iso_from_scene(&c->iso);

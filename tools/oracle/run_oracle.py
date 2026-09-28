@@ -163,6 +163,11 @@ class Worker:
                 shutil.copyfileobj(src, dst)
             os.remove(dump + ".plain")
             result["plain"] = out
+        if os.path.exists(dump + ".cells"):
+            out = os.path.join(self.args.out, "dumps", stem + ".cells.gz")
+            with open(dump + ".cells", "rb") as src, gzip.open(out, "wb", compresslevel=6) as dst:
+                shutil.copyfileobj(src, dst)
+            os.remove(dump + ".cells")
         if os.path.exists(dump + ".trace"):
             out = os.path.join(self.args.out, "dumps", stem + ".trace.gz")
             with open(dump + ".trace", "rb") as src, gzip.open(out, "wb", compresslevel=6) as dst:
