@@ -124,6 +124,7 @@ Tried and dropped (slower or no gain, all exact):
 | prefetching the reached records | 1.00× |
 | one bounding-volume tree over all static triangles and records in world space (built at load), candidates sorted into the walk's order, `to_mesh` only for blocks with candidates, exact reach checked for survivors | 0.80× random, 0.89× replay: an 18-level tree over 215 000 items costs as many box tests per substep as the two-level walk (214 vs 195), and world-space margins give 1.4× the candidates |
 | curve key bounds precomputed per track | no measurable gain (the lookup's cost is its scan, not the rounding) |
+| handling model 5: repeated pure curve and sine calls with the same argument evaluated once per pass | 1.00× |
 | exact detection cache: walks with query boxes inflated by the recent movement, reused while the car stays inside; rejected triangles sleep while the ellipsoid moves less than their gap; contacts checked against the exact walk | 0.68–0.78× random, 0.60–0.69× replay: the inflated candidate sets are 7–15× the exact ones, and even with sleeping more triangles stay awake than the exact walk tests |
 | memoizing tree boxes whose location did not change | est. 1 %, not done |
 | `-march=native` | 1.015× (not used: portability) |
