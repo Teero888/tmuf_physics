@@ -52,8 +52,8 @@ void quat_from_mat3(gm_quat *q, const gm_mat3 *m) {
 /* SetLocation's inverseInertiaWorld: SetMult(rotation, body) (apply the
    rotation, then the body inertia) then MultTranspose(rotation). */
 static void world_inertia(gm_mat3 *out, const gm_mat3 *rot, const gm_mat3 *body) {
-  gm_mat3 a = mat3_compose(rot, body);
-  *out = mat3_mul_transpose(&a, rot);
+  gm_mat3 a = mat3_compose_x87(rot, body);
+  *out = mat3_mul_transpose_x87(&a, rot);
 }
 
 /* CHmsDyna::SetLocation: write and current state */

@@ -80,6 +80,19 @@ static inline gm_mat3 mat3_compose(const gm_mat3 *first, const gm_mat3 *second) 
   return out;
 }
 
+
+/* GmMat3::MultTranspose(rhs): this = this * rhs^T with columns as basis vectors:
+   result column c = (rhs col k . this col c) for k = 0..2 as rows. */
+static inline gm_mat3 mat3_mul_transpose(const gm_mat3 *left, const gm_mat3 *right) {
+  gm_mat3 out;
+  for (int c = 0; c < 3; c++) {
+    gm_vec3 lc = mat3_col(left, c);
+    for (int k = 0; k < 3; k++)
+      out.m[k][c] = v3_dot(mat3_col(right, k), lc);
+  }
+  return out;
+}
+
 /* A product of floats as the game's x87 code rounds it with 24-bit
    precision control: the significand to 24 bits, the exponent unbounded
    (no subnormals on the register stack). In the float range this is the
@@ -91,6 +104,18 @@ static inline double x87_r24(double x) {
   return (double)(float)(x * 0x1p100) * 0x1p-100;
 }
 
+/* (a0 b0 + a1 b1) + a2 b2 on the x87 stack, stored as a float */
+/* the reference always takes the x87 path */
+static inline int mat3_has_tiny(const gm_mat3 *m) {
+  (void)m;
+  return 1;
+}
+
+static inline float x87_dot3(float a0, float b0, float a1, float b1, float a2, float b2) {
+  const double xy = x87_r24(x87_r24((double)a0 * (double)b0) + x87_r24((double)a1 * (double)b1));
+  return (float)x87_r24(xy + x87_r24((double)a2 * (double)b2));
+}
+
 /* mat3_compose as GmMat3::Mult computes it: each element's products and sums
    stay on the x87 stack and are rounded to float once when stored. The same
    as mat3_compose unless a product or sum is below the float range (then
@@ -99,24 +124,22 @@ static inline gm_mat3 mat3_compose_x87(const gm_mat3 *first, const gm_mat3 *seco
   gm_mat3 out;
   for (int c = 0; c < 3; c++)
     for (int r = 0; r < 3; r++) {
-      const double p0 = (double)second->m[r][0] * (double)first->m[0][c];
-      const double p1 = (double)second->m[r][1] * (double)first->m[1][c];
-      const double p2 = (double)second->m[r][2] * (double)first->m[2][c];
-      const double xy = x87_r24(x87_r24(p0) + x87_r24(p1));
-      out.m[r][c] = (float)x87_r24(xy + x87_r24(p2));
+      out.m[r][c] = x87_dot3(second->m[r][0], first->m[0][c], second->m[r][1], first->m[1][c], second->m[r][2],
+                             first->m[2][c]);
     }
   return out;
 }
 
-/* GmMat3::MultTranspose(rhs): this = this * rhs^T with columns as basis vectors:
-   result column c = (rhs col k . this col c) for k = 0..2 as rows. */
-static inline gm_mat3 mat3_mul_transpose(const gm_mat3 *left, const gm_mat3 *right) {
+/* mat3_mul_transpose as GmMat3::MultTranspose computes it (see
+   mat3_compose_x87) */
+static inline gm_mat3 mat3_mul_transpose_x87(const gm_mat3 *left, const gm_mat3 *right) {
+  if (!mat3_has_tiny(left) && !mat3_has_tiny(right))
+    return mat3_mul_transpose(left, right);
   gm_mat3 out;
-  for (int c = 0; c < 3; c++) {
-    gm_vec3 lc = mat3_col(left, c);
+  for (int c = 0; c < 3; c++)
     for (int k = 0; k < 3; k++)
-      out.m[k][c] = v3_dot(mat3_col(right, k), lc);
-  }
+      out.m[k][c] = x87_dot3(right->m[0][k], left->m[0][c], right->m[1][k], left->m[1][c], right->m[2][k],
+                             left->m[2][c]);
   return out;
 }
 

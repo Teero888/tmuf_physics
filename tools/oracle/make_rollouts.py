@@ -61,16 +61,27 @@ def rewrite(path, off, positions, end_ms):
     return True
 
 
+def f32(v):
+    return struct.unpack('<f', struct.pack('<f', float(v)))[0]
+
+
 def positions_of(tmuf_sim, packs, replay):
+    """the car's position the game samples at each tick time t: the end of
+    tick t, or the respawn location when tick t + 10 respawns (the sample is
+    taken after the next tick's respawn is applied, before its physics)"""
     out = subprocess.run([tmuf_sim, packs, replay, '--print'], capture_output=True, text=True,
                          errors='replace').stdout
-    pos = {}
+    end, spawn, resp = {}, {}, {}
     for l in out.splitlines():
         if not l.startswith('t='):
             continue
         p = l.split()
-        pos[int(p[0][2:])] = tuple(struct.unpack('<f', struct.pack('<f', float(v)))[0] for v in p[2:5])
-    return pos
+        t = int(p[0][2:])
+        end[t] = tuple(f32(v) for v in p[2:5])
+        i = p.index('resp')
+        resp[t] = int(p[i + 1])
+        spawn[t] = tuple(f32(v) for v in p[i + 3:i + 6])
+    return {t: (spawn[t] if resp.get(t + 10) else end[t]) for t in end}
 
 
 def main():

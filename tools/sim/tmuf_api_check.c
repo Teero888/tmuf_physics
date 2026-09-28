@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
        at its spawn and stays there, or the dump ends with teardown states.
        Compare up to there (as tmuf_sim does). */
     uint32_t oracle_stop = 0;
-    int game_finished = !o || race == UINT32_MAX || (uint64_t)ocount * 10u < 2600u + (uint64_t)race + 3000u;
+    const uint32_t ocount_all = ocount; /* before any stop is cut off */
     if (o && ocount > 1) {
       for (uint32_t k = ocount; k-- > 260;) {
         const float *a = o[k], *s0 = o[1];
@@ -201,7 +201,13 @@ int main(int argc, char **argv) {
     }
     const tmuf_race *rc = &worlds[cur].sim.race;
     int finished = rc->completed && rc->finish_time == race;
-    int finish_ok = race == UINT32_MAX || oracle_stop || rejected || (invalid ? finished == game_finished : finished);
+    /* a run the game finds invalid (a Stunts score, no finish, a rollout):
+       the game stops dumping shortly after a finish, else it simulates at
+       least to the end of the inputs */
+    int invalid_ok = !o || race == UINT32_MAX ||
+                     (rc->completed ? (uint64_t)ocount_all * 10u <= 2600u + (uint64_t)rc->finish_time + 3000u
+                                    : (uint64_t)ocount_all * 10u >= 2600u + (uint64_t)race);
+    int finish_ok = race == UINT32_MAX || oracle_stop || rejected || (invalid ? invalid_ok : finished);
     if (diverged == UINT32_MAX && finish_ok) {
       ok++;
       printf("%s MATCH %s %u ticks, %u copies, finish %u\n", name, tmuf_track_vehicle(t), n, copies,

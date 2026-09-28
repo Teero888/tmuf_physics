@@ -305,13 +305,16 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
     memset(ours, 0, sizeof ours);
     memcpy(ours, &sim.body.state, sizeof(float) * 44);
     if (op->print)
-      printf("t=%u pos %.9g %.9g %.9g vel %.9g %.9g %.9g sub %u mats %d %d %d %d in %.2f %.2f %.2f\n", ticks[i].time_ms,
+      printf("t=%u pos %.9g %.9g %.9g vel %.9g %.9g %.9g sub %u mats %d %d %d %d in %.2f %.2f %.2f resp %u spawn %.9g "
+             "%.9g %.9g\n",
+             ticks[i].time_ms,
              ours[13], ours[14], ours[15], ours[16], ours[17], ours[18], sim.substeps,
              sim.car.wheels[0].contact ? sim.car.wheels[0].contact_material : -1,
              sim.car.wheels[1].contact ? sim.car.wheels[1].contact_material : -1,
              sim.car.wheels[2].contact ? sim.car.wheels[2].contact_material : -1,
              sim.car.wheels[3].contact ? sim.car.wheels[3].contact_material : -1, ticks[i].gate_a, ticks[i].gate_b,
-             ticks[i].steering);
+             ticks[i].steering, ticks[i].respawns, (double)sim.race.current.t.x, (double)sim.race.current.t.y,
+             (double)sim.race.current.t.z);
     if (ext && !ext_bad) {
       for (uint32_t k = 0; k < ext_count; k++)
         if (ext[k].time == ticks[i].time_ms) {
