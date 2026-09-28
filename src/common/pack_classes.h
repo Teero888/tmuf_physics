@@ -78,7 +78,38 @@ typedef struct tmuf_plug_material {
   uint32_t surface_flags;
   uint8_t surface_id; /* EPlugSurfaceMaterialId (flags & 0xff) */
   tmuf_gbx_node *custom;
+  tmuf_gbx_node *model; /* material model (device sets of the model) */
+  uint32_t device_count;
+  uint32_t *device_words;        /* quality | sub-device << 8 | device << 16 */
+  tmuf_gbx_node **device_shaders; /* per device set */
 } tmuf_plug_material;
+
+/* CPlugMaterialCustom: the bitmaps it substitutes by sampler name */
+typedef struct tmuf_plug_material_custom {
+  uint32_t bitmap_count;
+  const char **bitmap_names;
+  tmuf_gbx_node **bitmaps;
+} tmuf_plug_material_custom;
+
+/* CPlugShader: archived flag words (+0x1c, +0x20) and, for CPlugShaderApply,
+   its bitmap addresses */
+typedef struct tmuf_plug_shader {
+  int has_flags;
+  uint32_t flags[2];
+  uint32_t address_count;
+  tmuf_gbx_node **addresses;
+} tmuf_plug_shader;
+
+/* CPlugBitmapSampler/Address: sampler name and bitmap */
+typedef struct tmuf_plug_bitmap_address {
+  const char *sampler;
+  tmuf_gbx_node *bitmap;
+} tmuf_plug_bitmap_address;
+
+/* CPlugBitmap: the render it is updated by (pixel update Render), if any */
+typedef struct tmuf_plug_bitmap {
+  tmuf_gbx_node *render;
+} tmuf_plug_bitmap;
 
 typedef struct tmuf_node_list {
   uint32_t count;

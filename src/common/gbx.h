@@ -60,6 +60,8 @@ struct tmuf_gbx_class {
      generic (skippable if "PIKS" follows). */
   int (*accepts)(uint32_t chunk_id);
   tmuf_chunk_fn generic;
+  /* Optional: an inline node archived without chunks (CPlugFileGen) */
+  void (*archive)(tmuf_gbx *g, void *node);
 };
 
 typedef struct tmuf_gbx_node {

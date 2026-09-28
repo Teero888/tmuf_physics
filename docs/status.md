@@ -38,14 +38,17 @@ Last updated 2026-09-28.
 
 ## Reference backend (src/reference)
 
-Matches the game bit for bit on all 307 local oracle replays and on 3471 of
-3472 TMX replays (`tools/sim/run_corpus.sh`, all environments). Replays the
+Matches the game bit for bit on all 307 local oracle replays and on all 3472
+TMX replays (`tools/sim/run_corpus.sh`, all environments). Replays the
 game itself rejects ("Wrong Simu", including all TMUnlimiter maps) are
 compared up to where the game aborts them. Includes an hour-long 60-lap
 replay with respawns (360855 ticks, 11 s).
 
-Open TMX case: a Coast replay that skims geometry water (7075288): collections
-with geometry water planes (Coast, Rally, Speed) have no water physics yet.
+Water: zone water grids (Coast, Bay, Island, Alpine) and geometry water planes
+(Speed, Rally): CHmsCorpus::WaterGetPlaneEqInZone over the scene's corpora
+(tree material -> model device shader -> CPlugShaderApply flags and a
+CPlugBitmapRenderWater bitmap; plane at the visual's bounding box), cells
+indexed by their ground block's plane (only the first plane is water).
 
 The static collision cells are in the game's order (checked against the
 oracle's `cells` trace, tools/oracle/dumper.c): only static-flagged corpora

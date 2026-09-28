@@ -77,6 +77,8 @@ typedef struct tmuf_scene {
   uint32_t size[3];    /* map size in squares (decoration size) */
   uint32_t base_height; /* default zone height */
   int collect_triangles;
+  uint32_t *water_ground_tags; /* geometry water, while building: per cell the tag of the
+                                  ground block of a wet zone, UINT32_MAX if none */
   uint32_t triangle_count, triangle_cap;
   tmuf_static_triangle *triangles; /* only with TMUF_SCENE_TRIANGLES */
   uint32_t blocks_placed, blocks_missing;

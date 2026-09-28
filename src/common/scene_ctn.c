@@ -987,18 +987,68 @@ static void create_mobil_for_clip(ctn *c, ctn_block *b) {
   }
 }
 
+/* CTrackMania::UpdateWaterMap for collections with geometry water planes
+   (Speed, Rally): the wet zones' cells, with their ground block
+   (CGameCtnChallenge::GetGroundBlock); the plane index of each cell is set
+   once the scene's corpora exist (tmuf_scene_build). */
+static void build_geometry_water(ctn *c) {
+  tmuf_scene_water *wt = &c->s->water;
+  size_t n = (size_t)c->w * c->d;
+  uint8_t *cells = calloc(n, 1);
+  uint32_t *tags = malloc(sizeof *tags * n);
+  if (!cells || !tags) {
+    free(cells), free(tags);
+    return;
+  }
+  int any = 0;
+  for (uint32_t z = 0; z < c->d; z++)
+    for (uint32_t x = 0; x < c->w; x++) {
+      uint32_t p[3] = {x, 0, z};
+      size_t i = x + (size_t)c->w * z;
+      tags[i] = UINT32_MAX;
+      ctn_zone *zone = real_zone(c, p);
+      if (!zone || !zone->has_water)
+        continue;
+      any = 1;
+      uint32_t q[3] = {x, (uint32_t)cell_at(c, p)->height + 1u, z};
+      ctn_block *b = contains(c, q) ? block_at(c, q) : NULL;
+      if (!b)
+        b = block_at(c, p);
+      if (b)
+        tags[i] = b->tag;
+    }
+  if (!any) {
+    free(cells), free(tags);
+    return;
+  }
+  float base = (float)(c->default_height + 1u) * c->sqh;
+  wt->enabled = 1;
+  wt->cell_size[0] = wt->cell_size[1] = c->sq;
+  wt->dims[0] = c->w;
+  wt->dims[1] = c->d;
+  wt->outside = c->coll->default_water ? 1 : 0;
+  wt->cells = cells;
+  wt->surface_height = base + c->coll->water_surface;
+  wt->secondary_cull_height = base + c->coll->water_secondary;
+  free(c->s->water_ground_tags);
+  c->s->water_ground_tags = tags;
+}
+
 /* BuildReplayWaterDefinition: the water grid of collections whose water
-   follows the zones (wet zones); collections with geometry water planes
-   (Rally, Speed) are not done yet. */
+   follows the zones (wet zones), or of the geometry water planes. */
 static void build_water(ctn *c) {
   const tmuf_collection *coll = c->coll;
   tmuf_scene_water *wt = &c->s->water;
   free(wt->cells);
   memset(wt, 0, sizeof *wt);
-  if (!(coll->has_water_heights || coll->has_geometry_water) || coll->geometry_water_planes)
+  if (!(coll->has_water_heights || coll->has_geometry_water))
     return;
   if (!(c->sq > 0.0f) || !(c->sqh > 0.0f) || c->w == 0 || c->d == 0)
     return;
+  if (coll->geometry_water_planes) {
+    build_geometry_water(c);
+    return;
+  }
   int playfield = 0;
   for (uint32_t z = 0; z < c->d && !playfield; z++)
     for (uint32_t x = 0; x < c->w; x++) {

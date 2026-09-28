@@ -422,7 +422,10 @@ static tmuf_gbx_node *new_inline_node(tmuf_gbx *g, uint32_t index, uint32_t clas
     tmuf_gbx_fail(g, "out of memory");
     return NULL;
   }
-  tmuf_gbx_node_body_as(g, cls, class_id, n->data);
+  if (cls->archive)
+    cls->archive(g, n->data);
+  else
+    tmuf_gbx_node_body_as(g, cls, class_id, n->data);
   return n;
 }
 

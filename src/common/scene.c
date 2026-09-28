@@ -146,6 +146,18 @@ static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node
   if (cls != 0x0904f000u && cls != 0x09015000u && cls != 0x09062000u)
     return; /* not a CPlugTree (generators, ...) */
   const tmuf_plug_tree *t = tn->data;
+  if (debug_enabled() && getenv("TMUF_SCENE_TAG") && strtoul(getenv("TMUF_SCENE_TAG"), NULL, 16) == s->current_block) {
+    tmuf_gbx_node *refs[3] = {t->visual, t->shader, t->material};
+    static const char *names[3] = {"visual", "shader", "material"};
+    for (int k = 0; k < 3; k++) {
+      if (!refs[k])
+        continue;
+      tmuf_asset *ra;
+      tmuf_gbx_node *rn = tmuf_assets_follow(&s->assets, ta, refs[k], &ra);
+      fprintf(stderr, "    %*s  %s class %08x file %s asset %s\n", depth * 2, "", names[k], rn ? rn->class_id : 0,
+              refs[k]->file ? refs[k]->file : "-", ra ? ra->path : "-");
+    }
+  }
   tmuf_iso world = *parent;
   if (t->has_iso) {
     tmuf_iso local;
@@ -378,6 +390,190 @@ static void clip_side(unsigned side, float sq, tmuf_iso *out) {
   out->t[0] = (side == 1 || side == 2) ? sq : 0.0f;
   out->t[1] = 0.0f;
   out->t[2] = (side == 2 || side == 3) ? sq : 0.0f;
+}
+
+/* ---- geometry water planes ---- */
+
+/* CPlugMaterial::GetSupportedShader: the model's (else the material's) device
+   set that is the last one not newer than the supported device (PC3, VHigh) */
+static tmuf_gbx_node *material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node, tmuf_asset **shader_owner,
+                                      const tmuf_plug_material_custom **custom, tmuf_asset **custom_owner) {
+  tmuf_asset *ma;
+  tmuf_gbx_node *mn = tmuf_assets_follow(&s->assets, owner, node, &ma);
+  if (!mn || !mn->data || !mn->cls || mn->cls->id != 0x09079000u)
+    return NULL;
+  const tmuf_plug_material *m = mn->data;
+  if (m->custom) {
+    tmuf_gbx_node *cn = tmuf_assets_follow(&s->assets, ma, m->custom, custom_owner);
+    if (cn && cn->data && cn->cls && cn->cls->id == 0x0903a000u)
+      *custom = cn->data;
+  }
+  const tmuf_plug_material *sets = m;
+  tmuf_asset *sets_owner = ma;
+  if (m->model) {
+    tmuf_gbx_node *mm = tmuf_assets_follow(&s->assets, ma, m->model, &sets_owner);
+    if (!mm || !mm->data || !mm->cls || mm->cls->id != 0x09079000u)
+      return NULL;
+    sets = mm->data;
+  }
+  if (!sets->device_count)
+    return NULL;
+  uint32_t sel = sets->device_count - 1u;
+  while (sets->device_words[sel] > 0x00030004u && sel != 0)
+    sel--;
+  if (!sets->device_shaders[sel])
+    return NULL;
+  return tmuf_assets_follow(&s->assets, sets_owner, sets->device_shaders[sel], shader_owner);
+}
+
+static int id_equal(const char *a, const char *b) { return a && b && strcmp(a, b) == 0; }
+
+/* The tree's shader is a water shader (CHmsCorpus::WaterGetPlaneEqInZone):
+   flags & 0xc00000 == 0x800000 and a bitmap updated by a
+   CPlugBitmapRenderWater (the material's custom bitmaps replace the
+   shader's by sampler name) */
+static int water_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node) {
+  tmuf_asset *sa = NULL, *ca = NULL;
+  const tmuf_plug_material_custom *custom = NULL;
+  tmuf_gbx_node *sn = material_shader(s, owner, node, &sa, &custom, &ca);
+  if (!sn || !sn->data || !sn->cls || sn->cls->id != 0x09002000u)
+    return 0;
+  const tmuf_plug_shader *sh = sn->data;
+  if (!sh->has_flags || (sh->flags[1] & 0x00c00000u) != 0x00800000u)
+    return 0;
+  for (uint32_t i = 0; i < sh->address_count; i++) {
+    tmuf_asset *aa;
+    tmuf_gbx_node *an = tmuf_assets_follow(&s->assets, sa, sh->addresses[i], &aa);
+    if (!an || !an->data || !an->cls || an->cls->id != 0x0907e000u)
+      continue;
+    const tmuf_plug_bitmap_address *ad = an->data;
+    tmuf_gbx_node *bitmap = ad->bitmap;
+    tmuf_asset *bowner = aa;
+    for (uint32_t k = 0; custom && k < custom->bitmap_count; k++)
+      if (id_equal(custom->bitmap_names[k], ad->sampler)) {
+        bitmap = custom->bitmaps[k];
+        bowner = ca;
+        break;
+      }
+    tmuf_asset *ba;
+    tmuf_gbx_node *bn = bitmap ? tmuf_assets_follow(&s->assets, bowner, bitmap, &ba) : NULL;
+    if (!bn || !bn->data || !bn->cls || bn->cls->id != 0x09011000u)
+      continue;
+    const tmuf_plug_bitmap *b = bn->data;
+    if (b->render && b->render->class_id == 0x09087000u)
+      return 1;
+  }
+  return 0;
+}
+
+/* GmVec4::PlaneEqMult */
+static void plane_mult(float p[4], const tmuf_iso *iso) {
+  float x = p[0], y = p[1], z = p[2];
+  float nx = (iso->m[0][1] * y + iso->m[0][0] * x) + iso->m[0][2] * z;
+  float ny = (iso->m[1][0] * x + iso->m[1][1] * y) + iso->m[1][2] * z;
+  float nz = (iso->m[2][0] * x + iso->m[2][1] * y) + iso->m[2][2] * z;
+  p[0] = nx, p[1] = ny, p[2] = nz;
+  p[3] = p[3] - ((nx * iso->t[0] + ny * iso->t[1]) + nz * iso->t[2]);
+}
+
+/* first tree (pre-order, root included) with a water shader and a visual:
+   the plane y = its visual's bounding box center, in world space */
+static int tree_water_plane(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent,
+                            int depth, float plane[4]) {
+  if (depth > 64)
+    return 0;
+  tmuf_asset *ta;
+  tmuf_gbx_node *tn = tmuf_assets_follow(&s->assets, owner, tree_node, &ta);
+  if (!tn || !tn->data || !tn->cls)
+    return 0;
+  uint32_t cls = tn->cls->id;
+  if (cls != 0x0904f000u && cls != 0x09015000u && cls != 0x09062000u)
+    return 0;
+  const tmuf_plug_tree *t = tn->data;
+  tmuf_iso world = *parent;
+  if (t->has_iso) {
+    tmuf_iso local;
+    tmuf_iso_from_archive(&local, t->iso);
+    tmuf_iso_mult(&world, &local, parent);
+  }
+  if (t->shader && t->visual && water_shader(s, ta, t->shader)) {
+    tmuf_asset *va;
+    tmuf_gbx_node *vn = tmuf_assets_follow(&s->assets, ta, t->visual, &va);
+    if (vn && vn->data && vn->cls && vn->cls->id == 0x09006000u) {
+      const tmuf_plug_visual *v = vn->data;
+      plane[0] = 0.0f, plane[1] = 1.0f, plane[2] = 0.0f, plane[3] = -v->bbox[1];
+      plane_mult(plane, &world);
+      return 1;
+    }
+  }
+  for (uint32_t i = 0; i < t->child_count; i++)
+    if (tree_water_plane(s, ta, t->children[i], &world, depth + 1, plane))
+      return 1;
+  return 0;
+}
+
+/* GmVec4::PlaneEqIsNearlyEqual */
+static int plane_near(const float a[4], const float b[4]) {
+  float dot = (b[1] * a[1] + b[0] * a[0]) + b[2] * a[2];
+  return dot >= 0.99000001f && fabsf(a[3] - b[3]) <= 0.1f;
+}
+
+/* Zone_UpdateWaterHeights over the scene's corpora, then each wet cell gets
+   the index + 1 of its ground block's plane (only index 1 is water for the
+   car: CSceneVehicleCar::ApplyWaterForces) */
+static void finish_geometry_water(tmuf_scene *s) {
+  uint32_t *tags = s->water_ground_tags;
+  s->water_ground_tags = NULL;
+  if (!tags || !s->water.cells) {
+    free(tags);
+    return;
+  }
+  float planes[255][4];
+  uint32_t plane_count = 0;
+  float *corpus_plane = malloc(sizeof(float) * 4 * (s->corpus_count ? s->corpus_count : 1));
+  uint8_t *has_plane = calloc(s->corpus_count ? s->corpus_count : 1, 1);
+  if (!corpus_plane || !has_plane) {
+    free(corpus_plane), free(has_plane), free(tags);
+    return;
+  }
+  for (uint32_t i = 0; i < s->corpus_count; i++) {
+    const tmuf_scene_corpus *c = &s->corpora[i];
+    float *p = corpus_plane + 4 * i;
+    if (!tree_water_plane(s, c->owner, c->tree, &c->iso, 0, p))
+      continue;
+    has_plane[i] = 1;
+    uint32_t k = 0;
+    while (k < plane_count && !plane_near(planes[k], p))
+      k++;
+    if (k == plane_count && plane_count < 255) {
+      memcpy(planes[plane_count], p, sizeof planes[0]);
+      plane_count++;
+    }
+  }
+  size_t n = (size_t)s->water.dims[0] * s->water.dims[1];
+  for (size_t i = 0; i < n; i++) {
+    if (tags[i] == UINT32_MAX)
+      continue;
+    /* the ground block's mobil: its first corpus */
+    uint32_t ci = 0;
+    while (ci < s->corpus_count && s->corpora[ci].tag != tags[i])
+      ci++;
+    if (ci == s->corpus_count || !has_plane[ci])
+      continue;
+    for (uint32_t k = 0; k < plane_count; k++)
+      if (plane_near(planes[k], corpus_plane + 4 * ci)) {
+        s->water.cells[i] = (uint8_t)(k + 1u);
+        break;
+      }
+  }
+  if (debug_enabled()) {
+    fprintf(stderr, "geometry water: %u planes", plane_count);
+    for (uint32_t k = 0; k < plane_count; k++)
+      fprintf(stderr, " (%g %g %g %g)", (double)planes[k][0], (double)planes[k][1], (double)planes[k][2],
+              (double)planes[k][3]);
+    fputc('\n', stderr);
+  }
+  free(corpus_plane), free(has_plane), free(tags);
 }
 
 /* AppendBlockPlacementModels for one installation */
@@ -709,6 +905,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   for (uint32_t i = 0; i < cr.count; i++)
     emit_install(s, &cr.items[i]);
   ctn_result_free(&cr);
+  finish_geometry_water(s);
   return 1;
 }
 
@@ -737,6 +934,7 @@ int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower,
 }
 
 void tmuf_scene_free(tmuf_scene *s) {
+  free(s->water_ground_tags);
   free(s->water.cells);
   free(s->triangles);
   free(s->catalog);

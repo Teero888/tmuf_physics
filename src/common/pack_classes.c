@@ -640,9 +640,12 @@ static void material_ref(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static void material_device_sets(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
-  if (tmuf_gbx_noderef(g))
-    return; /* material model */
+  tmuf_plug_material *m = node;
+  tmuf_gbx_node *model = tmuf_gbx_noderef(g);
+  if (model) {
+    m->model = model;
+    return;
+  }
   int shader_refs = id == 0x09079009 || id == 0x0907900c || id == 0x0907900d;
   int formats = id == 0x0907900c || id == 0x0907900d;
   uint32_t n = tmuf_gbx_u32(g);
@@ -650,12 +653,18 @@ static void material_device_sets(tmuf_gbx *g, void *node, uint32_t id) {
     tmuf_gbx_fail(g, "device set count %u", n);
     return;
   }
+  m->device_count = n;
+  m->device_words = TMUF_ARENA_ARRAY(g->arena, uint32_t, n ? n : 1);
+  m->device_shaders = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
   for (uint32_t i = 0; i < n && !g->error; i++) {
-    tmuf_gbx_skip(g, 4);
+    /* UPlugRenderDevice::Archive: u16 device, u8 sub-device, u8 quality;
+       compared as quality | sub << 8 | device << 16 */
+    uint32_t a = tmuf_gbx_u32(g);
+    m->device_words[i] = ((a & 0xffffu) << 16) | ((a & 0xff0000u) >> 8) | ((a & 0xff000000u) >> 24);
     if (tmuf_gbx_bool(g))
-      tmuf_gbx_fidref(g);
+      m->device_shaders[i] = tmuf_gbx_fidref(g);
     else
-      tmuf_gbx_noderef(g);
+      m->device_shaders[i] = tmuf_gbx_noderef(g);
     if (shader_refs) {
       tmuf_gbx_fidref(g);
       tmuf_gbx_fidref(g);
@@ -707,17 +716,20 @@ static void custom_int_array(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static void custom_bitmaps(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
+  tmuf_plug_material_custom *m = node;
   uint32_t n = tmuf_gbx_u32(g);
   if (n > 0x100000u) {
     tmuf_gbx_fail(g, "custom bitmap count %u", n);
     return;
   }
+  m->bitmap_count = n;
+  m->bitmap_names = TMUF_ARENA_ARRAY(g->arena, const char *, n ? n : 1);
+  m->bitmaps = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
   for (uint32_t i = 0; i < n && !g->error; i++) {
-    tmuf_gbx_id(g, NULL);
+    m->bitmap_names[i] = tmuf_gbx_id(g, NULL);
     tmuf_gbx_skip(g, 4);
-    tmuf_gbx_noderef(g);
+    m->bitmaps[i] = tmuf_gbx_noderef(g);
   }
 }
 
@@ -773,7 +785,8 @@ static const tmuf_gbx_chunk MATERIAL_CUSTOM_CHUNKS[] = {
     READ(0x0903a004, custom_int_array), READ(0x0903a006, custom_bitmaps), READ(0x0903a00a, custom_gpu_fx),
     READ(0x0903a00c, custom_bitmap_skip), READ(0x0903a00d, custom_flags), {0x0903a00f, 1, NULL}, {0x0903a011, 1, NULL},
 };
-static const tmuf_gbx_class MATERIAL_CUSTOM = {0x0903a000, "CPlugMaterialCustom", 1, MATERIAL_CUSTOM_CHUNKS,
+static const tmuf_gbx_class MATERIAL_CUSTOM = {0x0903a000, "CPlugMaterialCustom", sizeof(tmuf_plug_material_custom),
+                                               MATERIAL_CUSTOM_CHUNKS,
                                                COUNT(MATERIAL_CUSTOM_CHUNKS), NULL};
 
 /* ---- CPlugShader family (0x09002000: Generic, Apply) ---- */
@@ -798,11 +811,29 @@ static void c0900200e(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static void c09002016(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  tmuf_gbx_skip(g, 12);
+  tmuf_plug_shader *s = node;
+  s->flags[0] = tmuf_gbx_u32(g);
+  s->flags[1] = tmuf_gbx_u32(g);
+  s->has_flags = 1;
+  tmuf_gbx_skip(g, 4);
   tmuf_gbx_noderef(g);
   tmuf_gbx_skip(g, 2);
+}
+
+/* CPlugShaderApply: its bitmap addresses */
+static void c09026002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_shader *s = node;
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "node array count %u", n);
+    return;
+  }
+  s->address_count = n;
+  s->addresses = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    s->addresses[i] = tmuf_gbx_noderef(g);
 }
 
 static void c09004003(tmuf_gbx *g, void *node, uint32_t id) {
@@ -813,9 +844,10 @@ static void c09004003(tmuf_gbx *g, void *node, uint32_t id) {
 
 static const tmuf_gbx_chunk SHADER_CHUNKS[] = {
     READ(0x0900200e, c0900200e), READ(0x09002016, c09002016), READ(0x09004003, c09004003),
-    READ(0x09026002, noderef_array), READ(0x09026004, skip4), READ(0x09026008, skip8),
+    READ(0x09026002, c09026002), READ(0x09026004, skip4), READ(0x09026008, skip8),
 };
-static const tmuf_gbx_class SHADER = {0x09002000, "CPlugShader", 1, SHADER_CHUNKS, COUNT(SHADER_CHUNKS), NULL};
+static const tmuf_gbx_class SHADER = {0x09002000, "CPlugShader", sizeof(tmuf_plug_shader), SHADER_CHUNKS,
+                                      COUNT(SHADER_CHUNKS), NULL};
 
 /* ---- CPlugShaderPass (0x09067000) ---- */
 
@@ -859,10 +891,10 @@ static const tmuf_gbx_class SHADER_PASS = {0x09067000, "CPlugShaderPass", 1, SHA
 /* ---- CPlugBitmapSampler family (0x0907e000: Address, Apply) ---- */
 
 static void c0907e008(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  tmuf_gbx_id(g, NULL);
-  tmuf_gbx_noderef(g);
+  tmuf_plug_bitmap_address *a = node;
+  a->sampler = tmuf_gbx_id(g, NULL);
+  a->bitmap = tmuf_gbx_noderef(g);
   tmuf_gbx_skip(g, 8);
 }
 
@@ -883,8 +915,127 @@ static void c09047007(tmuf_gbx *g, void *node, uint32_t id) {
 static const tmuf_gbx_chunk BITMAP_SAMPLER_CHUNKS[] = {
     READ(0x0907e008, c0907e008), READ(0x09047007, c09047007), READ(0x09047009, skip4), READ(0x09012004, skip4),
 };
-static const tmuf_gbx_class BITMAP_SAMPLER = {0x0907e000, "CPlugBitmapSampler", 1, BITMAP_SAMPLER_CHUNKS,
-                                              COUNT(BITMAP_SAMPLER_CHUNKS), NULL};
+static const tmuf_gbx_class BITMAP_SAMPLER = {0x0907e000, "CPlugBitmapSampler", sizeof(tmuf_plug_bitmap_address),
+                                              BITMAP_SAMPLER_CHUNKS, COUNT(BITMAP_SAMPLER_CHUNKS), NULL};
+
+/* ---- CPlugBitmap (0x09011000) and the renders it can be updated by ---- */
+
+static void skip_n(tmuf_gbx *g, uint32_t id) {
+  static const struct {
+    uint32_t id, n;
+  } SIZES[] = {{0x09011019, 4}, {0x0901101b, 4}, {0x0901101f, 4}, {0x09011021, 4}, {0x09011023, 4},
+               {0x09011024, 4}, {0x0901102e, 4}, {0x0901101c, 20}, {0x0901101d, 4}, {0x09011025, 24},
+               {0x09011028, 8}, {0x09086003, 8}, {0x0908600a, 4}, {0x0908600d, 4}, {0x0908600e, 4}};
+  for (size_t i = 0; i < COUNT(SIZES); i++)
+    if (SIZES[i].id == id) {
+      tmuf_gbx_skip(g, SIZES[i].n);
+      return;
+    }
+}
+
+static void bitmap_fixed(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  skip_n(g, id);
+}
+
+static void bitmap_empty(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(g);
+  UNUSED(node);
+  UNUSED(id);
+}
+
+static void bitmap_vec2_array(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  skip_counted(g, 8);
+}
+
+static void bitmap_u32_array(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  skip_counted(g, 4);
+}
+
+/* image: the file (inline CPlugFileGen or external), then for 018/022 with
+   an inline image the render updating it */
+static void bitmap_image(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_plug_bitmap *b = node;
+  tmuf_gbx_node *image = tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 24);
+  if ((id == 0x09011018 || id == 0x09011022) && image && !image->external)
+    b->render = tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk BITMAP_CHUNKS[] = {
+    READ(0x09011014, bitmap_image),      READ(0x09011015, bitmap_image),    READ(0x09011018, bitmap_image),
+    READ(0x09011019, bitmap_fixed),      READ(0x0901101b, bitmap_fixed),    READ(0x0901101c, bitmap_fixed),
+    READ(0x0901101d, bitmap_fixed),      READ(0x0901101e, bitmap_vec2_array), READ(0x0901101f, bitmap_fixed),
+    READ(0x09011020, bitmap_u32_array),  READ(0x09011021, bitmap_fixed),    READ(0x09011022, bitmap_image),
+    READ(0x09011023, bitmap_fixed),      READ(0x09011024, bitmap_fixed),    READ(0x09011025, bitmap_fixed),
+    READ(0x09011028, bitmap_fixed),      READ(0x0901102e, bitmap_fixed),    READ(0x09011030, bitmap_empty),
+};
+static const tmuf_gbx_class BITMAP = {0x09011000, "CPlugBitmap", sizeof(tmuf_plug_bitmap), BITMAP_CHUNKS,
+                                      COUNT(BITMAP_CHUNKS), NULL};
+
+static void render_clear(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 8);
+  tmuf_gbx_noderef(g);
+  tmuf_gbx_skip(g, 8);
+}
+
+static void render_sub(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_noderef(g);
+}
+
+/* CPlugBitmapRender (0x09086000) family; the water render's own state
+   chunks (09087005/6) are skippable */
+static const tmuf_gbx_chunk BITMAP_RENDER_CHUNKS[] = {
+    READ(0x09086003, bitmap_fixed), READ(0x0908600a, bitmap_fixed), READ(0x0908600b, render_clear),
+    READ(0x0908600c, render_sub),   READ(0x0908600d, bitmap_fixed), READ(0x0908600e, bitmap_fixed),
+};
+static const tmuf_gbx_class BITMAP_RENDER = {0x09086000, "CPlugBitmapRender", 1, BITMAP_RENDER_CHUNKS,
+                                             COUNT(BITMAP_RENDER_CHUNKS), NULL};
+
+/* CPlugFileGen (0x0902f000): archived inline without chunks */
+static void file_gen_archive(tmuf_gbx *g, void *node) {
+  UNUSED(node);
+  uint32_t v = tmuf_gbx_u32(g);
+  if (v & 0x80000000u) {
+    uint32_t version = v & 0x7fffffffu;
+    if (version > 5u) {
+      tmuf_gbx_fail(g, "file gen version %u", version);
+      return;
+    }
+    tmuf_gbx_u32(g); /* kind */
+    skip_counted(g, 4);
+    skip_counted(g, 16);
+    skip_counted(g, 4);
+    if (version > 2u)
+      tmuf_gbx_string(g);
+    if (version > 3u) {
+      uint32_t n = tmuf_gbx_u32(g);
+      if (n > 0x100000u) {
+        tmuf_gbx_fail(g, "file gen refs %u", n);
+        return;
+      }
+      for (uint32_t i = 0; i < n && !g->error; i++)
+        tmuf_gbx_noderef(g);
+    }
+  } else {
+    if (v > 0x32u) {
+      tmuf_gbx_fail(g, "file gen version %u", v);
+      return;
+    }
+    skip_counted(g, 4);
+    skip_counted(g, 16);
+  }
+}
+
+static const tmuf_gbx_class FILE_GEN = {0x0902f000, "CPlugFileGen", 1, NULL, 0, NULL, NULL, NULL, file_gen_archive};
 
 /* ---- shared helpers for node lists ---- */
 
@@ -2405,6 +2556,7 @@ static const tmuf_gbx_class VEHICLE_ENV = {0x0a033000, "CSceneVehicleEnvironment
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &DECORATOR_TREE, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
+    &BITMAP,          &BITMAP_RENDER, &FILE_GEN,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL, &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
