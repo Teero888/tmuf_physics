@@ -40,6 +40,7 @@ typedef struct build_ctx {
   int error;
   const tmuf_scene *scene;
   uint8_t materials; /* TMUF_MATERIALS_* of the corpus */
+  uint32_t pylon_raise; /* of the corpus: its mesh surfaces are raised copies */
 } build_ctx;
 
 static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *surface_node) {
@@ -47,9 +48,10 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
   tmuf_gbx_node *sn = tmuf_assets_follow(b->assets, owner, surface_node, &sa);
   if (!sn || !sn->data || sn->class_id != 0x0900c000u)
     return NULL;
-  /* one ref_surf per surface node and material mode */
+  /* one ref_surf per surface node, material mode and pylon raise */
   for (uint32_t i = b->w->surf_count; i-- > 0;)
-    if (b->w->surfs[i]->key == sn && b->w->surfs[i]->materials == b->materials)
+    if (b->w->surfs[i]->key == sn && b->w->surfs[i]->materials == b->materials &&
+        b->w->surfs[i]->pylon_raise == b->pylon_raise)
       return b->w->surfs[i];
   const tmuf_plug_surface *surf = sn->data;
   tmuf_asset *ga;
@@ -78,6 +80,21 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
   r->vertices = geom->vertices;
   r->triangles = geom->triangles;
   r->cells = geom->cells;
+  r->pylon_raise = b->pylon_raise;
+  if (b->pylon_raise && geom->type == SURF_MESH) {
+    float *v;
+    uint8_t *t;
+    if (!tmuf_scene_raise_mesh(geom, b->pylon_raise, b->scene ? b->scene->square_height : 8.0f, &v, &t)) {
+      free(r);
+      free(mats);
+      b->error = 1;
+      return NULL;
+    }
+    r->vertices = v;
+    r->triangles = t;
+  } else {
+    r->pylon_raise = 0;
+  }
   r->material_count = surf->material_count;
   for (uint32_t i = 0; i < surf->material_count; i++) {
     const tmuf_plug_surface_material *m = &surf->materials[i];
@@ -287,6 +304,7 @@ int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
       continue;
     b.corpus = i;
     b.materials = c->materials;
+    b.pylon_raise = c->pylon_raise;
     gm_iso4 iso = iso_from_scene(&c->iso);
     add_tree(&b, c->owner, c->tree, &iso, 0, trigger ? TREE_COLLISION : 0);
   }
@@ -313,6 +331,10 @@ int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
 void ref_world_free(ref_world *w) {
   for (uint32_t i = 0; i < w->surf_count; i++) {
     free((void *)w->surfs[i]->material_ids);
+    if (w->surfs[i]->pylon_raise) {
+      free((void *)w->surfs[i]->vertices);
+      free((void *)w->surfs[i]->triangles);
+    }
     free(w->surfs[i]);
   }
   free(w->surfs);

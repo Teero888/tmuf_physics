@@ -362,6 +362,8 @@ typedef struct tmuf_surface {
   const uint8_t *cells;     /* u32 subtree count, center, half, i32 triangle */
   uint32_t material_count;
   const uint8_t *material_ids; /* EPlugSurfaceMaterialId per local material */
+  uint32_t pylon_raise; /* a pylon middle's mesh raised by this many squares: own
+                           copy of vertices and triangles (CreateNewPylonMobil) */
 } tmuf_surface;
 
 typedef struct tmuf_static_cell {

@@ -112,6 +112,11 @@ static void emit_surface(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *surfac
   const tmuf_plug_surface_geom *geom = gn->data;
   if (geom->type != TMUF_SURF_MESH)
     return;
+  float *raised = NULL;
+  uint8_t *raised_tris = NULL;
+  if (s->pylon_raise && !tmuf_scene_raise_mesh(geom, s->pylon_raise, s->square_height, &raised, &raised_tris))
+    return;
+  const float *vertices = raised ? raised : geom->vertices;
   for (uint32_t i = 0; i < geom->triangle_count; i++) {
     const uint8_t *rec = geom->triangles + (size_t)i * 32;
     uint32_t idx[3];
@@ -125,11 +130,62 @@ static void emit_surface(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *surfac
         ok = 0;
         break;
       }
-      tmuf_iso_point(world, geom->vertices + (size_t)idx[k] * 3, w[k]);
+      tmuf_iso_point(world, vertices + (size_t)idx[k] * 3, w[k]);
     }
     if (ok)
       add_triangle(s, w[0], w[1], w[2], mat);
   }
+  free(raised);
+  free(raised_tris);
+}
+
+int tmuf_scene_raise_mesh(const tmuf_plug_surface_geom *geom, uint32_t raise, float square_height, float **vertices,
+                          uint8_t **triangles) {
+  size_t vn = (size_t)geom->vertex_count * 3, tn = (size_t)geom->triangle_count * 32;
+  float *v = malloc(sizeof *v * (vn ? vn : 1));
+  uint8_t *t = malloc(tn ? tn : 1);
+  if (!v || !t) {
+    free(v);
+    free(t);
+    return 0;
+  }
+  if (vn)
+    memcpy(v, geom->vertices, sizeof *v * vn);
+  if (tn)
+    memcpy(t, geom->triangles, tn);
+  /* vertex y above square_height * 0.5 += square_height * raise */
+  const float threshold = square_height * 0.5f;
+  const float delta = square_height * (float)raise;
+  for (uint32_t i = 0; i < geom->vertex_count; i++)
+    if (v[i * 3 + 1] > threshold)
+      v[i * 3 + 1] = v[i * 3 + 1] + delta;
+  /* GmSurfMesh::ComputePlane: n = (v1 - v0) x (v2 - v0), normalized when
+     its square is above 1e-10, plane distance ((-nx v0x) - ny v0y) - nz v0z */
+  for (uint32_t i = 0; i < geom->triangle_count; i++) {
+    uint8_t *rec = t + (size_t)i * 32;
+    uint32_t idx[3];
+    memcpy(idx, rec + 16, 12);
+    if (idx[0] >= geom->vertex_count || idx[1] >= geom->vertex_count || idx[2] >= geom->vertex_count)
+      continue;
+    const float *a = v + (size_t)idx[0] * 3, *b = v + (size_t)idx[1] * 3, *c = v + (size_t)idx[2] * 3;
+    const float e1x = b[0] - a[0], e1y = b[1] - a[1], e1z = b[2] - a[2];
+    const float e2x = c[0] - a[0], e2y = c[1] - a[1], e2z = c[2] - a[2];
+    float n[3] = {e2z * e1y - e2y * e1z, e1z * e2x - e2z * e1x, e1x * e2y - e2x * e1y};
+    const float n2 = (n[1] * n[1] + n[0] * n[0]) + n[2] * n[2];
+    if (n2 > 1.0e-5f * 1.0e-5f) {
+      const float len = (float)sqrt((double)n2);
+      const float inv = 1.0f / len;
+      n[0] = n[0] * inv;
+      n[1] = n[1] * inv;
+      n[2] = inv * n[2];
+    }
+    const float d = ((-n[0] * a[0]) - n[1] * a[1]) - n[2] * a[2];
+    memcpy(rec, n, 12);
+    memcpy(rec + 12, &d, 4);
+  }
+  *vertices = v;
+  *triangles = t;
+  return 1;
 }
 
 static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent, int depth) {
@@ -184,6 +240,7 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->tree = tree;
   c->iso = *iso;
   c->tag = s->current_block;
+  c->pylon_raise = s->pylon_raise;
   c->trigger = s->current_trigger;
   c->item_flags = s->current_item_flags;
   /* Helper trees hang below a new CHALLENGEHELPERTREE tree without the
@@ -579,8 +636,8 @@ static void finish_geometry_water(tmuf_scene *s) {
 /* AppendBlockPlacementModels for one installation */
 static void emit_install(tmuf_scene *s, const ctn_install *in) {
   if (debug_enabled())
-    fprintf(stderr, "install tag %08x kind %d active %d suppressed %d main %p\n", in->tag, in->kind, in->active,
-            in->suppressed, (void *)in->main.node);
+    fprintf(stderr, "install tag %08x kind %d active %d suppressed %d main %p raise %u\n", in->tag, in->kind,
+            in->active, in->suppressed, (void *)in->main.node, in->pylon_raise);
   if (!in->active || in->suppressed)
     return;
   s->current_block = in->tag;

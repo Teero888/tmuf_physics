@@ -42,6 +42,7 @@ typedef struct tmuf_scene_corpus {
   uint8_t respawn_current; /* respawns keep the car's current spawn */
   uint8_t has_spawn;
   tmuf_iso spawn;
+  uint32_t pylon_raise; /* a pylon middle: levels its mesh vertices are raised by */
 } tmuf_scene_corpus;
 
 /* CGameCtnBlockInfo race role (way type) */
@@ -116,6 +117,15 @@ void tmuf_scene_free(tmuf_scene *scene);
 /* Surface material id of the material at plain path `path` under the
    corpus material mode `materials`; returns 0 if the material is kept. */
 int tmuf_scene_remap_material(const tmuf_scene *scene, uint8_t materials, const char *path, uint8_t *id);
+
+/* CGameCtnChallenge::CreateNewPylonMobil for a pylon middle's mesh: a copy
+   of the vertices and triangles with the vertices above half a square
+   raised by `raise` squares and every triangle's plane recomputed
+   (GmSurfMesh::ComputePlane); the octree stays the archived one. Returns 0
+   when out of memory. */
+struct tmuf_plug_surface_geom;
+int tmuf_scene_raise_mesh(const struct tmuf_plug_surface_geom *geom, uint32_t raise, float square_height,
+                          float **vertices, uint8_t **triangles);
 
 /* CSceneVehicleWaterZone::AcceptsRegion for a box spanning [lower, upper]
    in height around the column at (x, z). */
