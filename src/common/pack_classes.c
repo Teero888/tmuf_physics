@@ -2425,7 +2425,7 @@ static void scene_object_buffer(tmuf_gbx *g, tmuf_scene3d *sc, int mobils) {
     for (uint32_t i = 0; i < count && !g->error; i++)
       list[i] = do_mobil_ptr(g);
   } else {
-    tmuf_node_list l;
+    tmuf_node_list l = {0};
     fast_buffer_nod(g, &l);
     count = l.count;
   }

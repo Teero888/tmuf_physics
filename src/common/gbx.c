@@ -236,13 +236,15 @@ const char *tmuf_gbx_id(tmuf_gbx *g, uint32_t *number) {
     return "";
   if (v == 0xffffffffu)
     return "";
-  if ((v & 0xc0000000u) == 0) {
-    /* Numeric id (collection / engine ids), no string. */
+  if ((v & 0xc0000000u) != 0x40000000u && (v & 0xc0000000u) != 0x80000000u) {
+    /* Numeric id (collection / engine ids), no string. CMwId::Archive keeps
+       any value without the 0x40000000 / 0x80000000 name flag as it is
+       (e.g. 0xfffffffe in edited maps). */
     if (number)
       *number = v;
     return NULL;
   }
-  uint32_t index = v & 0x3fffffffu;
+  uint32_t index = v & 0x0fffffffu;
   if (index == 0) {
     const char *s = tmuf_gbx_string(g);
     if (g->error)
