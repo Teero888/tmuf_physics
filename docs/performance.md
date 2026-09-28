@@ -109,6 +109,7 @@ bit-exact: the whole oracle corpus matches.
 | 16 | triangle vertices loaded as vectors and transposed (no store-forwarding stalls) | +2.0 % | 203 k |
 | 17 | the static walk records which trees reach each record and at which slot (no search per mesh record) | +1.2 % (replay +2.5 %) | 206 k |
 | 18 | per mesh surface, each triangle's vertices packed together at load (the batch reads 36 contiguous bytes) | +3.5 % (replay +0.5 %) | 213 k |
+| 19 | exactness fix, not a speed-up: the world inverse inertia as GmMat3::Mult rounds it on the x87 (subnormal products); the optimized backend takes the float path unless an entry is below 2^-60 | −0.9 % | 211 k |
 
 Tried and dropped (slower or no gain, all exact):
 

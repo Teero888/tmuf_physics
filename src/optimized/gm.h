@@ -80,6 +80,46 @@ static inline gm_mat3 mat3_compose(const gm_mat3 *first, const gm_mat3 *second) 
   return out;
 }
 
+/* A product of floats as the game's x87 code rounds it with 24-bit
+   precision control: the significand to 24 bits, the exponent unbounded
+   (no subnormals on the register stack). In the float range this is the
+   float rounding. */
+static inline double x87_r24(double x) {
+  const double ax = fabs(x);
+  if (ax >= 0x1p-126 || ax == 0.0)
+    return (double)(float)x;
+  return (double)(float)(x * 0x1p100) * 0x1p-100;
+}
+
+/* mat3_compose as GmMat3::Mult computes it: each element's products and sums
+   stay on the x87 stack and are rounded to float once when stored. The same
+   as mat3_compose unless a product or sum is below the float range (then
+   float arithmetic would round it to a subnormal on the way). */
+static inline int mat3_has_tiny(const gm_mat3 *m) {
+  int tiny = 0;
+  for (int r = 0; r < 3; r++)
+    for (int c = 0; c < 3; c++)
+      tiny |= m->m[r][c] != 0.0f && fabsf(m->m[r][c]) < 0x1p-60f;
+  return tiny;
+}
+
+static inline gm_mat3 mat3_compose_x87(const gm_mat3 *first, const gm_mat3 *second) {
+  /* entries 0 or at least 2^-60: every product is 0 or at least 2^-120, in
+     the float range, and the float product is the same */
+  if (!mat3_has_tiny(first) && !mat3_has_tiny(second))
+    return mat3_compose(first, second);
+  gm_mat3 out;
+  for (int c = 0; c < 3; c++)
+    for (int r = 0; r < 3; r++) {
+      const double p0 = (double)second->m[r][0] * (double)first->m[0][c];
+      const double p1 = (double)second->m[r][1] * (double)first->m[1][c];
+      const double p2 = (double)second->m[r][2] * (double)first->m[2][c];
+      const double xy = x87_r24(x87_r24(p0) + x87_r24(p1));
+      out.m[r][c] = (float)x87_r24(xy + x87_r24(p2));
+    }
+  return out;
+}
+
 /* GmMat3::MultTranspose(rhs): this = this * rhs^T with columns as basis vectors:
    result column c = (rhs col k . this col c) for k = 0..2 as rows. */
 static inline gm_mat3 mat3_mul_transpose(const gm_mat3 *left, const gm_mat3 *right) {

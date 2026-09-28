@@ -141,8 +141,8 @@ void dyna_integrate(const dyna *d, const dyna_state *src, dyna_state *dst, float
 
   /* SetTranspose(rotation); Mult(body); Mult(rotation) */
   gm_mat3 t = mat3_transpose(&dst->rot);
-  gm_mat3 a = mat3_compose(&t, &d->params.inv_inertia_local);
-  dst->inv_inertia_world = mat3_compose(&a, &dst->rot);
+  gm_mat3 a = mat3_compose_x87(&t, &d->params.inv_inertia_local);
+  dst->inv_inertia_world = mat3_compose_x87(&a, &dst->rot);
 }
 
 void dyna_pre_collision(dyna *d, float dt) {
