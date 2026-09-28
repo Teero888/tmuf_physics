@@ -30,6 +30,10 @@ typedef struct tmuf_ghost {
   uint32_t event_count;
   tmuf_input_event *events;
   uint32_t validation_seed;
+  /* race settings the run was driven with ("<id>..</id><laps>N</laps>..."):
+     validation applies them (CGamePlayground::UpdateFromSettings) */
+  const char *race_settings;
+  uint32_t settings_laps; /* <laps>, 0 if none */
 
   /* CGameGhost state samples (zlib). */
   const uint8_t *samples;

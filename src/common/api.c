@@ -98,6 +98,8 @@ const void *tmuf_replay_map(const tmuf_replay *r, size_t *size) {
 
 const char *tmuf_replay_vehicle(const tmuf_replay *r) { return r->ghost->vehicle[0] ? r->ghost->vehicle[0] : ""; }
 
+uint32_t tmuf_replay_laps(const tmuf_replay *r) { return r->ghost->settings_laps; }
+
 uint32_t tmuf_replay_seed(const tmuf_replay *r) {
   return r->ghost->has_validation_seed ? r->ghost->validation_seed : 0u;
 }
@@ -146,7 +148,9 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     }
   }
   b->vehicle_name = name;
-  b->laps = b->map.has_laps && b->map.lap_race ? b->map.laps : 1;
+  /* CTrackManiaRace::InitNbLapsAndCheckpoints: the race settings' laps (a
+     replay's, see tmuf_replay_laps), else the map's for a lap race, else one */
+  b->laps = options && options->laps ? options->laps : b->map.has_laps && b->map.lap_race ? b->map.laps : 1;
   b->triangle_count = b->scene.triangle_count;
   b->triangles = malloc(sizeof *b->triangles * (b->triangle_count ? b->triangle_count : 1));
   if (!b->triangles) {

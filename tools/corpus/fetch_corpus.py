@@ -10,6 +10,9 @@ Resumable: existing files are skipped and a manifest.jsonl per source records
 what was fetched. Requests are throttled; be nice to the exchanges.
 
   fetch_corpus.py OUT_DIR [--source tmtas|tmnf|tmuf|all] [--limit N]
+  fetch_corpus.py OUT_DIR --query SITE NAME [--name TEXT] [--tag ID] [--max-time MS] [--limit N]
+      tracks of SITE (tmnf, tmuf) matching a name and/or tag, WR replays into
+      OUT_DIR/NAME (e.g. kacky maps, Trial/LOL tags: odd tricks)
 """
 import argparse
 import json
@@ -17,6 +20,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 USER_AGENT = "tmuf_physics-corpus/0.1 (+https://github.com/Teero888)"
@@ -132,12 +136,51 @@ def fetch_tmx(out_dir, site, limit, environments):
                 break
 
 
+def fetch_query(out_dir, site, name, text, tag, max_time, limit):
+    sink = Sink(out_dir, name)
+    after, got = None, 0
+    while got < limit:
+        url = (f"https://{site}.exchange/api/tracks?fields=TrackId,TrackName,Environment,Tags,"
+               f"WRReplay.ReplayId,WRReplay.ReplayTime&count=100&inhasrecord=1")
+        if text:
+            url += "&name=" + urllib.parse.quote(text)
+        if tag is not None:
+            url += f"&tag={tag}"
+        if after is not None:
+            url += f"&after={after}"
+        page = get_json(url)
+        if not page or not page.get("Results"):
+            break
+        for t in page["Results"]:
+            after = t["TrackId"]
+            wr = t.get("WRReplay") or {}
+            rid, ms = wr.get("ReplayId"), wr.get("ReplayTime")
+            if not rid or got >= limit or (max_time and (ms is None or ms > max_time)):
+                continue
+            meta = {"site": site, "track_id": t["TrackId"], "track": t["TrackName"],
+                    "environment": t.get("Environment"), "tags": t.get("Tags"), "time": ms}
+            if sink.save(f"{rid}.Replay.Gbx", f"https://{site}.exchange/recordgbx/{rid}", meta):
+                print(f"{name} {site} {rid} ({ms} ms) {t['TrackName']}", flush=True)
+                got += 1
+        if not page.get("More"):
+            break
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out_dir")
     ap.add_argument("--source", default="all", choices=["tmtas", "tmnf", "tmuf", "all"])
     ap.add_argument("--limit", type=int, default=None, help="max replays per source")
+    ap.add_argument("--query", nargs=2, metavar=("SITE", "NAME"))
+    ap.add_argument("--name", default=None)
+    ap.add_argument("--tag", type=int, default=None)
+    ap.add_argument("--max-time", type=int, default=None)
     args = ap.parse_args()
+
+    if args.query:
+        fetch_query(args.out_dir, args.query[0], args.query[1], args.name, args.tag, args.max_time,
+                    args.limit or 10**9)
+        return
 
     if args.source in ("tmtas", "all"):
         fetch_tmtas(args.out_dir, args.limit or 10**9)

@@ -92,6 +92,7 @@ enum {
 typedef struct tmuf_track_options {
   const char *vehicle; /* vehicle id; NULL: the map's, else the environment's car */
   uint32_t seed;       /* validation seed (tmuf_replay_seed), 0 for none */
+  uint32_t laps;       /* laps to race (tmuf_replay_laps), 0: the map's */
   uint32_t flags;      /* TMUF_TRACK_* */
 } tmuf_track_options;
 
@@ -164,6 +165,9 @@ TMUF_API void tmuf_replay_free(tmuf_replay *replay);
 /* The embedded map (.Challenge.Gbx bytes, owned by the replay). */
 TMUF_API const void *tmuf_replay_map(const tmuf_replay *replay, size_t *size);
 TMUF_API const char *tmuf_replay_vehicle(const tmuf_replay *replay); /* "" if none */
+/* Laps of the race settings the replay was driven with (0: none; pass it
+   as tmuf_track_options.laps: validation races that many laps). */
+TMUF_API uint32_t tmuf_replay_laps(const tmuf_replay *replay);
 /* Seed that turns the spawn by a tiny yaw in validation runs (0: none). */
 TMUF_API uint32_t tmuf_replay_seed(const tmuf_replay *replay);
 /* Recorded race time in ms, UINT32_MAX if the ghost did not finish. */

@@ -1,6 +1,7 @@
 #include "common/replay.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "common/gbx.h"
@@ -148,9 +149,12 @@ static void validation_inputs(tmuf_gbx *g, tmuf_ghost *gh, int has_seed) {
     gh->events[i].action = tmuf_gbx_u8(g);
     gh->events[i].value = tmuf_gbx_u32(g);
   }
-  tmuf_gbx_string(g);
+  tmuf_gbx_string(g); /* exe version */
   tmuf_gbx_skip(g, 12);
-  tmuf_gbx_string(g);
+  gh->race_settings = tmuf_gbx_string(g);
+  const char *lp = gh->race_settings ? strstr(gh->race_settings, "<laps>") : NULL;
+  if (lp)
+    gh->settings_laps = (uint32_t)strtoul(lp + 6, NULL, 10);
   if (has_seed)
     gh->validation_seed = tmuf_gbx_u32(g);
 }

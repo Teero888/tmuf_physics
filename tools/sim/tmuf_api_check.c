@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     }
     size_t map_size;
     const void *map = tmuf_replay_map(r, &map_size);
-    tmuf_track_options opt = {tmuf_replay_vehicle(r), tmuf_replay_seed(r)};
+    tmuf_track_options opt = {tmuf_replay_vehicle(r), tmuf_replay_seed(r), tmuf_replay_laps(r), 0};
     tmuf_track *t = tmuf_track_load(packs, map, map_size, &opt, err, sizeof err);
     if (!t) {
       printf("%s ERROR track %s\n", name, err);
@@ -120,6 +120,40 @@ int main(int argc, char **argv) {
     uint32_t n = tmuf_replay_inputs(r, &in);
     uint32_t race = tmuf_replay_race_time(r);
     uint32_t end_ms = race == UINT32_MAX ? UINT32_MAX : TMUF_RACE_START_MS + race;
+    /* A run the game rejects ("Wrong Simu") ends early: the car is put back
+       at its spawn and stays there, or the dump ends with teardown states.
+       Compare up to there (as tmuf_sim does). */
+    uint32_t oracle_stop = 0;
+    if (o && ocount > 1) {
+      for (uint32_t k = ocount; k-- > 262;) {
+        const float *a = o[k], *s0 = o[1];
+        int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
+        if (!still || memcmp(&a[13], &s0[13], 12) != 0)
+          break;
+        oracle_stop = k;
+      }
+      if (!oracle_stop) {
+        const tmuf_vec3 *sp = &tmuf_track_sim(t)->race.current.t;
+        const float st[3] = {sp->x, sp->y, sp->z};
+        for (uint32_t k = 262; k < ocount && k < n; k++) {
+          const float *a = o[k], *pv = o[k - 1];
+          int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
+          int moved = pv[16] != 0.0f || pv[17] != 0.0f || pv[18] != 0.0f;
+          if (still && moved && memcmp(&a[13], st, 12) == 0 && !in[k].respawn && !in[k - 1].respawn) {
+            oracle_stop = k;
+            break;
+          }
+        }
+      }
+      if (oracle_stop && race != UINT32_MAX && (uint64_t)oracle_stop * 10u < 2600u + (uint64_t)race)
+        ocount = oracle_stop;
+      else
+        oracle_stop = 0;
+      if (!oracle_stop && ocount > 4 && race != UINT32_MAX && (uint64_t)ocount * 10u + 100u < 2600u + (uint64_t)race) {
+        ocount -= 3;
+        oracle_stop = ocount;
+      }
+    }
     tmuf_world worlds[2] = {tmuf_world_empty(), tmuf_world_empty()};
     int cur = 0;
     tmuf_world_init(&worlds[0], t);
@@ -137,11 +171,19 @@ int main(int argc, char **argv) {
       uint32_t time = w->tick * TMUF_TICK_MS;
       /* the oracle dumps a tick's respawn before its physics */
       int respawn_next = i + 1 < n && in[i + 1].respawn;
-      if (diverged == UINT32_MAX && time <= end_ms && i + 1 < ocount && !respawn_next && differs(w, o[i + 1]))
+      if (diverged == UINT32_MAX && time <= end_ms && i + 1 < ocount && !respawn_next && differs(w, o[i + 1])) {
         diverged = i;
+        if (getenv("TMUF_API_VERBOSE")) {
+          const float *ours = (const float *)&w->sim.body.state;
+          for (int f = 0; f < 44; f++)
+            if (memcmp(&ours[f], &o[i + 1][f], 4))
+              printf("  tick %u field %d ours %.9g oracle %.9g (input a%u b%u s%d r%u)\n", i, f, (double)ours[f],
+                     (double)o[i + 1][f], in[i].accelerate, in[i].brake, in[i].steer, in[i].respawn);
+        }
+      }
     }
     const tmuf_race *rc = &worlds[cur].sim.race;
-    int finish_ok = race == UINT32_MAX || (rc->completed && rc->finish_time == race);
+    int finish_ok = race == UINT32_MAX || oracle_stop || (rc->completed && rc->finish_time == race);
     if (diverged == UINT32_MAX && finish_ok) {
       ok++;
       printf("%s MATCH %s %u ticks, %u copies, finish %u\n", name, tmuf_track_vehicle(t), n, copies,

@@ -194,8 +194,8 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   int clone_built = getenv("TMUF_SIM_SNAPTEST") && ref_sim_clone(&clone, &sim);
   void *snap = clone_built ? malloc(ref_sim_snapshot_size(&sim)) : NULL;
   uint32_t snap_checks = 0, snap_bad = 0;
-  /* ConfigureReplayRace: the map's laps for a lap race, else one */
-  sim.race.laps = map.has_laps && map.lap_race ? map.laps : 1;
+  /* ConfigureReplayRace: the race settings' laps, else the map's for a lap race, else one */
+  sim.race.laps = ghost->settings_laps ? ghost->settings_laps : map.has_laps && map.lap_race ? map.laps : 1;
   if (!op->summary)
     printf("race: %u checkpoints, %u laps, %u trigger records\n", sim.race.checkpoint_count, sim.race.laps,
            sim.triggers.record_count);
