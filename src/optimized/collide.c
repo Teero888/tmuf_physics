@@ -838,14 +838,12 @@ __attribute__((target("avx"))) static int ellipsoid_mesh_tris_avx(const ref_surf
        transposed into x, y, z vectors */
     __m128 pv[3][4];
     for (uint32_t j = 0; j < 4; j++) {
-      const uint8_t *tr = m->triangles + (size_t)tris[k0 + (j < lanes ? j : 0)] * 32;
-      uint32_t idx[3];
-      memcpy(idx, tr + 16, 12);
-      memcpy(&mat[j], tr + 28, 2);
-      for (int k = 0; k < 3; k++) {
-        const float *p = m->vertices + (size_t)idx[k] * 3;
-        pv[k][j] = _mm_movelh_ps(_mm_castpd_ps(_mm_load_sd((const double *)p)), _mm_load_ss(p + 2));
-      }
+      const uint32_t ti = tris[k0 + (j < lanes ? j : 0)];
+      memcpy(&mat[j], m->triangles + (size_t)ti * 32 + 28, 2);
+      const float *p = m->tri_vertices + (size_t)ti * 9;
+      pv[0][j] = _mm_loadu_ps(p);     /* x y z (next vertex's x in lane 3, unused) */
+      pv[1][j] = _mm_loadu_ps(p + 3);
+      pv[2][j] = _mm_movelh_ps(_mm_castpd_ps(_mm_load_sd((const double *)(p + 6))), _mm_load_ss(p + 8));
     }
     __m128 vx[3], vy[3], vz[3];
     for (int k = 0; k < 3; k++) {
@@ -1028,6 +1026,14 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
   uint32_t recs[AT_TREES][AT_RECS];
   uint32_t nrec[AT_TREES];
   memset(nrec, 0, sizeof nrec);
+  /* each reached record once, with the trees that reach it and its slot in
+     each tree's list */
+  typedef struct at_reached {
+    uint32_t rec, lanes;
+    uint8_t slot[AT_TREES];
+  } at_reached;
+  at_reached reached[AT_TREES * AT_RECS];
+  uint32_t nreached = 0;
   {
     uint32_t mask_stack[AT_STACK], end_stack[AT_STACK];
     uint32_t depth = 0, cur = all;
@@ -1041,15 +1047,20 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
         ci += cell->subtree_count;
         continue;
       }
-      if (cell->record >= 0)
+      if (cell->record >= 0) {
+        at_reached *re = &reached[nreached++];
+        re->rec = (uint32_t)cell->record;
+        re->lanes = m;
         for (uint32_t k = m; k; k &= k - 1u) {
           uint32_t t = (uint32_t)__builtin_ctz(k);
           if (nrec[t] == AT_RECS) {
             ref_detect_static(d, root, moving_iso);
             return;
           }
+          re->slot[t] = (uint8_t)nrec[t];
           recs[t][nrec[t]++] = (uint32_t)cell->record;
         }
+      }
       if (cell->subtree_count > 1) {
         if (depth == AT_STACK) {
           ref_detect_static(d, root, moving_iso);
@@ -1073,32 +1084,27 @@ static inline __attribute__((always_inline)) void at_walk_world_impl(ref_detect 
   for (uint32_t t = 0; t < nt; t++)
     for (uint32_t k = 0; k < nrec[t]; k++)
       tri_off[t][k] = NONE;
-  for (uint32_t t0 = 0; t0 < nt; t0++) {
-    if (trees[t0].tree->surf->type != SURF_ELLIPSOID)
-      continue;
-    for (uint32_t k0 = 0; k0 < nrec[t0]; k0++) {
-      if (tri_off[t0][k0] != NONE)
-        continue;
-      uint32_t r = recs[t0][k0];
+  uint32_t ellipsoids = 0;
+  for (uint32_t t = 0; t < nt; t++)
+    if (trees[t].tree->surf->type == SURF_ELLIPSOID)
+      ellipsoids |= 1u << t;
+  for (uint32_t ri = 0; ri < nreached; ri++) {
+    {
+      const at_reached *re = &reached[ri];
+      const uint32_t r = re->rec;
       const ref_static_record *rec = &w->records[r];
       const ref_surf *m = rec->surf;
-      if (!(rec->tree_flags & 0x80u) || m->type != SURF_MESH)
+      if (!(re->lanes & ellipsoids) || !(rec->tree_flags & 0x80u) || m->type != SURF_MESH)
         continue;
-      /* the ellipsoids from t0 on that reach r: lane = tree */
-      uint32_t lanes = 0, slot[AT_TREES];
+      /* the ellipsoids that reach r: lane = tree */
+      const uint32_t lanes = re->lanes & ellipsoids;
+      uint32_t slot[AT_TREES];
       at_boxes e;
       memset(&e, 0, sizeof e);
-      for (uint32_t t = t0; t < nt; t++) {
-        if (trees[t].tree->surf->type != SURF_ELLIPSOID)
-          continue;
-        uint32_t k = t == t0 ? k0 : NONE;
-        for (uint32_t j = 0; k == NONE && j < nrec[t]; j++)
-          if (recs[t][j] == r)
-            k = j;
-        if (k == NONE)
-          continue;
+      for (uint32_t kk = lanes; kk; kk &= kk - 1u) {
+        const uint32_t t = (uint32_t)__builtin_ctz(kk);
+        const uint32_t k = re->slot[t];
         slot[t] = k;
-        lanes |= 1u << t;
         to_mesh[t][k] = iso4_mult_inverse(&trees[t].local, &rec->iso);
         gm_box eb = {v3(0.0f, 0.0f, 0.0f), ellipsoid_radii(trees[t].tree->surf)};
         eb = box_transform(&eb, &to_mesh[t][k]);

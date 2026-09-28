@@ -115,6 +115,24 @@ static const ref_surf *get_surf(build_ctx *b, tmuf_asset *owner, tmuf_gbx_node *
     mats[i] = id;
   }
   r->material_ids = mats;
+  if (r->type == SURF_MESH && r->triangle_count) {
+    /* each triangle's vertices packed together (the collision batches read
+       them in one go) */
+    float *tv = malloc(sizeof *tv * 9 * (size_t)r->triangle_count);
+    if (!tv) {
+      b->error = 1;
+    } else {
+      for (uint32_t i = 0; i < r->triangle_count; i++) {
+        uint32_t idx[3];
+        memcpy(idx, r->triangles + (size_t)i * 32 + 16, 12);
+        for (int k = 0; k < 3; k++)
+          for (int c = 0; c < 3; c++)
+            tv[i * 9 + (uint32_t)k * 3 + (uint32_t)c] =
+                idx[k] < r->vertex_count ? r->vertices[(size_t)idx[k] * 3 + (uint32_t)c] : 0.0f;
+      }
+      r->tri_vertices = tv;
+    }
+  }
   ref_world *w = b->w;
   ref_surf **s = grow(w->surfs, &w->surf_cap, w->surf_count, sizeof *s);
   if (!s) {
@@ -331,6 +349,7 @@ int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
 void ref_world_free(ref_world *w) {
   for (uint32_t i = 0; i < w->surf_count; i++) {
     free((void *)w->surfs[i]->material_ids);
+    free((void *)w->surfs[i]->tri_vertices);
     if (w->surfs[i]->pylon_raise) {
       free((void *)w->surfs[i]->vertices);
       free((void *)w->surfs[i]->triangles);
