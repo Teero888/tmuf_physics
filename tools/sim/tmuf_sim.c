@@ -266,7 +266,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   uint32_t matched = 0;
   int diverged = 0;
   for (uint32_t i = 0; i < n; i++) {
-    int check = snap && i % 97 == 5;
+    int check = snap && i % 13 == 5;
     if (check) {
       ref_sim_save(&sim, snap);
       ref_sim_load(&clone, snap);
@@ -282,6 +282,9 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
                         memcmp(&a->damper_absorb, &b->damper_absorb, sizeof(float) * 3) == 0 &&
                         memcmp(&a->angular_speed, &b->angular_speed, sizeof(float)) == 0;
       }
+      for (uint32_t k = 0; k < sim.tree_count; k++)
+        wheels_equal &= memcmp(&sim.trees[k].local, &clone.trees[k].local, sizeof sim.trees[k].local) == 0 &&
+                        memcmp(&sim.trees[k].box, &clone.trees[k].box, sizeof sim.trees[k].box) == 0;
       if (memcmp(&clone.body.state, &sim.body.state, sizeof sim.body.state) != 0 || !wheels_equal) {
         if (!snap_bad)
           printf("snapshot test: clone differs after tick %u\n", i);
