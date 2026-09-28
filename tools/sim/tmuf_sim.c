@@ -220,12 +220,20 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   /* A replay the game rejects ("Wrong Simu") ends its run early: the car is
      put back at its spawn and stays there. Compare up to that point. */
   uint32_t oracle_stop = 0;
-  for (uint32_t k = o.count; k-- > 262;) {
+  for (uint32_t k = o.count; k-- > 260;) {
     const float *a = o.states[k], *s0 = o.states[1];
     int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
     if (!still || memcmp(&a[13], &s0[13], 12) != 0)
       break;
     oracle_stop = k;
+  }
+  /* the reset state itself holds the spawn location exactly (the car settles
+     a little after it): still, but not state 1's position */
+  while (oracle_stop > 261) {
+    const float *a = o.states[oracle_stop - 1];
+    if (!(a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f))
+      break;
+    oracle_stop--;
   }
   /* or it puts the car on the start block's spawn (without the validation
      seed's yaw) at rest, without a respawn input */

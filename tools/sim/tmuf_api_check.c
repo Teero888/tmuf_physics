@@ -134,12 +134,20 @@ int main(int argc, char **argv) {
     uint32_t oracle_stop = 0;
     int game_finished = !o || race == UINT32_MAX || (uint64_t)ocount * 10u < 2600u + (uint64_t)race + 3000u;
     if (o && ocount > 1) {
-      for (uint32_t k = ocount; k-- > 262;) {
+      for (uint32_t k = ocount; k-- > 260;) {
         const float *a = o[k], *s0 = o[1];
         int still = a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f;
         if (!still || memcmp(&a[13], &s0[13], 12) != 0)
           break;
         oracle_stop = k;
+      }
+      /* the reset state itself holds the spawn location exactly (the car
+         settles a little after it): still, but not state 1's position */
+      while (oracle_stop > 261) {
+        const float *a = o[oracle_stop - 1];
+        if (!(a[16] == 0.0f && a[17] == 0.0f && a[18] == 0.0f && a[22] == 0.0f && a[23] == 0.0f && a[24] == 0.0f))
+          break;
+        oracle_stop--;
       }
       if (!oracle_stop) {
         const tmuf_vec3 *sp = &tmuf_track_sim(t)->race.current.t;
