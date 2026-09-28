@@ -16,10 +16,6 @@ struct tmuf_track {
   ref_sim tpl; /* the car at time 0; worlds are clones of it */
 };
 
-struct tmuf_world_state {
-  ref_sim sim;
-};
-
 /* ---- tracks ---- */
 
 tmuf_track *tmuf_track_load(const tmuf_packs *packs, const void *map, size_t size, const tmuf_track_options *options,
@@ -76,13 +72,9 @@ uint32_t tmuf_track_triangles(const tmuf_track *t, const tmuf_triangle **triangl
   return t->base.triangle_count;
 }
 
-/* ---- worlds ---- */
+const tmuf_sim *tmuf_track_sim(const tmuf_track *t) { return &t->tpl; }
 
-static void bind(tmuf_world *w) {
-  w->body = &w->state->sim.body;
-  w->car = &w->state->sim.car;
-  w->race = &w->state->sim.race;
-}
+/* ---- worlds ---- */
 
 tmuf_world tmuf_world_empty(void) {
   tmuf_world w;
@@ -92,39 +84,32 @@ tmuf_world tmuf_world_empty(void) {
 
 int tmuf_world_init(tmuf_world *w, const tmuf_track *track) {
   *w = tmuf_world_empty();
-  tmuf_world_state *st = calloc(1, sizeof *st);
-  if (!st)
+  if (!ref_sim_clone(&w->sim, &track->tpl))
     return 0;
-  if (!ref_sim_clone(&st->sim, &track->tpl)) {
-    free(st);
-    return 0;
-  }
   w->track = track;
-  w->state = st;
-  bind(w);
   return 1;
 }
 
 int tmuf_world_copy(tmuf_world *to, const tmuf_world *from) {
   if (to == from)
     return 1;
-  if (!from->state) {
+  if (!from->track) {
     tmuf_world_free(to);
     return 1;
   }
-  if (!to->state || to->track != from->track) {
+  if (to->track != from->track) {
     tmuf_world_free(to);
     if (!tmuf_world_init(to, from->track))
       return 0;
   }
-  ref_sim_copy_state(&to->state->sim, &from->state->sim);
+  ref_sim_copy_state(&to->sim, &from->sim);
   to->tick = from->tick;
   to->input = from->input;
   return 1;
 }
 
 void tmuf_world_tick(tmuf_world *w) {
-  ref_sim *s = &w->state->sim;
+  ref_sim *s = &w->sim;
   const tmuf_input *in = &w->input;
   ref_tick tk = tmuf_control_tick_at(w->tick, in->accelerate, in->brake, in->steer, in->respawn);
   /* the first tick's controls are installed as the car is created
@@ -136,9 +121,7 @@ void tmuf_world_tick(tmuf_world *w) {
 }
 
 void tmuf_world_free(tmuf_world *w) {
-  if (w->state) {
-    ref_sim_free(&w->state->sim);
-    free(w->state);
-  }
+  if (w->track)
+    ref_sim_free(&w->sim);
   *w = tmuf_world_empty();
 }

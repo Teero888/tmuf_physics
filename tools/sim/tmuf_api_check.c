@@ -69,7 +69,7 @@ static float (*load_oracle(const char *path, unsigned *count))[45] {
 }
 
 /* the body state is the game's CHmsDyna state layout, as dumped */
-static int differs(const tmuf_world *w, const float *o) { return memcmp(&w->body->state, o, 44 * sizeof(float)) != 0; }
+static int differs(const tmuf_world *w, const float *o) { return memcmp(&w->sim.body.state, o, 44 * sizeof(float)) != 0; }
 
 int main(int argc, char **argv) {
   if (argc < 3) {
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
       continue;
     }
     unsigned ocount;
-    float(*o)[45] = load_oracle(op, &ocount);
+    float(*o)[45] = getenv("TMUF_API_NO_ORACLE") ? (ocount = 0, NULL) : load_oracle(op, &ocount);
     const tmuf_input *in;
     uint32_t n = tmuf_replay_inputs(r, &in);
     uint32_t race = tmuf_replay_race_time(r);
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
       if (diverged == UINT32_MAX && time <= end_ms && i + 1 < ocount && !respawn_next && differs(w, o[i + 1]))
         diverged = i;
     }
-    const tmuf_race *rc = worlds[cur].race;
+    const tmuf_race *rc = &worlds[cur].sim.race;
     int finish_ok = race == UINT32_MAX || (rc->completed && rc->finish_time == race);
     if (diverged == UINT32_MAX && finish_ok) {
       ok++;

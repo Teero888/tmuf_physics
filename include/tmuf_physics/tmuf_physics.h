@@ -14,7 +14,7 @@
  *   tmuf_world_init(&world, track);
  *   world.input = (tmuf_input){.accelerate = 1};
  *   tmuf_world_tick(&world);           // one 10 ms tick
- *   // world.body->state.pos, world.car->wheels[i], world.race->finish_time, ...
+ *   // world.sim.body.state.pos, world.sim.car.wheels[i], world.sim.race.finish_time, ...
  *
  *   tmuf_world copy = tmuf_world_empty();
  *   tmuf_world_copy(&copy, &world);    // cheap: reuses copy's memory
@@ -45,6 +45,8 @@
 #else
 #define TMUF_API
 #endif
+
+#include <tmuf_physics/state.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,218 +109,10 @@ typedef struct tmuf_triangle {
 
 TMUF_API uint32_t tmuf_track_triangles(const tmuf_track *track, const tmuf_triangle **triangles);
 
-/* ---- the physics state: the game's own structures ---- *
- *
- * Matrices are row-major (m[row][col]) and a local vector v maps to m * v;
- * quaternions are (w, x, y, z). Speeds are m/s, times ms. These are the
- * structures the simulation works on, not copies. */
-
-#define TMUF_CAR_MAX_WHEELS 4
-
-struct tmuf_collision_tree; /* the car's collision trees (internal) */
-struct tmuf_car_def;        /* the car's definition (internal) */
-struct tmuf_vehicle_tuning; /* the car's tunings (internal) */
-struct tmuf_scene_water;    /* the track's water (internal) */
-
-typedef struct tmuf_vec3 {
-  float x, y, z;
-} tmuf_vec3;
-
-typedef struct tmuf_quat {
-  float w, x, y, z;
-} tmuf_quat;
-
-typedef struct tmuf_mat3 {
-  float m[3][3];
-} tmuf_mat3;
-
-typedef struct tmuf_iso4 {
-  tmuf_mat3 r;
-  tmuf_vec3 t;
-} tmuf_iso4;
-
-typedef struct tmuf_box {
-  tmuf_vec3 center, half;
-} tmuf_box;
-
-/* CHmsDyna::CHmsStateDyna, 180 bytes, the game's memory layout (the oracle
-   dumps exactly this). */
-typedef struct tmuf_dyna_state {
-  tmuf_quat quat;
-  tmuf_mat3 rot;
-  tmuf_vec3 pos;
-  tmuf_vec3 lin;       /* linear speed */
-  tmuf_vec3 lin_corr;  /* linear correction speed */
-  tmuf_vec3 ang;       /* angular speed */
-  tmuf_vec3 force;
-  tmuf_vec3 torque;
-  tmuf_mat3 inv_inertia_world;
-  uint32_t tweaked_valid;
-  tmuf_vec3 tweaked_lin;
-} tmuf_dyna_state;
-
-typedef enum tmuf_dyna_type { TMUF_DYNA_LINEAR_ONLY = 0, TMUF_DYNA_FULL = 1, TMUF_DYNA_FROZEN = 2 } tmuf_dyna_type;
-
-typedef struct tmuf_dyna_params {
-  float mass;
-  tmuf_mat3 inv_inertia_local; /* body inverse inertia ("bodyInertiaLike") */
-  tmuf_vec3 com;               /* local center of mass */
-  float max_step_distance;
-  float linear_damping_scale, angular_damping_scale;
-  float force_scale; /* scales the force fields (gravity) */
-} tmuf_dyna_params;
-
-
-typedef struct tmuf_dyna {
-  tmuf_dyna_params params;
-  tmuf_dyna_state state; /* currentState: the working state */
-  tmuf_dyna_state write; /* writeState: GetLocation() */
-  tmuf_dyna_state temp;  /* tempState */
-  tmuf_dyna_type type;
-  int active;
-  int has_max_ang;
-  float max_ang;
-  uint32_t replacement_count, replacement_cap;
-  tmuf_vec3 *replacements; /* pending collision replacements (grown, freed by dyna_free) */
-} tmuf_dyna;
-
-/* GmSpring<float> */
-typedef struct tmuf_car_spring {
-  float stiffness, damping, value, velocity;
-} tmuf_car_spring;
-
-/* CSceneVehicleCar::SSimulationWheel (simulation part) */
-typedef struct tmuf_car_wheel {
-  int kills_lateral_speed;
-  int front;
-  float rolling_radius;
-  struct tmuf_collision_tree *tree;           /* collision tree of the wheel surface */
-  tmuf_iso4 rest_iso, cur_iso; /* SSurfaceHandler */
-  tmuf_vec3 force_point;
-  /* SRealTimeState */
-  float damper_absorb, damper_velocity, max_replacement_y;
-  tmuf_mat3 visual_rotation, contact_frame;
-  tmuf_vec3 latest_contact_point;
-  float angular_speed;
-  int contact;
-  uint8_t contact_material;
-  int slipping;
-  tmuf_vec3 peer_z_local;
-  uint32_t peer_corpus;
-  uint32_t normal_samples;
-  tmuf_vec3 normal_sum;
-  float spin_angle, steer_angle, steer_target;
-  int rejected;
-  tmuf_vec3 rejected_point;
-} tmuf_car_wheel;
-
-typedef struct tmuf_car {
-  struct tmuf_car_def *def;
-  struct tmuf_vehicle_tuning *t; /* &def->tuning (curves change interpolation) */
-  struct tmuf_dyna *body;
-  uint32_t tick; /* timer tick time, ms */
-
-  /* dyna params derived from the solid physical parameters */
-  float solid_mass;
-  tmuf_vec3 solid_com;
-  float contact_feedback_scale, linear_fluid_friction;
-
-  tmuf_car_wheel wheels[TMUF_CAR_MAX_WHEELS];
-  uint32_t wheel_count;
-
-  struct {
-    float gate_a, gate_b, steering, special_gate, current_steering;
-    int forced_low_speed_friction;
-    int special_mode;
-    int no_ground_friction_guard;
-  } controls;
-  struct {
-    tmuf_car_spring forward, side;
-    float ramp0, ramp1, drive_limit, velocity_limit, value_limit, surface;
-  } feedback;
-  float linear_speed_cap, reverse_gear_speed_threshold;
-  struct {
-    int update_wheel_visuals, integrate_wheels, integrate_engine, zero_horizontal_speed;
-    int speed_blocked, speed_blocked2;
-  } integration;
-  struct {
-    float input_max, low_feedback_gate_scale, low_feedback_friction_scale, low_feedback_force;
-    float input_memory, target_input, slip_rpm_scale, shift_cooldown;
-    int use_gate_b;
-    int gear;
-  } engine;
-  struct {
-    uint32_t roulette_origin;
-    float progress, impulse_scale;
-    uint32_t start_tick, end_tick;
-    int type;
-    uint32_t source_corpus;
-    float type2_phase;
-  } turbo;
-  struct {
-    int refresh_memory;
-    uint32_t memory_tick;
-    tmuf_vec3 memory_angular;
-  } air;
-  struct {
-    int body_impact, front_impact, rear_impact, peak_rear, peak_front, peak_body;
-    uint8_t last_body_material, last_wheel_material, peak_wheel_material, peak_body_material;
-    int body_contact, lateral_slowdown_contact;
-    uint32_t lateral_slowdown_tick, special_cooldown_until;
-    float front_bucket, rear_bucket, body_bucket;
-    uint32_t wheel_contact_count, body_contact_count;
-    tmuf_vec3 body_point_sum, body_normal_sum;
-  } contacts;
-  struct {
-    float steer_angle, previous_sign;
-    int phase;
-  } radius;
-  struct {
-    int active;
-    uint32_t last_tick, start_tick, elapsed, steering_tick;
-    int steering_slip;
-  } slip;
-  struct {
-    int engine_state, burnout_phase, wheel_speed_override;
-    tmuf_iso4 frame_iso;
-    tmuf_vec3 scaled_force, burnout_center;
-    float burnout_base_radius, burnout_target_radius;
-    uint32_t burnout_start, burnout_exit_start;
-    tmuf_vec3 burnout_normal;
-    float burnout_direction;
-    tmuf_vec3 local_speed;
-    float active_steer_slowdown;
-    int drive_speed_inhibited, input_window_exceeded, shift_down;
-    float wheel_span;
-  } geared;
-  struct {
-    tmuf_vec3 force, impulse;
-  } acc;
-  uint32_t last_forces_tick;
-  int water_splash_events;
-  tmuf_vec3 water_splash_speed;
-  const struct tmuf_scene_water *water; /* the zone's water, NULL if none */
-  /* frame state used by the race and replays */
-  struct {
-    float forward_speed, side_speed;
-    int has_wheel_contact, has_body_contact;
-  } frame;
-} tmuf_car;
-
-/* CTrackManiaRace: checkpoint slots and the respawn location */
-typedef struct tmuf_race {
-  int has_spawn;
-  tmuf_iso4 current, previous; /* CTrackManiaPlayerInfo spawn locations */
-  uint32_t checkpoint_count, laps, lap_checkpoints, completed_laps, checkpoints_passed;
-  int completed;
-  uint32_t finish_time; /* race time of the finish, ms */
-  uint32_t respawns;    /* respawns done */
-  uint8_t *passed; /* checkpoint_count + 1 slots (the last: finish) */
-  /* per scene corpus */
-  int32_t *slot; /* checkpoint slot, -1 if none */
-  uint8_t *role, *respawn_current;
-  tmuf_iso4 *spawn;
-} tmuf_race;
+/* The track's simulation at time 0, which every world starts as a copy of:
+   its static collision (world, triggers), water, race tables and the car's
+   definition are the ones all worlds on the track share. */
+TMUF_API const tmuf_sim *tmuf_track_sim(const tmuf_track *track);
 
 /* ---- worlds: one car driving a track ---- */
 
@@ -330,23 +124,21 @@ typedef struct tmuf_input {
   int32_t steer;      /* -65536 (full left) .. 65536 (full right); keys steer +-65536 */
 } tmuf_input;
 
-typedef struct tmuf_world_state tmuf_world_state; /* owns the structures below */
-
 typedef struct tmuf_world {
   const tmuf_track *track;
   uint32_t tick;    /* ticks simulated: the time is tick * TMUF_TICK_MS */
   tmuf_input input; /* used by the next tmuf_world_tick */
-  tmuf_dyna *body;  /* the car's rigid body (CHmsDyna); body->state is its state */
-  tmuf_car *car;    /* the car (CSceneVehicleCar) */
-  tmuf_race *race;  /* checkpoints, laps, finish and respawn (CTrackManiaRace) */
-  tmuf_world_state *state;
+  tmuf_sim sim;     /* the simulation itself (tmuf_physics/state.h): sim.body is the
+                       car's rigid body, sim.car the car, sim.race the race,
+                       sim.world and sim.triggers the track's static collision */
 } tmuf_world;
 
 TMUF_API tmuf_world tmuf_world_empty(void);
 /* The car at time 0 on the track's start. world must be empty or freed. */
 TMUF_API int tmuf_world_init(tmuf_world *world, const tmuf_track *track);
 /* to becomes an exact copy of from. Cheap when to already holds a world on
-   the same track (its memory is reused); to may also be empty. */
+   the same track (its memory is reused); to may also be empty. A world holds
+   pointers into itself: copy it with this, never by assignment. */
 TMUF_API int tmuf_world_copy(tmuf_world *to, const tmuf_world *from);
 /* One tick with world->input. */
 TMUF_API void tmuf_world_tick(tmuf_world *world);

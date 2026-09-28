@@ -449,7 +449,7 @@ static int uses_sphere_buffer(const ref_surf *s) { return s->type == SURF_SPHERE
 
 int ref_mtree_update_box(ref_mtree *t) {
   int has = 0;
-  gm_box box;
+  gm_box box = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
   if (t->surf && !(t->surf->geom_box.half.x < 0.0f)) {
     box = t->surf->geom_box;
     has = 1;

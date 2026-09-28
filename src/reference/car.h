@@ -13,47 +13,51 @@
 #include "reference/dyna.h"
 #include "reference/gm.h"
 
-enum {
-  MAT_CONCRETE = 0,
-  MAT_ICE = 3,
-  MAT_METAL = 4,
-  MAT_DIRT = 6,
-  MAT_TURBO = 7,
-  MAT_RUBBER = 9,
-  MAT_SLIDING_RUBBER = 10,
-  MAT_TEST = 11,
-  MAT_WATER = 13,
-  MAT_GOLF_BALL = 23,
-  MAT_GOLF_WALL = 24,
-  MAT_GOLF_GROUND = 25,
-  MAT_TURBO2 = 26,
-  MAT_FREE_WHEELING = 29,
-  MAT_TURBO_ROULETTE = 30,
-  MAT_COUNT = 31
-};
+#define MAT_CONCRETE TMUF_MAT_CONCRETE
+#define MAT_ICE TMUF_MAT_ICE
+#define MAT_METAL TMUF_MAT_METAL
+#define MAT_DIRT TMUF_MAT_DIRT
+#define MAT_TURBO TMUF_MAT_TURBO
+#define MAT_RUBBER TMUF_MAT_RUBBER
+#define MAT_SLIDING_RUBBER TMUF_MAT_SLIDING_RUBBER
+#define MAT_TEST TMUF_MAT_TEST
+#define MAT_WATER TMUF_MAT_WATER
+#define MAT_GOLF_BALL TMUF_MAT_GOLF_BALL
+#define MAT_GOLF_WALL TMUF_MAT_GOLF_WALL
+#define MAT_GOLF_GROUND TMUF_MAT_GOLF_GROUND
+#define MAT_TURBO2 TMUF_MAT_TURBO2
+#define MAT_FREE_WHEELING TMUF_MAT_FREE_WHEELING
+#define MAT_TURBO_ROULETTE TMUF_MAT_TURBO_ROULETTE
+#define MAT_COUNT TMUF_MAT_COUNT
+#define HANDLING_STANDARD TMUF_HANDLING_STANDARD
+#define HANDLING_LATERAL TMUF_HANDLING_LATERAL
+#define HANDLING_RADIUS TMUF_HANDLING_RADIUS_STEERING
+#define HANDLING_SLIP TMUF_HANDLING_SLIP_RESPONSE
+#define HANDLING_GEARED TMUF_HANDLING_GEARED_DRIVE
+#define WHEEL_FORCE_SPRING TMUF_WHEEL_FORCE_DIRECT_SPRING
+#define WHEEL_FORCE_FOLLOW TMUF_WHEEL_FORCE_FOLLOW_ABSORB
+#define WHEEL_FORCE_FOLLOW_IMPULSE TMUF_WHEEL_FORCE_FOLLOW_ABSORB_IMPULSE
+#define TURBO_NONE TMUF_TURBO_NONE
+#define TURBO_DIRECT TMUF_TURBO_DIRECT
+#define TURBO_ROULETTE TMUF_TURBO_ROULETTE
+#define ENGINE_STEADY TMUF_ENGINE_STEADY
+#define ENGINE_GEAR_SHIFT TMUF_ENGINE_GEAR_SHIFT
+#define ENGINE_FORWARD TMUF_ENGINE_FORWARD
+#define ENGINE_REVERSE TMUF_ENGINE_REVERSE
+#define ENGINE_BURNOUT TMUF_ENGINE_BURNOUT
+#define BURNOUT_NONE TMUF_BURNOUT_NONE
+#define BURNOUT_SPIN TMUF_BURNOUT_SPIN
+#define BURNOUT_CIRCLE TMUF_BURNOUT_CIRCLE
+#define BURNOUT_EXIT TMUF_BURNOUT_EXIT
+#define IMPACT_NONE TMUF_IMPACT_NONE
+#define IMPACT_LOW TMUF_IMPACT_LOW
+#define IMPACT_HIGH TMUF_IMPACT_HIGH
+#define RADIUS_IDLE TMUF_RADIUS_IDLE
+#define RADIUS_DIRECT TMUF_RADIUS_DIRECT
+#define RADIUS_CAPTURED TMUF_RADIUS_CAPTURED
 
-enum { HANDLING_STANDARD = 0, HANDLING_LATERAL = 1, HANDLING_RADIUS = 3, HANDLING_SLIP = 4, HANDLING_GEARED = 5 };
-enum { WHEEL_FORCE_SPRING = 0, WHEEL_FORCE_FOLLOW = 1, WHEEL_FORCE_FOLLOW_IMPULSE = 2 };
-enum { TURBO_NONE = 0, TURBO_DIRECT = 1, TURBO_ROULETTE = 2 };
-enum { ENGINE_STEADY = 0, ENGINE_GEAR_SHIFT = 1, ENGINE_FORWARD = 2, ENGINE_REVERSE = 3, ENGINE_BURNOUT = 4 };
-enum { BURNOUT_NONE = 0, BURNOUT_SPIN = 1, BURNOUT_CIRCLE = 2, BURNOUT_EXIT = 3 };
-enum { IMPACT_NONE = 0, IMPACT_LOW = 1, IMPACT_HIGH = 2 };
-enum { RADIUS_IDLE = 0, RADIUS_DIRECT = 1, RADIUS_CAPTURED = 2 };
-
-/* CSceneVehicleMaterial */
-typedef struct car_material {
-  float x, y, z, w; /* SBlendableVals */
-  int fake_contact;  /* has the fake contact bitmap */
-  float fake_period_x, fake_period_z, fake_speed_scale, fake_depth_max;
-  float feedback_speed_divisor, feedback_scale;
-  uint32_t natural_id;
-} car_material;
-
-/* Fake contact texture (8-bit samples, the first byte of each pixel). */
-typedef struct car_fake_texture {
-  uint32_t width, height, stride, bpp;
-  const uint8_t *pixels;
-} car_fake_texture;
+typedef tmuf_car_material car_material;
+typedef tmuf_car_fake_texture car_fake_texture;
 
 typedef tmuf_car_spring car_spring;
 
@@ -75,22 +79,7 @@ typedef struct car_contact {
 
 #define CAR_MAX_WHEELS TMUF_CAR_MAX_WHEELS
 
-typedef struct tmuf_car_def {
-  tmuf_vehicle_tuning tuning;
-  uint32_t wheel_count;
-  struct {
-    int kills_lateral_speed, front;
-    ref_mtree *tree;
-    gm_vec3 force_point; /* rest surface point in the car frame */
-  } wheels[CAR_MAX_WHEELS];
-  float linear_speed_cap, reverse_gear_speed_threshold;
-  gm_box water_box;
-  uint32_t material_count;
-  car_material materials[MAT_COUNT];
-  uint32_t material_remap[MAT_COUNT];
-  car_fake_texture fake_texture;
-  ref_mtree *root; /* collision tree */
-} car_def;
+typedef tmuf_car_def car_def;
 
 typedef tmuf_car car;
 

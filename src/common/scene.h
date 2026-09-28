@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <tmuf_physics/tmuf_physics.h>
+
 #include "common/assets.h"
 #include "common/challenge.h"
 #include "common/packset.h"
@@ -57,16 +59,7 @@ typedef struct tmuf_material_remap {
 
 #define TMUF_SCENE_MAX_MATERIAL_REMAPS 128
 
-/* CSceneVehicleWaterZone: where the car floats. A grid over the map's
-   columns (1: water) and the water surface height. */
-typedef struct tmuf_scene_water {
-  int enabled;
-  float cell_size[2], origin[2]; /* x, z */
-  uint32_t dims[2];
-  uint8_t outside;
-  uint8_t *cells; /* dims[0] * dims[1], x fastest */
-  float surface_height, secondary_cull_height;
-} tmuf_scene_water;
+
 
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
