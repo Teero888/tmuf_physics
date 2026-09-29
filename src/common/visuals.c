@@ -231,6 +231,8 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
     m->uv_sets[i] = pv->texcoords[i];
     m->uv_dims[i] = pv->texcoord_dim[i];
   }
+  m->tangents = pv->tangents;
+  m->binormals = pv->binormals;
   m->index_count = pv->index_count - pv->index_count % 3u;
   m->indices = pv->indices;
   memcpy(m->bounds, pv->bbox, sizeof m->bounds);

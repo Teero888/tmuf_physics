@@ -156,6 +156,9 @@ typedef struct tmuf_visual_mesh {
   uint32_t index_count; /* 3 per triangle */
   const uint16_t *indices;
   float bounds[6]; /* centre, half extents */
+  /* the tangent and binormal of each vertex (normal-mapped surfaces), packed
+     like the normals; NULL when the mesh has none */
+  const uint32_t *tangents, *binormals;
 } tmuf_visual_mesh;
 
 /* A texture a material's shader samples: the sampler's name (e.g.

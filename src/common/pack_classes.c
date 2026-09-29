@@ -416,8 +416,17 @@ static void c0902c004(tmuf_gbx *g, void *node, uint32_t id) {
     stride += 8;
   v->vertex_stride = stride;
   v->vertices = read_block(g, v->vertex_count, stride);
-  skip_counted(g, 4); /* tangents */
-  skip_counted(g, 4); /* binormals */
+  /* tangents, then binormals: one per vertex when present */
+  for (int k = 0; k < 2 && !g->error; k++) {
+    const uint32_t n = tmuf_gbx_u32(g);
+    if (n > 0x1000000u) {
+      tmuf_gbx_fail(g, "record count %u", n);
+      return;
+    }
+    const uint32_t *data = read_block(g, n, 4);
+    if (n == v->vertex_count && n)
+      *(k ? &v->binormals : &v->tangents) = data;
+  }
 }
 
 static void c0902c002(tmuf_gbx *g, void *node, uint32_t id) {

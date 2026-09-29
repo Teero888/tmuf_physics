@@ -43,6 +43,7 @@ typedef struct tmuf_plug_visual {
   float bbox[6]; /* center, half extents */
   uint32_t vertex_stride;
   const uint8_t *vertices; /* position, [normal u32], [color u32], [sprite 8] */
+  const uint32_t *tangents, *binormals; /* packed like the normals, NULL if absent */
   uint32_t index_count;
   const uint16_t *indices;
   tmuf_gbx_node *material;
