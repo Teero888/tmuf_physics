@@ -5,6 +5,7 @@
 #include "common/visuals.h"
 
 #include <float.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +58,8 @@ typedef struct builder {
 } builder;
 
 /* the image file a bitmap loads: on disk, else inside the packs */
-static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tmuf_visual_texture *t) {
+static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tmuf_visual_texture *t,
+                        int use_tc_scale) {
   t->file = t->pack_file = NULL;
   tmuf_asset *ba;
   tmuf_gbx_node *bn = tmuf_assets_follow(&b->scene->assets, owner, bitmap, &ba);
@@ -68,6 +70,20 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
     return;
   }
   const tmuf_plug_bitmap *bm = bn->data;
+  /* CPlugBitmapAddress::ApplyBitmapTcScale: addresses flagged 0x1000 take the
+     bitmap's texcoord transform, and a bitmap flagged 0x8000 its generation */
+  if (use_tc_scale && bm->has_tc_transform) {
+    const float r = bm->tc_rotation * 3.14159265358979f / 180.0f, c = cosf(r), s = sinf(r);
+    t->transform[0] = c * bm->tc_scale[0];
+    t->transform[1] = s * bm->tc_scale[0];
+    t->transform[2] = -s * bm->tc_scale[1];
+    t->transform[3] = c * bm->tc_scale[1];
+    t->transform[4] = bm->tc_offset[0];
+    t->transform[5] = bm->tc_offset[1];
+    t->has_transform = 1;
+  }
+  if (bm->has_flags && (bm->flags & 0x8000u) && t->texcoord == TMUF_TEXCOORD_GENERATED)
+    t->generate = (bm->flags >> 16) & 0xffu;
   char path[1200];
   if (bm->image && bm->image->external &&
       tmuf_packset_resolve(b->scene->assets.set, &ba->gbx, bm->image, ba->path, path, sizeof path).pack >= 0) {
@@ -123,7 +139,7 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
     t[n].has_transform = ad->has_transform;
     memcpy(t[n].transform, ad->transform, sizeof t[n].transform);
     if (bitmap)
-      bitmap_file(b, bowner, bitmap, &t[n]);
+      bitmap_file(b, bowner, bitmap, &t[n], ad->has_address && (ad->address_flags & 0x1000u));
     n++;
   }
   m->textures = t;

@@ -121,6 +121,14 @@ typedef struct tmuf_plug_bitmap_address {
 /* CPlugBitmap: the render it is updated by (pixel update Render), if any */
 typedef struct tmuf_plug_bitmap {
   tmuf_gbx_node *image; /* the image file (external) or an inline CPlugFileGen */
+  /* 0x0901101c: texcoord scale u v, offset u v, rotation (degrees), which
+     addresses using the bitmap's scale apply (ApplyBitmapTcScale) */
+  int has_tc_transform;
+  float tc_scale[2], tc_offset[2], tc_rotation;
+  /* 0x09011024 (and older): flag word; 0x8000: the bitmap sets how its
+     coordinates are generated (EGxUVGenerate in bits 16..23) */
+  int has_flags;
+  uint32_t flags;
   tmuf_gbx_node *render;
 } tmuf_plug_bitmap;
 

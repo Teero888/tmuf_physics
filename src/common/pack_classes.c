@@ -969,6 +969,24 @@ static void bitmap_fixed(tmuf_gbx *g, void *node, uint32_t id) {
   skip_n(g, id);
 }
 
+static void bitmap_tc_transform(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_bitmap *b = node;
+  b->tc_scale[0] = tmuf_gbx_f32(g);
+  b->tc_scale[1] = tmuf_gbx_f32(g);
+  b->tc_offset[0] = tmuf_gbx_f32(g);
+  b->tc_offset[1] = tmuf_gbx_f32(g);
+  b->tc_rotation = tmuf_gbx_f32(g);
+  b->has_tc_transform = !g->error;
+}
+
+static void bitmap_flags(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_bitmap *b = node;
+  b->flags = tmuf_gbx_u32(g);
+  b->has_flags = !g->error;
+}
+
 static void bitmap_empty(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(g);
   UNUSED(node);
@@ -1000,10 +1018,10 @@ static void bitmap_image(tmuf_gbx *g, void *node, uint32_t id) {
 
 static const tmuf_gbx_chunk BITMAP_CHUNKS[] = {
     READ(0x09011014, bitmap_image),      READ(0x09011015, bitmap_image),    READ(0x09011018, bitmap_image),
-    READ(0x09011019, bitmap_fixed),      READ(0x0901101b, bitmap_fixed),    READ(0x0901101c, bitmap_fixed),
+    READ(0x09011019, bitmap_fixed),      READ(0x0901101b, bitmap_fixed),    READ(0x0901101c, bitmap_tc_transform),
     READ(0x0901101d, bitmap_fixed),      READ(0x0901101e, bitmap_vec2_array), READ(0x0901101f, bitmap_fixed),
     READ(0x09011020, bitmap_u32_array),  READ(0x09011021, bitmap_fixed),    READ(0x09011022, bitmap_image),
-    READ(0x09011023, bitmap_fixed),      READ(0x09011024, bitmap_fixed),    READ(0x09011025, bitmap_fixed),
+    READ(0x09011023, bitmap_fixed),      READ(0x09011024, bitmap_flags),    READ(0x09011025, bitmap_fixed),
     READ(0x09011028, bitmap_fixed),      READ(0x0901102e, bitmap_fixed),    READ(0x09011030, bitmap_empty),
 };
 static const tmuf_gbx_class BITMAP = {0x09011000, "CPlugBitmap", sizeof(tmuf_plug_bitmap), BITMAP_CHUNKS,
