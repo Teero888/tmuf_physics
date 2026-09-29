@@ -17,6 +17,7 @@ typedef struct tmuf_packset_entry {
 } tmuf_packset_entry;
 
 typedef struct tmuf_packset {
+  char dir[1024]; /* the Packs directory */
   tmuf_packlist list;
   int pack_count;
   tmuf_pack packs[TMUF_PACKLIST_MAX];
@@ -41,6 +42,13 @@ tmuf_pack_ref tmuf_packset_find(const tmuf_packset *set, const char *plain_path)
 
 /* External node of g, referenced from the file at stored path `from`.
    Hashed files hide their subfolders, so every possible depth is tried. */
+/* The file an external reference points to outside the packs (textures and
+   other media under the installation's GameData, beside Packs): its path on
+   disk, the directories and name matched case-insensitively. 0 if there is
+   none. */
+int tmuf_packset_resolve_file(const tmuf_packset *set, const tmuf_gbx *g, const tmuf_gbx_node *node, const char *from,
+                              char *out, size_t out_size);
+
 tmuf_pack_ref tmuf_packset_resolve(const tmuf_packset *set, const tmuf_gbx *g, const tmuf_gbx_node *node,
                                    const char *from, char *plain_out, size_t plain_out_size);
 

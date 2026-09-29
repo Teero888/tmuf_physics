@@ -26,6 +26,10 @@ typedef struct tmuf_plug_tree {
   uint32_t child_count;
   tmuf_gbx_node **children;
   tmuf_gbx_node *visual, *shader, *material, *surface, *generator;
+  /* CPlugTreeVisualMip: its levels are children[mip_first ..], each with the
+     distance it applies from */
+  uint32_t mip_first, mip_count;
+  const float *mip_distances;
 } tmuf_plug_tree;
 
 #define TMUF_VISUAL_MAX_TEXCOORDS 8
@@ -108,6 +112,7 @@ typedef struct tmuf_plug_bitmap_address {
 
 /* CPlugBitmap: the render it is updated by (pixel update Render), if any */
 typedef struct tmuf_plug_bitmap {
+  tmuf_gbx_node *image; /* the image file (external) or an inline CPlugFileGen */
   tmuf_gbx_node *render;
 } tmuf_plug_bitmap;
 

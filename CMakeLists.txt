@@ -30,6 +30,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/replay_write.c
   src/common/stunts.c
   src/common/stunts.h
+  src/common/visuals.c
+  src/common/visuals.h
   src/common/replay.h
   src/common/compress.c
   src/common/compress.h
@@ -182,6 +184,8 @@ if(TMUF_PHYSICS_TOOLS)
   target_link_libraries(tmuf_api_check PRIVATE tmuf_physics)
   add_executable(tmuf_rewrite tools/sim/tmuf_rewrite.c)
   target_link_libraries(tmuf_rewrite PRIVATE tmuf_physics)
+  add_executable(tmuf_visuals tools/sim/tmuf_visuals.c)
+  target_link_libraries(tmuf_visuals PRIVATE tmuf_physics)
   add_executable(tmuf_bench tools/sim/tmuf_bench.c)
   target_link_libraries(tmuf_bench PRIVATE tmuf_physics)
   if(TMUF_PHYSICS_BACKEND STREQUAL "reference")

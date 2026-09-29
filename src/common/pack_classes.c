@@ -337,11 +337,18 @@ static void c09015002(tmuf_gbx *g, void *node, uint32_t id) {
   if (t->child_count)
     memcpy(children, t->children, sizeof *children * t->child_count);
   t->children = children;
+  float *distances = TMUF_ARENA_ARRAY(g->arena, float, n ? n : 1);
+  t->mip_first = t->child_count;
+  t->mip_count = 0;
+  t->mip_distances = distances;
   for (uint32_t i = 0; i < n && !g->error; i++) {
-    tmuf_gbx_skip(g, 4); /* distance */
+    float d;
+    read_floats(g, &d, 1);
     tmuf_gbx_node *c = tmuf_gbx_noderef(g);
-    if (c)
+    if (c) {
+      distances[t->mip_count++] = d;
       t->children[t->child_count++] = c;
+    }
   }
 }
 
@@ -961,6 +968,7 @@ static void bitmap_u32_array(tmuf_gbx *g, void *node, uint32_t id) {
 static void bitmap_image(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_plug_bitmap *b = node;
   tmuf_gbx_node *image = tmuf_gbx_noderef(g);
+  b->image = image;
   tmuf_gbx_skip(g, 24);
   if ((id == 0x09011018 || id == 0x09011022) && image && !image->external)
     b->render = tmuf_gbx_noderef(g);

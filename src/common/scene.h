@@ -11,6 +11,7 @@
 
 #include "common/assets.h"
 #include "common/challenge.h"
+#include "common/pack_classes.h"
 #include "common/packset.h"
 
 typedef struct tmuf_iso {
@@ -64,6 +65,18 @@ typedef struct tmuf_material_remap {
 
 
 
+/* A visible visual of a placed solid (only with TMUF_SCENE_VISUALS): the
+   tree's visual and material references (in the asset holding the tree) and
+   where it is drawn. */
+typedef struct tmuf_scene_visual {
+  tmuf_asset *owner;
+  tmuf_gbx_node *visual;
+  tmuf_gbx_node *material, *shader; /* the tree's own, either may be NULL */
+  tmuf_iso iso;
+  uint32_t tag; /* as tmuf_scene_corpus.tag */
+  float lod_near, lod_far; /* camera distances it is drawn at (visual mips) */
+} tmuf_scene_visual;
+
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
   tmuf_pack_ref ref;
@@ -78,6 +91,9 @@ typedef struct tmuf_scene {
   uint32_t size[3];    /* map size in squares (decoration size) */
   uint32_t base_height; /* default zone height */
   int collect_triangles;
+  int collect_visuals;
+  uint32_t visual_count, visual_cap;
+  tmuf_scene_visual *visuals; /* only with TMUF_SCENE_VISUALS */
   uint32_t *water_ground_tags; /* geometry water, while building: per cell the tag of the
                                   ground block of a wet zone, UINT32_MAX if none */
   uint32_t triangle_count, triangle_cap;
@@ -109,7 +125,17 @@ typedef struct tmuf_scene {
 } tmuf_scene;
 
 /* flags */
-enum { TMUF_SCENE_TRIANGLES = 1 }; /* collect the world-space triangle list (scene.triangles) */
+enum {
+  TMUF_SCENE_TRIANGLES = 1, /* collect the world-space triangle list (scene.triangles) */
+  TMUF_SCENE_VISUALS = 2,   /* collect the visible visuals (scene.visuals) */
+};
+
+/* CPlugMaterial::GetSupportedShader for a material reference in owner: the
+   shader the game draws with, its asset, and the material's custom bitmaps
+   (sampler substitutions) if any. NULL if node is not a material. */
+tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node,
+                                          tmuf_asset **shader_owner, const tmuf_plug_material_custom **custom,
+                                          tmuf_asset **custom_owner);
 
 int tmuf_scene_build(tmuf_scene *scene, const tmuf_packset *set, const tmuf_challenge *map, unsigned flags);
 void tmuf_scene_free(tmuf_scene *scene);

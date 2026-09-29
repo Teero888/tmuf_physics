@@ -1,4 +1,6 @@
 #include "common/scene.h"
+
+#include <float.h>
 #include "common/scene_ctn.h"
 
 #include <math.h>
@@ -188,7 +190,8 @@ int tmuf_scene_raise_mesh(const tmuf_plug_surface_geom *geom, uint32_t raise, fl
   return 1;
 }
 
-static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent, int depth) {
+static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent, int depth,
+                          float lod_near, float lod_far) {
   if (depth > 64)
     return;
   tmuf_asset *ta;
@@ -222,8 +225,48 @@ static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node
   }
   if (t->surface)
     emit_surface(s, ta, t->surface, &world);
-  for (uint32_t i = 0; i < t->child_count; i++)
-    emit_tree(s, ta, t->children[i], &world, depth + 1);
+  /* CPlugTree::SFlags bit 3: IsVisible; editor helpers and race triggers are
+     never drawn */
+  if (s->collect_visuals && t->visual && (t->flags & 8u) && !s->helper_depth && !s->current_trigger) {
+    if (s->visual_count == s->visual_cap) {
+      uint32_t cap = s->visual_cap ? s->visual_cap * 2 : 1024;
+      tmuf_scene_visual *v = realloc(s->visuals, sizeof *v * cap);
+      if (v) {
+        s->visuals = v;
+        s->visual_cap = cap;
+      }
+    }
+    if (getenv("TMUF_SCENE_VISUALS_DEBUG") && s->current_block == (uint32_t)strtoul(getenv("TMUF_SCENE_VISUALS_DEBUG"), NULL, 16))
+      fprintf(stderr, "visual depth %d tree %s flags %08x lod %g..%g\n", depth, t->name ? t->name : "-", t->flags,
+              (double)lod_near, (double)lod_far);
+    if (s->visual_count < s->visual_cap) {
+      tmuf_scene_visual *v = &s->visuals[s->visual_count++];
+      v->owner = ta;
+      v->visual = t->visual;
+      v->material = t->material;
+      v->shader = t->shader;
+      v->iso = world;
+      v->tag = s->current_block;
+      v->lod_near = lod_near;
+      v->lod_far = lod_far;
+    }
+  }
+  for (uint32_t i = 0; i < t->child_count; i++) {
+    /* CPlugTreeVisualMip level k: drawn from the previous level's distance
+       to its own */
+    float n = lod_near, f = lod_far;
+    if (t->mip_count && i >= t->mip_first) {
+      const uint32_t k = i - t->mip_first;
+      const float from = k ? t->mip_distances[k - 1] : 0.0f, to = t->mip_distances[k];
+      n = from > n ? from : n;
+      f = to < f ? to : f;
+    }
+    emit_tree_lod(s, ta, t->children[i], &world, depth + 1, n, f);
+  }
+}
+
+static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent, int depth) {
+  emit_tree_lod(s, owner, tree_node, parent, depth, 0.0f, FLT_MAX);
 }
 
 static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, const tmuf_iso *iso) {
@@ -454,8 +497,9 @@ static void clip_side(unsigned side, float sq, tmuf_iso *out) {
 
 /* CPlugMaterial::GetSupportedShader: the model's (else the material's) device
    set that is the last one not newer than the supported device (PC3, VHigh) */
-static tmuf_gbx_node *material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node, tmuf_asset **shader_owner,
-                                      const tmuf_plug_material_custom **custom, tmuf_asset **custom_owner) {
+tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node,
+                                          tmuf_asset **shader_owner, const tmuf_plug_material_custom **custom,
+                                          tmuf_asset **custom_owner) {
   tmuf_asset *ma;
   tmuf_gbx_node *mn = tmuf_assets_follow(&s->assets, owner, node, &ma);
   if (!mn || !mn->data || !mn->cls || mn->cls->id != 0x09079000u)
@@ -493,7 +537,7 @@ static int id_equal(const char *a, const char *b) { return a && b && strcmp(a, b
 static int water_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node) {
   tmuf_asset *sa = NULL, *ca = NULL;
   const tmuf_plug_material_custom *custom = NULL;
-  tmuf_gbx_node *sn = material_shader(s, owner, node, &sa, &custom, &ca);
+  tmuf_gbx_node *sn = tmuf_scene_material_shader(s, owner, node, &sa, &custom, &ca);
   if (!sn || !sn->data || !sn->cls || sn->cls->id != 0x09002000u)
     return 0;
   const tmuf_plug_shader *sh = sn->data;
@@ -872,6 +916,7 @@ static void apply_decorator(tmuf_scene *s, tmuf_asset *da, tmuf_asset *owner, tm
 int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challenge *map, unsigned flags) {
   memset(s, 0, sizeof *s);
   s->collect_triangles = (flags & TMUF_SCENE_TRIANGLES) != 0;
+  s->collect_visuals = (flags & TMUF_SCENE_VISUALS) != 0;
   s->rand_state = 1;
   tmuf_assets_init(&s->assets, set);
   /* the map's own collection holds its blocks and zones; the decoration
@@ -992,6 +1037,7 @@ int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower,
 }
 
 void tmuf_scene_free(tmuf_scene *s) {
+  free(s->visuals);
   free(s->water_ground_tags);
   free(s->water.cells);
   free(s->triangles);

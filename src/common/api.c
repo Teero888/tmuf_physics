@@ -40,6 +40,23 @@ void tmuf_packs_close(tmuf_packs *p) {
   free(p);
 }
 
+void *tmuf_packs_read(const tmuf_packs *packs, const char *path, size_t *size) {
+  if (size)
+    *size = 0;
+  if (!packs || !path)
+    return NULL;
+  const tmuf_pack_ref ref = tmuf_packset_find(&packs->set, path);
+  if (ref.pack < 0)
+    return NULL;
+  uint8_t *data = NULL;
+  size_t n = 0;
+  if (!tmuf_pack_extract(&packs->set.packs[ref.pack], ref.file, &data, &n))
+    return NULL;
+  if (size)
+    *size = n;
+  return data;
+}
+
 /* ---- replays ---- */
 
 tmuf_replay *tmuf_replay_load(const void *data, size_t size, char *err, size_t err_size) {
@@ -149,8 +166,9 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     tmuf_set_error(err, err_size, "map: %s", e);
     return 0;
   }
-  if (!tmuf_scene_build(&b->scene, &packs->set, &b->map,
-                        options && (options->flags & TMUF_TRACK_TRIANGLES) ? TMUF_SCENE_TRIANGLES : 0u)) {
+  const unsigned scene_flags = (options && (options->flags & TMUF_TRACK_TRIANGLES) ? TMUF_SCENE_TRIANGLES : 0u) |
+                               (options && (options->flags & TMUF_TRACK_VISUALS) ? TMUF_SCENE_VISUALS : 0u);
+  if (!tmuf_scene_build(&b->scene, &packs->set, &b->map, scene_flags)) {
     tmuf_set_error(err, err_size, "scene: %s", b->scene.error);
     return 0;
   }
@@ -170,6 +188,16 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
   /* CTrackManiaRace::InitNbLapsAndCheckpoints: the race settings' laps (a
      replay's, see tmuf_replay_laps), else the map's for a lap race, else one */
   b->laps = options && options->laps ? options->laps : b->map.has_laps && b->map.lap_race ? b->map.laps : 1;
+  if (scene_flags & TMUF_SCENE_VISUALS) {
+    if (!tmuf_visuals_build(&b->visuals, &b->scene, &b->arena)) {
+      tmuf_set_error(err, err_size, "out of memory");
+      return 0;
+    }
+    b->has_visuals = 1;
+    free(b->scene.visuals); /* the list is not needed any more */
+    b->scene.visuals = NULL;
+    b->scene.visual_count = b->scene.visual_cap = 0;
+  }
   b->triangle_count = b->scene.triangle_count;
   b->triangles = malloc(sizeof *b->triangles * (b->triangle_count ? b->triangle_count : 1));
   if (!b->triangles) {
@@ -186,7 +214,13 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
   return 1;
 }
 
+const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  return b && b->has_visuals ? &b->visuals.view : NULL;
+}
+
 void tmuf_track_base_free(tmuf_track_base *b) {
+  tmuf_visuals_free(&b->visuals);
   free(b->triangles);
   tmuf_scene_free(&b->scene);
   tmuf_arena_free(&b->arena);
