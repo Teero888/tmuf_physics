@@ -1,6 +1,6 @@
 # Status
 
-Last updated 2026-09-28.
+Last updated 2026-09-29.
 
 ## Oracle (tools/oracle)
 
@@ -19,10 +19,11 @@ Last updated 2026-09-28.
   `roll1`): 300 local replays (all campaign environments), 3 103 valid TMX
   replays (tmnf + tmuf exchange), 4 611 replays from TMX searches for kacky,
   press-forward, trial, maze, offroad and similar maps
-  (`tools/corpus/fetch_corpus.py --query`), and 1 464 random rollouts
-  (see Tools). 411 replays the game itself cannot simulate are left out:
+  (`tools/corpus/fetch_corpus.py --query`), 1 464 random rollouts (see
+  Tools) and 3 365 TAS replays (`tas_rs`, rebased and resampled, see
+  below). 420 replays the game itself cannot simulate are left out:
   "Wrong Simu" or no verdict on maps with block infos the stock game lacks
-  (348 need the TMUnlimiter mod).
+  (357 need the TMUnlimiter mod).
 - The game validates at ~0.7 ms per tick under Wine (~1 400 ticks/s, our
   dumper included) plus ~19 s to start per replay (one launch per replay:
   ~21 s each, ~21 h for 3 500 replays on one worker).
@@ -61,8 +62,8 @@ Last updated 2026-09-28.
 ## Reference backend (src/reference)
 
 Matches the game bit for bit on all 6 929 oracle replays (all environments,
-`tools/sim/run_api_corpus.sh`) and on 1 464 random rollouts (1.48 million
-ticks of random driving). Replays the game itself rejects ("Wrong Simu") are
+`tools/sim/run_api_corpus.sh`), on 1 464 random rollouts (1.48 million
+ticks of random driving) and on 3 365 TAS replays. Replays the game itself rejects ("Wrong Simu") are
 compared up to where the game stops them (it puts the car back at the spawn,
 also right at the race start). Includes an hour-long 60-lap replay with
 respawns (360855 ticks, 11 s).
@@ -160,8 +161,9 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
 
 ## Optimized backend (src/optimized)
 
-Bit-identical to the reference on the same 6 929 oracle replays and 1 464
-rollouts, about 2.2x faster on one core (A01-Race: 208 000 ticks/s with
+Bit-identical to the reference on the same 6 929 oracle replays, 1 464
+rollouts and 3 365 TAS replays, about 2.2x faster on one core (A01-Race:
+210 000 ticks/s with
 random inputs, 100 500 on the author's replay). What it does and every
 optimization with its measured gain: docs/performance.md.
 

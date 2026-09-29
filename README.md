@@ -18,11 +18,21 @@ and replay parsing, map construction into plain data) lives in `src/common/`.
 
 ## Status
 
-- Both backends match the game tick for tick on all 6 929 oracle replays
-  (local, TMX and kacky-style maps, all environments) and on 1 464 random
-  rollouts (1.48 million ticks of random driving the game confirmed).
+- Both backends match the game tick for tick on 11 758 replays: 6 929 oracle
+  replays (local, TMX and kacky-style maps, all environments), 1 464 random
+  rollouts (1.48 million ticks of random driving the game confirmed) and
+  3 365 TAS replays from tmtas.exchange.
+- Race details match what the game recorded: respawns and every checkpoint
+  time on all 6 812 valid finished runs, and the stunt score on all 137 valid
+  Stunts mode replays.
+- Game modes: Race and Laps (checkpoints, laps, finish, respawns) and Stunts
+  (figures, chains, respawn and time penalties). Platform and Puzzle maps
+  simulate like any other (the game refuses to validate Puzzle replays).
+- Replays written by the library validate in the game: 136 of 138 corpus
+  replays rewritten from their inputs (the two others were Stunts maps before
+  the stunt score was computed), and 24 of 24 Stunts mode replays since.
 - Single core, A01-Race: the reference runs 95 000 ticks/s with random
-  inputs (about 950x real time), the optimized backend 208 000 ticks/s. The
+  inputs (about 950x real time), the optimized backend 210 000 ticks/s. The
   game itself validates at about 1 400 ticks/s.
 
 Details: [docs/status.md](docs/status.md) (what is ported and how it is
@@ -32,8 +42,8 @@ optimization with its measured gain), [docs/pack-format.md](docs/pack-format.md)
 ## Requirements
 
 - A C11 compiler (GCC, Clang or MSVC), CMake 3.18+
-- The `Packs` directory of a TrackMania United Forever installation. Nations
-  Forever alone lacks the six non-Stadium environments.
+- The `Packs` directory of a TrackMania United Forever installation (2.11.26).
+  Nations Forever alone lacks the six non-Stadium environments.
 
 ## Build
 
@@ -81,16 +91,42 @@ for (uint32_t i = 0; i < n; i++) {
 
 tmuf_world copy = tmuf_world_empty();
 tmuf_world_copy(&copy, &world); /* about a microsecond: branch a search here */
+
+/* what the replay recorded, to compare with world.sim.race */
+uint32_t race_time = tmuf_replay_race_time(replay);   /* UINT32_MAX: not finished */
+uint32_t respawns = tmuf_replay_respawns(replay);
+uint32_t stunts = tmuf_replay_stunt_score(replay);
+const uint32_t *cp_times, *cp_scores;
+uint32_t cps = tmuf_replay_checkpoints(replay, &cp_times, &cp_scores);
 ```
+
+Inputs are the game's own: `accelerate` and `brake` bits, `respawn` for the
+tick it is pressed, `steer` as the integer axis (keys steer ±65536), and
+`input_event` for a key event that leaves the input as it was (a second
+steering key held): it cancels a master jump in Stunts mode.
+`tmuf_replay_inputs` fills it from a replay's events. Replays of TAS tools,
+which record their events on another clock, are read the same way as the
+game's.
+
+Stunts are scored on Stunts maps, the only mode that uses the score; load a
+track with `TMUF_TRACK_STUNTS` in `tmuf_track_options.flags` to score them on
+any map (the game also records the score in Race mode ghosts, where nothing
+checks it).
 
 Any run can be saved as a replay the game plays and validates:
 
 ```c
+tmuf_replay_write_options wo = {"my_login", "My Name"}; /* or NULL for defaults */
 size_t size;
-void *gbx = tmuf_replay_write(track, inputs, count, NULL, &size, err, sizeof err);
+void *gbx = tmuf_replay_write(track, inputs, count, &wo, &size, err, sizeof err);
 /* write gbx to a .Replay.Gbx file */
 tmuf_free(gbx);
 ```
+
+The run is simulated to fill in what the game records and checks: the car's
+samples, race time, respawns, stunt score and checkpoint times. Inputs before
+the race start have no effect in a replay (the car is held during the
+countdown), and the track's seed and laps become the replay's.
 
 A world starts at time 0 on the start block and is held for the countdown;
 the race starts at `TMUF_RACE_START_MS`. There is no global mutable state:
@@ -109,4 +145,12 @@ are public (`include/tmuf_physics/state.h`) and mirror the game's.
   world copies) against those dumps, for either backend.
 - `tools/oracle/make_rollouts.py` turns existing replays into new test
   cases: the recorded inputs up to a random time, then random driving,
-  rewritten so the game's validator plays them to the end.
+  rewritten so the game's validator plays them to the end. `--resample`
+  keeps a replay's inputs and only rebases and resamples it, which is how
+  TAS replays reach the game's validator.
+- `tmuf_api_check` also compares each valid run's recorded race details
+  (respawns, checkpoint times, Stunts mode scores) with the simulation, and
+  `tools/sim/tmuf_rewrite` writes a replay's inputs anew through
+  `tmuf_replay_write`, for the game to validate.
+- `run_oracle.py --trace stunts` logs every stunt the game scores (figure,
+  points, multiplier); `TMUF_STUNTS_DEBUG=1 tmuf_sim` prints ours.

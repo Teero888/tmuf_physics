@@ -56,7 +56,8 @@ Measured with `perf record -e task-clock` on the random-input benchmark:
 
 `src/optimized` produces bit-identical states (checked with
 `tools/sim/run_api_corpus.sh` on all 6 929 oracle replays the game itself
-can simulate and on 1 464 random rollouts, see docs/status.md). The speed-up
+can simulate, on 1 464 random rollouts and on 3 365 TAS replays, see
+docs/status.md). The speed-up
 comes from doing the same work with less overhead, not from different
 arithmetic:
 
