@@ -112,6 +112,10 @@ typedef struct tmuf_plug_shader {
 typedef struct tmuf_plug_bitmap_address {
   const char *sampler;
   tmuf_gbx_node *bitmap;
+  int has_address;
+  uint32_t address_flags; /* bits 15..19: texcoord set, 31 generated from the position */
+  int has_transform;
+  float transform[6];
 } tmuf_plug_bitmap_address;
 
 /* CPlugBitmap: the render it is updated by (pixel update Render), if any */

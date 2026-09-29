@@ -118,6 +118,10 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
       }
     t[n].sampler = dup(b->arena, ad->sampler ? ad->sampler : "");
     t[n].file = t[n].pack_file = NULL;
+    t[n].texcoord = ad->has_address ? (ad->address_flags >> 15) & 31u : 0u;
+    t[n].generate = ad->has_address ? ad->address_flags & 0xffu : 0u;
+    t[n].has_transform = ad->has_transform;
+    memcpy(t[n].transform, ad->transform, sizeof t[n].transform);
     if (bitmap)
       bitmap_file(b, bowner, bitmap, &t[n]);
     n++;
@@ -154,14 +158,6 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
     tmuf_gbx_node *sn = cls == CLS_SHADER ? n
                                           : tmuf_scene_material_shader(b->scene, refs[r].owner, refs[r].ref, &sa,
                                                                        &custom, &ca);
-    if (getenv("TMUF_VISUALS_DEBUG") && strstr(m->name, "6284E3502"))
-      fprintf(stderr, "material %s: shader %p custom %p (%u bitmaps: %s)\n", m->name, (void *)sn, (const void *)custom,
-              custom ? custom->bitmap_count : 0, custom && custom->bitmap_count ? custom->bitmap_names[0] : "-");
-    if (getenv("TMUF_VISUALS_DEBUG") && strstr(m->name, "6284E3502") && custom)
-      for (uint32_t k = 0; k < custom->bitmap_count; k++)
-        fprintf(stderr, "  custom %s -> %p ext %d file %s\n", custom->bitmap_names[k], (void *)custom->bitmaps[k],
-                custom->bitmaps[k] ? custom->bitmaps[k]->external : -1,
-                custom->bitmaps[k] && custom->bitmaps[k]->file ? custom->bitmaps[k]->file : "-");
     if (node_class(sn) == CLS_SHADER && sn->data) {
       const tmuf_plug_shader *sh = sn->data;
       m->has_shader_flags = sh->has_flags;

@@ -928,17 +928,19 @@ static void c0907e008(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static void c09047007(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  tmuf_gbx_skip(g, 4);
+  tmuf_plug_bitmap_address *a = node;
+  a->address_flags = tmuf_gbx_u32(g);
+  a->has_address = 1;
   tmuf_gbx_noderef(g);
   uint8_t has_transform = tmuf_gbx_u8(g);
   if (has_transform > 1) {
     tmuf_gbx_fail(g, "bitmap address transform flag %u", has_transform);
     return;
   }
-  if (has_transform)
-    tmuf_gbx_skip(g, 24);
+  a->has_transform = has_transform;
+  for (int i = 0; i < 6 && has_transform; i++)
+    a->transform[i] = tmuf_gbx_f32(g);
 }
 
 static const tmuf_gbx_chunk BITMAP_SAMPLER_CHUNKS[] = {

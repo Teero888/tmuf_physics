@@ -109,10 +109,15 @@ int main(int argc, char **argv) {
              m->shader_flags[1], m->has_render_state ? (m->render_state[0] >> 24) & 7u : 9u,
              (m->render_state[0] >> 14) & 0xffu);
       for (uint32_t k = 0; k < m->texture_count; k++)
-        printf("  %-12s %s\n", m->textures[k].sampler,
-               m->textures[k].file        ? m->textures[k].file
-               : m->textures[k].pack_file ? m->textures[k].pack_file
-                                          : "(not found)");
+      {
+        const tmuf_visual_texture *t = &m->textures[k];
+        printf("  %-12s %s uv %u gen %u", t->sampler, t->file ? t->file : t->pack_file ? t->pack_file : "(not found)",
+               t->texcoord, t->generate);
+        if (t->has_transform)
+          printf(" transform %g %g %g %g %g %g", t->transform[0], t->transform[1], t->transform[2], t->transform[3],
+                 t->transform[4], t->transform[5]);
+        printf("\n");
+      }
       for (uint32_t k = 0; k < v->instance_count; k++)
         if (v->instances[k].material == i) {
           const tmuf_visual_mesh *me = &v->meshes[v->instances[k].mesh];
