@@ -9,6 +9,7 @@
  *   tmuf_inspect gbx PACKS_DIR PACK PATH    parse a pack file with feedback,
  *                                           print header info and mixed values
  *   tmuf_inspect vehicle PACKS_DIR NAME     print a vehicle's solid tree
+ *   tmuf_inspect catp PACKS_DIR PATH OUT    extract a file by its plain path
  *   tmuf_inspect refs PACKS_DIR LIST        resolve the external references of
  *                                           every file in LIST (verify format)
  *   tmuf_inspect verify PACKS_DIR LIST      LIST lines: "pack<TAB>path<TAB>hex..."
@@ -663,6 +664,31 @@ static void dump_tree(tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *nod
     dump_tree(assets, ta, t->children[i], depth + 1);
 }
 
+/* Extracts a pack file by its plain path (e.g. Vehicles\Media\Text\VHLSL\X.VHlsl.Txt). */
+static int cmd_catp(const char *packs, const char *path, const char *out) {
+  tmuf_packset set;
+  char err[256];
+  if (!tmuf_packset_open(&set, packs, err, sizeof err)) {
+    printf("packs: %s\n", err);
+    return 1;
+  }
+  tmuf_pack_ref r = tmuf_packset_find(&set, path);
+  uint8_t *data = NULL;
+  size_t size = 0;
+  int ok = r.pack >= 0 && tmuf_pack_extract(&set.packs[r.pack], r.file, &data, &size);
+  if (ok) {
+    FILE *f = fopen(out, "wb");
+    ok = f && fwrite(data, 1, size, f) == size;
+    if (f)
+      fclose(f);
+  }
+  free(data);
+  tmuf_packset_close(&set);
+  if (!ok)
+    fprintf(stderr, "%s: not found\n", path);
+  return !ok;
+}
+
 /* Prints the solid tree of a vehicle (collector id, e.g. StadiumCar). */
 static int cmd_vehicle(const char *packs, const char *name) {
   tmuf_packset set;
@@ -732,6 +758,8 @@ static int cmd_solid(const char *packs, const char *path) {
 int main(int argc, char **argv) {
   if (argc >= 4 && strcmp(argv[1], "solid") == 0)
     return cmd_solid(argv[2], argv[3]);
+  if (argc >= 5 && strcmp(argv[1], "catp") == 0)
+    return cmd_catp(argv[2], argv[3], argv[4]);
   if (argc >= 4 && strcmp(argv[1], "vehicle") == 0)
     return cmd_vehicle(argv[2], argv[3]);
   if (argc >= 4 && strcmp(argv[1], "tuning") == 0)
