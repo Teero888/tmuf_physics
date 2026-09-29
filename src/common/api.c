@@ -215,6 +215,11 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
   return 1;
 }
 
+const char *tmuf_track_decoration(const tmuf_track *track) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  return b && b->map.decoration[0] ? b->map.decoration[0] : "";
+}
+
 const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals ? &b->visuals.view : NULL;

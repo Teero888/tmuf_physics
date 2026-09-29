@@ -116,6 +116,8 @@ TMUF_API void tmuf_track_free(tmuf_track *track);
 
 TMUF_API const char *tmuf_track_name(const tmuf_track *track);
 TMUF_API const char *tmuf_track_environment(const tmuf_track *track); /* collection: Stadium, Alpine, ... */
+/* the map's decoration: its size and mood, e.g. "Sunset", "Day", "30x30Sunrise" */
+TMUF_API const char *tmuf_track_decoration(const tmuf_track *track);
 TMUF_API const char *tmuf_track_vehicle(const tmuf_track *track);     /* the car it runs */
 TMUF_API uint32_t tmuf_track_checkpoints(const tmuf_track *track);    /* per lap, without the finish */
 TMUF_API uint32_t tmuf_track_laps(const tmuf_track *track);
