@@ -201,6 +201,7 @@ int tmuf_vehicle_load(tmuf_vehicle *v, tmuf_assets *assets, const char *name, ch
     return 0;
   }
   const tmuf_vehicle_struct *vs = vn->data;
+  v->visual_struct = vs;
   if (vs->wheel_count > TMUF_VEHICLE_MAX_WHEELS) {
     snprintf(err, err_size, "vehicle %s: %u wheels", name, vs->wheel_count);
     return 0;

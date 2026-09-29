@@ -7,6 +7,7 @@
 
 #include "common/arena.h"
 #include "common/scene.h"
+#include "common/vehicle.h"
 
 typedef struct tmuf_visuals_data {
   tmuf_visuals view;
@@ -19,5 +20,15 @@ typedef struct tmuf_visuals_data {
    outlive the result. */
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *arena);
 void tmuf_visuals_free(tmuf_visuals_data *v);
+
+typedef struct tmuf_vehicle_visuals_data {
+  tmuf_vehicle_visuals view;
+  tmuf_visuals_data visuals;
+  tmuf_vehicle_part *parts;
+} tmuf_vehicle_visuals_data;
+
+int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene, const tmuf_vehicle *vehicle,
+                               tmuf_arena *arena);
+void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v);
 
 #endif

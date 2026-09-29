@@ -55,7 +55,8 @@ tmuf_asset *tmuf_assets_load(tmuf_assets *a, tmuf_pack_ref ref) {
   if (as->gbx.error || !as->root) {
     as->failed = 1;
     snprintf(as->error, sizeof as->error, "%s: %s", as->path, as->gbx.message);
-    fprintf(stderr, "asset: %s\n", as->error);
+    if (getenv("TMUF_ASSETS_DEBUG"))
+      fprintf(stderr, "asset: %s\n", as->error);
     return NULL;
   }
   return as;

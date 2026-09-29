@@ -238,11 +238,54 @@ typedef struct tmuf_vehicle_wheel_def {
   const char *name;
 } tmuf_vehicle_wheel_def;
 
+/* CSceneVehicleStruct::SVisualId: a tree of the vehicle's solid by name
+   (or a joint of a skinned visual) */
+typedef struct tmuf_visual_id {
+  const char *name;
+  int flag; /* the handler keeps its own location instead of the tree's */
+} tmuf_visual_id;
+
+/* SVisualWheel: the trees a simulation wheel moves */
+typedef struct tmuf_visual_wheel_def {
+  tmuf_visual_id rolling;  /* spins, steers and follows the suspension */
+  tmuf_visual_id fixed;    /* not moved */
+  tmuf_visual_id bouncing; /* follows the suspension */
+  tmuf_visual_id steering; /* steers and follows the suspension */
+  uint32_t wheel;          /* simulation wheel index */
+  int steers;
+} tmuf_visual_wheel_def;
+
+/* SVisualArm: a tree stretched between points of two other trees */
+typedef struct tmuf_visual_arm_def {
+  tmuf_visual_id arm, from, to;
+  int flag0;
+  int rolls; /* also turns with the wheel's spin and steering (cardans) */
+  uint32_t wheel;
+} tmuf_visual_arm_def;
+
+typedef struct tmuf_visual_light_def {
+  tmuf_visual_id tree;
+  uint32_t kind;
+} tmuf_visual_light_def;
+
+/* SVisualVehicle: one level of detail of the vehicle's visual */
+typedef struct tmuf_visual_vehicle_def {
+  uint32_t quality; /* ESceneMobilQuality it is used for */
+  tmuf_visual_id body;       /* SVisualVehicle +0xc: the car's body (CSceneVehicleCar tilts it) */
+  tmuf_visual_id pilot_head; /* +4: the driver's head (CSceneVehicle turns it) */
+  tmuf_visual_id shadow, extra; /* +0x14 (projected shadow frame), +0x1c */
+  uint32_t wheel_count, arm_count, light_count;
+  tmuf_visual_wheel_def *wheels;
+  tmuf_visual_arm_def *arms;
+  tmuf_visual_light_def *lights;
+} tmuf_visual_vehicle_def;
+
 typedef struct tmuf_vehicle_struct {
   uint32_t wheel_count;
   tmuf_vehicle_wheel_def *wheels;
   uint32_t visual_vehicle_count;
   int has_visual_vehicle_count;
+  tmuf_visual_vehicle_def *visual_vehicles;
   tmuf_node_list material_groups, emitters;
   tmuf_gbx_node *feedback_curves[3];
 } tmuf_vehicle_struct;

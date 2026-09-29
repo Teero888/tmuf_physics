@@ -8,6 +8,7 @@
  *   tmuf_inspect map REPLAY OUT             write the embedded challenge GBX
  *   tmuf_inspect gbx PACKS_DIR PACK PATH    parse a pack file with feedback,
  *                                           print header info and mixed values
+ *   tmuf_inspect vehicle PACKS_DIR NAME     print a vehicle's solid tree
  *   tmuf_inspect refs PACKS_DIR LIST        resolve the external references of
  *                                           every file in LIST (verify format)
  *   tmuf_inspect verify PACKS_DIR LIST      LIST lines: "pack<TAB>path<TAB>hex..."
@@ -21,6 +22,7 @@
 #include "common/challenge.h"
 #include "common/scene.h"
 #include "common/assets.h"
+#include "common/vehicle.h"
 #include "common/vehicle_tuning.h"
 #include "common/gbx.h"
 #include "common/pack.h"
@@ -615,7 +617,7 @@ static void dump_tree(tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *nod
     return;
   }
   const tmuf_plug_tree *t = tn->data;
-  printf("%*stree '%s' flags %08x", depth * 2, "", t->name ? t->name : "", t->flags);
+  printf("%*stree [%08x] '%s' flags %08x", depth * 2, "", cls, t->name ? t->name : "", t->flags);
   if (t->has_iso)
     printf(" iso t=(%g %g %g)", t->iso[9], t->iso[10], t->iso[11]);
   if (t->surface) {
@@ -633,9 +635,74 @@ static void dump_tree(tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *nod
       }
     }
   }
+  if (t->visual) {
+    tmuf_asset *va;
+    tmuf_gbx_node *vn = tmuf_assets_follow(assets, ta, t->visual, &va);
+    if (vn && vn->data && vn->class_id == 0x09006000u) {
+      const tmuf_plug_visual *v = vn->data;
+      printf(" visual %08x verts %u stride %u tris %u uvs %u", vn->class_id, v->vertex_count, v->vertex_stride,
+             v->index_count / 3u, v->texcoord_count);
+    } else
+      printf(" visual [%08x]", vn ? vn->class_id : 0);
+  }
+  tmuf_gbx_node *refs[2] = {t->material, t->shader};
+  for (int k = 0; k < 2; k++)
+    if (refs[k]) {
+      tmuf_asset *ra;
+      tmuf_gbx_node *rn = tmuf_assets_follow(assets, ta, refs[k], &ra);
+      printf(" %s %s", k ? "shader" : "material", ra && refs[k]->external ? ra->path : "(inline)");
+      (void)rn;
+    }
+  if (t->mip_count)
+    printf(" mips %u from %u", t->mip_count, t->mip_first);
+  if (t->has_iso)
+    printf("\n%*s  rot %g %g %g / %g %g %g / %g %g %g", depth * 2, "", t->iso[0], t->iso[1], t->iso[2], t->iso[3],
+           t->iso[4], t->iso[5], t->iso[6], t->iso[7], t->iso[8]);
   printf("\n");
   for (uint32_t i = 0; i < t->child_count; i++)
     dump_tree(assets, ta, t->children[i], depth + 1);
+}
+
+/* Prints the solid tree of a vehicle (collector id, e.g. StadiumCar). */
+static int cmd_vehicle(const char *packs, const char *name) {
+  tmuf_packset set;
+  char err[256];
+  if (!tmuf_packset_open(&set, packs, err, sizeof err)) {
+    printf("packs: %s\n", err);
+    return 1;
+  }
+  tmuf_assets assets;
+  tmuf_assets_init(&assets, &set);
+  tmuf_vehicle v;
+  if (!tmuf_vehicle_load(&v, &assets, name, err, sizeof err))
+    printf("vehicle: %s\n", err);
+  else {
+    printf("solid %s\n", v.solid_owner->path);
+    const tmuf_vehicle_struct *st = v.visual_struct;
+    for (uint32_t k = 0; st && k < st->visual_vehicle_count; k++) {
+      const tmuf_visual_vehicle_def *vv = &st->visual_vehicles[k];
+      printf("visual %u quality %u body %s/%d pilot head %s/%d shadow %s/%d extra %s/%d\n", k, vv->quality,
+             vv->body.name, vv->body.flag, vv->pilot_head.name, vv->pilot_head.flag, vv->shadow.name, vv->shadow.flag,
+             vv->extra.name, vv->extra.flag);
+      for (uint32_t i = 0; i < vv->wheel_count; i++) {
+        const tmuf_visual_wheel_def *w = &vv->wheels[i];
+        printf("  wheel %u steers %d: rolling %s/%d fixed %s/%d bouncing %s/%d steering %s/%d\n", w->wheel, w->steers,
+               w->rolling.name, w->rolling.flag, w->fixed.name, w->fixed.flag, w->bouncing.name, w->bouncing.flag,
+               w->steering.name, w->steering.flag);
+      }
+      for (uint32_t i = 0; i < vv->arm_count; i++) {
+        const tmuf_visual_arm_def *a = &vv->arms[i];
+        printf("  arm %s/%d from %s/%d to %s/%d flag0 %d rolls %d wheel %u\n", a->arm.name, a->arm.flag, a->from.name,
+               a->from.flag, a->to.name, a->to.flag, a->flag0, a->rolls, a->wheel);
+      }
+      for (uint32_t i = 0; i < vv->light_count; i++)
+        printf("  light %s/%d kind %u\n", vv->lights[i].tree.name, vv->lights[i].tree.flag, vv->lights[i].kind);
+    }
+    dump_tree(&assets, v.solid_owner, v.solid_tree, 0);
+  }
+  tmuf_assets_free(&assets);
+  tmuf_packset_close(&set);
+  return 0;
 }
 
 /* Prints the tree of a solid (pack path). */
@@ -665,6 +732,8 @@ static int cmd_solid(const char *packs, const char *path) {
 int main(int argc, char **argv) {
   if (argc >= 4 && strcmp(argv[1], "solid") == 0)
     return cmd_solid(argv[2], argv[3]);
+  if (argc >= 4 && strcmp(argv[1], "vehicle") == 0)
+    return cmd_vehicle(argv[2], argv[3]);
   if (argc >= 4 && strcmp(argv[1], "tuning") == 0)
     return cmd_tuning(argv[2], argv[3]);
   if (argc >= 5 && strcmp(argv[1], "scene") == 0)

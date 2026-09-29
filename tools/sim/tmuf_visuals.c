@@ -49,6 +49,32 @@ int main(int argc, char **argv) {
     fprintf(stderr, "%s\n", err);
     return 1;
   }
+  const tmuf_vehicle_visuals *car = tmuf_track_vehicle_visuals(track);
+  if (car) {
+    uint32_t tris = 0;
+    for (uint32_t i = 0; i < car->visuals.instance_count; i++)
+      tris += car->visuals.meshes[car->visuals.instances[i].mesh].index_count / 3u;
+    printf("vehicle %s: %u parts, %u levels, %u meshes, %u materials, %u instances, %u triangles\n",
+           tmuf_track_vehicle(track), car->part_count, car->level_count, car->visuals.mesh_count,
+           car->visuals.material_count, car->visuals.instance_count, tris);
+    for (uint32_t k = 0; k < car->level_count; k++) {
+      const tmuf_vehicle_visual_level *l = &car->levels[k];
+      printf("  level quality %u root %s body %s head %s wheels %u arms %u lights %u\n", l->quality,
+             l->root != TMUF_VEHICLE_NO_PART ? car->parts[l->root].name : "-",
+             l->body != TMUF_VEHICLE_NO_PART ? car->parts[l->body].name : "-",
+             l->pilot_head != TMUF_VEHICLE_NO_PART ? car->parts[l->pilot_head].name : "-", l->wheel_count,
+             l->arm_count, l->light_count);
+    }
+    if (argc > 3 && strcmp(argv[3], "--materials") == 0)
+      for (uint32_t i = 0; i < car->visuals.material_count; i++) {
+        const tmuf_visual_material *m = &car->visuals.materials[i];
+        printf("  car material %u %s flags %08x:", i, m->name, m->shader_flags[0]);
+        for (uint32_t t = 0; t < m->texture_count; t++)
+          printf(" %s=%s", m->textures[t].sampler,
+                 m->textures[t].file ? m->textures[t].file : m->textures[t].pack_file ? m->textures[t].pack_file : "-");
+        printf("\n");
+      }
+  }
   const tmuf_visuals *v = tmuf_track_visuals(track);
   uint64_t triangles = 0, vertices = 0;
   uint32_t no_material = 0;

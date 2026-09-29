@@ -4,6 +4,7 @@
 
 #include "common/visuals.h"
 
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -194,9 +195,9 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
   return *slot;
 }
 
-int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *arena) {
+static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
+                      tmuf_arena *arena) {
   memset(out, 0, sizeof *out);
-  const uint32_t n = scene->visual_count;
   builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
   b.materials = malloc(sizeof *b.materials * (n ? 3u * n : 1));
@@ -208,7 +209,7 @@ int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *ar
   }
   uint32_t count = 0;
   for (uint32_t i = 0; i < n && !b.oom; i++) {
-    const tmuf_scene_visual *v = &scene->visuals[i];
+    const tmuf_scene_visual *v = &list[i];
     tmuf_asset *va;
     tmuf_gbx_node *vn = tmuf_assets_follow(&scene->assets, v->owner, v->visual, &va);
     if (node_class(vn) != CLS_VISUAL || !vn->data)
@@ -243,6 +244,176 @@ int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *ar
   out->view.materials = b.materials;
   out->view.instances = instances;
   return 1;
+}
+
+int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *arena) {
+  return build_list(out, scene, scene->visuals, scene->visual_count, arena);
+}
+
+/* ---- the vehicle ---- */
+
+typedef struct vehicle_builder {
+  tmuf_scene *scene;
+  tmuf_arena *arena;
+  tmuf_vehicle_part *parts;
+  uint32_t part_count, part_cap;
+  tmuf_scene_visual *list;
+  uint32_t count, cap;
+  int oom;
+} vehicle_builder;
+
+static void vehicle_tree(vehicle_builder *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, uint32_t parent, int depth,
+                         float lod_near, float lod_far) {
+  if (depth > 64 || b->oom)
+    return;
+  tmuf_asset *ta;
+  tmuf_gbx_node *tn = tmuf_assets_follow(&b->scene->assets, owner, tree_node, &ta);
+  const uint32_t cls = node_class(tn);
+  if (!tn || !tn->data || (cls != 0x0904f000u && cls != 0x09015000u && cls != 0x09062000u))
+    return;
+  const tmuf_plug_tree *t = tn->data;
+  if (b->part_count == b->part_cap) {
+    uint32_t cap = b->part_cap ? b->part_cap * 2 : 64;
+    tmuf_vehicle_part *p = realloc(b->parts, sizeof *p * cap);
+    if (!p) {
+      b->oom = 1;
+      return;
+    }
+    b->parts = p;
+    b->part_cap = cap;
+  }
+  const uint32_t index = b->part_count++;
+  tmuf_vehicle_part *part = &b->parts[index];
+  part->name = dup(b->arena, t->name ? t->name : "");
+  part->parent = parent;
+  tmuf_iso iso;
+  tmuf_iso_identity(&iso);
+  if (t->has_iso)
+    tmuf_iso_from_archive(&iso, t->iso);
+  for (int r = 0; r < 3; r++)
+    for (int c = 0; c < 3; c++)
+      part->location.r.m[r][c] = iso.m[r][c];
+  part->location.t = (tmuf_vec3){iso.t[0], iso.t[1], iso.t[2]};
+  if (t->visual && (t->flags & 8u)) {
+    if (b->count == b->cap) {
+      uint32_t cap = b->cap ? b->cap * 2 : 64;
+      tmuf_scene_visual *l = realloc(b->list, sizeof *l * cap);
+      if (!l) {
+        b->oom = 1;
+        return;
+      }
+      b->list = l;
+      b->cap = cap;
+    }
+    tmuf_scene_visual *v = &b->list[b->count++];
+    v->owner = ta;
+    v->visual = t->visual;
+    v->material = t->material;
+    v->shader = t->shader;
+    tmuf_iso_identity(&v->iso); /* the part's own frame */
+    v->tag = index;
+    v->lod_near = lod_near;
+    v->lod_far = lod_far;
+  }
+  for (uint32_t i = 0; i < t->child_count; i++) {
+    float n = lod_near, f = lod_far;
+    if (t->mip_count && i >= t->mip_first) {
+      const uint32_t k = i - t->mip_first;
+      const float from = k ? t->mip_distances[k - 1] : 0.0f, to = t->mip_distances[k];
+      n = from > n ? from : n;
+      f = to < f ? to : f;
+    }
+    vehicle_tree(b, ta, t->children[i], index, depth + 1, n, f);
+  }
+}
+
+/* SolidGetTargetFromId: the first tree of that name, depth first */
+static uint32_t part_named(const vehicle_builder *b, const tmuf_visual_id *id) {
+  if (!id->name || !id->name[0])
+    return TMUF_VEHICLE_NO_PART;
+  for (uint32_t i = 0; i < b->part_count; i++)
+    if (strcmp(b->parts[i].name, id->name) == 0)
+      return i;
+  return TMUF_VEHICLE_NO_PART;
+}
+
+int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene, const tmuf_vehicle *vehicle,
+                               tmuf_arena *arena) {
+  memset(out, 0, sizeof *out);
+  vehicle_builder b = {scene, arena, NULL, 0, 0, NULL, 0, 0, 0};
+  vehicle_tree(&b, vehicle->solid_owner, vehicle->solid_tree, TMUF_VEHICLE_NO_PART, 0, 0.0f, FLT_MAX);
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, arena)) {
+    free(b.parts);
+    free(b.list);
+    return 0;
+  }
+  free(b.list);
+  out->parts = b.parts;
+  const tmuf_vehicle_struct *st = vehicle->visual_struct;
+  const uint32_t level_count = st ? st->visual_vehicle_count : 0;
+  tmuf_vehicle_visual_level *levels = TMUF_ARENA_ARRAY(arena, tmuf_vehicle_visual_level, level_count ? level_count : 1);
+  if (!levels) {
+    tmuf_vehicle_visuals_free(out);
+    return 0;
+  }
+  for (uint32_t k = 0; k < level_count; k++) {
+    const tmuf_visual_vehicle_def *d = &st->visual_vehicles[k];
+    tmuf_vehicle_visual_level *l = &levels[k];
+    memset(l, 0, sizeof *l);
+    l->quality = d->quality;
+    l->body = part_named(&b, &d->body);
+    l->pilot_head = part_named(&b, &d->pilot_head);
+    l->shadow = part_named(&b, &d->shadow);
+    tmuf_vehicle_visual_wheel *w = TMUF_ARENA_ARRAY(arena, tmuf_vehicle_visual_wheel, d->wheel_count ? d->wheel_count : 1);
+    tmuf_vehicle_visual_arm *a = TMUF_ARENA_ARRAY(arena, tmuf_vehicle_visual_arm, d->arm_count ? d->arm_count : 1);
+    tmuf_vehicle_visual_light *li = TMUF_ARENA_ARRAY(arena, tmuf_vehicle_visual_light, d->light_count ? d->light_count : 1);
+    if (!w || !a || !li) {
+      tmuf_vehicle_visuals_free(out);
+      return 0;
+    }
+    for (uint32_t i = 0; i < d->wheel_count; i++) {
+      w[i].rolling = part_named(&b, &d->wheels[i].rolling);
+      w[i].fixed = part_named(&b, &d->wheels[i].fixed);
+      w[i].bouncing = part_named(&b, &d->wheels[i].bouncing);
+      w[i].steering = part_named(&b, &d->wheels[i].steering);
+      w[i].wheel = d->wheels[i].wheel;
+      w[i].steers = d->wheels[i].steers;
+    }
+    for (uint32_t i = 0; i < d->arm_count; i++) {
+      a[i].arm = part_named(&b, &d->arms[i].arm);
+      a[i].from = part_named(&b, &d->arms[i].from);
+      a[i].to = part_named(&b, &d->arms[i].to);
+      a[i].rolls = d->arms[i].rolls;
+      a[i].wheel = d->arms[i].wheel;
+    }
+    for (uint32_t i = 0; i < d->light_count; i++) {
+      li[i].part = part_named(&b, &d->lights[i].tree);
+      li[i].kind = d->lights[i].kind;
+    }
+    l->wheel_count = d->wheel_count;
+    l->wheels = w;
+    l->arm_count = d->arm_count;
+    l->arms = a;
+    l->light_count = d->light_count;
+    l->lights = li;
+    /* the level's group: the tree its first wheel hangs from */
+    l->root = TMUF_VEHICLE_NO_PART;
+    for (uint32_t i = 0; i < d->wheel_count && l->root == TMUF_VEHICLE_NO_PART; i++)
+      if (w[i].rolling != TMUF_VEHICLE_NO_PART)
+        l->root = b.parts[w[i].rolling].parent;
+  }
+  out->view.visuals = out->visuals.view;
+  out->view.part_count = b.part_count;
+  out->view.parts = b.parts;
+  out->view.level_count = level_count;
+  out->view.levels = levels;
+  return 1;
+}
+
+void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v) {
+  tmuf_visuals_free(&v->visuals);
+  free(v->parts);
+  memset(v, 0, sizeof *v);
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {

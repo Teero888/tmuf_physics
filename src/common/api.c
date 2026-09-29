@@ -189,7 +189,8 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
      replay's, see tmuf_replay_laps), else the map's for a lap race, else one */
   b->laps = options && options->laps ? options->laps : b->map.has_laps && b->map.lap_race ? b->map.laps : 1;
   if (scene_flags & TMUF_SCENE_VISUALS) {
-    if (!tmuf_visuals_build(&b->visuals, &b->scene, &b->arena)) {
+    if (!tmuf_visuals_build(&b->visuals, &b->scene, &b->arena) ||
+        !tmuf_vehicle_visuals_build(&b->vehicle_visuals, &b->scene, &b->vehicle, &b->arena)) {
       tmuf_set_error(err, err_size, "out of memory");
       return 0;
     }
@@ -219,8 +220,14 @@ const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track) {
   return b && b->has_visuals ? &b->visuals.view : NULL;
 }
 
+const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  return b && b->has_visuals ? &b->vehicle_visuals.view : NULL;
+}
+
 void tmuf_track_base_free(tmuf_track_base *b) {
   tmuf_visuals_free(&b->visuals);
+  tmuf_vehicle_visuals_free(&b->vehicle_visuals);
   free(b->triangles);
   tmuf_scene_free(&b->scene);
   tmuf_arena_free(&b->arena);

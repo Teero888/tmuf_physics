@@ -44,6 +44,7 @@ typedef struct tmuf_track_base {
   uint32_t laps;
   int has_visuals;
   tmuf_visuals_data visuals; /* with TMUF_TRACK_VISUALS */
+  tmuf_vehicle_visuals_data vehicle_visuals;
 } tmuf_track_base;
 
 void tmuf_set_error(char *err, size_t err_size, const char *fmt, ...);

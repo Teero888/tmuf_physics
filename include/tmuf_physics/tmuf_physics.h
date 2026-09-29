@@ -206,6 +206,70 @@ typedef struct tmuf_visuals {
    track. */
 TMUF_API const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track);
 
+/* The car as the game draws it: the trees of the vehicle's solid (parts)
+   and the rig CSceneVehicleStruct lays over them, one level per visual
+   quality. The game shows the parts of one level (the player's car: the
+   level of the highest quality) and moves them from the car's state each
+   frame: wheels spin, steer and follow the suspension, arms stretch
+   between the parts they join, the body pitches with a turbo and the
+   pilot's head sways with the feedback springs. */
+
+#define TMUF_VEHICLE_NO_PART UINT32_MAX
+
+typedef struct tmuf_vehicle_part {
+  const char *name;   /* the tree's name, e.g. "1FLWheel" */
+  uint32_t parent;    /* index of the parent part, TMUF_VEHICLE_NO_PART for the root */
+  tmuf_iso4 location; /* in the parent's frame (the root's in the car's) */
+} tmuf_vehicle_part;
+
+/* CSceneVehicleStruct::SVisualWheel: the parts a simulation wheel moves */
+typedef struct tmuf_vehicle_visual_wheel {
+  uint32_t rolling;  /* spins with the wheel, steers (steers set) and follows the suspension */
+  uint32_t fixed;    /* not moved */
+  uint32_t bouncing; /* follows the suspension */
+  uint32_t steering; /* steers (steers set) and follows the suspension */
+  uint32_t wheel;    /* index into sim.car.wheels */
+  int steers;
+} tmuf_vehicle_visual_wheel;
+
+/* SVisualArm: a part aimed from `from` at `to` and stretched to reach it;
+   rolls: also turns with the wheel (cardans) */
+typedef struct tmuf_vehicle_visual_arm {
+  uint32_t arm, from, to;
+  int rolls;
+  uint32_t wheel;
+} tmuf_vehicle_visual_arm;
+
+typedef struct tmuf_vehicle_visual_light {
+  uint32_t part;
+  uint32_t kind;
+} tmuf_vehicle_visual_light;
+
+/* SVisualVehicle: one level of detail */
+typedef struct tmuf_vehicle_visual_level {
+  uint32_t quality;   /* ESceneMobilQuality it is shown at (higher: more detail) */
+  uint32_t root;      /* the group of the level's parts */
+  uint32_t body;      /* pitched by the turbo */
+  uint32_t pilot_head;
+  uint32_t shadow;    /* frame of the projected shadow */
+  uint32_t wheel_count, arm_count, light_count;
+  const tmuf_vehicle_visual_wheel *wheels;
+  const tmuf_vehicle_visual_arm *arms;
+  const tmuf_vehicle_visual_light *lights;
+} tmuf_vehicle_visual_level;
+
+typedef struct tmuf_vehicle_visuals {
+  /* instances: location in the frame of the part `block` */
+  tmuf_visuals visuals;
+  uint32_t part_count, level_count;
+  const tmuf_vehicle_part *parts; /* parents before their children */
+  const tmuf_vehicle_visual_level *levels;
+} tmuf_vehicle_visuals;
+
+/* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the
+   track. */
+TMUF_API const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track);
+
 /* The track's simulation at time 0, which every world starts as a copy of:
    its static collision (world, triggers), water, race tables and the car's
    definition are the ones all worlds on the track share. */

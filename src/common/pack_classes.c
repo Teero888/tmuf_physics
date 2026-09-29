@@ -1793,9 +1793,9 @@ static uint32_t vs_count(tmuf_gbx *g) {
   return g->error ? 0 : n;
 }
 
-static void vs_visual_id(tmuf_gbx *g) {
-  tmuf_gbx_id(g, NULL);
-  tmuf_gbx_bool(g);
+static void vs_visual_id(tmuf_gbx *g, tmuf_visual_id *out) {
+  out->name = id_text(g);
+  out->flag = tmuf_gbx_bool(g);
 }
 
 static void c0a039005(tmuf_gbx *g, void *node, uint32_t id) {
@@ -1815,68 +1815,95 @@ static void c0a039006(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_vehicle_struct *v = node;
   v->visual_vehicle_count = vs_count(g);
   v->has_visual_vehicle_count = !g->error;
+  v->visual_vehicles = TMUF_ARENA_ARRAY(g->arena, tmuf_visual_vehicle_def,
+                                        v->visual_vehicle_count ? v->visual_vehicle_count : 1);
+  if (v->visual_vehicles)
+    memset(v->visual_vehicles, 0, sizeof *v->visual_vehicles * (v->visual_vehicle_count ? v->visual_vehicle_count : 1));
 }
 
 static int vs_need_count(tmuf_gbx *g, tmuf_vehicle_struct *v) {
-  if (!v->has_visual_vehicle_count)
+  if (!v->has_visual_vehicle_count || !v->visual_vehicles)
     tmuf_gbx_fail(g, "vehicle struct visual chunk before count");
-  return v->has_visual_vehicle_count;
+  return v->has_visual_vehicle_count && v->visual_vehicles;
 }
 
+/* arms: SVisualId arm, from, to; bools; wheel */
 static void c0a039009(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_vehicle_struct *v = node;
   if (!vs_need_count(g, v))
     return;
   for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    tmuf_visual_vehicle_def *vv = &v->visual_vehicles[k];
     uint32_t n = vs_count(g);
-    for (uint32_t i = 0; i < n && !g->error; i++) {
-      vs_visual_id(g);
-      vs_visual_id(g);
-      vs_visual_id(g);
-      tmuf_gbx_skip(g, 12);
+    vv->arms = TMUF_ARENA_ARRAY(g->arena, tmuf_visual_arm_def, n ? n : 1);
+    vv->arm_count = vv->arms ? n : 0;
+    for (uint32_t i = 0; i < vv->arm_count && !g->error; i++) {
+      tmuf_visual_arm_def *a = &vv->arms[i];
+      vs_visual_id(g, &a->arm);
+      vs_visual_id(g, &a->from);
+      vs_visual_id(g, &a->to);
+      a->flag0 = tmuf_gbx_bool(g);
+      a->rolls = tmuf_gbx_bool(g);
+      a->wheel = tmuf_gbx_u32(g);
     }
   }
 }
 
+/* lights: SVisualId, kind */
 static void c0a03900a(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_vehicle_struct *v = node;
   if (!vs_need_count(g, v))
     return;
   for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    tmuf_visual_vehicle_def *vv = &v->visual_vehicles[k];
     uint32_t n = vs_count(g);
-    for (uint32_t i = 0; i < n && !g->error; i++) {
-      vs_visual_id(g);
-      tmuf_gbx_skip(g, 4);
+    vv->lights = TMUF_ARENA_ARRAY(g->arena, tmuf_visual_light_def, n ? n : 1);
+    vv->light_count = vv->lights ? n : 0;
+    for (uint32_t i = 0; i < vv->light_count && !g->error; i++) {
+      vs_visual_id(g, &vv->lights[i].tree);
+      vv->lights[i].kind = tmuf_gbx_u32(g);
     }
   }
 }
 
+/* wheels: SVisualId x4 (at +0, +0x10, +8, +0x18 of SVisualWheel), wheel, steers */
 static void c0a03900f(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_vehicle_struct *v = node;
   if (!vs_need_count(g, v))
     return;
   for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
+    tmuf_visual_vehicle_def *vv = &v->visual_vehicles[k];
     uint32_t n = vs_count(g);
-    for (uint32_t i = 0; i < n && !g->error; i++) {
-      for (int j = 0; j < 4; j++)
-        vs_visual_id(g);
-      tmuf_gbx_skip(g, 8);
+    vv->wheels = TMUF_ARENA_ARRAY(g->arena, tmuf_visual_wheel_def, n ? n : 1);
+    vv->wheel_count = vv->wheels ? n : 0;
+    for (uint32_t i = 0; i < vv->wheel_count && !g->error; i++) {
+      tmuf_visual_wheel_def *w = &vv->wheels[i];
+      vs_visual_id(g, &w->rolling);
+      vs_visual_id(g, &w->fixed);
+      vs_visual_id(g, &w->bouncing);
+      vs_visual_id(g, &w->steering);
+      w->wheel = tmuf_gbx_u32(g);
+      w->steers = tmuf_gbx_bool(g);
     }
   }
 }
 
+/* per level: SVisualId at +0xc (body), +4 (pilot head), +0x14, +0x1c; quality */
 static void c0a039010(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_vehicle_struct *v = node;
   if (!vs_need_count(g, v))
     return;
   for (uint32_t k = 0; k < v->visual_vehicle_count && !g->error; k++) {
-    for (int j = 0; j < 4; j++)
-      vs_visual_id(g);
-    tmuf_gbx_skip(g, 4);
+    tmuf_visual_vehicle_def *vv = &v->visual_vehicles[k];
+    vs_visual_id(g, &vv->body);
+    vs_visual_id(g, &vv->pilot_head);
+    vs_visual_id(g, &vv->shadow);
+    vs_visual_id(g, &vv->extra);
+    vv->quality = tmuf_gbx_u32(g);
   }
 }
 
