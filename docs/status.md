@@ -95,13 +95,6 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
 
 ## Scene (src/common/scene.c, scene_ctn.c)
 
-- Challenge construction following the game's
-  CGameCtnChallenge: zone grid, field units, automatic base, suppression,
-  block mobils, clips (AddClipsToScene/UpdateClip), pylons.
-- Static triangles contain every reference triangle on 49 test maps;
-  the extra ones are editor helpers (never collided) and mobils with
-  emitter-leaves motion (trees), collided but left out of the reference
-  dump.
 - Material remaps: terrain-modifier skins (CGameCtnDecorationTerrainModifier
   / CPlugGameSkin) for decoration-skin and replacement blocks; collection
   surface replacement pairs decide replacement for ground blocks and clips.
@@ -211,13 +204,11 @@ optimization with its measured gain: docs/performance.md.
   reject test skips and aborts on a contact.
 - `tmuf_inspect scene PACKS MAP OUT` dumps static triangles
   (`TMUF_SCENE_BLOCKS` tags them, `TMUF_SCENE_DEBUG` traces assembly);
-  `tools/dev/cmp_tris.py` compares with a reference dump.
+  `tools/dev/cmp_tris.py` compares two such dumps.
 
 ## Scene notes
 
-- Reference to compare against: a dev-only tool writes a map's static collision triangles
-  (`u32 count`, 9 floats each). "fragmented" (corpus 7260080): 206581.
-- Flow (the game's Preload): collection + decoration size, automatic
+- Flow (replay preload): collection + decoration size, automatic
   base (ground zones), challenge construction (explicit blocks plus
   automatic pylons/clips), per placement mobils -> CHmsItem solid -> tree ->
   surfaces, decoration scene.
