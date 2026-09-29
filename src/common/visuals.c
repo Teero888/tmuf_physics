@@ -61,8 +61,12 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
   t->file = t->pack_file = NULL;
   tmuf_asset *ba;
   tmuf_gbx_node *bn = tmuf_assets_follow(&b->scene->assets, owner, bitmap, &ba);
-  if (node_class(bn) != CLS_BITMAP || !bn->data)
+  if (node_class(bn) != CLS_BITMAP || !bn->data) {
+    if (getenv("TMUF_VISUALS_DEBUG"))
+      fprintf(stderr, "bitmap %s from %s: node %p class %08x\n", bitmap->file ? bitmap->file : "(inline)",
+              owner ? owner->path : "-", (void *)bn, node_class(bn));
     return;
+  }
   const tmuf_plug_bitmap *bm = bn->data;
   char path[1200];
   if (bm->image && bm->image->external &&
@@ -150,6 +154,14 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
     tmuf_gbx_node *sn = cls == CLS_SHADER ? n
                                           : tmuf_scene_material_shader(b->scene, refs[r].owner, refs[r].ref, &sa,
                                                                        &custom, &ca);
+    if (getenv("TMUF_VISUALS_DEBUG") && strstr(m->name, "6284E3502"))
+      fprintf(stderr, "material %s: shader %p custom %p (%u bitmaps: %s)\n", m->name, (void *)sn, (const void *)custom,
+              custom ? custom->bitmap_count : 0, custom && custom->bitmap_count ? custom->bitmap_names[0] : "-");
+    if (getenv("TMUF_VISUALS_DEBUG") && strstr(m->name, "6284E3502") && custom)
+      for (uint32_t k = 0; k < custom->bitmap_count; k++)
+        fprintf(stderr, "  custom %s -> %p ext %d file %s\n", custom->bitmap_names[k], (void *)custom->bitmaps[k],
+                custom->bitmaps[k] ? custom->bitmaps[k]->external : -1,
+                custom->bitmaps[k] && custom->bitmaps[k]->file ? custom->bitmaps[k]->file : "-");
     if (node_class(sn) == CLS_SHADER && sn->data) {
       const tmuf_plug_shader *sh = sn->data;
       m->has_shader_flags = sh->has_flags;

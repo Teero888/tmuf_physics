@@ -102,11 +102,23 @@ int main(int argc, char **argv) {
   if (argc > 3 && strcmp(argv[3], "--materials") == 0)
     for (uint32_t i = 0; i < v->material_count; i++) {
       const tmuf_visual_material *m = &v->materials[i];
-      printf("material %u %s flags %08x %08x alpha test %u ref %u\n", i, m->name, m->shader_flags[0],
+      uint32_t uses = 0;
+      for (uint32_t k = 0; k < v->instance_count; k++)
+        uses += v->instances[k].material == i;
+      printf("material %u (%u uses) %s state %d %08x flags %08x %08x alpha test %u ref %u\n", i, uses, m->name, m->has_render_state, m->render_state[0], m->shader_flags[0],
              m->shader_flags[1], m->has_render_state ? (m->render_state[0] >> 24) & 7u : 9u,
              (m->render_state[0] >> 14) & 0xffu);
       for (uint32_t k = 0; k < m->texture_count; k++)
-        printf("  %-12s %s\n", m->textures[k].sampler, m->textures[k].file ? m->textures[k].file : "(not found)");
+        printf("  %-12s %s\n", m->textures[k].sampler,
+               m->textures[k].file        ? m->textures[k].file
+               : m->textures[k].pack_file ? m->textures[k].pack_file
+                                          : "(not found)");
+      for (uint32_t k = 0; k < v->instance_count; k++)
+        if (v->instances[k].material == i) {
+          const tmuf_visual_mesh *me = &v->meshes[v->instances[k].mesh];
+          printf("  first use: mesh flags %x stride %u uv sets %u\n", me->flags, me->vertex_stride, me->uv_set_count);
+          break;
+        }
     }
   tmuf_track_free(track);
   free(map);
