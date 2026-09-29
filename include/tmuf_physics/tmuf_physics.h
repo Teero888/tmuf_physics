@@ -171,7 +171,13 @@ typedef struct tmuf_visual_texture {
 typedef struct tmuf_visual_material {
   const char *name;         /* the material's or shader's file, as stored; "" if inline */
   int has_shader_flags;
-  uint32_t shader_flags[2]; /* CPlugShader's archived flag words */
+  uint32_t shader_flags[2]; /* CPlugShader's archived flag words (bit 0x100 of the
+                               first: alpha blended) */
+  /* CPlugShaderApply's packed render state: alpha test reference in bits
+     14..21 and alpha test function in bits 24..26 of the first word
+     (function 6: no alpha test) */
+  int has_render_state;
+  uint32_t render_state[2];
   uint32_t texture_count;
   const tmuf_visual_texture *textures;
 } tmuf_visual_material;

@@ -76,7 +76,9 @@ int main(int argc, char **argv) {
   if (argc > 3 && strcmp(argv[3], "--materials") == 0)
     for (uint32_t i = 0; i < v->material_count; i++) {
       const tmuf_visual_material *m = &v->materials[i];
-      printf("material %u %s flags %08x %08x\n", i, m->name, m->shader_flags[0], m->shader_flags[1]);
+      printf("material %u %s flags %08x %08x alpha test %u ref %u\n", i, m->name, m->shader_flags[0],
+             m->shader_flags[1], m->has_render_state ? (m->render_state[0] >> 24) & 7u : 9u,
+             (m->render_state[0] >> 14) & 0xffu);
       for (uint32_t k = 0; k < m->texture_count; k++)
         printf("  %-12s %s\n", m->textures[k].sampler, m->textures[k].file ? m->textures[k].file : "(not found)");
     }

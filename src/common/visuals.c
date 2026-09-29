@@ -154,6 +154,9 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
       m->has_shader_flags = sh->has_flags;
       m->shader_flags[0] = sh->flags[0];
       m->shader_flags[1] = sh->flags[1];
+      m->has_render_state = sh->has_apply_state;
+      m->render_state[0] = sh->apply_state[0];
+      m->render_state[1] = sh->apply_state[1];
       shader_textures(b, m, sa, sh, custom, ca);
     }
     *slot = b->material_count++;

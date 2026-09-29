@@ -100,6 +100,10 @@ typedef struct tmuf_plug_material_custom {
 typedef struct tmuf_plug_shader {
   int has_flags;
   uint32_t flags[2];
+  /* CPlugShaderApply's packed render state (+0x9c, +0xa0): alpha test
+     reference in bits 14..21 and function in bits 24..26 of the first */
+  int has_apply_state;
+  uint32_t apply_state[2];
   uint32_t address_count;
   tmuf_gbx_node **addresses;
 } tmuf_plug_shader;

@@ -283,13 +283,13 @@ static uint32_t build_bintree(ref_world *w, const uint32_t *src, uint32_t n, int
 }
 
 ref_surf *ref_world_surface(ref_world *w, tmuf_assets *assets, tmuf_asset *owner, tmuf_gbx_node *surface) {
-  build_ctx b = {w, assets, 0, 0, NULL, TMUF_MATERIALS_OWN};
+  build_ctx b = {w, assets, 0, 0, NULL, TMUF_MATERIALS_OWN, 0};
   return (ref_surf *)get_surf(&b, owner, surface);
 }
 
 int ref_world_build(ref_world *w, tmuf_scene *scene, int group) {
   memset(w, 0, sizeof *w);
-  build_ctx b = {w, &scene->assets, 0, 0, scene, TMUF_MATERIALS_OWN};
+  build_ctx b = {w, &scene->assets, 0, 0, scene, TMUF_MATERIALS_OWN, 0};
   for (uint32_t i = 0; i < scene->corpus_count && !b.error; i++) {
     const tmuf_scene_corpus *c = &scene->corpora[i];
     /* the static group holds the static items; the trigger group the race

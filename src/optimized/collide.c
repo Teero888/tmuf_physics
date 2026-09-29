@@ -665,7 +665,7 @@ __attribute__((target("avx"))) static inline uint32_t at_test_avx(const at_boxes
      passes on to the next; the first other edge decides: clearly ed > r
      rejects, anything else is left to the float test. */
 static inline int tri_rejects(const gm_vec3 v[3], float nx, float ny, float nz) {
-  const double n0 = nx, n1 = ny, n2 = nz;
+  const double n0 = (double)nx, n1 = (double)ny, n2 = (double)nz;
   const double tx = -(double)v[0].x * n0, ty = -(double)v[0].y * n1, tz = -(double)v[0].z * n2;
   const double d = (tx + ty) + tz;
   const double nn = (n0 * n0 + n1 * n1) + n2 * n2;
@@ -677,9 +677,9 @@ static inline int tri_rejects(const gm_vec3 v[3], float nx, float ny, float nz) 
     return 1;
   double p[3][3], vmax = 0.0;
   for (int k = 0; k < 3; k++) {
-    p[k][0] = v[k].x;
-    p[k][1] = v[k].y;
-    p[k][2] = v[k].z;
+    p[k][0] = (double)v[k].x;
+    p[k][1] = (double)v[k].y;
+    p[k][2] = (double)v[k].z;
     const double a1 = (fabs(p[k][0]) + fabs(p[k][1])) + fabs(p[k][2]);
     vmax = a1 > vmax ? a1 : vmax;
   }

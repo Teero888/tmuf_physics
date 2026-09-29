@@ -843,6 +843,28 @@ static void c09026002(tmuf_gbx *g, void *node, uint32_t id) {
     s->addresses[i] = tmuf_gbx_noderef(g);
 }
 
+/* CPlugShaderApply::Chunk 0x09026004: the old render state word,
+   converted as ApplyFieldLoadAndSetFromOld does (bit 0x2000: alpha test,
+   function 3, else none, 6) */
+static void c09026004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_shader *s = node;
+  const uint32_t old = tmuf_gbx_u32(g);
+  const uint32_t func = (old & 0x2000u) ? 3u : 6u;
+  s->apply_state[0] = ((old & 0xf8ffdfffu) | func << 24) & 0x1f3fffffu;
+  s->apply_state[1] = 0;
+  s->has_apply_state = 1;
+}
+
+/* CPlugShaderApply::Chunk 0x09026008: the render state words */
+static void c09026008(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_shader *s = node;
+  s->apply_state[0] = tmuf_gbx_u32(g) & 0x1fffffffu;
+  s->apply_state[1] = tmuf_gbx_u32(g) & 0x7fffffu;
+  s->has_apply_state = 1;
+}
+
 static void c09004003(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(node);
   UNUSED(id);
@@ -851,7 +873,7 @@ static void c09004003(tmuf_gbx *g, void *node, uint32_t id) {
 
 static const tmuf_gbx_chunk SHADER_CHUNKS[] = {
     READ(0x0900200e, c0900200e), READ(0x09002016, c09002016), READ(0x09004003, c09004003),
-    READ(0x09026002, c09026002), READ(0x09026004, skip4), READ(0x09026008, skip8),
+    READ(0x09026002, c09026002), READ(0x09026004, c09026004), READ(0x09026008, c09026008),
 };
 static const tmuf_gbx_class SHADER = {0x09002000, "CPlugShader", sizeof(tmuf_plug_shader), SHADER_CHUNKS,
                                       COUNT(SHADER_CHUNKS), NULL};

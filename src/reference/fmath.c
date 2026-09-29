@@ -158,7 +158,7 @@ static double atan_unit(double t) {
 
 static double atan2_d(double y, double x) {
   if (isnan(x) || isnan(y))
-    return NAN;
+    return (double)NAN;
   double ay = fabs(y), ax = fabs(x);
   double a;
   if (ay == 0.0) {
