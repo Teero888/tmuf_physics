@@ -121,7 +121,9 @@ int main(int argc, char **argv) {
       for (uint32_t k = 0; k < v->instance_count; k++)
         if (v->instances[k].material == i) {
           const tmuf_visual_mesh *me = &v->meshes[v->instances[k].mesh];
-          printf("  first use: mesh flags %x stride %u uv sets %u\n", me->flags, me->vertex_stride, me->uv_set_count);
+          printf("  first use: mesh flags %x stride %u uv sets %u at %.1f %.1f %.1f bounds y %.1f..%.1f\n", me->flags,
+                 me->vertex_stride, me->uv_set_count, v->instances[k].location.t.x, v->instances[k].location.t.y,
+                 v->instances[k].location.t.z, me->bounds[1] - me->bounds[4], me->bounds[1] + me->bounds[4]);
           break;
         }
     }
