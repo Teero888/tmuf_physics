@@ -114,7 +114,8 @@ int main(int argc, char **argv) {
     }
     size_t map_size;
     const void *map = tmuf_replay_map(r, &map_size);
-    tmuf_track_options opt = {tmuf_replay_vehicle(r), tmuf_replay_seed(r), tmuf_replay_laps(r), 0};
+    /* stunts on every map: Race mode ghosts record their score too */
+    tmuf_track_options opt = {tmuf_replay_vehicle(r), tmuf_replay_seed(r), tmuf_replay_laps(r), TMUF_TRACK_STUNTS};
     tmuf_track *t = tmuf_track_load(packs, map, map_size, &opt, err, sizeof err);
     if (!t) {
       printf("%s ERROR track %s\n", name, err);

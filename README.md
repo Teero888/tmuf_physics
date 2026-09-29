@@ -76,7 +76,8 @@ for (uint32_t i = 0; i < n; i++) {
 }
 /* world.sim.body.state (the game's CHmsDyna state), world.sim.car,
    world.sim.race: completed, finish_time, respawns, checkpoint_times[] (every
-   checkpoint crossing, finish lines of each lap included), stunts.score, ... */
+   checkpoint crossing, finish lines of each lap included), stunts.score (on
+   Stunts maps, or any map loaded with TMUF_TRACK_STUNTS), ... */
 
 tmuf_world copy = tmuf_world_empty();
 tmuf_world_copy(&copy, &world); /* about a microsecond: branch a search here */

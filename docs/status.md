@@ -133,7 +133,10 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
 - Stunts (src/common/stunts.c, `tmuf_race.stunts`): CTrackManiaRace's
   UpdateStunts / ComputeStunt / ResetStunts, the respawn penalty and the
   Stunts mode time limit, ported from the exe. The game scores stunts in
-  every mode; the validator checks the score on Stunts maps. Details that
+  every mode; the validator checks the score on Stunts maps, so the library
+  scores stunts only there unless a track is loaded with
+  `TMUF_TRACK_STUNTS` (the checks use it to compare Race mode ghosts too).
+  Details that
   took the game's own trace to find (`run_oracle.py --trace stunts`, a hook
   in ComputeStunt): the car's location the stunts read lags the body by one
   step (the contact flags do not); the first rotation in the air is measured

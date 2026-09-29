@@ -48,6 +48,7 @@ tmuf_track *tmuf_track_load(const tmuf_packs *packs, const void *map, size_t siz
   }
   t->tpl.race.laps = t->base.laps;
   t->tpl.race.stunts_mode = t->base.map.play_mode == 5;
+  t->tpl.race.stunts_enabled = t->tpl.race.stunts_mode || (options && (options->flags & TMUF_TRACK_STUNTS));
   t->tpl.race.time_limit = t->base.map.time_limit;
   return t;
 }

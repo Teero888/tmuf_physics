@@ -120,6 +120,7 @@ bit-exact: the whole oracle corpus matches.
 | 18 | per mesh surface, each triangle's vertices packed together at load (the batch reads 36 contiguous bytes) | +3.5 % (replay +0.5 %) | 213 k |
 | 19 | exactness fix, not a speed-up: the world inverse inertia as GmMat3::Mult rounds it on the x87 (subnormal products); the optimized backend takes the float path unless an entry is below 2^-60 | −0.9 % | 211 k |
 | 20 | feature, not a speed-up: stunt figures (src/common/stunts.c, every racing tick: location history, rotation in the air) | −0.5 % random, −0.8 % on a replay with 60 jumps | 210 k |
+| 21 | stunts scored only on Stunts maps (or with `TMUF_TRACK_STUNTS`): Race maps skip them | back to +0.5 % on A01 | 211 k |
 
 Tried and dropped (slower or no gain, all exact):
 

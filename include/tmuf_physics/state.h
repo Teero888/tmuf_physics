@@ -683,6 +683,7 @@ typedef struct tmuf_race {
   uint32_t *checkpoint_scores; /* the stunt score at each of them */
   uint32_t checkpoint_time_count, checkpoint_time_cap;
   int stunts_mode;     /* the map's mode is Stunts */
+  int stunts_enabled;  /* stunts are scored: Stunts mode or TMUF_TRACK_STUNTS */
   uint32_t time_limit; /* ms: stunts landed later do not count */
   tmuf_stunts stunts;
   uint8_t *passed; /* checkpoint_count + 1 slots (the last: finish) */

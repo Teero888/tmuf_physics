@@ -87,6 +87,10 @@ enum {
   /* keep the world-space triangle list for tmuf_track_triangles (large: every
      static triangle of the map, up to gigabytes on maps with 10k+ blocks) */
   TMUF_TRACK_TRIANGLES = 1u << 0,
+  /* score stunts on every map (world.sim.race.stunts); by default only on
+     Stunts maps, the only mode that uses the score (the game also records
+     it in Race mode ghosts, where nothing checks it) */
+  TMUF_TRACK_STUNTS = 1u << 1,
 };
 
 typedef struct tmuf_track_options {
@@ -205,7 +209,8 @@ typedef struct tmuf_replay_write_options {
    during the countdown; the run starts with the input of that tick), so
    count must be larger. options may be NULL.
    On Stunts maps the validator also checks the stunt score, which the
-   replay records as the run scored it.
+   replay records as the run scored it (on other maps 0, unless the track
+   was loaded with TMUF_TRACK_STUNTS).
    Returns the file's bytes (free them with tmuf_free) and their count in
    *size, or NULL. */
 TMUF_API void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inputs, uint32_t count,

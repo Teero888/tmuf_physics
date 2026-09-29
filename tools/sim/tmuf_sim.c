@@ -197,6 +197,7 @@ static int run_one(const tmuf_packset *set, const char *replay_path, const char 
   /* ConfigureReplayRace: the race settings' laps, else the map's for a lap race, else one */
   sim.race.laps = ghost->settings_laps ? ghost->settings_laps : map.has_laps && map.lap_race ? map.laps : 1;
   sim.race.stunts_mode = map.play_mode == 5;
+  sim.race.stunts_enabled = 1; /* score them everywhere: compared with the ghost */
   sim.race.time_limit = map.time_limit;
   if (!op->summary)
     printf("race: %u checkpoints, %u laps, %u trigger records\n", sim.race.checkpoint_count, sim.race.laps,

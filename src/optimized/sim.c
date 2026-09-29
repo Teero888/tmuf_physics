@@ -249,7 +249,8 @@ static void race_trigger(ref_sim *s, uint32_t corpus) {
     if (r->laps != 0 && r->completed_laps >= r->laps) {
       r->completed = 1;
       r->finish_time = s->tick_ms - TMUF_CONTROL_RACE_START_MS;
-      tmuf_stunts_finish(r);
+      if (r->stunts_enabled)
+        tmuf_stunts_finish(r);
       if (r->checkpoint_time_count)
         r->checkpoint_scores[r->checkpoint_time_count - 1] = r->stunts.score;
       return;
@@ -284,7 +285,8 @@ static void respawn(ref_sim *s) {
   gm_iso4 at = s->race.current;
   dyna_set_location(d, &at);
   car_set_controls(c, a, b, st);
-  tmuf_stunts_respawn(&s->race.stunts, &s->body.state.rot); /* RespawnPlayer */
+  if (s->race.stunts_enabled)
+    tmuf_stunts_respawn(&s->race.stunts, &s->body.state.rot); /* RespawnPlayer */
 }
 
 int ref_sim_init(ref_sim *s, tmuf_scene *scene, const tmuf_vehicle *v, const gm_iso4 *spawn, uint32_t seed,
@@ -1011,7 +1013,8 @@ void ref_sim_step(ref_sim *s, const ref_tick *t) {
       c->turbo.roulette_origin = t->time_ms;
       c->integration.speed_blocked = 0;
       car_reset(c);
-      tmuf_stunts_reset_player(&s->race.stunts, &s->body.state.rot); /* ResetPlayer */
+      if (s->race.stunts_enabled)
+        tmuf_stunts_reset_player(&s->race.stunts, &s->body.state.rot); /* ResetPlayer */
     }
     /* InstallPhysicalParameters(CaptureDynaParameters()): solid = dyna */
     c->solid_mass = s->body.params.mass;
@@ -1023,7 +1026,7 @@ void ref_sim_step(ref_sim *s, const ref_tick *t) {
   s->period_ms = t->period_ms;
   /* CTrackManiaRace::InputRace: the stunts see the car after the last step,
      before this tick's respawns */
-  if (t->enable_race && !s->race.completed) {
+  if (s->race.stunts_enabled && t->enable_race && !s->race.completed) {
     tmuf_stunts_input(&s->race.stunts, t->time_ms, t->accelerate, t->brake, t->steer, t->input_event);
     const tmuf_stunt_car sc = {&s->body.state.rot,
                                &s->body.state.pos,
@@ -1039,7 +1042,7 @@ void ref_sim_step(ref_sim *s, const ref_tick *t) {
   for (uint32_t k = 0; k < t->respawns; k++) {
     respawn(s);
   }
-  if (t->enable_race)
+  if (s->race.stunts_enabled && t->enable_race)
     tmuf_stunts_time(&s->race, t->time_ms);
   physics_step2(s);
   s->first_step = 0;
