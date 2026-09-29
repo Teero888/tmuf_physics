@@ -176,6 +176,11 @@ typedef struct tmuf_visual_texture {
   uint32_t generate; /* EGxUVGenerate: how generated coordinates are made (0: none) */
   int has_transform;
   float transform[6];
+  /* a bitmap of the material that no sampler of its shader names: the game's
+     shader programs sample it by name (a block's "Lighting": baked light in
+     rgb, occlusion in alpha, on the uv set of its "Occlusion"); texcoord,
+     generate and transform are then unset */
+  int unbound;
 } tmuf_visual_texture;
 
 /* The shader the game draws a surface with (CPlugMaterial's supported

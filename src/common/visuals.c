@@ -109,10 +109,13 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
 }
 
 /* the textures of a shader: its sampler addresses, the material's custom
-   bitmaps replacing those of the same sampler name */
+   bitmaps replacing those of the same sampler name; then the custom bitmaps
+   no address names (the game's programs sample them by name, e.g. a block's
+   "Lighting") */
 static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa, const tmuf_plug_shader *sh,
                             const tmuf_plug_material_custom *custom, tmuf_asset *ca) {
-  tmuf_visual_texture *t = TMUF_ARENA_ARRAY(b->arena, tmuf_visual_texture, sh->address_count ? sh->address_count : 1);
+  const uint32_t cap = sh->address_count + (custom ? custom->bitmap_count : 0u);
+  tmuf_visual_texture *t = TMUF_ARENA_ARRAY(b->arena, tmuf_visual_texture, cap ? cap : 1);
   if (!t) {
     b->oom = 1;
     return;
@@ -134,12 +137,28 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
       }
     t[n].sampler = dup(b->arena, ad->sampler ? ad->sampler : "");
     t[n].file = t[n].pack_file = NULL;
+    t[n].unbound = 0;
     t[n].texcoord = ad->has_address ? (ad->address_flags >> 15) & 31u : 0u;
     t[n].generate = ad->has_address ? ad->address_flags & 0xffu : 0u;
     t[n].has_transform = ad->has_transform;
     memcpy(t[n].transform, ad->transform, sizeof t[n].transform);
     if (bitmap)
       bitmap_file(b, bowner, bitmap, &t[n], ad->has_address && (ad->address_flags & 0x1000u));
+    n++;
+  }
+  for (uint32_t k = 0; custom && k < custom->bitmap_count; k++) {
+    const char *name = custom->bitmap_names[k];
+    if (!name || !custom->bitmaps[k])
+      continue;
+    int named = 0;
+    for (uint32_t i = 0; i < n && !named; i++)
+      named = strcmp(t[i].sampler, name) == 0;
+    if (named)
+      continue;
+    memset(&t[n], 0, sizeof t[n]);
+    t[n].sampler = dup(b->arena, name);
+    t[n].unbound = 1;
+    bitmap_file(b, ca, custom->bitmaps[k], &t[n], 0);
     n++;
   }
   m->textures = t;
