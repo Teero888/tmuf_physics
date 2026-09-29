@@ -147,6 +147,14 @@ own list), and clip sides follow CreateMobilForClip's ReplaceByLastAt order.
   checkpoint times and Stunts mode scores equal the recorded ones on all
   6 812 valid finished runs (ghosts keep the first 1 000 checkpoint
   crossings); 5 Race mode ghosts keep a live-drive stunt score.
+- TAS replays (tmtas.exchange, 3 516, run rebased and resampled): 3 320
+  valid in the game, 125 on puzzle maps (the validator refuses those), 54
+  invalid (they do not finish in the game either). All 3 365 with a
+  trajectory match on both backends (9 more are TMUnlimiter maps the stock
+  game cannot load, excluded). Open: on a 66-lap exploit map (4047) that
+  crosses the checkpoint and the finish several times per tick, one crossing
+  lands a tick later than in the ghost (the order of trigger contacts within
+  a tick; physics and finish time match).
 - `tmuf_replay_write` (src/common/replay_write.c) saves a run as a replay in
   the game's layout (one CGameCtnGhost, uncompressed body, samples in stored
   zlib blocks). Both backends write identical bytes. `tmuf_rewrite` writes a

@@ -221,6 +221,8 @@ int main(int argc, char **argv) {
                  (nc == 0 || nc == rc->checkpoint_time_count || (nc == 1000 && rc->checkpoint_time_count > 1000));
       int scores = gs == UINT32_MAX || gs == rc->stunts.score;
       for (uint32_t k = 0; same && nc && k < nc; k++) {
+        if (ct[k] == UINT32_MAX) /* not recorded (ghosts of TAS tools) */
+          continue;
         same = ct[k] == rc->checkpoint_times[k];
         scores &= cs[k] == rc->checkpoint_scores[k];
       }
