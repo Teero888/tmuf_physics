@@ -203,6 +203,10 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
       m->render_state[1] = sh->apply_state[1];
       shader_textures(b, m, sa, sh, custom, ca);
     }
+    m->lightmap_uv = UINT32_MAX;
+    for (uint32_t t = 0; t < m->texture_count; t++)
+      if (!m->textures[t].unbound && strcmp(m->textures[t].sampler, "PreLightGen") == 0)
+        m->lightmap_uv = m->textures[t].texcoord;
     *slot = b->material_count++;
     return *slot;
   }
@@ -241,7 +245,7 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
 }
 
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
-                      tmuf_arena *arena) {
+                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena) {
   memset(out, 0, sizeof *out);
   builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
@@ -272,6 +276,7 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
     in->block = v->tag;
     in->lod_near = v->lod_near;
     in->lod_far = v->lod_far;
+    in->lightmap = lightmap_of_corpus && v->corpus < scene->corpus_count ? lightmap_of_corpus[v->corpus] : UINT32_MAX;
   }
   map_free(&b.mesh_map);
   map_free(&b.material_map);
@@ -291,8 +296,9 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
   return 1;
 }
 
-int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *arena) {
-  return build_list(out, scene, scene->visuals, scene->visual_count, arena);
+int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
+                       tmuf_arena *arena) {
+  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena);
 }
 
 /* ---- the vehicle ---- */
@@ -387,7 +393,7 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
   memset(out, 0, sizeof *out);
   vehicle_builder b = {scene, arena, NULL, 0, 0, NULL, 0, 0, 0};
   vehicle_tree(&b, vehicle->solid_owner, vehicle->solid_tree, TMUF_VEHICLE_NO_PART, 0, 0.0f, FLT_MAX);
-  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, arena)) {
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena)) {
     free(b.parts);
     free(b.list);
     return 0;

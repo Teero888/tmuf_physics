@@ -30,6 +30,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/replay_write.c
   src/common/stunts.c
   src/common/stunts.h
+  src/common/lightmap.c
+  src/common/lightmap.h
   src/common/visuals.c
   src/common/visuals.h
   src/common/replay.h

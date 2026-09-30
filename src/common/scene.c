@@ -249,6 +249,7 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
       v->tag = s->current_block;
       v->lod_near = lod_near;
       v->lod_far = lod_far;
+      v->corpus = s->corpus_count ? s->corpus_count - 1 : 0;
     }
   }
   for (uint32_t i = 0; i < t->child_count; i++) {
@@ -284,6 +285,8 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   c->iso = *iso;
   c->tag = s->current_block;
   c->pylon_raise = s->pylon_raise;
+  c->lightmap_cells = s->current_lightmap_cells;
+  c->warp = s->current_mobil && strcmp(s->current_mobil, "Warp") == 0;
   c->trigger = s->current_trigger;
   c->item_flags = s->current_item_flags;
   /* Helper trees hang below a new CHALLENGEHELPERTREE tree without the
@@ -314,6 +317,10 @@ static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_no
   if (!sn || !sn->data || sn->class_id != 0x09005000u)
     return;
   const tmuf_plug_solid *solid = sn->data;
+  /* CHmsPackLightMap::Corpus_GetLightMapBlockCount reads the count of the
+     item solid's model, i.e. of the solid the mobil references */
+  if (depth == 0)
+    s->current_lightmap_cells = solid->lightmap_cells;
   if (solid->use_model) {
     if (depth < 8)
       emit_solid(s, sa, solid->model, world, depth + 1);
@@ -347,8 +354,11 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   if (m->name && (strcmp(m->name, "TriggerCheckpoint") == 0 || strcmp(m->name, "TriggerFinishLine") == 0))
     s->current_trigger = 1;
   s->current_item_flags = m->has_item ? m->item.physics_flags : 0;
+  const char *saved_mobil = s->current_mobil;
+  s->current_mobil = m->name;
   if (m->has_item && m->item.solid)
     emit_solid(s, ma, m->item.solid, world, 0);
+  s->current_mobil = saved_mobil;
   for (uint32_t i = 0; i < m->children.count; i++) {
     tmuf_asset *la;
     tmuf_gbx_node *ln = tmuf_assets_follow(&s->assets, ma, m->children.nodes[i], &la);

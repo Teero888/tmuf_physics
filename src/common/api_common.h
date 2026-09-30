@@ -14,6 +14,7 @@
 #include "common/replay.h"
 #include "common/scene.h"
 #include "common/vehicle.h"
+#include "common/lightmap.h"
 #include "common/visuals.h"
 
 struct tmuf_packs {
@@ -45,6 +46,7 @@ typedef struct tmuf_track_base {
   int has_visuals;
   tmuf_visuals_data visuals; /* with TMUF_TRACK_VISUALS */
   tmuf_vehicle_visuals_data vehicle_visuals;
+  tmuf_lightmap_data lightmap; /* with TMUF_TRACK_VISUALS */
 } tmuf_track_base;
 
 void tmuf_set_error(char *err, size_t err_size, const char *fmt, ...);

@@ -18,7 +18,10 @@ typedef struct tmuf_visuals_data {
 
 /* Mesh data points into the scene's assets, strings into arena: both must
    outlive the result. */
-int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, tmuf_arena *arena);
+/* lightmap_of_corpus: per scene corpus, its index in the track's
+   tmuf_lightmap (or NULL) */
+int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
+                       tmuf_arena *arena);
 void tmuf_visuals_free(tmuf_visuals_data *v);
 
 typedef struct tmuf_vehicle_visuals_data {

@@ -58,7 +58,6 @@ static void skip_id(tmuf_gbx *g, void *node, uint32_t id) {
     UNUSED(id); \
     tmuf_gbx_skip(g, n); \
   }
-SKIP_FN(1)
 SKIP_FN(4)
 SKIP_FN(8)
 SKIP_FN(12)
@@ -169,12 +168,17 @@ static void c09005011(tmuf_gbx *g, void *node, uint32_t id) {
     s->tree = tmuf_gbx_noderef(g);
 }
 
+static void c09005012(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_plug_solid *)node)->lightmap_cells = tmuf_gbx_u8(g);
+}
+
 static const tmuf_gbx_chunk SOLID_CHUNKS[] = {
     READ(0x09005000, skip4),        NOPAY(0x09005001),          NOPAY(0x09005002),          NOPAY(0x09005003),
     NOPAY(0x09005004),              NOPAY(0x09005005),          READ(0x09005006, c09005006), READ(0x09005007, skip4),
     NOPAY(0x09005008),              NOPAY(0x09005009),          READ(0x0900500a, c0900500a), READ(0x0900500b, skip32),
     READ(0x0900500c, skip72),       READ(0x0900500d, c0900500d), READ(0x0900500e, c0900500e), READ(0x0900500f, skip8),
-    READ(0x09005010, skip_noderef), READ(0x09005011, c09005011), READ(0x09005012, skip1),
+    READ(0x09005010, skip_noderef), READ(0x09005011, c09005011), READ(0x09005012, c09005012),
 };
 static const tmuf_gbx_class SOLID = {0x09005000, "CPlugSolid", sizeof(tmuf_plug_solid), SOLID_CHUNKS,
                                      COUNT(SOLID_CHUNKS), NULL};

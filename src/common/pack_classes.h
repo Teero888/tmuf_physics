@@ -16,6 +16,9 @@ typedef struct tmuf_plug_solid {
   int has_physics;
   float mass, center_of_mass[3], inertia[9];
   float fluid_friction, response_a, response_b;
+  /* chunk 0x09005012: cells of the lightmap atlas its corpus takes, in a
+     row (CPlugSolid+0x70 bits 1..8); 0 when absent */
+  uint8_t lightmap_cells;
 } tmuf_plug_solid;
 
 typedef struct tmuf_plug_tree {

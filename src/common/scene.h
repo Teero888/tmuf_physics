@@ -44,6 +44,10 @@ typedef struct tmuf_scene_corpus {
   uint8_t has_spawn;
   tmuf_iso spawn;
   uint32_t pylon_raise; /* a pylon middle: levels its mesh vertices are raised by */
+  /* baked lighting: the cells its solid takes in the lightmap atlas (0:
+     none), and whether it is the decoration's "Warp" mobil */
+  uint8_t lightmap_cells;
+  uint8_t warp;
 } tmuf_scene_corpus;
 
 /* CGameCtnBlockInfo race role (way type) */
@@ -75,6 +79,7 @@ typedef struct tmuf_scene_visual {
   tmuf_iso iso;
   uint32_t tag; /* as tmuf_scene_corpus.tag */
   float lod_near, lod_far; /* camera distances it is drawn at (visual mips) */
+  uint32_t corpus; /* index into tmuf_scene.corpora */
 } tmuf_scene_visual;
 
 typedef struct tmuf_scene_catalog_entry {
@@ -100,6 +105,8 @@ typedef struct tmuf_scene {
   tmuf_static_triangle *triangles; /* only with TMUF_SCENE_TRIANGLES */
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
+  const char *current_mobil; /* name of the mobil being placed */
+  uint8_t current_lightmap_cells;
   uint8_t current_trigger;
   uint32_t current_item_flags;
   int helper_depth;

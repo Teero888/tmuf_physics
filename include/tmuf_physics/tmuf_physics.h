@@ -200,6 +200,9 @@ typedef struct tmuf_visual_material {
   uint32_t render_state[2];
   uint32_t texture_count;
   const tmuf_visual_texture *textures;
+  /* the uv set its "PreLightGen" sampler (the lightmap atlas, see
+     tmuf_lightmap) reads, UINT32_MAX when it samples none */
+  uint32_t lightmap_uv;
 } tmuf_visual_material;
 
 /* A mesh placed in the world: world = location.r * p + location.t, with
@@ -213,6 +216,9 @@ typedef struct tmuf_visual_instance {
      camera is between these distances (0 and FLT_MAX when it has no
      levels); the levels of one mip share their placement */
   float lod_near, lod_far;
+  /* the corpus that places it in the lightmap atlas: index into
+     tmuf_lightmap.corpora, UINT32_MAX when it has none */
+  uint32_t lightmap;
 } tmuf_visual_instance;
 
 typedef struct tmuf_visuals {
@@ -225,6 +231,51 @@ typedef struct tmuf_visuals {
 /* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the
    track. */
 TMUF_API const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track);
+
+/* Baked lighting (Stadium): the game draws lightmapped surfaces with a
+   texture atlas, "PreLightGen" (GameData/LightmapsCache/.../LightMap0.dds
+   for the maps it ships a cache for). Each lightmapped corpus (a placed
+   solid whose shaders sample PreLightGen) takes `cells` cells in a row of
+   the atlas's grid (CHmsPackLightMapAlloc); its meshes' lightmap uvs span
+   [0, cells] x [0, 1] and map into the atlas by
+
+     atlas uv = scale * uv + offset
+
+   (CorpusToLightGenP), in the picture as the game keeps it: flipped at
+   load, row 0 at the bottom of the DDS file. In the file's own row order
+   sample (atlas.u, 1 - atlas.v). */
+typedef struct tmuf_lightmap_corpus {
+  uint32_t block; /* as tmuf_visual_instance.block */
+  uint32_t cells; /* CPlugSolid chunk 0x09005012; the Warp: 6 * 10 */
+  int whole;      /* the decoration's "Warp" mobil: the atlas's reserved first
+                     6 columns of its first 10 rows */
+  tmuf_iso4 location;
+  float tree_box[6]; /* its tree's bounding box (centre, half extents) in its frame */
+  float box[6];      /* the same in the world (GmBoxAligned::SetMult): what the
+                        atlas is ordered by (z, y, x of the centre, then of the
+                        half extents) */
+  /* placement: first cell (column, row), UINT32_MAX when it did not fit */
+  uint32_t column, row;
+  float scale[2], offset[2];
+} tmuf_lightmap_corpus;
+
+typedef struct tmuf_lightmap {
+  uint32_t size;          /* atlas width and height in texels */
+  uint32_t columns, rows; /* its grid */
+  uint32_t corpus_count;
+  const tmuf_lightmap_corpus *corpora; /* in the order the game adds them */
+} tmuf_lightmap;
+
+/* NULL unless the track was loaded with TMUF_TRACK_VISUALS; placed for the
+   2048-texel atlas of the shipped caches. Owned by the track. */
+TMUF_API const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track);
+
+/* Places a copy of a lightmap's corpora (corpora, lightmap->corpus_count of
+   them) for an atlas of `size` texels (2048, 4096, 8192: the game's
+   lightmap qualities), filling in their column, row, scale and offset and
+   out's grid. out->corpora points at `corpora`. */
+TMUF_API void tmuf_lightmap_place(const tmuf_lightmap *lightmap, uint32_t size, tmuf_lightmap_corpus *corpora,
+                                  tmuf_lightmap *out);
 
 /* The car as the game draws it: the trees of the vehicle's solid (parts)
    and the rig CSceneVehicleStruct lays over them, one level per visual
