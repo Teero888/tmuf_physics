@@ -202,6 +202,30 @@ typedef struct tmuf_visual_texture {
      PX2 shaders) */
   int has_matrix;
   float matrix[16];
+  /* the shader's function driving this sampler (a CFuncShaderLayerUV
+     whose layer is named as the sampler, e.g. "Anim", "Glow"): the game
+     replaces the texcoord transform with it every frame, at
+     t = frac(seconds / anim_period) of the engine clock
+     (CFuncShader::ComputeFromTime; the phase is not used there) when
+     anim_auto, else at a phase the game sets (a start light's glow:
+     CGameCtnChallenge::SetStartLight). m = the 2x2 part, tr = the
+     translation:
+       type 0: m = I, tr = start + t delta
+       type 1: m = I, tr = start + (cos, sin)(2 pi t) * delta (a circle)
+       type 2: rotation by lerp(delta.x, delta.y, t) degrees about start
+       type 3: cell = floor(count t 0.99999); m = diag(1/columns, 1/rows),
+               tr = ((cell % columns) / columns, (cell / columns) / rows),
+               v = 1 - (row + 1) / rows when anim_flip_v; rows 0: ceil(count / columns)
+       type 4: m = diag(scale), tr = start + t delta
+       type 6: m = diag(start + t delta), tr = -m scale
+     anim_file: the function's file (pack path, "" when inline) */
+  int has_anim, anim_auto;
+  uint32_t anim_type;
+  float anim_period, anim_phase;
+  float anim_start[2], anim_delta[2], anim_scale[2];
+  uint32_t anim_cells[3]; /* count, columns, rows */
+  int anim_flip_v;
+  const char *anim_file;
 } tmuf_visual_texture;
 
 /* A GPU program of a shader pass: its file (e.g. "Diff X2 2Sided Trans

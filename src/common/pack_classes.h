@@ -176,7 +176,9 @@ typedef struct tmuf_plug_shader {
   uint32_t apply_state[2];
   uint32_t address_count;
   tmuf_gbx_node **addresses;
-  /* chunk 0x0900200e: its passes (CPlugShaderPass, +0x2c) */
+  /* chunk 0x0900200e: its function (+0x34: a CFuncShaderLayerUV, or a
+     CFuncShaders listing them) and its passes (CPlugShaderPass, +0x2c) */
+  tmuf_gbx_node *func;
   uint32_t pass_count;
   tmuf_gbx_node **passes;
   /* CPlugShaderGeneric's flags +0x8c (the last word of the 0x58-byte
@@ -609,10 +611,20 @@ typedef struct tmuf_motion_weathers {
 typedef struct tmuf_func_layer_uv {
   int has_period;
   float period, phase; /* CFuncPlug +0x20, +0x24 (s) */
+  int auto_motion;     /* CFuncPlug +0x14: the viewport runs it on the clock */
   const char *layer;   /* +0x44: the shader layer it drives */
   uint32_t signal;     /* +0x4c low byte: 4 = scale + scrolling translation */
   float vec28[2], vec30[2], vec38[2]; /* signal 4: offset, speed, scale */
+  /* chunk 0x05015015 (signal 3, sub-textures): count, columns, rows (0:
+     as many as the count needs), rows counted from the bottom */
+  uint32_t cells[3];
+  int flip_v;
 } tmuf_func_layer_uv;
+
+/* CFuncShaders (0x05014000): its CFuncShader nodes */
+typedef struct tmuf_func_shaders {
+  tmuf_node_list funcs;
+} tmuf_func_shaders;
 
 extern const tmuf_gbx_class *const tmuf_pack_classes[];
 extern const size_t tmuf_pack_class_count;

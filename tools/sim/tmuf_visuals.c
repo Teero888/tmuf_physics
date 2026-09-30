@@ -136,6 +136,11 @@ int main(int argc, char **argv) {
         if (t->has_transform)
           printf(" transform %g %g %g %g %g %g", t->transform[0], t->transform[1], t->transform[2], t->transform[3],
                  t->transform[4], t->transform[5]);
+        if (t->has_anim)
+          printf(" anim%s type %u period %g start %g %g delta %g %g scale %g %g cells %u %u %u%s (%s)",
+                 t->anim_auto ? "" : " (driven)", t->anim_type, t->anim_period, t->anim_start[0], t->anim_start[1],
+                 t->anim_delta[0], t->anim_delta[1], t->anim_scale[0], t->anim_scale[1], t->anim_cells[0],
+                 t->anim_cells[1], t->anim_cells[2], t->anim_flip_v ? " flip" : "", t->anim_file);
         printf("\n");
       }
       for (uint32_t k = 0; k < v->instance_count; k++)

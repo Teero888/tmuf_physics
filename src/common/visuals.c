@@ -13,7 +13,8 @@
 #include <string.h>
 
 enum { CLS_VISUAL = 0x09006000u, CLS_SHADER = 0x09002000u, CLS_MATERIAL = 0x09079000u, CLS_SAMPLER = 0x0907e000u,
-       CLS_BITMAP = 0x09011000u, CLS_SHADER_PASS = 0x09067000u };
+       CLS_BITMAP = 0x09011000u, CLS_SHADER_PASS = 0x09067000u, CLS_FUNC_LAYER_UV = 0x05015000u,
+       CLS_FUNC_SHADERS = 0x05014000u };
 
 static uint32_t node_class(const tmuf_gbx_node *n) { return n && n->cls ? n->cls->id : 0; }
 
@@ -130,6 +131,45 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
   t->file = dup(b->arena, path);
 }
 
+/* a shader function (CFuncShaderLayerUV) on the texture its layer names */
+static void layer_uv_on(builder *b, tmuf_visual_texture *t, uint32_t n, const tmuf_func_layer_uv *f, tmuf_asset *fa) {
+  if (!f->layer)
+    return;
+  for (uint32_t i = 0; i < n; i++) {
+    if (!t[i].sampler || strcmp(t[i].sampler, f->layer) != 0)
+      continue;
+    t[i].has_anim = 1;
+    t[i].anim_auto = f->auto_motion;
+    t[i].anim_type = f->signal;
+    t[i].anim_period = f->has_period ? f->period : 1.f;
+    t[i].anim_phase = f->phase;
+    memcpy(t[i].anim_start, f->vec28, sizeof t[i].anim_start);
+    memcpy(t[i].anim_delta, f->vec30, sizeof t[i].anim_delta);
+    memcpy(t[i].anim_scale, f->vec38, sizeof t[i].anim_scale);
+    memcpy(t[i].anim_cells, f->cells, sizeof t[i].anim_cells);
+    t[i].anim_flip_v = f->flip_v;
+    t[i].anim_file = dup(b->arena, fa ? fa->path : "");
+  }
+}
+
+/* the shader's function (+0x34): one CFuncShaderLayerUV, or a CFuncShaders
+   list of them */
+static void shader_funcs(builder *b, tmuf_visual_texture *t, uint32_t n, tmuf_asset *sa, const tmuf_plug_shader *sh) {
+  tmuf_asset *fa = NULL;
+  tmuf_gbx_node *fn = sh->func ? tmuf_assets_follow(&b->scene->assets, sa, sh->func, &fa) : NULL;
+  if (node_class(fn) == CLS_FUNC_LAYER_UV && fn->data) {
+    layer_uv_on(b, t, n, fn->data, fa);
+  } else if (node_class(fn) == CLS_FUNC_SHADERS && fn->data) {
+    const tmuf_func_shaders *list = fn->data;
+    for (uint32_t i = 0; i < list->funcs.count; i++) {
+      tmuf_asset *la = NULL;
+      tmuf_gbx_node *ln = tmuf_assets_follow(&b->scene->assets, fa, list->funcs.nodes[i], &la);
+      if (node_class(ln) == CLS_FUNC_LAYER_UV && ln->data)
+        layer_uv_on(b, t, n, ln->data, la);
+    }
+  }
+}
+
 /* the textures of a shader: its sampler addresses, the material's custom
    bitmaps replacing those of the same sampler name; then the custom bitmaps
    no address names (the game's programs sample them by name, e.g. a block's
@@ -158,9 +198,8 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
         bowner = ca;
         break;
       }
+    memset(&t[n], 0, sizeof t[n]);
     t[n].sampler = dup(b->arena, ad->sampler ? ad->sampler : "");
-    t[n].file = t[n].pack_file = NULL;
-    t[n].unbound = 0;
     t[n].texcoord = ad->has_address ? (ad->address_flags >> 15) & 31u : 0u;
     t[n].generate = ad->has_address ? ad->address_flags & 0xffu : 0u;
     t[n].has_transform = ad->has_transform;
@@ -191,6 +230,7 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
     bitmap_file(b, ca, custom->bitmaps[k], &t[n], 0);
     n++;
   }
+  shader_funcs(b, t, n, sa, sh);
   m->textures = t;
   m->texture_count = n;
 }

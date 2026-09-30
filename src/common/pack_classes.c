@@ -947,7 +947,7 @@ static void noderef_array(tmuf_gbx *g, void *node, uint32_t id) {
    (+0x2c), then more references */
 static void c0900200e(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_plug_shader *s = node;
-  tmuf_gbx_noderef(g);
+  s->func = tmuf_gbx_noderef(g);
   uint32_t n = tmuf_gbx_u32(g);
   if (n > 0x10000u) {
     tmuf_gbx_fail(g, "shader pass count %u", n);
@@ -3087,7 +3087,7 @@ static void c0500b005_layer(tmuf_gbx *g, void *node, uint32_t id) {
   f->period = tmuf_gbx_f32(g);
   f->phase = tmuf_gbx_f32(g);
   f->has_period = 1;
-  tmuf_gbx_bool(g);
+  f->auto_motion = tmuf_gbx_bool(g) != 0;
   tmuf_gbx_bool(g);
   tmuf_gbx_id(g, NULL);
 }
@@ -3110,13 +3110,30 @@ static void c0501500d(tmuf_gbx *g, void *node, uint32_t id) {
   read_floats(g, f->vec38, 2);
 }
 
+static void c05015015(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_layer_uv *f = node;
+  for (int i = 0; i < 3; i++)
+    f->cells[i] = tmuf_gbx_u32(g);
+  f->flip_v = tmuf_gbx_bool(g) & 1;
+}
+
 static const tmuf_gbx_chunk FUNC_LAYER_UV_CHUNKS[] = {
     READ(0x0500b005, c0500b005_layer), READ(0x05015005, c05015005), READ(0x05015009, c0501500d),
     READ(0x0501500a, c0501500d),       READ(0x0501500b, c0501500d), READ(0x0501500d, c0501500d),
-    READ(0x05015013, c0501500d),
+    READ(0x05015013, c0501500d),       READ(0x05015015, c05015015),
 };
 static const tmuf_gbx_class FUNC_LAYER_UV = {0x05015000, "CFuncShaderLayerUV", sizeof(tmuf_func_layer_uv),
                                              FUNC_LAYER_UV_CHUNKS, COUNT(FUNC_LAYER_UV_CHUNKS), &FUNC_PLUG};
+
+static void c05014000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  read_node_list(g, &((tmuf_func_shaders *)node)->funcs);
+}
+
+static const tmuf_gbx_chunk FUNC_SHADERS_CHUNKS[] = {READ(0x05014000, c05014000)};
+static const tmuf_gbx_class FUNC_SHADERS = {0x05014000, "CFuncShaders", sizeof(tmuf_func_shaders),
+                                            FUNC_SHADERS_CHUNKS, COUNT(FUNC_SHADERS_CHUNKS), &FUNC_PLUG};
 
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
@@ -3128,6 +3145,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
-    &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV,
+    &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV, &FUNC_SHADERS,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);
