@@ -125,6 +125,11 @@ typedef struct sample {
   tmuf_quat q;
   float forward, sideward; /* speed in the car's frame */
   uint8_t steer, gas, brake;
+  float steer_front; /* the front wheels' steer angle */
+  /* the wheels (FL, FR, RR, RL: the library's order): spin angle, damper,
+     the ground material, on the ground, sliding on it */
+  float spin[4], damper[4];
+  uint8_t material[4], ground[4], sliding[4];
 } sample;
 
 static const double PI = 3.14159265358979323846;
@@ -176,17 +181,45 @@ static void wb_sample(wbuf *b, const sample *s) {
   wb_quat6(b, s->q);
   wb_vec3_4(b, s->lin);
   wb_vec3_4(b, s->ang);
-  /* CSceneVehicleVis state: speeds, rpm, wheel rotations, controls, then
-     neutral dampers and no contacts */
+  /* CSceneVehicleVis state (as the game's own replays hold it): speeds,
+     rpm (the engine sound's; the simulation has none: 0), the wheels' spin
+     (0..256 turns), the controls, two neutral values, no turbo, the front
+     steer angle, per wheel the damper length (-2..2 m) and the ground
+     material (Asphalt, 16, in the air, as the game writes it), then the ground and sliding bits (FL in the first byte's top
+     bits, the others in the second's), no dirt */
   wb_u16(b, (uint16_t)clampi(((double)s->forward + 1000.0) / 11000.0 * 65535.0, 0, 65535));
   wb_u16(b, (uint16_t)clampi(((double)s->sideward + 1000.0) / 2000.0 * 65535.0, 0, 65535));
-  for (int i = 0; i < 5; i++)
-    wb_u16(b, 0);
+  wb_u16(b, 0);
+  const double turns = 256.0 * 2.0 * PI;
+  for (int i = 0; i < 4; i++) {
+    const double a = fmod((double)s->spin[i], turns);
+    wb_u16(b, (uint16_t)clampi((a < 0 ? a + turns : a) / turns * 65535.0, 0, 65535));
+  }
   wb_u8(b, s->steer);
   wb_u8(b, s->gas);
   wb_u8(b, s->brake);
-  const uint8_t rest[18] = {0, 0, 0x7f, 0x7f, 0, 0x7f, 0x80, 0, 0x80, 0, 0x80, 0, 0x80, 0, 0, 0, 0, 0};
-  wb_put(b, rest, sizeof rest);
+  wb_u8(b, 0);
+  wb_u8(b, 0);
+  wb_u8(b, 0x80);
+  wb_u8(b, 0x80);
+  wb_u8(b, 0);
+  wb_u8(b, (uint8_t)clampi(((double)s->steer_front + PI) / (2.0 * PI) * 255.0, 0, 255));
+  for (int i = 0; i < 4; i++) {
+    wb_u8(b, (uint8_t)clampi(((double)s->damper[i] + 2.0) / 4.0 * 255.0, 0, 255));
+    wb_u8(b, s->material[i]);
+  }
+  static const uint8_t ground_bit[4] = {0x80, 0x02, 0x08, 0x20}, sliding_bit[4] = {0x40, 0x01, 0x04, 0x10};
+  uint8_t bits[2] = {0, 0};
+  for (int i = 0; i < 4; i++) {
+    if (s->ground[i])
+      bits[i > 0] |= ground_bit[i];
+    if (s->sliding[i])
+      bits[i > 0] |= sliding_bit[i];
+  }
+  wb_u8(b, 0);
+  wb_u8(b, bits[0]);
+  wb_u8(b, bits[1]);
+  wb_u8(b, 0);
 }
 
 static tmuf_quat quat_of(const tmuf_mat3 *r) {
@@ -213,17 +246,35 @@ static tmuf_quat quat_of(const tmuf_mat3 *r) {
   return q;
 }
 
+enum { MATERIAL_ASPHALT = 16 };
+
 /* the car as the game samples it after a tick; a respawn in the next tick
    is applied before the sample is taken */
 static sample sample_of(const tmuf_world *w, const tmuf_input *next) {
   const tmuf_dyna_state *st = &w->sim.body.state;
+  const tmuf_car *car = &w->sim.car;
   sample s;
   memset(&s, 0, sizeof s);
+  for (uint32_t i = 0; i < 4; i++) {
+    s.damper[i] = 0.2f;
+    s.material[i] = MATERIAL_ASPHALT;
+  }
   if (next && next->respawn && w->sim.race.has_spawn) {
     s.pos = w->sim.race.current.t;
     s.q = quat_of(&w->sim.race.current.r);
     return s;
   }
+  for (uint32_t i = 0; i < 4 && i < car->wheel_count; i++) {
+    const tmuf_car_wheel *wh = &car->wheels[i];
+    s.spin[i] = wh->spin_angle;
+    s.damper[i] = wh->damper_absorb;
+    s.ground[i] = wh->contact != 0;
+    if (wh->contact)
+      s.material[i] = wh->contact_material;
+    s.sliding[i] = wh->contact && wh->slipping;
+  }
+  if (car->wheel_count)
+    s.steer_front = car->wheels[0].steer_angle;
   s.pos = st->pos;
   s.q = st->quat;
   s.lin = st->lin;
