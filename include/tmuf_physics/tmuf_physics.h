@@ -1181,6 +1181,38 @@ TMUF_API void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inpu
 /* Frees memory the library returned (tmuf_replay_write). */
 TMUF_API void tmuf_free(void *p);
 
+/* ---- a map's header: what the game lists maps by ----
+
+   Read from a .Challenge.Gbx's header chunks alone (the body is not
+   touched): CGameCtnChallenge 0x03043002 (medal times, mode, laps),
+   0x03043003 (ident, name, kind, decoration), 0x03043007 (thumbnail,
+   comments) and 0x03043008 (author). Strings are "" when missing. */
+typedef struct tmuf_challenge_info {
+  const char *name;
+  const char *uid;
+  const char *environment;  /* the collection: "Stadium", "Speed" (Desert), "Alpine" (Snow), ... */
+  const char *decoration;   /* e.g. "Base48x48Sunset" (its mood in the name) */
+  const char *author_login;
+  const char *author_nickname, *author_zone; /* 0x03043008, "" without it */
+  uint32_t kind;             /* 0x03043003's (CGameCtnChallenge::EKind; 6: in play) */
+  uint32_t bronze, silver, gold, author_time; /* ms; 0xffffffff when unset */
+  uint32_t author_score;     /* stunts */
+  uint32_t cost;             /* the editor's coppers */
+  int lap_race;
+  uint32_t laps, checkpoints; /* version 13 of 0x03043002, else 0 */
+  uint32_t play_mode;        /* 0 race, 1 platform, 2 puzzle, 3 crazy, 4 shortcut, 5 stunts */
+  /* the thumbnail as the game stores it: a JPEG (usually 256 x 256) whose
+     rows run bottom first (flip it to show it); NULL for none */
+  const uint8_t *thumbnail;
+  size_t thumbnail_size;
+  const char *comments;
+} tmuf_challenge_info;
+
+/* The header of a map's file bytes, or NULL (err says why) when it is not a
+   challenge. Owns copies of everything; free with tmuf_challenge_info_free. */
+TMUF_API tmuf_challenge_info *tmuf_challenge_info_read(const void *data, size_t size, char *err, size_t err_size);
+TMUF_API void tmuf_challenge_info_free(tmuf_challenge_info *info);
+
 /* A file of a zip archive (the game's skins and lightmap caches), by its
    name inside it (case-insensitive): its bytes (free them with tmuf_free), or
    NULL when it is not there or cannot be read. */

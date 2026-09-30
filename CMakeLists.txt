@@ -51,6 +51,7 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/packset.h
   src/common/blowfish_tables.h
   src/common/challenge.c
+  src/common/challenge_info.c
   src/common/controls.c
   src/common/controls.h
   src/common/challenge.h
