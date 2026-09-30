@@ -106,6 +106,7 @@ struct ctn_block {
   float mobil_y;
   const char *modifier;
   int replacement_remap, skin_remap;
+  int replacement_index; /* CGameCtnChallenge::GetReplacementIndex when replacement_remap */
   int custom_size; /* block flag 0x4000 */
   ctn_mobil *main, *helper;
   ctn_source clip_src[4], clip_helper[4];
@@ -1096,11 +1097,11 @@ static void build_water(ctn *c) {
             (double)wt->surface_height, (double)wt->secondary_cull_height, wt->outside);
 }
 
-/* CGameCtnCollection::SurfaceReplacementIndex != -1 */
+/* CGameCtnCollection::SurfaceReplacementIndex + 1 (0: none) */
 static int has_surface_replacement(ctn *c, const char *source, const char *target) {
   for (uint32_t i = 0; i < c->coll->surface_replacement_count; i++)
     if (id_eq(c->coll->surface_replacements[2 * i], source) && id_eq(c->coll->surface_replacements[2 * i + 1], target))
-      return 1;
+      return (int)i + 1;
   return 0;
 }
 
@@ -1140,11 +1141,12 @@ static void create_mobil_for_block(ctn *c, ctn_block *b) {
           if (!id_eq(cand, target))
             source = cand;
         }
-        if (!id_eq(source, target) && has_surface_replacement(c, source, target))
-          replacement = 1;
+        if (!id_eq(source, target))
+          replacement = has_surface_replacement(c, source, target);
       }
     }
-    b->replacement_remap = replacement;
+    b->replacement_remap = replacement != 0;
+    b->replacement_index = replacement - 1;
     create_mobil_for_clip(c, b);
     return;
   }
@@ -1444,6 +1446,7 @@ static void append_block(ctn *c, ctn_block *b) {
     }
   }
   in->material = b->replacement_remap ? CTN_MATERIAL_REPLACEMENT : b->skin_remap ? CTN_MATERIAL_SKIN : CTN_MATERIAL_BLOCK;
+  in->replacement_index = b->replacement_remap ? b->replacement_index : -1;
   in->terrain_modifier = b->modifier;
   c->inst_main[c->out->count] = b->main;
   c->inst_helper[c->out->count] = b->helper;
@@ -1841,8 +1844,11 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
         continue;
       }
       if (pass != 0 && b->origin == ORIGIN_AUTHORED) {
-        if (block_replacement_applies(c, b))
+        int replacement = block_replacement_applies(c, b);
+        if (replacement) {
           b->replacement_remap = 1;
+          b->replacement_index = replacement - 1;
+        }
         create_mobil_for_block(c, b);
       }
       i++;

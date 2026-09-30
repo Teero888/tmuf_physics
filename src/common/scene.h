@@ -48,6 +48,7 @@ typedef struct tmuf_scene_corpus {
      none), and whether it is the decoration's "Warp" mobil */
   uint8_t lightmap_cells;
   uint8_t warp;
+  uint8_t remap_set; /* the visual material remaps of its block (tmuf_visual_remap.set), TMUF_REMAP_SET_NONE */
 } tmuf_scene_corpus;
 
 /* CGameCtnBlockInfo race role (way type) */
@@ -66,6 +67,22 @@ typedef struct tmuf_material_remap {
 } tmuf_material_remap;
 
 #define TMUF_SCENE_MAX_MATERIAL_REMAPS 128
+
+/* A material the game loads in place of another for a block's mobil
+   (CGameSkin::AddRemappingParams while CGameCtnChallenge::CreateMobilForBlock
+   creates it): set is the collection's surface replacement index for
+   replacement materials, TMUF_REMAP_SET_DECORATION for the decoration's
+   terrain modifier (blocks in modified columns). */
+typedef struct tmuf_visual_remap {
+  char source[600]; /* plain path of the material, or of a folder of materials */
+  int folder;
+  uint8_t set;
+  char replacement[600]; /* plain path of the replacement material */
+} tmuf_visual_remap;
+
+#define TMUF_REMAP_SET_DECORATION 0xfeu
+#define TMUF_REMAP_SET_NONE 0xffu
+#define TMUF_SCENE_MAX_VISUAL_REMAPS 256
 
 
 
@@ -117,6 +134,9 @@ typedef struct tmuf_scene {
   tmuf_iso current_spawn;
   uint32_t material_remap_count;
   tmuf_material_remap material_remaps[TMUF_SCENE_MAX_MATERIAL_REMAPS];
+  uint8_t current_remap_set;
+  uint32_t visual_remap_count;
+  tmuf_visual_remap *visual_remaps; /* TMUF_SCENE_MAX_VISUAL_REMAPS, with TMUF_SCENE_VISUALS */
   uint32_t frontier_count;
   const void *frontier_info[64]; /* block infos of frontier zones */
   uint32_t frontier_height[64];
@@ -153,6 +173,11 @@ void tmuf_scene_free(tmuf_scene *scene);
 /* Surface material id of the material at plain path `path` under the
    corpus material mode `materials`; returns 0 if the material is kept. */
 int tmuf_scene_remap_material(const tmuf_scene *scene, uint8_t materials, const char *path, uint8_t *id);
+
+/* The material the game draws a corpus with in place of the material at
+   plain path `path` (its tmuf_scene_corpus.remap_set): the replacement's
+   plain path, or NULL when it keeps it. */
+const char *tmuf_scene_visual_remap(const tmuf_scene *scene, uint8_t set, const char *path);
 
 /* CGameCtnChallenge::CreateNewPylonMobil for a pylon middle's mesh: a copy
    of the vertices and triangles with the vertices above half a square

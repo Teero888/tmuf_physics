@@ -33,6 +33,7 @@ typedef struct ctn_install {
   uint32_t pylon_raise;  /* pylon middle: levels its mesh vertices are raised by */
   int pylon_generated;
   int material;
+  int replacement_index; /* the collection's surface replacement (and terrain modifier) of CTN_MATERIAL_REPLACEMENT */
   const char *terrain_modifier;
   int start_line; /* way type start or start/finish */
   const tmuf_block_info *info;

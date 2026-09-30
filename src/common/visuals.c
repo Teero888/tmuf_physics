@@ -166,10 +166,24 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
   m->texture_count = n;
 }
 
+/* the replacement the game loads for a material reference of a remapped
+   block (tmuf_scene_visual_remap), NULL to keep it */
+static tmuf_asset *remapped_material(builder *b, uint8_t set, tmuf_asset *owner, tmuf_gbx_node *ref) {
+  if (set == TMUF_REMAP_SET_NONE || !ref || !ref->external)
+    return NULL;
+  char path[600];
+  if (tmuf_packset_resolve(b->scene->assets.set, &owner->gbx, ref, owner->path, path, sizeof path).pack < 0)
+    return NULL;
+  const char *repl = tmuf_scene_visual_remap(b->scene, set, path);
+  tmuf_asset *ra = repl ? tmuf_assets_load_path(&b->scene->assets, repl) : NULL;
+  return ra && ra->root && ra->class_id == CLS_MATERIAL ? ra : NULL;
+}
+
 /* the material of a visual: the tree's material, else its shader, else the
-   visual's own material; UINT32_MAX for none */
+   visual's own material (a remapped block's materials replaced as the game
+   loads them); UINT32_MAX for none */
 static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *visual_owner,
-                            const tmuf_plug_visual *visual) {
+                            const tmuf_plug_visual *visual, uint8_t remap_set) {
   struct {
     tmuf_asset *owner;
     tmuf_gbx_node *ref;
@@ -179,21 +193,30 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
       continue;
     tmuf_asset *na;
     tmuf_gbx_node *n = tmuf_assets_follow(&b->scene->assets, refs[r].owner, refs[r].ref, &na);
-    const uint32_t cls = node_class(n);
+    uint32_t cls = node_class(n);
     if (!n || !n->data || (cls != CLS_MATERIAL && cls != CLS_SHADER))
       continue;
+    tmuf_asset *owner = refs[r].owner;
+    tmuf_gbx_node *ref = refs[r].ref;
+    tmuf_asset *ra = cls == CLS_MATERIAL ? remapped_material(b, remap_set, owner, ref) : NULL;
+    if (ra) {
+      owner = na = ra;
+      ref = n = &ra->gbx.nodes[0];
+      cls = node_class(n);
+      if (!n->data || cls != CLS_MATERIAL)
+        continue;
+    }
     int found;
     uint32_t *slot = map_slot(&b->material_map, n, &found);
     if (found)
       return *slot;
     tmuf_visual_material *m = &b->materials[b->material_count];
     memset(m, 0, sizeof *m);
-    m->name = dup(b->arena, refs[r].ref->external ? na->path : "");
+    m->name = dup(b->arena, ra || ref->external ? na->path : "");
     tmuf_asset *sa = na, *ca = NULL;
     const tmuf_plug_material_custom *custom = NULL;
     tmuf_gbx_node *sn = cls == CLS_SHADER ? n
-                                          : tmuf_scene_material_shader(b->scene, refs[r].owner, refs[r].ref, &sa,
-                                                                       &custom, &ca);
+                                          : tmuf_scene_material_shader(b->scene, owner, ref, &sa, &custom, &ca);
     if (node_class(sn) == CLS_SHADER && sn->data) {
       const tmuf_plug_shader *sh = sn->data;
       m->has_shader_flags = sh->has_flags;
@@ -255,7 +278,7 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
 }
 
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
-                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites) {
+                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites, int remap) {
   memset(out, 0, sizeof *out);
   builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
@@ -278,7 +301,9 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
       continue;
     tmuf_visual_instance *in = &instances[count++];
     in->mesh = mesh;
-    in->material = material_of(&b, v, va, vn->data);
+    const uint8_t set = remap && v->corpus < scene->corpus_count ? scene->corpora[v->corpus].remap_set
+                                                                 : (uint8_t)TMUF_REMAP_SET_NONE;
+    in->material = material_of(&b, v, va, vn->data, set);
     for (int r = 0; r < 3; r++)
       for (int c = 0; c < 3; c++)
         in->location.r.m[r][c] = v->iso.m[r][c];
@@ -308,7 +333,7 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
 
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
                        tmuf_arena *arena) {
-  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0);
+  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1);
 }
 
 /* ---- the vehicle ---- */
@@ -403,7 +428,7 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
   memset(out, 0, sizeof *out);
   vehicle_builder b = {scene, arena, NULL, 0, 0, NULL, 0, 0, 0};
   vehicle_tree(&b, vehicle->solid_owner, vehicle->solid_tree, TMUF_VEHICLE_NO_PART, 0, 0.0f, FLT_MAX);
-  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0)) {
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0)) {
     free(b.parts);
     free(b.list);
     return 0;
@@ -479,7 +504,7 @@ void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v) {
 
 int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
                             tmuf_arena *arena) {
-  return build_list(out, scene, list, n, NULL, arena, 1);
+  return build_list(out, scene, list, n, NULL, arena, 1, 0);
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {
