@@ -381,8 +381,8 @@ typedef struct tmuf_visual_material {
        SRC_ALPHA and destinations ONE / INV_SRC_ALPHA;
      - not blended: no blending; alpha test GREATER than the viewport's
        reference (128) when the alpha texture's bitmap has usage bit 21
-       and the source is SRC_ALPHA (or ONE / ZERO, as the traces draw
-       them);
+       and the source is SRC_ALPHA (or ONE / ZERO with BlendFromOpacityMap,
+       render_state bit 22, as the traces draw them);
      - then the apply's own alpha test (render_state bits 14..21 reference,
        24..26 function f: TMUF_CMP f + 2) when f is not 6. */
   int alpha_blend;
