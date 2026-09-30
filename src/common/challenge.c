@@ -77,6 +77,31 @@ static void c0305b004(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_gbx_u32(g);
 }
 
+/* 0x0305b005: three naturals; 0x0305b006: a counted list of naturals;
+   0x0305b007: a natural (none used here) */
+static void c0305b005(tmuf_gbx *g, void *node, uint32_t id) {
+  (void)node;
+  (void)id;
+  tmuf_gbx_skip(g, 12);
+}
+
+static void c0305b006(tmuf_gbx *g, void *node, uint32_t id) {
+  (void)node;
+  (void)id;
+  const uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "challenge parameters list of %u", n);
+    return;
+  }
+  tmuf_gbx_skip(g, (size_t)n * 4);
+}
+
+static void c0305b007(tmuf_gbx *g, void *node, uint32_t id) {
+  (void)node;
+  (void)id;
+  tmuf_gbx_skip(g, 4);
+}
+
 static void c0305b008(tmuf_gbx *g, void *node, uint32_t id) {
   (void)id;
   params *p = node;
@@ -95,6 +120,9 @@ static void c0305b00d(tmuf_gbx *g, void *node, uint32_t id) {
 static const tmuf_gbx_chunk PARAMS_CHUNKS[] = {
     {0x0305b001, 0, c0305b001},
     {0x0305b004, 0, c0305b004},
+    {0x0305b005, 0, c0305b005},
+    {0x0305b006, 0, c0305b006},
+    {0x0305b007, 0, c0305b007},
     {0x0305b008, 0, c0305b008},
     {0x0305b00d, 0, c0305b00d},
 };
