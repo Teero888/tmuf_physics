@@ -789,18 +789,25 @@ static void material_device_sets(tmuf_gbx *g, void *node, uint32_t id) {
   m->device_count = n;
   m->device_words = TMUF_ARENA_ARRAY(g->arena, uint32_t, n ? n : 1);
   m->device_shaders = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
+  m->device_day = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
+  m->device_night = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
   for (uint32_t i = 0; i < n && !g->error; i++) {
     /* UPlugRenderDevice::Archive: u16 device, u8 sub-device, u8 quality;
        compared as quality | sub << 8 | device << 16 */
     uint32_t a = tmuf_gbx_u32(g);
     m->device_words[i] = ((a & 0xffffu) << 16) | ((a & 0xff0000u) >> 8) | ((a & 0xff000000u) >> 24);
-    if (tmuf_gbx_bool(g))
-      m->device_shaders[i] = tmuf_gbx_fidref(g);
-    else
-      m->device_shaders[i] = tmuf_gbx_noderef(g);
+    const int is_fid = tmuf_gbx_bool(g);
+    m->device_shaders[i] = is_fid ? tmuf_gbx_fidref(g) : tmuf_gbx_noderef(g);
+    m->device_day[i] = m->device_night[i] = m->device_shaders[i];
     if (shader_refs) {
-      tmuf_gbx_fidref(g);
-      tmuf_gbx_fidref(g);
+      /* Archive_DeviceMat: the day (+0x04) and night (+0x08) fids; an
+         inline shader is the same by day and by night */
+      tmuf_gbx_node *day = tmuf_gbx_fidref(g);
+      tmuf_gbx_node *night = tmuf_gbx_fidref(g);
+      if (is_fid) {
+        m->device_day[i] = day;
+        m->device_night[i] = night;
+      }
     }
   }
   if (formats)
@@ -962,7 +969,7 @@ static void c09002016(tmuf_gbx *g, void *node, uint32_t id) {
   s->has_flags = 1;
   tmuf_gbx_skip(g, 4);
   tmuf_gbx_noderef(g);
-  tmuf_gbx_skip(g, 2);
+  s->visible_id = tmuf_gbx_u16(g);
 }
 
 /* CPlugShaderApply: its bitmap addresses */

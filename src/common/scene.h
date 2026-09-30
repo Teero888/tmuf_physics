@@ -196,8 +196,10 @@ enum {
 
 /* CPlugMaterial::GetSupportedShader for a material reference in owner: the
    shader the game draws with, its asset, and the material's custom bitmaps
-   (sampler substitutions) if any. NULL if node is not a material. */
-tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node,
+   (sampler substitutions) if any. NULL if node is not a material.
+   is_night: the fid parameter IsNight (tmuf_weather.is_night), which picks
+   the device set's day or night shader (CPlugMaterial::ApplyFidParameters) */
+tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node, int is_night,
                                           tmuf_asset **shader_owner, const tmuf_plug_material_custom **custom,
                                           tmuf_asset **custom_owner);
 

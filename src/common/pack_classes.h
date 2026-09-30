@@ -147,7 +147,12 @@ typedef struct tmuf_plug_material {
   tmuf_gbx_node *model; /* material model (device sets of the model) */
   uint32_t device_count;
   uint32_t *device_words;        /* quality | sub-device << 8 | device << 16 */
-  tmuf_gbx_node **device_shaders; /* per device set */
+  tmuf_gbx_node **device_shaders; /* per device set: the shader stored (+0x14 / +0x18) */
+  /* per device set: the day (+0x04) and night (+0x08) shader fids that
+     CPlugMaterial::ApplyFidParameters picks from by the fid parameter
+     IsNight (chunks 0x09079009/c/d); the stored shader for the other
+     chunks and for an inline shader */
+  tmuf_gbx_node **device_day, **device_night;
 } tmuf_plug_material;
 
 /* CPlugMaterialCustom: the bitmaps it substitutes by sampler name */
@@ -162,6 +167,9 @@ typedef struct tmuf_plug_material_custom {
 typedef struct tmuf_plug_shader {
   int has_flags;
   uint32_t flags[2];
+  /* the VisibleId word (+0x28, the last u16 of chunk 0x09002016):
+     bit 8 VIdHideAlways, the game draws no tree with this shader */
+  uint16_t visible_id;
   /* CPlugShaderApply's packed render state (+0x9c, +0xa0): alpha test
      reference in bits 14..21 and function in bits 24..26 of the first */
   int has_apply_state;

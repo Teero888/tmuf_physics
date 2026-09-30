@@ -365,7 +365,7 @@ static void build_sky_clouds(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *a
     }
   }
   /* the pieces' meshes and materials, as the track's own visuals */
-  const int ok = n && tmuf_visuals_build_list(&wd->cloud_visuals, s, list, n, arena);
+  const int ok = n && tmuf_visuals_build_list(&wd->cloud_visuals, s, list, n, wd->view.is_night, arena);
   free(list);
   if (!ok) {
     free(pieces);

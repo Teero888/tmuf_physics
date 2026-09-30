@@ -195,7 +195,7 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     const int is_night = b->weather.found && b->weather.view.is_night;
     const char *mood_folder = b->weather.found ? b->weather.view.mood.folder : NULL;
     if (!tmuf_lightmap_build(&b->lightmap, &b->scene, 2048) ||
-        !tmuf_visuals_build(&b->visuals, &b->scene, b->lightmap.of_scene_corpus, &b->arena) ||
+        !tmuf_visuals_build(&b->visuals, &b->scene, b->lightmap.of_scene_corpus, is_night, &b->arena) ||
         !tmuf_vehicle_visuals_build(&b->vehicle_visuals, &b->scene, &b->vehicle, is_night, mood_folder, &b->arena) ||
         !tmuf_track_lights_build(&b->lights, &b->scene, is_night, mood_folder, &b->arena) ||
         !tmuf_scenery_build(&b->scenery, &b->scene, &b->visuals.view, b->weather.found ? &b->weather.view : NULL,

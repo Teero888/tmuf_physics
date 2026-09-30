@@ -630,8 +630,11 @@ static void clip_side(unsigned side, float sq, tmuf_iso *out) {
 /* ---- geometry water planes ---- */
 
 /* CPlugMaterial::GetSupportedShader: the model's (else the material's) device
-   set that is the last one not newer than the supported device (PC3, VHigh) */
-tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node,
+   set that is the last one not newer than the supported device (PC3, VHigh);
+   its day or night shader, as ApplyFidParameters picks it by IsNight (a
+   material with a model copies the model's day and night fids,
+   DuplicateShaderFromMaterialModel) */
+tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node, int is_night,
                                           tmuf_asset **shader_owner, const tmuf_plug_material_custom **custom,
                                           tmuf_asset **custom_owner) {
   tmuf_asset *ma;
@@ -660,9 +663,12 @@ tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf
   uint32_t sel = sets->device_count - 1u;
   while (sets->device_words[sel] > 0x00030004u && sel != 0)
     sel--;
-  if (!sets->device_shaders[sel])
+  tmuf_gbx_node *shader = is_night ? sets->device_night[sel] : sets->device_day[sel];
+  if (!shader)
+    shader = sets->device_shaders[sel];
+  if (!shader)
     return NULL;
-  return tmuf_assets_follow(&s->assets, sets_owner, sets->device_shaders[sel], shader_owner);
+  return tmuf_assets_follow(&s->assets, sets_owner, shader, shader_owner);
 }
 
 static int id_equal(const char *a, const char *b) { return a && b && strcmp(a, b) == 0; }
@@ -674,7 +680,9 @@ static int id_equal(const char *a, const char *b) { return a && b && strcmp(a, b
 static int water_shader(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *node) {
   tmuf_asset *sa = NULL, *ca = NULL;
   const tmuf_plug_material_custom *custom = NULL;
-  tmuf_gbx_node *sn = tmuf_scene_material_shader(s, owner, node, &sa, &custom, &ca);
+  /* the day shader: the planes are found before the mood is known (the
+     game's water materials have the same shader by day and by night) */
+  tmuf_gbx_node *sn = tmuf_scene_material_shader(s, owner, node, 0, &sa, &custom, &ca);
   if (!sn || !sn->data || !sn->cls || sn->cls->id != 0x09002000u)
     return 0;
   const tmuf_plug_shader *sh = sn->data;

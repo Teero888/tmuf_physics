@@ -59,6 +59,7 @@ typedef struct builder {
   int oom;
   int sprites; /* also take sprite visuals (vertices without indices) */
   tmuf_vehicle_lighting *lighting; /* the car's: filled from the renders its bitmaps name */
+  int is_night;                    /* the fid parameter IsNight: materials' night shaders */
 } builder;
 
 /* the image file a bitmap loads: on disk, else inside the packs */
@@ -390,7 +391,8 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
     tmuf_asset *sa = na, *ca = NULL;
     const tmuf_plug_material_custom *custom = NULL;
     tmuf_gbx_node *sn = cls == CLS_SHADER ? n
-                                          : tmuf_scene_material_shader(b->scene, owner, ref, &sa, &custom, &ca);
+                                          : tmuf_scene_material_shader(b->scene, owner, ref, b->is_night, &sa,
+                                                                       &custom, &ca);
     if (node_class(sn) == CLS_SHADER && sn->data) {
       const tmuf_plug_shader *sh = sn->data;
       m->has_shader_flags = sh->has_flags;
@@ -399,6 +401,8 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
       m->has_render_state = sh->has_apply_state;
       m->render_state[0] = sh->apply_state[0];
       m->render_state[1] = sh->apply_state[1];
+      m->visible_id = sh->visible_id;
+      m->hidden = (sh->visible_id & 0x100u) != 0;
       const tmuf_plug_bitmap *alpha_bitmap;
       shader_textures(b, m, sa, sh, custom, ca, &alpha_bitmap);
       material_draw_state(m, sn->class_id, sh, alpha_bitmap);
@@ -458,9 +462,9 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
 
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
                       const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites, int remap,
-                      tmuf_vehicle_lighting *lighting) {
+                      tmuf_vehicle_lighting *lighting, int is_night) {
   memset(out, 0, sizeof *out);
-  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites, lighting};
+  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites, lighting, is_night};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
   b.materials = malloc(sizeof *b.materials * (n ? 3u * n : 1));
   tmuf_visual_instance *instances = malloc(sizeof *instances * (n ? n : 1));
@@ -576,9 +580,9 @@ float tmuf_visual_mip_z(const tmuf_visual_mip *mip, const float view_z[4], float
   return (cz - hz) * f;
 }
 
-int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
+int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus, int is_night,
                        tmuf_arena *arena) {
-  if (!build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL))
+  if (!build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL, is_night))
     return 0;
   if (!scene->mip_count)
     return 1;
@@ -616,7 +620,7 @@ static float cos_half_degrees(float a) { return cosf(a * 3.14159265358979f / 360
 
 /* One tree light: its CPlugLight (ref, in owner) placed at iso. is_night: the
    fid parameter IsNight (CPlugTreeLight::ApplyFidParameters). Returns 0
-   when the reference doesn't lead to a GxLight. */
+   when the reference doesn't lead to a GxLight, or when the game drops it. */
 static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const tmuf_iso *iso, int is_night,
                       const char *mood_folder, tmuf_light *out) {
   memset(out, 0, sizeof *out);
@@ -663,10 +667,13 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
   out->archived_flags = g->flags;
   out->plug_flags = pl->flags;
   out->night_only = (int)(pl->flags & 1u);
-  /* ApplyFidParameters (race: the global it tests is 0): a night-only light
-     by day keeps its light but loses its highlights and flare; the others
-     get both */
-  out->flags = out->night_only && !is_night ? g->flags & ~0x18u : g->flags | 0x18u;
+  /* CPlugTreeLight::ApplyFidParameters: its global @0xd16c08 is 1 (never
+     written), so a night-only light on a day map loses its GxLight copy
+     (released, +0xb0 = 0) and the flags are not forced: the copy keeps the
+     archived ones (UpdateFromPlugLight) */
+  if (out->night_only && !is_night)
+    return 0;
+  out->flags = g->flags;
   for (int r = 0; r < 3; r++)
     for (int c = 0; c < 3; c++)
       out->location.r.m[r][c] = iso->m[r][c];
@@ -722,7 +729,7 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
 static int lights_build(tmuf_lights_data *out, tmuf_scene *scene, const tmuf_scene_light *list, uint32_t n,
                         int is_night, const char *mood_folder, tmuf_arena *arena) {
   memset(out, 0, sizeof *out);
-  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, 0, NULL};
+  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, 0, NULL, is_night};
   out->lights = malloc(sizeof *out->lights * (n ? n : 1));
   if (!out->lights)
     return 0;
@@ -913,7 +920,7 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
   lighting->lfm_grid = lighting->lfm_grid_max = 2;
   lighting->lfm_depth = 10.0f;
   lighting->lfm_top = 0.05f;
-  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0, lighting) ||
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0, lighting, is_night) ||
       !lights_build(&out->lights, scene, b.lights, b.light_count, is_night, mood_folder, arena)) {
     free(b.parts);
     free(b.list);
@@ -996,8 +1003,8 @@ void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v) {
 }
 
 int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
-                            tmuf_arena *arena) {
-  return build_list(out, scene, list, n, NULL, arena, 1, 0, NULL);
+                            int is_night, tmuf_arena *arena) {
+  return build_list(out, scene, list, n, NULL, arena, 1, 0, NULL, is_night);
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {

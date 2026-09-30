@@ -20,13 +20,14 @@ typedef struct tmuf_visuals_data {
 /* Mesh data points into the scene's assets, strings into arena: both must
    outlive the result. */
 /* lightmap_of_corpus: per scene corpus, its index in the track's
-   tmuf_lightmap (or NULL) */
-int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
+   tmuf_lightmap (or NULL). is_night: the map's (tmuf_weather), the fid
+   parameter IsNight that picks each material's day or night shader. */
+int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus, int is_night,
                        tmuf_arena *arena);
 /* The visuals of a list of scene visuals (not the scene's), sprite visuals
    included (TMUF_VISUAL_SPRITES meshes). */
 int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
-                            tmuf_arena *arena);
+                            int is_night, tmuf_arena *arena);
 void tmuf_visuals_free(tmuf_visuals_data *v);
 
 /* Lights (tmuf_light) of a list of tree lights */
@@ -47,8 +48,8 @@ typedef struct tmuf_vehicle_visuals_data {
   tmuf_lights_data lights;
 } tmuf_vehicle_visuals_data;
 
-/* is_night, mood_folder: the map's (tmuf_weather), for the lights' fid
-   parameters */
+/* is_night, mood_folder: the map's (tmuf_weather), for the materials' and
+   the lights' fid parameters */
 int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene, const tmuf_vehicle *vehicle,
                                int is_night, const char *mood_folder, tmuf_arena *arena);
 void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v);

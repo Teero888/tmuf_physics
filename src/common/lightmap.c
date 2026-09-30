@@ -67,7 +67,10 @@ static int node_prelight(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *ref) {
     return 0;
   tmuf_asset *sa = NULL, *ca = NULL;
   const tmuf_plug_material_custom *custom = NULL;
-  tmuf_gbx_node *sn = tmuf_scene_material_shader(s, owner, ref, &sa, &custom, &ca);
+  /* the day shader, night maps too: the shipped atlas caches of the Sunset
+     and Night maps (A03-Race's among them) place the corpora of the day
+     shaders, whose night variants (TLight) sample no PreLightGen */
+  tmuf_gbx_node *sn = tmuf_scene_material_shader(s, owner, ref, 0, &sa, &custom, &ca);
   return node_class(sn) == CLS_SHADER && sn->data && samples_prelight(s, sa, sn->data);
 }
 

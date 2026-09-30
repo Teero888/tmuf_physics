@@ -260,7 +260,12 @@ enum {
 };
 
 /* The shader the game draws a surface with (CPlugMaterial's supported
-   device set, the material's custom bitmaps substituted). */
+   device set, the material's custom bitmaps substituted). Each device set
+   has a day and a night shader: the map's tmuf_weather.is_night (the fid
+   parameter IsNight, CPlugMaterial::ApplyFidParameters) picks one when the
+   track loads, and everything below describes that one (e.g. the Stadium
+   blocks' TOcc shaders become TLight ones at night, which sample the
+   "Lighting" map and no PreLightGen). */
 typedef struct tmuf_visual_material {
   const char *name;         /* the material's or shader's file, as stored; "" if inline */
   int has_shader_flags;
@@ -276,6 +281,20 @@ typedef struct tmuf_visual_material {
   /* the uv set its "PreLightGen" sampler (the lightmap atlas, see
      tmuf_lightmap) reads, UINT32_MAX when it samples none */
   uint32_t lightmap_uv;
+  /* the shader's VisibleId word (CPlugShader +0x28): bit 0 VIdReflected,
+     1 VIdReflectMirror, 2 VIdRefracted, 3 VIdViewDepBump, 4
+     VIdViewDepOcclusion, 5 VIdOnlyRefracted, 6 VIdHideWhenUnderground, 7
+     VIdHideWhenOverground, 8 VIdHideAlways, 9 VIdViewDepWindIntens, 10
+     VIdBackground, 11 VIdGrassRGB, 12 VIdLightGenP, 13 VIdVehicle, 14
+     VIdHideOnlyDirect; 0 when there is no shader */
+  uint16_t visible_id;
+  /* VIdHideAlways (visible_id bit 8): the game draws nothing with this
+     material (CHmsZoneVPacker::AddTree leaves its trees out and their
+     textures are never loaded). The shader is Invisible.Shader.Gbx: the
+     night-only lamp glows by day (materials on the TAdd Night models,
+     whose night shader is TAdd, additive) and the StadiumGrassFence
+     terrain modifier materials always */
+  int hidden;
 
   /* ---- how the game draws it ----
      The shader's flags as the game ends up with them at load
@@ -564,12 +583,14 @@ enum {
 
 typedef struct tmuf_light {
   uint32_t kind;  /* TMUF_LIGHT_* */
-  /* GxLight flags as the game ends up with them: a map tree light gets
-     SPECULAR and LENS_FLARE forced on (CPlugTreeLight::ApplyFidParameters),
-     except a night-only light on a day map, which gets both cleared */
+  /* GxLight flags as the game ends up with them: the archived ones
+     (CPlugTreeLight::ApplyFidParameters forces none) */
   uint32_t flags;
   uint32_t archived_flags; /* the flags as stored */
-  int night_only;          /* CPlugLight flag bit 0 (NightOnly) */
+  /* CPlugLight flag bit 0 (NightOnly): on a day map the game drops the
+     light (ApplyFidParameters releases its GxLight), so the lists
+     (tmuf_track_lights, tmuf_vehicle_visuals.lights) leave it out */
+  int night_only;
   uint32_t plug_flags;     /* the CPlugLight's flag word */
   /* where it is: world (map lights), or the frame of the part `block`
      (tmuf_vehicle_visuals.lights); a spot shines along the location's +Z */
@@ -780,7 +801,8 @@ typedef struct tmuf_weather {
   tmuf_day_time start; /* the mood's start time: the one the game shows */
   /* the fid parameter IsNight (CGameCtnDecoration::Init): !(0.25 <
      remapped_start_day_time < 0.75); Stadium's Sunset (0.75) is night. It
-     switches the cars' lights on and the maps' night-only lights */
+     switches the cars' lights on and the maps' night-only lights, and
+     picks each material's night shader (tmuf_visual_material) */
   int is_night;
   /* the sun has a lens flare (flare_sun, half angle flare_size_sun): the
      day state is not night and there is a flare picture; the moon never

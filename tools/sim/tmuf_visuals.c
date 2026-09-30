@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
              m->alpha_to_coverage ? " atoc" : "", m->has_generic_flags, m->generic_flags);
       if (m->shadow_depth_bias_extra)
         printf(" bias-extra");
-      printf("\n");
+      printf(", visible id %04x%s\n", m->visible_id, m->hidden ? " HIDDEN" : "");
       for (uint32_t k = 0; k < m->pass_count; k++) {
         const tmuf_visual_program *pr[2] = {&m->passes[k].vertex, &m->passes[k].pixel};
         for (int j = 0; j < 2; j++) {
