@@ -325,7 +325,11 @@ static void material_draw_state(tmuf_visual_material *m, uint32_t cls, const tmu
     m->alpha_blend = 1;
   } else {
     m->alpha_blend = 0;
-    if (bit21 && src == 4) {
+    /* also opaque ONE / ZERO applies whose alpha bitmap has usage bit 21, as
+       the traces draw them (the Stadium's start arch joints, its stands'
+       fabric: 128 GREATER), though Undirty's own test wants SRC_ALPHA */
+    const int cut = alpha_bitmap && (usage & 0x200000u) && (usage & 0xffu) != 7u && !usage_is_bump(usage & 0xffu);
+    if ((bit21 && src == 4) || (cut && src == 1 && dst == 0)) {
       m->alpha_test = 1;
       m->alpha_ref = 128; /* the viewport's reference */
       m->alpha_func = TMUF_CMP_GREATER;
