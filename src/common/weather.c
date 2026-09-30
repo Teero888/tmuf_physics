@@ -117,7 +117,7 @@ void tmuf_day_time_at(float t, float latitude, tmuf_day_time *o) {
 }
 
 void tmuf_weather_at(const tmuf_weather *w, const tmuf_day_time *t, tmuf_weather_fog *fog, float *spec_intensity, float *spec_power) {
-  const double n = t->night, d = t->day;
+  const double n = (double)t->night, d = (double)t->day;
   if (fog) {
     const tmuf_weather_fog *a = &w->fogs[0], *b = &w->fogs[1];
     for (int i = 0; i < 3; i++) /* night + (day - night) * d */
