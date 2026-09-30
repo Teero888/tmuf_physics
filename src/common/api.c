@@ -115,6 +115,7 @@ const void *tmuf_replay_map(const tmuf_replay *r, size_t *size) {
 }
 
 const char *tmuf_replay_vehicle(const tmuf_replay *r) { return r->ghost->vehicle[0] ? r->ghost->vehicle[0] : ""; }
+const char *tmuf_replay_skin(const tmuf_replay *r) { return r->ghost->skin ? r->ghost->skin : ""; }
 
 uint32_t tmuf_replay_laps(const tmuf_replay *r) { return r->ghost->settings_laps; }
 

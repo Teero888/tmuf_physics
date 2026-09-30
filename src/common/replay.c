@@ -114,9 +114,42 @@ static void read_vehicle(tmuf_gbx *g, tmuf_ghost *gh) {
 
 static void c0309200d(tmuf_gbx *g, void *node, uint32_t id) {
   (void)id;
+  tmuf_ghost *gh = node;
   read_vehicle(g, node);
-  tmuf_gbx_string(g);
+  const char *skin = tmuf_gbx_string(g);
+  if (skin && skin[0] && !gh->skin)
+    gh->skin = skin;
   tmuf_gbx_skip(g, 16);
+  tmuf_gbx_string(g);
+}
+
+/* CSystemPackDesc: a version byte, a checksum from version 3, the file's
+   path and, when it has one, where to download it */
+static const char *pack_desc(tmuf_gbx *g) {
+  const uint8_t version = tmuf_gbx_u8(g);
+  if (version >= 3)
+    tmuf_gbx_skip(g, 32);
+  const char *path = tmuf_gbx_string(g);
+  if (path && path[0] && version >= 1)
+    tmuf_gbx_string(g);
+  return path;
+}
+
+/* the ghost's skin packs, nickname and avatar */
+static void c03092017(tmuf_gbx *g, void *node, uint32_t id) {
+  (void)id;
+  tmuf_ghost *gh = node;
+  const uint32_t count = tmuf_gbx_u32(g);
+  if (count > 64) {
+    tmuf_gbx_fail(g, "skin packs %u", count);
+    return;
+  }
+  for (uint32_t i = 0; i < count && !g->error; i++) {
+    const char *path = pack_desc(g);
+    if (i == 0 && path && path[0])
+      gh->skin = path;
+  }
+  tmuf_gbx_string(g);
   tmuf_gbx_string(g);
 }
 
@@ -213,7 +246,7 @@ static const tmuf_gbx_chunk CTN_GHOST_CHUNKS[] = {
     {0x03092005, 1, c03092005}, {0x03092008, 1, c03092008}, {0x0309200a, 1, c0309200a}, {0x0309200b, 1, c0309200b},
     {0x0309200c, 0, c0309200c}, {0x0309200d, 0, c0309200d}, {0x0309200e, 0, c_one_id},
     {0x0309200f, 0, c0309200f}, {0x03092010, 0, c_one_id},  {0x03092011, 0, c03092011},
-    {0x03092012, 0, c03092012}, {0x03092015, 0, c_one_id},  {0x03092018, 0, c03092018},
+    {0x03092012, 0, c03092012}, {0x03092015, 0, c_one_id},  {0x03092017, 1, c03092017}, {0x03092018, 0, c03092018},
     {0x03092019, 0, c03092019},
 };
 

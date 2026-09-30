@@ -22,6 +22,9 @@ typedef struct tmuf_ghost {
   uint32_t *checkpoint_times, *checkpoint_scores;
   const char *vehicle[3]; /* id, collection, author */
   const char *login;
+  /* the player's skin: the pack its car wears (0x03092017's first pack
+     description, else 0x0309200d's skin file), NULL for none */
+  const char *skin;
 
   /* Validation inputs (0x03092019, or 0x03092011 without seed). */
   int has_inputs;

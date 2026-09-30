@@ -339,6 +339,10 @@ TMUF_API void tmuf_replay_free(tmuf_replay *replay);
 /* The embedded map (.Challenge.Gbx bytes, owned by the replay). */
 TMUF_API const void *tmuf_replay_map(const tmuf_replay *replay, size_t *size);
 TMUF_API const char *tmuf_replay_vehicle(const tmuf_replay *replay); /* "" if none */
+/* The skin the player's car wears: its pack's path as the game stores it
+   (e.g. "Skins\\Vehicles\\StadiumCar\\FRA.zip", relative to GameData or the
+   player's documents), "" if none */
+TMUF_API const char *tmuf_replay_skin(const tmuf_replay *replay);
 /* Laps of the race settings the replay was driven with (0: none; pass it
    as tmuf_track_options.laps: validation races that many laps). */
 TMUF_API uint32_t tmuf_replay_laps(const tmuf_replay *replay);
