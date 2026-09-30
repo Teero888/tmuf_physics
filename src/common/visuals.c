@@ -527,9 +527,12 @@ static const tmuf_visual_sequence *sequence_of(builder *b, const tmuf_scene_visu
   return s;
 }
 
+/* entry_material: when not NULL, per entry the material of the entries
+   without a visual (a material alone: the particles'), UINT32_MAX for the
+   others */
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
                       const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites, int remap,
-                      tmuf_vehicle_lighting *lighting, int is_night) {
+                      tmuf_vehicle_lighting *lighting, int is_night, uint32_t *entry_material) {
   memset(out, 0, sizeof *out);
   builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites, lighting, is_night};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
@@ -543,6 +546,14 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
   uint32_t count = 0;
   for (uint32_t i = 0; i < n && !b.oom; i++) {
     const tmuf_scene_visual *v = &list[i];
+    if (entry_material)
+      entry_material[i] = UINT32_MAX;
+    if (!v->visual) {
+      static const tmuf_plug_visual none;
+      if (entry_material && v->material)
+        entry_material[i] = material_of(&b, v, v->owner, &none, (uint8_t)TMUF_REMAP_SET_NONE);
+      continue;
+    }
     tmuf_asset *va;
     tmuf_gbx_node *vn = tmuf_assets_follow(&scene->assets, v->owner, v->visual, &va);
     if (node_class(vn) != CLS_VISUAL || !vn->data)
@@ -650,7 +661,8 @@ float tmuf_visual_mip_z(const tmuf_visual_mip *mip, const float view_z[4], float
 
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus, int is_night,
                        tmuf_arena *arena) {
-  if (!build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL, is_night))
+  if (!build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL, is_night,
+                  NULL))
     return 0;
   if (!scene->mip_count)
     return 1;
@@ -997,6 +1009,217 @@ static uint32_t part_named(const vehicle_builder *b, const tmuf_visual_id *id) {
   return TMUF_VEHICLE_NO_PART;
 }
 
+/* ---- the vehicle's particle emitters ---- */
+
+enum { CLS_EMITTER = 0x0a010000u, CLS_MATERIAL_GROUP = 0x0a015000u, CLS_PARTICLE_MODEL = 0x0805b000u,
+       CLS_PARTICLE_TYPE = 0x0805a000u, CLS_ENVELOPE = 0x05036000u, CLS_GRADIENT = 0x05038000u };
+#define SCAN_MAX 256
+
+typedef struct scan_type {
+  const tmuf_particle_type_def *def;
+  uint32_t entry; /* its material's entry in the list, UINT32_MAX for none */
+  const tmuf_func_gradient *gradient;
+  const tmuf_func_envelope *size, *transparency;
+} scan_type;
+
+typedef struct scan_model {
+  tmuf_gbx_node *node;
+  const char *file;
+  uint32_t first_type, type_count;
+} scan_model;
+
+typedef struct particle_scan {
+  uint32_t model_count, type_count, emitter_count;
+  scan_model models[SCAN_MAX];
+  scan_type types[SCAN_MAX];
+  struct {
+    const tmuf_vehicle_emitter_def *def;
+    const tmuf_vehicle_material_group *group;
+    uint32_t models[3]; /* index into models, UINT32_MAX for none */
+  } emitters[SCAN_MAX];
+} particle_scan;
+
+static const void *follow_class(tmuf_scene *scene, tmuf_asset *owner, tmuf_gbx_node *ref, uint32_t cls,
+                                tmuf_asset **out_owner) {
+  tmuf_asset *a = NULL;
+  tmuf_gbx_node *n = ref ? tmuf_assets_follow(&scene->assets, owner, ref, &a) : NULL;
+  if (!n || !n->data || node_class(n) != cls)
+    return NULL;
+  if (out_owner)
+    *out_owner = a ? a : owner;
+  return n->data;
+}
+
+/* a particle model, once: its types, their materials as entries of the list */
+static uint32_t scan_model_of(vehicle_builder *b, particle_scan *s, tmuf_scene *scene, tmuf_asset *owner,
+                              tmuf_gbx_node *ref) {
+  tmuf_asset *ma = NULL;
+  tmuf_gbx_node *mn = ref ? tmuf_assets_follow(&scene->assets, owner, ref, &ma) : NULL;
+  if (!mn || !mn->data || node_class(mn) != CLS_PARTICLE_MODEL)
+    return UINT32_MAX;
+  for (uint32_t i = 0; i < s->model_count; i++)
+    if (s->models[i].node == mn)
+      return i;
+  if (s->model_count == SCAN_MAX)
+    return UINT32_MAX;
+  if (!ma)
+    ma = owner;
+  const tmuf_particle_model_def *md = mn->data;
+  scan_model *m = &s->models[s->model_count];
+  m->node = mn;
+  m->file = dup(b->arena, ref->external && ma ? ma->path : "");
+  m->first_type = s->type_count;
+  m->type_count = 0;
+  for (uint32_t k = 0; k < md->types.count && s->type_count < SCAN_MAX; k++) {
+    tmuf_asset *ta = NULL;
+    const tmuf_particle_type_def *td = follow_class(scene, ma, md->types.nodes[k], CLS_PARTICLE_TYPE, &ta);
+    if (!td)
+      continue;
+    scan_type *t = &s->types[s->type_count++];
+    memset(t, 0, sizeof *t);
+    t->def = td;
+    t->gradient = follow_class(scene, ta, td->color_gradient, CLS_GRADIENT, NULL);
+    t->size = follow_class(scene, ta, td->size_over_life, CLS_ENVELOPE, NULL);
+    t->transparency = follow_class(scene, ta, td->transparency_over_life, CLS_ENVELOPE, NULL);
+    t->entry = UINT32_MAX;
+    tmuf_gbx_node *mat = td->material ? td->material : td->shader;
+    if (mat) {
+      if (b->count == b->cap) {
+        uint32_t cap = b->cap ? b->cap * 2 : 64;
+        tmuf_scene_visual *l = realloc(b->list, sizeof *l * cap);
+        if (!l) {
+          b->oom = 1;
+          return UINT32_MAX;
+        }
+        b->list = l;
+        b->cap = cap;
+      }
+      tmuf_scene_visual *v = &b->list[b->count];
+      memset(v, 0, sizeof *v);
+      v->owner = ta;
+      if (td->material)
+        v->material = mat;
+      else
+        v->shader = mat;
+      tmuf_iso_identity(&v->iso);
+      v->mip = UINT32_MAX;
+      t->entry = b->count++;
+    }
+    m->type_count++;
+  }
+  return s->model_count++;
+}
+
+static void particles_scan(vehicle_builder *b, particle_scan *s, tmuf_scene *scene, const tmuf_vehicle *vehicle) {
+  const tmuf_vehicle_struct *st = vehicle->visual_struct;
+  tmuf_asset *sa = vehicle->visual_struct_owner;
+  if (!st || !sa)
+    return;
+  for (uint32_t i = 0; i < st->emitters.count && s->emitter_count < SCAN_MAX; i++) {
+    tmuf_asset *ea = NULL;
+    const tmuf_vehicle_emitter_def *e = follow_class(scene, sa, st->emitters.nodes[i], CLS_EMITTER, &ea);
+    if (!e)
+      continue;
+    s->emitters[s->emitter_count].def = e;
+    s->emitters[s->emitter_count].group =
+        e->group < st->material_groups.count
+            ? follow_class(scene, sa, st->material_groups.nodes[e->group], CLS_MATERIAL_GROUP, NULL)
+            : NULL;
+    for (int q = 0; q < 3; q++)
+      s->emitters[s->emitter_count].models[q] = scan_model_of(b, s, scene, ea, e->models[q]);
+    s->emitter_count++;
+  }
+}
+
+static void curve_of(const tmuf_func_envelope *e, tmuf_particle_curve *out) {
+  memcpy(out->v, e->v, sizeof out->v);
+  out->t1 = e->t1;
+  out->t2 = e->t2;
+}
+
+/* the scan as the public emitters (materials: the list's entries' ones) */
+static int particles_finish(tmuf_vehicle_visuals *view, const particle_scan *s, const uint32_t *entry_material,
+                            tmuf_arena *arena) {
+  if (!s->emitter_count)
+    return 1;
+  tmuf_particle_model *models = TMUF_ARENA_ARRAY(arena, tmuf_particle_model, s->model_count ? s->model_count : 1);
+  tmuf_particle_type *types = TMUF_ARENA_ARRAY(arena, tmuf_particle_type, s->type_count ? s->type_count : 1);
+  tmuf_vehicle_emitter *emitters = TMUF_ARENA_ARRAY(arena, tmuf_vehicle_emitter, s->emitter_count);
+  if (!models || !types || !emitters)
+    return 0;
+  for (uint32_t i = 0; i < s->type_count; i++) {
+    const scan_type *st = &s->types[i];
+    const tmuf_particle_type_def *d = st->def;
+    tmuf_particle_type *t = &types[i];
+    memset(t, 0, sizeof *t);
+    t->material = st->entry != UINT32_MAX ? entry_material[st->entry] : UINT32_MAX;
+    t->particle_type = d->particle_type;
+    t->multi_state_render_mode = d->multi_state_render_mode;
+    t->standard_render_mode = d->standard_render_mode;
+    t->birth_step_type = d->birth_step_type;
+    t->max_particle_count = d->max_particle_count;
+    t->birth_period = d->birth_period;
+    t->birth_min_dist = d->birth_min_dist;
+    t->life = d->life[0], t->life_variation = d->life[1];
+    t->size = d->size[0], t->size_variation = d->size[1];
+    t->ratio_xy = d->ratio_xy;
+    t->velocity = d->velocity[0], t->velocity_variation = d->velocity[1];
+    t->weight = d->weight[0], t->weight_variation = d->weight[1];
+    t->transparency = d->transparency[0], t->transparency_variation = d->transparency[1];
+    t->u_scale_dist = d->u_scale_dist;
+    t->v_scale_dist = d->v_scale_dist;
+    t->view_dist2_max = d->view_dist2_max;
+    t->color_gradient_use = d->color_gradient_use;
+    t->async_link = d->multi_state_async_link != 0;
+    t->use_game_timer = d->use_game_timer != 0;
+    if (st->gradient) {
+      t->has_color_gradient = 1;
+      memcpy(t->color_gradient.c, st->gradient->c, sizeof t->color_gradient.c);
+      t->color_gradient.t1 = st->gradient->t1;
+      t->color_gradient.t2 = st->gradient->t2;
+    }
+    if (st->size) {
+      t->has_size_over_life = 1;
+      curve_of(st->size, &t->size_over_life);
+    }
+    if (st->transparency) {
+      t->has_transparency_over_life = 1;
+      curve_of(st->transparency, &t->transparency_over_life);
+    }
+  }
+  for (uint32_t i = 0; i < s->model_count; i++) {
+    models[i].file = s->models[i].file;
+    models[i].type_count = s->models[i].type_count;
+    models[i].types = types + s->models[i].first_type;
+  }
+  for (uint32_t i = 0; i < s->emitter_count; i++) {
+    const tmuf_vehicle_emitter_def *d = s->emitters[i].def;
+    tmuf_vehicle_emitter *e = &emitters[i];
+    memset(e, 0, sizeof *e);
+    e->kind = d->kind;
+    for (int q = 0; q < 3; q++)
+      e->models[q] = s->emitters[i].models[q] != UINT32_MAX ? &models[s->emitters[i].models[q]] : NULL;
+    e->wheel = d->wheel;
+    e->part = d->part;
+    e->any_material = !s->emitters[i].group;
+    if (s->emitters[i].group) {
+      e->material_count = s->emitters[i].group->count;
+      e->materials = s->emitters[i].group->ids;
+    }
+    e->needs_sliding = d->needs_sliding;
+    e->needs_all_sliding = d->needs_all_sliding;
+    e->orient_to_speed = d->orient_to_speed;
+    for (int r = 0; r < 3; r++)
+      for (int c = 0; c < 3; c++)
+        e->location.r.m[r][c] = d->iso[3 * r + c];
+    e->location.t = (tmuf_vec3){d->iso[9], d->iso[10], d->iso[11]};
+    memcpy(e->params, d->params, sizeof e->params);
+  }
+  view->emitter_count = s->emitter_count;
+  view->emitters = emitters;
+  return 1;
+}
+
 int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene, const tmuf_vehicle *vehicle,
                                int is_night, const char *mood_folder, tmuf_arena *arena) {
   memset(out, 0, sizeof *out);
@@ -1010,13 +1233,26 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
   lighting->lfm_grid = lighting->lfm_grid_max = 2;
   lighting->lfm_depth = 10.0f;
   lighting->lfm_top = 0.05f;
-  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0, lighting, is_night) ||
-      !lights_build(&out->lights, scene, b.lights, b.light_count, is_night, mood_folder, arena)) {
+  /* the particle emitters: their types' materials as entries of the list */
+  particle_scan *scan = calloc(1, sizeof *scan);
+  if (scan)
+    particles_scan(&b, scan, scene, vehicle);
+  uint32_t *entry_material = malloc(sizeof *entry_material * (b.count ? b.count : 1));
+  if (!entry_material || !scan)
+    b.oom = 1;
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0, lighting, is_night,
+                           entry_material) ||
+      !lights_build(&out->lights, scene, b.lights, b.light_count, is_night, mood_folder, arena) ||
+      !particles_finish(&out->view, scan, entry_material, arena)) {
+    free(scan);
+    free(entry_material);
     free(b.parts);
     free(b.list);
     free(b.lights);
     return 0;
   }
+  free(scan);
+  free(entry_material);
   free(b.list);
   free(b.lights);
   if (!tmuf_tree_box(scene, vehicle->solid_owner, vehicle->solid_tree, lighting->box))
@@ -1094,7 +1330,7 @@ void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v) {
 
 int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
                             int is_night, tmuf_arena *arena) {
-  return build_list(out, scene, list, n, NULL, arena, 1, 0, NULL, is_night);
+  return build_list(out, scene, list, n, NULL, arena, 1, 0, NULL, is_night, NULL);
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {

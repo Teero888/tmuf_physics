@@ -316,6 +316,74 @@ typedef struct tmuf_scene_object {
   float physical_params[8]; /* 0x0a02b00c: speed cap, reverse speed, water box (center, half) */
 } tmuf_scene_object;
 
+/* CSceneVehicleMaterialGroup (0x0a015000): EPlugSurfaceMaterialIds */
+typedef struct tmuf_vehicle_material_group {
+  uint32_t count;
+  const uint32_t *ids;
+} tmuf_vehicle_material_group;
+
+/* CSceneVehicleEmitter (0x0a010000), chunks 0x0a010002..5 */
+typedef struct tmuf_vehicle_emitter_def {
+  uint32_t kind;             /* +0x14: 0 wheel, 1 off, 2 water, 3 splash, 4 light trail */
+  tmuf_gbx_node *models[3];  /* +0x18..: the particle model at particle quality 0, 1, 2 */
+  uint32_t wheel, part;      /* +0x30, +0x34 (UINT32_MAX: none) */
+  uint32_t group;            /* +0x24: the vehicle struct's material group (UINT32_MAX: any) */
+  int needs_sliding;         /* +0x28 */
+  int use_owner_loc, event;  /* +0x38, +0x3c */
+  float iso[12];             /* +0x40: rotation rows, then position */
+  float params[14];          /* +0x8c: intensity base, x |v.x|, |v.y|, |v.z|, burnout; emit speed base (3), x v (3), x v burnout (3) */
+  int orient_to_speed;       /* 0x0a010002: +0x88 */
+  int needs_all_sliding;     /* 0x0a010005: +0x2c */
+} tmuf_vehicle_emitter_def;
+
+/* CFuncEnvelope (0x05036000): v0 at 0, v1 at t1, v2 at t2, v3 at 1 */
+typedef struct tmuf_func_envelope {
+  float v[4], t1, t2, freq, amp;
+  uint32_t cos;
+} tmuf_func_envelope;
+
+/* CFuncColorGradient (0x05038000): colours at 0, t1, t2, 1 */
+typedef struct tmuf_func_gradient {
+  float c[4][3], t1, t2;
+} tmuf_func_gradient;
+
+/* CMotionParticleEmitterModel (0x0805b000): its particle types */
+typedef struct tmuf_particle_model_def {
+  tmuf_node_list types;
+} tmuf_particle_model_def;
+
+/* CMotionParticleType (0x0805a000), chunks 0x0805a011..23 */
+typedef struct tmuf_particle_type_def {
+  tmuf_gbx_node *material, *shader, *color_gradient, *size_over_life, *transparency_over_life, *size_x_over_life;
+  tmuf_gbx_node *intensity_filter, *distor;
+  float ratio_xy, ref_pos[2], pitch[2], yaw[2];
+  uint32_t color_gradient_use, color_modulate_with_transparency, max_particle_count;
+  float birth_period;
+  float life[2], size[2], velocity[2], weight[2], roll_speed[2], transparency[2]; /* value, variation */
+  uint32_t particle_type, multi_state_render_mode, one_part_period, birth_step_type;
+  float birth_min_dist, size_gen_period;
+  uint32_t size_gen;
+  float u_scale_dist;
+  uint32_t standard_render_mode;
+  float v_scale_dist, fluid_friction[2];
+  uint32_t size_use_size_x, size_use_emission_zone, vert_per_part_count;
+  uint32_t splash_part_count;
+  float splash[8];
+  uint32_t size_use_intensity, color_use_intensity, transparency_use_intensity;
+  float birth_pos[3];
+  float size_emission_zone_scale;
+  uint32_t birth_pos_type;
+  float fluid_friction_intensity_base;
+  uint32_t fluid_friction_use_intensity;
+  uint32_t multi_state_async_link, multi_state_static_parts;
+  uint32_t texture_atlas[4]; /* kind, x, y, fixed index */
+  float roll[2];
+  float view_dist2_max, size_speed_scale;
+  uint32_t precalc[3], physics_enable;
+  float physics_bounce, physics_radius, physics_damper;
+  uint32_t sort_sprites, use_game_timer;
+} tmuf_particle_type_def;
+
 /* CSceneVehicleMaterial (0x0a031000) */
 typedef struct tmuf_vehicle_material {
   tmuf_gbx_node *fake_bitmap;

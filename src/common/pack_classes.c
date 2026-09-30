@@ -2285,30 +2285,200 @@ static const tmuf_gbx_class VEHICLE_STRUCT = {0x0a039000, "CSceneVehicleStruct",
                                               VEHICLE_STRUCT_CHUNKS, COUNT(VEHICLE_STRUCT_CHUNKS), NULL};
 
 static void c0a015000(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  skip_counted(g, 4);
+  tmuf_vehicle_material_group *m = node;
+  const uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x10000u) {
+    tmuf_gbx_fail(g, "material group size %u", n);
+    return;
+  }
+  uint32_t *ids = TMUF_ARENA_ARRAY(g->arena, uint32_t, n ? n : 1u);
+  if (!ids) {
+    tmuf_gbx_fail(g, "out of memory");
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    ids[i] = tmuf_gbx_u32(g);
+  m->count = n;
+  m->ids = ids;
 }
 
 static const tmuf_gbx_chunk VEHICLE_MATERIAL_GROUP_CHUNKS[] = {READ(0x0a015000, c0a015000)};
-static const tmuf_gbx_class VEHICLE_MATERIAL_GROUP = {0x0a015000, "CSceneVehicleMaterialGroup", 1,
+static const tmuf_gbx_class VEHICLE_MATERIAL_GROUP = {0x0a015000, "CSceneVehicleMaterialGroup",
+                                                      sizeof(tmuf_vehicle_material_group),
                                                       VEHICLE_MATERIAL_GROUP_CHUNKS, 1, NULL};
 
-static void c0a010004(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
+static void c0a010002(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
-  tmuf_gbx_skip(g, 4);
-  tmuf_gbx_noderef(g);
-  tmuf_gbx_noderef(g);
-  tmuf_gbx_noderef(g);
-  tmuf_gbx_skip(g, 24 + 48 + 56);
+  ((tmuf_vehicle_emitter_def *)node)->orient_to_speed = tmuf_gbx_bool(g) != 0;
+}
+
+static void c0a010004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_vehicle_emitter_def *e = node;
+  e->kind = tmuf_gbx_u32(g);
+  for (int i = 0; i < 3; i++)
+    e->models[i] = tmuf_gbx_noderef(g);
+  e->wheel = tmuf_gbx_u32(g);
+  e->part = tmuf_gbx_u32(g);
+  e->group = tmuf_gbx_u32(g);
+  e->needs_sliding = tmuf_gbx_bool(g) != 0;
+  e->use_owner_loc = tmuf_gbx_bool(g) != 0;
+  e->event = tmuf_gbx_bool(g) != 0;
+  read_floats(g, e->iso, 12);
+  read_floats(g, e->params, 14);
+}
+
+static void c0a010005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_vehicle_emitter_def *)node)->needs_all_sliding = tmuf_gbx_bool(g) != 0;
 }
 
 static const tmuf_gbx_chunk VEHICLE_EMITTER_CHUNKS[] = {
-    READ(0x0a010002, skip4), READ(0x0a010003, skip24), READ(0x0a010004, c0a010004), READ(0x0a010005, skip4),
+    READ(0x0a010002, c0a010002), READ(0x0a010003, skip24), READ(0x0a010004, c0a010004), READ(0x0a010005, c0a010005),
 };
-static const tmuf_gbx_class VEHICLE_EMITTER = {0x0a010000, "CSceneVehicleEmitter", 1, VEHICLE_EMITTER_CHUNKS,
-                                               COUNT(VEHICLE_EMITTER_CHUNKS), NULL};
+static const tmuf_gbx_class VEHICLE_EMITTER = {0x0a010000, "CSceneVehicleEmitter", sizeof(tmuf_vehicle_emitter_def),
+                                               VEHICLE_EMITTER_CHUNKS, COUNT(VEHICLE_EMITTER_CHUNKS), NULL};
+
+/* ---- particles: CMotionParticleEmitterModel, CMotionParticleType and their functions ---- */
+
+static void c05036000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_envelope *f = node;
+  read_floats(g, f->v, 4);
+  f->t1 = tmuf_gbx_f32(g);
+  f->t2 = tmuf_gbx_f32(g);
+  f->freq = tmuf_gbx_f32(g);
+  f->amp = tmuf_gbx_f32(g);
+  f->cos = tmuf_gbx_u32(g);
+}
+static const tmuf_gbx_chunk FUNC_ENVELOPE_CHUNKS[] = {READ(0x05036000, c05036000)};
+static const tmuf_gbx_class FUNC_ENVELOPE = {0x05036000, "CFuncEnvelope", sizeof(tmuf_func_envelope),
+                                             FUNC_ENVELOPE_CHUNKS, COUNT(FUNC_ENVELOPE_CHUNKS), NULL};
+
+static void c05038000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_gradient *f = node;
+  for (int i = 0; i < 4; i++)
+    read_floats(g, f->c[i], 3);
+  f->t1 = tmuf_gbx_f32(g);
+  f->t2 = tmuf_gbx_f32(g);
+}
+static const tmuf_gbx_chunk FUNC_GRADIENT_CHUNKS[] = {READ(0x05038000, c05038000)};
+static const tmuf_gbx_class FUNC_GRADIENT = {0x05038000, "CFuncColorGradient", sizeof(tmuf_func_gradient),
+                                             FUNC_GRADIENT_CHUNKS, COUNT(FUNC_GRADIENT_CHUNKS), NULL};
+
+static void c0805b000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gbx_u32(g);
+  read_node_list(g, &((tmuf_particle_model_def *)node)->types);
+}
+static const tmuf_gbx_chunk PARTICLE_MODEL_CHUNKS[] = {READ(0x0805b000, c0805b000)};
+static const tmuf_gbx_class PARTICLE_MODEL = {0x0805b000, "CMotionParticleEmitterModel",
+                                              sizeof(tmuf_particle_model_def), PARTICLE_MODEL_CHUNKS,
+                                              COUNT(PARTICLE_MODEL_CHUNKS), NULL};
+
+static void pair(tmuf_gbx *g, float out[2]) { read_floats(g, out, 2); }
+
+/* CMotionParticleType::Chunk (the game's own reader's order) */
+static void c0805a0xx(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_particle_type_def *p = node;
+  switch (id & 0xfffu) {
+  case 0x11: {
+    p->material = tmuf_gbx_noderef(g);
+    if (!p->material)
+      p->shader = tmuf_gbx_noderef(g);
+    p->ratio_xy = tmuf_gbx_f32(g);
+    read_floats(g, p->ref_pos, 2);
+    pair(g, p->pitch);
+    pair(g, p->yaw);
+    p->color_gradient = tmuf_gbx_noderef(g);
+    p->color_gradient_use = tmuf_gbx_u32(g);
+    p->color_modulate_with_transparency = tmuf_gbx_u32(g);
+    p->max_particle_count = tmuf_gbx_u32(g);
+    p->birth_period = tmuf_gbx_f32(g);
+    pair(g, p->life);
+    pair(g, p->size);
+    pair(g, p->velocity);
+    pair(g, p->weight);
+    pair(g, p->roll_speed);
+    pair(g, p->transparency);
+    p->size_over_life = tmuf_gbx_noderef(g);
+    p->transparency_over_life = tmuf_gbx_noderef(g);
+    p->particle_type = tmuf_gbx_u32(g);
+    tmuf_gbx_u32(g);
+    p->multi_state_render_mode = tmuf_gbx_u32(g);
+    p->one_part_period = tmuf_gbx_u32(g);
+    p->birth_step_type = tmuf_gbx_u32(g);
+    p->birth_min_dist = tmuf_gbx_f32(g);
+    p->size_gen_period = tmuf_gbx_f32(g);
+    p->size_gen = tmuf_gbx_u32(g);
+    p->u_scale_dist = tmuf_gbx_f32(g);
+    p->standard_render_mode = tmuf_gbx_u32(g);
+    p->v_scale_dist = tmuf_gbx_f32(g);
+    pair(g, p->fluid_friction);
+    p->size_x_over_life = tmuf_gbx_noderef(g);
+    p->size_use_size_x = tmuf_gbx_u32(g);
+    p->size_use_emission_zone = tmuf_gbx_u32(g);
+    p->vert_per_part_count = tmuf_gbx_u32(g);
+    tmuf_gbx_u32(g);
+    break;
+  }
+  case 0x13:
+    p->splash_part_count = tmuf_gbx_u32(g);
+    read_floats(g, p->splash, 8);
+    break;
+  case 0x15:
+    p->size_use_intensity = tmuf_gbx_u32(g);
+    p->color_use_intensity = tmuf_gbx_u32(g);
+    p->transparency_use_intensity = tmuf_gbx_u32(g);
+    read_floats(g, p->birth_pos, 3);
+    break;
+  case 0x16:
+    p->size_emission_zone_scale = tmuf_gbx_f32(g);
+    p->birth_pos_type = tmuf_gbx_u32(g);
+    break;
+  case 0x17:
+    p->fluid_friction_intensity_base = tmuf_gbx_f32(g);
+    p->fluid_friction_use_intensity = tmuf_gbx_u32(g);
+    break;
+  case 0x18: p->intensity_filter = tmuf_gbx_noderef(g); break;
+  case 0x19: tmuf_gbx_id(g, NULL); break;
+  case 0x1a: p->distor = tmuf_gbx_noderef(g); break;
+  case 0x1b:
+    p->multi_state_async_link = tmuf_gbx_u32(g);
+    p->multi_state_static_parts = tmuf_gbx_u32(g);
+    break;
+  case 0x1c:
+    for (int i = 0; i < 4; i++)
+      p->texture_atlas[i] = tmuf_gbx_u32(g);
+    break;
+  case 0x1d: pair(g, p->roll); break;
+  case 0x1e: p->view_dist2_max = tmuf_gbx_f32(g); break;
+  case 0x1f: p->size_speed_scale = tmuf_gbx_f32(g); break;
+  case 0x20:
+    for (int i = 0; i < 3; i++)
+      p->precalc[i] = tmuf_gbx_u32(g);
+    p->physics_enable = tmuf_gbx_u32(g);
+    p->physics_bounce = tmuf_gbx_f32(g);
+    p->physics_radius = tmuf_gbx_f32(g);
+    break;
+  case 0x21: p->physics_damper = tmuf_gbx_f32(g); break;
+  case 0x22: p->sort_sprites = tmuf_gbx_u32(g); break;
+  case 0x23: p->use_game_timer = tmuf_gbx_u32(g); break;
+  default: break;
+  }
+}
+static const tmuf_gbx_chunk PARTICLE_TYPE_CHUNKS[] = {
+    READ(0x0805a011, c0805a0xx), READ(0x0805a013, c0805a0xx), READ(0x0805a015, c0805a0xx),
+    READ(0x0805a016, c0805a0xx), READ(0x0805a017, c0805a0xx), READ(0x0805a018, c0805a0xx),
+    READ(0x0805a019, c0805a0xx), READ(0x0805a01a, c0805a0xx), READ(0x0805a01b, c0805a0xx),
+    READ(0x0805a01c, c0805a0xx), READ(0x0805a01d, c0805a0xx), READ(0x0805a01e, c0805a0xx),
+    READ(0x0805a01f, c0805a0xx), READ(0x0805a020, c0805a0xx), READ(0x0805a021, c0805a0xx),
+    READ(0x0805a022, c0805a0xx), READ(0x0805a023, c0805a0xx),
+};
+static const tmuf_gbx_class PARTICLE_TYPE = {0x0805a000, "CMotionParticleType", sizeof(tmuf_particle_type_def),
+                                             PARTICLE_TYPE_CHUNKS, COUNT(PARTICLE_TYPE_CHUNKS), NULL};
 
 /* ---- CSceneVehicleMaterial (0x0a031000) ---- */
 
@@ -3229,6 +3399,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
     &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV, &FUNC_SHADERS,
-    &FUNC_TREE_SEQUENCE,
+    &FUNC_TREE_SEQUENCE, &FUNC_ENVELOPE, &FUNC_GRADIENT, &PARTICLE_MODEL, &PARTICLE_TYPE,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

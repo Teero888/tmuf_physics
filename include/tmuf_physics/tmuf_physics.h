@@ -1143,6 +1143,77 @@ typedef struct tmuf_vehicle_lighting {
                        when the car's up vector's y is below it */
 } tmuf_vehicle_lighting;
 
+/* ---- particles (CMotionParticleType) ----
+   A piecewise-linear curve over a particle's life (CFuncEnvelope): v[0] at
+   0, v[1] at t1, v[2] at t2, v[3] at 1; a gradient the same with colours */
+typedef struct tmuf_particle_curve {
+  float v[4], t1, t2;
+} tmuf_particle_curve;
+typedef struct tmuf_particle_gradient {
+  float c[4][3], t1, t2;
+} tmuf_particle_gradient;
+
+enum { TMUF_PARTICLES_STANDARD = 0, TMUF_PARTICLES_MULTI_STATE = 1, TMUF_PARTICLES_ONE = 2 };
+/* multi-state render modes: how a strip of particles is drawn */
+enum {
+  TMUF_PARTICLES_LINE_NORMAL = 0,
+  TMUF_PARTICLES_LINE_WIDE_WORLD = 1,
+  TMUF_PARTICLES_LINE_WIDE_SCREEN = 2,
+  TMUF_PARTICLES_QUAD_CENTER_LEFT = 3, /* a flat ribbon, 2 size wide across `left` (the wheels' marks) */
+  TMUF_PARTICLES_QUAD_UP = 4,
+  TMUF_PARTICLES_WATER_SPLASH = 5,
+  TMUF_PARTICLES_LIGHT_TRAIL = 6,
+  TMUF_PARTICLES_GRASS_MARKS = 7,
+};
+
+typedef struct tmuf_particle_type {
+  uint32_t material;       /* index into the vehicle's visuals.materials, UINT32_MAX for none */
+  uint32_t particle_type;  /* TMUF_PARTICLES_* */
+  uint32_t multi_state_render_mode, standard_render_mode;
+  uint32_t birth_step_type; /* 0 Active&FixedPeriod, 1 Active&MinDist, 2 Active, 3 Splash, 4 Active&FixedDist, 5 SplashSimple */
+  uint32_t max_particle_count; /* its ring (all emitters of the type, all cars) */
+  float birth_period, birth_min_dist;          /* s, m */
+  float life, life_variation;                  /* s */
+  float size, size_variation, ratio_xy;        /* half width (m) */
+  float velocity, velocity_variation, weight, weight_variation;
+  float transparency, transparency_variation;
+  float u_scale_dist, v_scale_dist;            /* texture per metre along a strip */
+  float view_dist2_max;                        /* squared distance from the camera it is emitted within */
+  uint32_t color_gradient_use;                 /* 0 random constant colour, 1 colour over life */
+  int async_link;                              /* a strip reaches its emitter every frame */
+  int use_game_timer;
+  int has_color_gradient, has_size_over_life, has_transparency_over_life;
+  tmuf_particle_gradient color_gradient;
+  tmuf_particle_curve size_over_life, transparency_over_life;
+} tmuf_particle_type;
+
+typedef struct tmuf_particle_model {
+  const char *file; /* its pack path (e.g. "...\\AsphaltMarks.ParticleModel.Gbx" as stored), "" inline */
+  uint32_t type_count;
+  const tmuf_particle_type *types;
+} tmuf_particle_model;
+
+/* A vehicle's emitter (CSceneVehicleEmitter): which particles it makes,
+   from where and when (CSceneVehicle::VisualUpdateAsync) */
+enum { TMUF_EMITTER_WHEEL = 0, TMUF_EMITTER_OFF = 1, TMUF_EMITTER_WATER = 2, TMUF_EMITTER_SPLASH = 3,
+       TMUF_EMITTER_LIGHT_TRAIL = 4 };
+typedef struct tmuf_vehicle_emitter {
+  uint32_t kind;                         /* TMUF_EMITTER_* */
+  const tmuf_particle_model *models[3];  /* at particle quality low, medium, high (NULL: none) */
+  uint32_t wheel;                        /* the wheel it follows, UINT32_MAX for none */
+  uint32_t part;                         /* a visual part, UINT32_MAX for none */
+  /* the ground materials it emits on (EPlugSurfaceMaterialId); any when
+     any_material */
+  int any_material;
+  uint32_t material_count;
+  const uint32_t *materials;
+  int needs_sliding;      /* its wheel sliding (contact and slipping) */
+  int needs_all_sliding;  /* all the wheels sliding */
+  int orient_to_speed;    /* its frame turned to the car's horizontal speed */
+  tmuf_iso4 location;     /* in the car's frame (a wheel's: from its ground point) */
+  float params[14];       /* intensity base, x |v.x|, |v.y|, |v.z|, burnout; emit speed base (3), x v (3), x v burnout (3) */
+} tmuf_vehicle_emitter;
+
 typedef struct tmuf_vehicle_visuals {
   /* instances: location in the frame of the part `block` */
   tmuf_visuals visuals;
@@ -1157,6 +1228,9 @@ typedef struct tmuf_vehicle_visuals {
   uint32_t light_count;
   const tmuf_light *lights;
   tmuf_vehicle_lighting lighting;
+  /* its particle emitters (the wheels' marks and smoke, splashes, ...) */
+  uint32_t emitter_count;
+  const tmuf_vehicle_emitter *emitters;
 } tmuf_vehicle_visuals;
 
 /* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the

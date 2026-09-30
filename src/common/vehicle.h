@@ -21,6 +21,7 @@ typedef struct tmuf_vehicle {
   tmuf_asset *solid_owner;
   tmuf_gbx_node *solid_tree;
   const tmuf_vehicle_struct *visual_struct; /* the visual rig (levels of detail) */
+  tmuf_asset *visual_struct_owner;
   uint32_t wheel_count;
   struct {
     int kills_lateral_speed, front;
