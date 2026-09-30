@@ -684,6 +684,17 @@ static void gx_light_spot(tmuf_gbx *g, void *node, uint32_t id) {
   l->chunks |= 16u;
 }
 
+/* GxLightFrustum::Chunk 0x0400a006: the GmFrustum (flag, x min, y min,
+   near, x max, y max, far), then a word */
+static void c0400a006(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gx_light *l = node;
+  l->frustum_flag = tmuf_gbx_u32(g);
+  read_floats(g, l->frustum, 6);
+  tmuf_gbx_u32(g);
+  l->chunks |= 1u << 6;
+}
+
 /* GxLightAmbient::Chunk 0x04005000: HeightMin, HeightMax */
 static void c04005000(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
@@ -701,6 +712,8 @@ static const tmuf_gbx_chunk LIGHT_CHUNKS[] = {
     READ(0x0400b002, gx_light_spot),
     /* GxLightAmbient */
     READ(0x04005000, c04005000),
+    /* GxLightFrustum */
+    READ(0x0400a006, c0400a006),
     /* GxLightDirectional */
     READ(0x04007000, skip12), READ(0x04007001, skip16), READ(0x04007002, skip24), READ(0x04007003, skip12),
     READ(0x04007004, skip16), READ(0x04007005, skip8),

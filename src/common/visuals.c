@@ -728,6 +728,9 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
   case 0x0400b000u:
     out->kind = TMUF_LIGHT_SPOT;
     break;
+  case 0x0400a000u:
+    out->kind = (g->chunks & (1u << 6)) ? TMUF_LIGHT_FRUSTUM : TMUF_LIGHT_OTHER;
+    break;
   default:
     out->kind = TMUF_LIGHT_OTHER;
     break;
@@ -789,6 +792,25 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
     b->lighting = saved;
     out->flare_file = t.file;
     out->flare_pack_file = t.pack_file;
+  }
+  if (out->kind == TMUF_LIGHT_FRUSTUM) {
+    out->frustum_flag = g->frustum_flag;
+    memcpy(out->frustum, g->frustum, sizeof out->frustum);
+    /* archived garbage: a symmetric frustum, and the far a trace shows */
+    if (!isfinite(out->frustum[4]) || fabsf(out->frustum[4]) > 1e6f)
+      out->frustum[4] = -out->frustum[1];
+    if (!isfinite(out->frustum[5]) || out->frustum[5] < 1e-6f || out->frustum[5] > 1e6f)
+      out->frustum[5] = 100.f;
+    if (pl->projector) {
+      tmuf_visual_texture t;
+      memset(&t, 0, sizeof t);
+      tmuf_vehicle_lighting *saved = b->lighting;
+      b->lighting = NULL;
+      bitmap_file(b, pa, pl->projector, &t, 0);
+      b->lighting = saved;
+      out->projector_file = t.file;
+      out->projector_pack_file = t.pack_file;
+    }
   }
   out->file = dup(b->arena, (ref->external || pn != ref) && pa ? pa->path : "");
   return 1;

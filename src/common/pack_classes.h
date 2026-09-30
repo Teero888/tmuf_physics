@@ -77,6 +77,10 @@ typedef struct tmuf_gx_light {
   float spot[6];
   /* GxLightAmbient (0x04005000): +0x5c HeightMin, +0x60 HeightMax (bit 5 of chunks) */
   float ambient_height[2];
+  /* GxLightFrustum (0x0400a006, bit 6 of chunks): its GmFrustum (+0x98):
+     flag, then x min, y min, near, x max, y max, far as archived */
+  uint32_t frustum_flag;
+  float frustum[6];
 } tmuf_gx_light;
 
 /* CHmsLight (0x0600c000): the GxLight it places (+0x88), its flag bits

@@ -618,7 +618,8 @@ enum {
   TMUF_LIGHT_POINT = 0, /* GxLightPoint */
   TMUF_LIGHT_BALL = 1,  /* GxLightBall: omni within a radius */
   TMUF_LIGHT_SPOT = 2,  /* GxLightSpot: a ball limited to a cone */
-  TMUF_LIGHT_OTHER = 3, /* another GxLight (frustum, ...): only the GxLight fields are set */
+  TMUF_LIGHT_OTHER = 3, /* another GxLight: only the GxLight fields are set */
+  TMUF_LIGHT_FRUSTUM = 4, /* GxLightFrustum: a projector (the cars' headlights at night), frustum set */
 };
 
 /* GxLight flags (+0x14) */
@@ -671,6 +672,15 @@ typedef struct tmuf_light {
   /* the lens flare picture (CPlugLight BitmapFlare's image; the renderer's
      default flare when both are NULL) */
   const char *flare_file, *flare_pack_file;
+  /* a projector's picture (CPlugLight BitmapProjector's image) and its
+     frustum along the location's +Z: x and y extents at distance 1
+     (frustum[0] x min, [1] y min, [3] x max, [4] y max), near [2] and far
+     [5] (GmFrustum::GetFarZ: far, + near when frustum_flag). The archived
+     y max and far of the cars' headlight are garbage: y max is then
+     -y min and far 100 (the game's InvFarZ2 of 1e-4 in a trace). */
+  const char *projector_file, *projector_pack_file;
+  uint32_t frustum_flag;
+  float frustum[6];
   const char *file;  /* the CPlugLight's file (pack path), "" when inline */
   uint32_t block;    /* as tmuf_visual_instance.block; vehicle lights: the part */
   float lod_near, lod_far; /* camera distances of its tree (visual mips) */
