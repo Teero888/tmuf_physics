@@ -4,6 +4,8 @@
 
 #include "common/visuals.h"
 
+#include "common/lightmap.h"
+
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
@@ -56,6 +58,7 @@ typedef struct builder {
   ptr_map mesh_map, material_map;
   int oom;
   int sprites; /* also take sprite visuals (vertices without indices) */
+  tmuf_vehicle_lighting *lighting; /* the car's: filled from the renders its bitmaps name */
 } builder;
 
 /* the image file a bitmap loads: on disk, else inside the packs */
@@ -71,6 +74,23 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
     return;
   }
   const tmuf_plug_bitmap *bm = bn->data;
+  if (b->lighting && bm->render && bm->render->data && bm->render->cls) {
+    const tmuf_plug_bitmap_render *r = bm->render->data;
+    tmuf_vehicle_lighting *l = b->lighting;
+    if (bm->render->cls->id == 0x09058000u && r->has_hemisphere) {
+      l->has_hemisphere = 1;
+      l->hemi_exp_l = r->exp_l;
+      l->hemi_exp_a = r->exp_a;
+      l->hemi_layout = r->hemi_layout;
+    } else if (bm->render->cls->id == 0x09021000u && r->has_light_from_map) {
+      l->has_light_from_map = 1;
+      l->lfm_grid = r->lfm_grid;
+      l->lfm_grid_max = r->lfm_grid_max;
+      l->lfm_top = r->lfm[0];
+      l->lfm_depth = r->lfm[1];
+      memcpy(l->lfm_values, r->lfm + 2, sizeof l->lfm_values);
+    }
+  }
   /* CPlugBitmapAddress::ApplyBitmapTcScale: addresses flagged 0x1000 take the
      bitmap's texcoord transform, and a bitmap flagged 0x8000 its generation */
   if (use_tc_scale && bm->has_tc_transform) {
@@ -278,9 +298,10 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
 }
 
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
-                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites, int remap) {
+                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites, int remap,
+                      tmuf_vehicle_lighting *lighting) {
   memset(out, 0, sizeof *out);
-  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites};
+  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites, lighting};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
   b.materials = malloc(sizeof *b.materials * (n ? 3u * n : 1));
   tmuf_visual_instance *instances = malloc(sizeof *instances * (n ? n : 1));
@@ -333,10 +354,188 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
 
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
                        tmuf_arena *arena) {
-  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1);
+  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL);
 }
 
 /* ---- the vehicle ---- */
+
+/* ---- lights (CPlugTreeLight -> CPlugLight -> GxLight*) ---- */
+
+enum { CLS_PLUG_LIGHT = 0x0901d000u };
+
+static float cos_half_degrees(float a) { return cosf(a * 3.14159265358979f / 360.0f); }
+
+/* One tree light: its CPlugLight (ref, in owner) placed at iso. is_night: the
+   fid parameter IsNight (CPlugTreeLight::ApplyFidParameters). Returns 0
+   when the reference doesn't lead to a GxLight. */
+static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const tmuf_iso *iso, int is_night,
+                      const char *mood_folder, tmuf_light *out) {
+  memset(out, 0, sizeof *out);
+  tmuf_asset *pa = NULL, *ga;
+  tmuf_gbx_node *pn = NULL;
+  /* the fid parameters of the map's mood: a light file of the same name in
+     the mood's folder replaces the one the solid names (e.g. Stadium's
+     Moods\Sunset\StadiumspotBig.Light.Gbx) */
+  if (mood_folder && mood_folder[0] && ref->external && ref->file) {
+    const char *name = strrchr(ref->file, '\\');
+    name = name ? name + 1 : ref->file;
+    char path[1024];
+    const size_t fl = strlen(mood_folder);
+    snprintf(path, sizeof path, "%s%s%s", mood_folder, mood_folder[fl - 1] == '\\' ? "" : "\\", name);
+    tmuf_asset *ma = tmuf_assets_load_path(&b->scene->assets, path);
+    if (ma && !ma->failed && ma->class_id == CLS_PLUG_LIGHT && ma->gbx.nodes && ma->gbx.nodes[0].data) {
+      pa = ma;
+      pn = &ma->gbx.nodes[0];
+    }
+  }
+  if (!pn)
+    pn = tmuf_assets_follow(&b->scene->assets, owner, ref, &pa);
+  if (node_class(pn) != CLS_PLUG_LIGHT || !pn->data)
+    return 0;
+  const tmuf_plug_light *pl = pn->data;
+  tmuf_gbx_node *gn = pl->light ? tmuf_assets_follow(&b->scene->assets, pa, pl->light, &ga) : NULL;
+  if (!gn || !gn->data || node_class(gn) != 0x04001000u)
+    return 0;
+  const tmuf_gx_light *g = gn->data;
+  switch (gn->class_id) {
+  case 0x04003000u:
+    out->kind = TMUF_LIGHT_POINT;
+    break;
+  case 0x04002000u:
+    out->kind = TMUF_LIGHT_BALL;
+    break;
+  case 0x0400b000u:
+    out->kind = TMUF_LIGHT_SPOT;
+    break;
+  default:
+    out->kind = TMUF_LIGHT_OTHER;
+    break;
+  }
+  out->archived_flags = g->flags;
+  out->plug_flags = pl->flags;
+  out->night_only = (int)(pl->flags & 1u);
+  /* ApplyFidParameters (race: the global it tests is 0): a night-only light
+     by day keeps its light but loses its highlights and flare; the others
+     get both */
+  out->flags = out->night_only && !is_night ? g->flags & ~0x18u : g->flags | 0x18u;
+  for (int r = 0; r < 3; r++)
+    for (int c = 0; c < 3; c++)
+      out->location.r.m[r][c] = iso->m[r][c];
+  out->location.t = (tmuf_vec3){iso->t[0], iso->t[1], iso->t[2]};
+  for (int k = 0; k < 3; k++) {
+    out->position[k] = iso->t[k];
+    out->direction[k] = iso->m[k][2];
+  }
+  memcpy(out->rgb, g->rgb, sizeof out->rgb);
+  out->intensity = g->intensity;
+  out->diffuse_intensity = g->diffuse;
+  out->specular_intensity = g->specular;
+  out->specular_power = g->specular_power;
+  for (int k = 0; k < 3; k++) {
+    out->diffuse_rgb[k] = g->intensity * g->diffuse * g->rgb[k];
+    out->specular_rgb[k] = g->specular * g->intensity * g->rgb[k];
+  }
+  out->flare_intensity = g->flare_intensity;
+  out->flare_size = g->point[0];
+  out->flare_bias_z = g->point[1];
+  memcpy(out->radius, g->radius, sizeof out->radius);
+  if (out->kind == TMUF_LIGHT_SPOT) {
+    out->angle_inner = g->spot[0];
+    out->angle_outer = g->spot[1];
+    /* UpdateCosHalfAngles: the flare angle is the outer one unless set */
+    out->angle_flare = (g->spot_flags & 1u) ? g->spot[2] : g->spot[1];
+    out->falloff = g->spot[5];
+    out->cos_inner = cos_half_degrees(out->angle_inner);
+    out->cos_outer = cos_half_degrees(out->angle_outer);
+    out->cos_flare = cos_half_degrees(out->angle_flare);
+  }
+  if (pl->flare) {
+    tmuf_visual_texture t;
+    memset(&t, 0, sizeof t);
+    tmuf_vehicle_lighting *saved = b->lighting;
+    b->lighting = NULL;
+    bitmap_file(b, pa, pl->flare, &t, 0);
+    b->lighting = saved;
+    out->flare_file = t.file;
+    out->flare_pack_file = t.pack_file;
+  }
+  out->file = dup(b->arena, (ref->external || pn != ref) && pa ? pa->path : "");
+  return 1;
+}
+
+static int lights_build(tmuf_lights_data *out, tmuf_scene *scene, const tmuf_scene_light *list, uint32_t n,
+                        int is_night, const char *mood_folder, tmuf_arena *arena) {
+  memset(out, 0, sizeof *out);
+  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, 0, NULL};
+  out->lights = malloc(sizeof *out->lights * (n ? n : 1));
+  if (!out->lights)
+    return 0;
+  for (uint32_t i = 0; i < n; i++) {
+    tmuf_light *l = &out->lights[out->count];
+    if (!light_fill(&b, list[i].owner, list[i].light, &list[i].iso, is_night, mood_folder, l))
+      continue;
+    l->block = list[i].tag;
+    l->lod_near = list[i].lod_near;
+    l->lod_far = list[i].lod_far;
+    l->decorator_hidden = list[i].hidden;
+    out->count++;
+  }
+  return 1;
+}
+
+int tmuf_track_lights_build(tmuf_lights_data *out, tmuf_scene *scene, int is_night, const char *mood_folder,
+                            tmuf_arena *arena) {
+  return lights_build(out, scene, scene->lights, scene->light_count, is_night, mood_folder, arena);
+}
+
+void tmuf_lights_free(tmuf_lights_data *l) {
+  free(l->lights);
+  memset(l, 0, sizeof *l);
+}
+
+void tmuf_light_box(const tmuf_light *l, uint32_t which, float box[6]) {
+  float r = 0.0f;
+  if (which < 4) {
+    r = l->radius[which];
+  } else {
+    if ((l->flags & 1u) && l->radius[0] > 0.0f)
+      r = l->radius[0];
+    if ((l->flags & 8u) && r < l->radius[1])
+      r = l->radius[1];
+    if ((l->flags & 4u) && r < l->radius[2])
+      r = l->radius[2];
+  }
+  if (l->kind != TMUF_LIGHT_SPOT) {
+    for (int k = 0; k < 3; k++) {
+      box[k] = l->position[k];
+      box[3 + k] = r;
+    }
+    return;
+  }
+  /* GmBoxAligned::SetFromConeAndRadius(apex, axis, cos of the outer half
+     angle, r) */
+  const float c = l->cos_outer, sn = sqrtf(1.0f - c * c);
+  float mn[3], mx[3];
+  for (int k = 0; k < 3; k++) {
+    const float d = l->direction[k], sd = sqrtf(1.0f - d * d);
+    float hi = r;
+    if (d <= c) {
+      float f = d * c + sd * sn;
+      hi = (f > 0.0f ? f : 0.0f) * r;
+    }
+    float lo = -r;
+    if (-d <= c) {
+      float f = sd * sn - d * c;
+      lo = -r * (f > 0.0f ? f : 0.0f);
+    }
+    mn[k] = l->position[k] + lo;
+    mx[k] = l->position[k] + hi;
+  }
+  for (int k = 0; k < 3; k++) {
+    box[k] = (mn[k] + mx[k]) * 0.5f;
+    box[3 + k] = (mx[k] - mn[k]) * 0.5f;
+  }
+}
 
 typedef struct vehicle_builder {
   tmuf_scene *scene;
@@ -346,6 +545,8 @@ typedef struct vehicle_builder {
   tmuf_scene_visual *list;
   uint32_t count, cap;
   int oom;
+  tmuf_scene_light *lights; /* its light trees (tag: the part) */
+  uint32_t light_count, light_cap;
 } vehicle_builder;
 
 static void vehicle_tree(vehicle_builder *b, tmuf_asset *owner, tmuf_gbx_node *tree_node, uint32_t parent, int depth,
@@ -401,6 +602,26 @@ static void vehicle_tree(vehicle_builder *b, tmuf_asset *owner, tmuf_gbx_node *t
     v->lod_near = lod_near;
     v->lod_far = lod_far;
   }
+  if (cls == 0x09062000u && t->light) {
+    if (b->light_count == b->light_cap) {
+      uint32_t cap = b->light_cap ? b->light_cap * 2 : 8;
+      tmuf_scene_light *l = realloc(b->lights, sizeof *l * cap);
+      if (!l) {
+        b->oom = 1;
+        return;
+      }
+      b->lights = l;
+      b->light_cap = cap;
+    }
+    tmuf_scene_light *l = &b->lights[b->light_count++];
+    l->owner = ta;
+    l->light = t->light;
+    tmuf_iso_identity(&l->iso); /* the part's own frame */
+    l->tag = index;
+    l->lod_near = lod_near;
+    l->lod_far = lod_far;
+    l->hidden = 0;
+  }
   for (uint32_t i = 0; i < t->child_count; i++) {
     float n = lod_near, f = lod_far;
     if (t->mip_count && i >= t->mip_first) {
@@ -424,16 +645,29 @@ static uint32_t part_named(const vehicle_builder *b, const tmuf_visual_id *id) {
 }
 
 int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene, const tmuf_vehicle *vehicle,
-                               tmuf_arena *arena) {
+                               int is_night, const char *mood_folder, tmuf_arena *arena) {
   memset(out, 0, sizeof *out);
-  vehicle_builder b = {scene, arena, NULL, 0, 0, NULL, 0, 0, 0};
+  vehicle_builder b = {scene, arena, NULL, 0, 0, NULL, 0, 0, 0, NULL, 0, 0};
   vehicle_tree(&b, vehicle->solid_owner, vehicle->solid_tree, TMUF_VEHICLE_NO_PART, 0, 0.0f, FLT_MAX);
-  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0)) {
+  tmuf_vehicle_lighting *lighting = &out->view.lighting;
+  /* the game's defaults (CPlugBitmapRenderLightFromMap constructor) */
+  lighting->lfm_footprint = 1.0f + 1.5f / 2.0f;
+  lighting->lfm_white = 0.5f;
+  lighting->lfm_up_min = 0.8f;
+  lighting->lfm_grid = lighting->lfm_grid_max = 2;
+  lighting->lfm_depth = 10.0f;
+  lighting->lfm_top = 0.05f;
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0, 0, lighting) ||
+      !lights_build(&out->lights, scene, b.lights, b.light_count, is_night, mood_folder, arena)) {
     free(b.parts);
     free(b.list);
+    free(b.lights);
     return 0;
   }
   free(b.list);
+  free(b.lights);
+  if (!tmuf_tree_box(scene, vehicle->solid_owner, vehicle->solid_tree, lighting->box))
+    memset(lighting->box, 0, sizeof lighting->box);
   out->parts = b.parts;
   const tmuf_vehicle_struct *st = vehicle->visual_struct;
   const uint32_t level_count = st ? st->visual_vehicle_count : 0;
@@ -489,6 +723,8 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
         l->root = b.parts[w[i].rolling].parent;
   }
   out->view.visuals = out->visuals.view;
+  out->view.light_count = out->lights.count;
+  out->view.lights = out->lights.lights;
   out->view.part_count = b.part_count;
   out->view.parts = b.parts;
   out->view.level_count = level_count;
@@ -498,13 +734,14 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
 
 void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v) {
   tmuf_visuals_free(&v->visuals);
+  tmuf_lights_free(&v->lights);
   free(v->parts);
   memset(v, 0, sizeof *v);
 }
 
 int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
                             tmuf_arena *arena) {
-  return build_list(out, scene, list, n, NULL, arena, 1, 0);
+  return build_list(out, scene, list, n, NULL, arena, 1, 0, NULL);
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {

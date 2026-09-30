@@ -28,14 +28,28 @@ int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmu
                             tmuf_arena *arena);
 void tmuf_visuals_free(tmuf_visuals_data *v);
 
+/* Lights (tmuf_light) of a list of tree lights */
+typedef struct tmuf_lights_data {
+  uint32_t count;
+  tmuf_light *lights;
+} tmuf_lights_data;
+
+/* The scene's tree lights; is_night, mood_folder: the map's (tmuf_weather) */
+int tmuf_track_lights_build(tmuf_lights_data *out, tmuf_scene *scene, int is_night, const char *mood_folder,
+                            tmuf_arena *arena);
+void tmuf_lights_free(tmuf_lights_data *l);
+
 typedef struct tmuf_vehicle_visuals_data {
   tmuf_vehicle_visuals view;
   tmuf_visuals_data visuals;
   tmuf_vehicle_part *parts;
+  tmuf_lights_data lights;
 } tmuf_vehicle_visuals_data;
 
+/* is_night, mood_folder: the map's (tmuf_weather), for the lights' fid
+   parameters */
 int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene, const tmuf_vehicle *vehicle,
-                               tmuf_arena *arena);
+                               int is_night, const char *mood_folder, tmuf_arena *arena);
 void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v);
 
 #endif

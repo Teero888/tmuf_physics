@@ -191,14 +191,17 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
      replay's, see tmuf_replay_laps), else the map's for a lap race, else one */
   b->laps = options && options->laps ? options->laps : b->map.has_laps && b->map.lap_race ? b->map.laps : 1;
   if (scene_flags & TMUF_SCENE_VISUALS) {
+    tmuf_weather_build(&b->weather, &b->scene, &b->arena);
+    const int is_night = b->weather.found && b->weather.view.is_night;
+    const char *mood_folder = b->weather.found ? b->weather.view.mood.folder : NULL;
     if (!tmuf_lightmap_build(&b->lightmap, &b->scene, 2048) ||
         !tmuf_visuals_build(&b->visuals, &b->scene, b->lightmap.of_scene_corpus, &b->arena) ||
-        !tmuf_vehicle_visuals_build(&b->vehicle_visuals, &b->scene, &b->vehicle, &b->arena)) {
+        !tmuf_vehicle_visuals_build(&b->vehicle_visuals, &b->scene, &b->vehicle, is_night, mood_folder, &b->arena) ||
+        !tmuf_track_lights_build(&b->lights, &b->scene, is_night, mood_folder, &b->arena)) {
       tmuf_set_error(err, err_size, "out of memory");
       return 0;
     }
     b->has_visuals = 1;
-    tmuf_weather_build(&b->weather, &b->scene, &b->arena);
     free(b->scene.visuals); /* the list is not needed any more */
     b->scene.visuals = NULL;
     b->scene.visual_count = b->scene.visual_cap = 0;
@@ -239,6 +242,18 @@ const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track) {
   return b && b->has_visuals ? &b->lightmap.view : NULL;
 }
 
+uint32_t tmuf_track_lights(const tmuf_track *track, const tmuf_light **lights) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (!b || !b->has_visuals) {
+    if (lights)
+      *lights = NULL;
+    return 0;
+  }
+  if (lights)
+    *lights = b->lights.lights;
+  return b->lights.count;
+}
+
 const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals ? &b->vehicle_visuals.view : NULL;
@@ -247,6 +262,7 @@ const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track) 
 void tmuf_track_base_free(tmuf_track_base *b) {
   tmuf_visuals_free(&b->visuals);
   tmuf_vehicle_visuals_free(&b->vehicle_visuals);
+  tmuf_lights_free(&b->lights);
   tmuf_lightmap_free(&b->lightmap);
   tmuf_weather_free(&b->weather);
   free(b->triangles);

@@ -1,5 +1,6 @@
 #include "common/pack_classes.h"
 
+#include <math.h>
 #include <string.h>
 
 #include "common/tuning_schema.h"
@@ -65,7 +66,6 @@ SKIP_FN(16)
 
 SKIP_FN(24)
 SKIP_FN(32)
-SKIP_FN(52)
 SKIP_FN(80)
 SKIP_FN(72)
 
@@ -360,8 +360,13 @@ static const tmuf_gbx_chunk TREE_MIP_CHUNKS[] = {NOPAY(0x09015000), NOPAY(0x0901
 static const tmuf_gbx_class TREE_MIP = {0x09015000, "CPlugTreeVisualMip", sizeof(tmuf_plug_tree), TREE_MIP_CHUNKS,
                                         COUNT(TREE_MIP_CHUNKS), &TREE};
 
+static void c09062004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_plug_tree *)node)->light = tmuf_gbx_noderef(g);
+}
+
 static const tmuf_gbx_chunk TREE_LIGHT_CHUNKS[] = {NOPAY(0x09062000), NOPAY(0x09062001), NOPAY(0x09062002),
-                                                   NOPAY(0x09062003), READ(0x09062004, skip_noderef)};
+                                                   NOPAY(0x09062003), READ(0x09062004, c09062004)};
 static const tmuf_gbx_class TREE_LIGHT = {0x09062000, "CPlugTreeLight", sizeof(tmuf_plug_tree), TREE_LIGHT_CHUNKS,
                                           COUNT(TREE_LIGHT_CHUNKS), &TREE};
 
@@ -599,16 +604,93 @@ static const tmuf_gbx_class SURFACE_GEOM = {0x0900f000, "CPlugSurfaceGeom", size
 
 /* ---- GxLight family ---- */
 
+/* GxLight::Chunk 0x04001009 */
+static void c04001009(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gx_light *l = node;
+  read_floats(g, l->rgb, 3);
+  l->flags = tmuf_gbx_u32(g);
+  l->intensity = tmuf_gbx_f32(g);
+  l->diffuse = tmuf_gbx_f32(g);
+  l->specular = tmuf_gbx_f32(g);
+  l->specular_power = tmuf_gbx_f32(g);
+  l->f38 = tmuf_gbx_f32(g);
+  l->flare_intensity = tmuf_gbx_f32(g);
+  read_floats(g, l->shadow_rgb, 3);
+  l->chunks |= 1u;
+}
+
+/* GxLightPoint::Chunk 0x04003004 */
+static void c04003004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gx_light *l = node;
+  read_floats(g, l->point, 2);
+  l->chunks |= 2u;
+}
+
+/* GxLightBall::Chunk 0x04002004..6: flags, radii +0x68, +0x6c, +0x70 (and
+   +0x74 from 5 on), then +0x80, +0x78, +0x7c, +0x84, +0x88, +0x8c */
+static void gx_light_ball(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_gx_light *l = node;
+  l->ball_flags = tmuf_gbx_u32(g);
+  read_floats(g, l->radius, id == 0x04002004u ? 3 : 4);
+  read_floats(g, l->ball, 6);
+  l->chunks |= 4u;
+}
+
+/* GxLightSpot::Chunk: 0x0400b000 inner, outer, falloff; 0x0400b001 inner,
+   outer, +0x9c, falloff; 0x0400b002 flags, inner, outer, +0x9c, +0xa0,
+   +0xa4, falloff */
+static void gx_light_spot(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_gx_light *l = node;
+  if (id == 0x0400b002u) {
+    l->spot_flags = tmuf_gbx_u32(g);
+    read_floats(g, l->spot, 6);
+    l->chunks |= 8u;
+    return;
+  }
+  l->spot[0] = tmuf_gbx_f32(g);
+  l->spot[1] = tmuf_gbx_f32(g);
+  l->spot[2] = id == 0x0400b001u ? tmuf_gbx_f32(g) : 2.0f * l->spot[1];
+  l->spot[5] = tmuf_gbx_f32(g);
+  /* 0x0400b001: the flare angle is its own (flag 1) unless equal to the outer */
+  if (id == 0x0400b001u && fabsf(l->spot[2] - l->spot[1]) > 1e-4f)
+    l->spot_flags |= 1u;
+  l->chunks |= 16u;
+}
+
 static const tmuf_gbx_chunk LIGHT_CHUNKS[] = {
     NOPAY(0x04001000), NOPAY(0x04001001), NOPAY(0x04001002), NOPAY(0x04001003), NOPAY(0x04001004), NOPAY(0x04001005),
-    NOPAY(0x04001006), NOPAY(0x04001007), NOPAY(0x04001008), READ(0x04001009, skip52),
+    NOPAY(0x04001006), NOPAY(0x04001007), NOPAY(0x04001008), READ(0x04001009, c04001009),
+    /* GxLightPoint, GxLightBall, GxLightSpot (the versions the packs use) */
+    READ(0x04003004, c04003004), READ(0x04002004, gx_light_ball), READ(0x04002005, gx_light_ball),
+    READ(0x04002006, gx_light_ball), READ(0x0400b000, gx_light_spot), READ(0x0400b001, gx_light_spot),
+    READ(0x0400b002, gx_light_spot),
     /* GxLightAmbient */
     READ(0x04005000, skip8),
     /* GxLightDirectional */
     READ(0x04007000, skip12), READ(0x04007001, skip16), READ(0x04007002, skip24), READ(0x04007003, skip12),
     READ(0x04007004, skip16), READ(0x04007005, skip8),
 };
-static const tmuf_gbx_class LIGHT = {0x04001000, "GxLight", 1, LIGHT_CHUNKS, COUNT(LIGHT_CHUNKS), NULL};
+static const tmuf_gbx_class LIGHT = {0x04001000, "GxLight", sizeof(tmuf_gx_light), LIGHT_CHUNKS, COUNT(LIGHT_CHUNKS),
+                                     NULL};
+
+/* CPlugLight (0x0901d000): 0x0901d000 the light and three more references;
+   0x0901d001/2 the same then a flag word */
+static void plug_light(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_plug_light *l = node;
+  l->light = tmuf_gbx_noderef(g);
+  l->func = tmuf_gbx_noderef(g);
+  l->flare = tmuf_gbx_noderef(g);
+  l->projector = tmuf_gbx_noderef(g);
+  if (id != 0x0901d000u)
+    l->flags = tmuf_gbx_u32(g);
+}
+
+static const tmuf_gbx_chunk PLUG_LIGHT_CHUNKS[] = {READ(0x0901d000, plug_light), READ(0x0901d001, plug_light),
+                                                   READ(0x0901d002, plug_light)};
+static const tmuf_gbx_class PLUG_LIGHT = {0x0901d000, "CPlugLight", sizeof(tmuf_plug_light), PLUG_LIGHT_CHUNKS,
+                                          COUNT(PLUG_LIGHT_CHUNKS), NULL};
 
 /* ---- CPlugDecoratorSolid (0x090a3000), CPlugDecoratorTree (0x090a2000) ---- */
 
@@ -1076,8 +1158,43 @@ static const tmuf_gbx_chunk BITMAP_RENDER_CHUNKS[] = {
     READ(0x09086003, bitmap_fixed), READ(0x0908600a, bitmap_fixed), READ(0x0908600b, render_clear),
     READ(0x0908600c, render_sub),   READ(0x0908600d, bitmap_fixed), READ(0x0908600e, bitmap_fixed),
 };
-static const tmuf_gbx_class BITMAP_RENDER = {0x09086000, "CPlugBitmapRender", 1, BITMAP_RENDER_CHUNKS,
-                                             COUNT(BITMAP_RENDER_CHUNKS), NULL};
+static const tmuf_gbx_class BITMAP_RENDER = {0x09086000, "CPlugBitmapRender", sizeof(tmuf_plug_bitmap_render),
+                                             BITMAP_RENDER_CHUNKS, COUNT(BITMAP_RENDER_CHUNKS), NULL};
+
+/* CPlugBitmapRenderHemisphere::Chunk_Crypted: 0x09058000 layout, ExpL;
+   0x09058001 layout, ExpL (+0x5c), ExpA (+0x60), six more reals */
+static void render_hemisphere(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_plug_bitmap_render *r = node;
+  r->has_hemisphere = 1;
+  r->hemi_layout = tmuf_gbx_u32(g);
+  r->exp_l = tmuf_gbx_f32(g);
+  if (id == 0x09058001u) {
+    r->exp_a = tmuf_gbx_f32(g);
+    tmuf_gbx_skip(g, 24);
+  }
+}
+
+static const tmuf_gbx_chunk BITMAP_RENDER_HEMI_CHUNKS[] = {READ(0x09058000, render_hemisphere),
+                                                           READ(0x09058001, render_hemisphere)};
+static const tmuf_gbx_class BITMAP_RENDER_HEMI = {0x09058000, "CPlugBitmapRenderHemisphere",
+                                                  sizeof(tmuf_plug_bitmap_render), BITMAP_RENDER_HEMI_CHUNKS,
+                                                  COUNT(BITMAP_RENDER_HEMI_CHUNKS), &BITMAP_RENDER};
+
+/* CPlugBitmapRenderLightFromMap::Chunk: grid (+0x80), max grid (+0x84), then
+   +0x88, +0x8c, +0x94, +0x98 and, from 0x09021001, +0x9c, +0xa0, +0xa4, +0xa8 */
+static void render_light_from_map(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_plug_bitmap_render *r = node;
+  r->has_light_from_map = 1;
+  r->lfm_grid = tmuf_gbx_u32(g);
+  r->lfm_grid_max = tmuf_gbx_u32(g);
+  read_floats(g, r->lfm, id == 0x09021001u ? 8 : 4);
+}
+
+static const tmuf_gbx_chunk BITMAP_RENDER_LFM_CHUNKS[] = {READ(0x09021000, render_light_from_map),
+                                                          READ(0x09021001, render_light_from_map)};
+static const tmuf_gbx_class BITMAP_RENDER_LFM = {0x09021000, "CPlugBitmapRenderLightFromMap",
+                                                 sizeof(tmuf_plug_bitmap_render), BITMAP_RENDER_LFM_CHUNKS,
+                                                 COUNT(BITMAP_RENDER_LFM_CHUNKS), &BITMAP_RENDER};
 
 /* CPlugFileGen (0x0902f000): archived inline without chunks */
 static void file_gen_archive(tmuf_gbx *g, void *node) {
@@ -2872,6 +2989,7 @@ static const tmuf_gbx_class FUNC_LAYER_UV = {0x05015000, "CFuncShaderLayerUV", s
 
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
+    &PLUG_LIGHT,      &BITMAP_RENDER_HEMI, &BITMAP_RENDER_LFM,
     &LIGHT,           &DECORATOR_SOLID, &DECORATOR_TREE, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
     &BITMAP,          &BITMAP_RENDER, &FILE_GEN,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,

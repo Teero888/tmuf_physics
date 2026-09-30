@@ -548,6 +548,7 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
   w->mood.pack_light_map = node_file(&b, ma, mood->pack_light_map);
   b.folder = w->mood.folder;
   tmuf_day_time_at(w->mood.remapped_start_day_time, w->mood.latitude, &w->start);
+  w->is_night = !(0.25f < w->mood.remapped_start_day_time && w->mood.remapped_start_day_time < 0.75f);
 
   /* the mood's skin */
   tmuf_asset *ka = NULL;
@@ -588,6 +589,7 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
     w->sea_color = picture(&b, fa, f->sea_color);
     w->sky_gradient = picture(&b, fa, f->sky_gradient);
     w->flare_sun = picture(&b, fa, f->flare_sun);
+    w->sun_flare = w->start.state != TMUF_DAY_NIGHT && f->flare_sun != NULL;
     w->flare_moon = picture(&b, fa, f->flare_moon);
     w->flare_size_sun = f->flare_size_sun;
     w->flare_size_moon = f->flare_size_moon;

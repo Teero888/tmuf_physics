@@ -99,6 +99,18 @@ typedef struct tmuf_scene_visual {
   uint32_t corpus; /* index into tmuf_scene.corpora */
 } tmuf_scene_visual;
 
+/* A light a placed solid's tree carries (CPlugTreeLight, only with
+   TMUF_SCENE_VISUALS): its CPlugLight reference (in the asset holding the
+   tree) and the tree's world location. */
+typedef struct tmuf_scene_light {
+  tmuf_asset *owner;
+  tmuf_gbx_node *light;
+  tmuf_iso iso;
+  uint32_t tag;
+  float lod_near, lod_far;
+  uint8_t hidden; /* below a decorator tree not shown at the highest quality */
+} tmuf_scene_light;
+
 typedef struct tmuf_scene_catalog_entry {
   const char *name; /* collector identifier */
   tmuf_pack_ref ref;
@@ -116,6 +128,9 @@ typedef struct tmuf_scene {
   int collect_visuals;
   uint32_t visual_count, visual_cap;
   tmuf_scene_visual *visuals; /* only with TMUF_SCENE_VISUALS */
+  uint32_t light_count, light_cap;
+  tmuf_scene_light *lights; /* only with TMUF_SCENE_VISUALS */
+  int decorator_hidden_depth;
   uint32_t *water_ground_tags; /* geometry water, while building: per cell the tag of the
                                   ground block of a wet zone, UINT32_MAX if none */
   uint32_t triangle_count, triangle_cap;

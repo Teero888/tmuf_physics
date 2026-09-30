@@ -33,7 +33,43 @@ typedef struct tmuf_plug_tree {
      distance it applies from */
   uint32_t mip_first, mip_count;
   const float *mip_distances;
+  tmuf_gbx_node *light; /* CPlugTreeLight: its CPlugLight (chunk 0x09062004) */
+  /* set by the scene: a decoration tree its decorator doesn't show at the
+     highest quality (CPlugDecoratorTree visible condition) */
+  uint8_t decorator_hidden;
 } tmuf_plug_tree;
+
+/* CPlugLight (0x0901d000): the GxLight it places and its flags */
+typedef struct tmuf_plug_light {
+  tmuf_gbx_node *light;     /* +0x24 GxLight */
+  tmuf_gbx_node *func;      /* +0x14 */
+  tmuf_gbx_node *flare;     /* +0x18 BitmapFlare */
+  tmuf_gbx_node *projector; /* +0x1c BitmapProjector */
+  uint32_t flags;           /* +0x20: bit 0 NightOnly */
+} tmuf_plug_light;
+
+/* GxLight and its subclasses (GxLightPoint, GxLightBall, GxLightSpot), as
+   archived; offsets are the fields of the game's GxLight* objects */
+typedef struct tmuf_gx_light {
+  uint32_t chunks;      /* bit 0: 0x04001009, 1: point, 2: ball, 3: spot (0x0400b002), 4: spot (0x0400b000/1) */
+  float rgb[3];         /* +0x18 */
+  uint32_t flags;       /* +0x14 */
+  float intensity;      /* +0x24 */
+  float diffuse;        /* +0x28 DiffuseIntensity */
+  float specular;       /* +0x58 SpecularIntensity */
+  float specular_power; /* +0x54 */
+  float f38;            /* +0x38 */
+  float flare_intensity; /* +0x50 FlareIntensity */
+  float shadow_rgb[3];
+  float point[2];       /* GxLightPoint +0x5c FlareSize, +0x60 FlareBiasZ */
+  uint32_t ball_flags;  /* GxLightBall +0x64 */
+  float radius[4];      /* +0x68 diffuse, +0x6c specular, +0x70, +0x74 flare */
+  float ball[6];        /* +0x80, +0x78, +0x7c, +0x84, +0x88, +0x8c (archive order) */
+  uint32_t spot_flags;  /* GxLightSpot +0x90 */
+  /* GxLightSpot +0x94 inner angle, +0x98 outer angle (degrees, full), +0x9c
+     flare angle, +0xa0, +0xa4, +0xa8 falloff */
+  float spot[6];
+} tmuf_gx_light;
 
 #define TMUF_VISUAL_MAX_TEXCOORDS 8
 
@@ -140,6 +176,16 @@ typedef struct tmuf_plug_bitmap {
   uint32_t flags;
   tmuf_gbx_node *render;
 } tmuf_plug_bitmap;
+
+/* CPlugBitmapRender subclasses the car's shaders use */
+typedef struct tmuf_plug_bitmap_render {
+  int has_hemisphere; /* CPlugBitmapRenderHemisphere (0x09058000) */
+  uint32_t hemi_layout;
+  float exp_l, exp_a; /* +0x5c, +0x60 */
+  int has_light_from_map; /* CPlugBitmapRenderLightFromMap (0x09021000) */
+  uint32_t lfm_grid, lfm_grid_max; /* +0x80, +0x84 */
+  float lfm[8];      /* +0x88, +0x8c, +0x94, +0x98, +0x9c, +0xa0, +0xa4, +0xa8 */
+} tmuf_plug_bitmap_render;
 
 typedef struct tmuf_node_list {
   uint32_t count;

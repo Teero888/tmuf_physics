@@ -289,6 +289,106 @@ TMUF_API const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track);
 TMUF_API void tmuf_lightmap_place(const tmuf_lightmap *lightmap, uint32_t size, tmuf_lightmap_corpus *corpora,
                                   tmuf_lightmap *out);
 
+/* ---- the map's lights (TMUF_TRACK_VISUALS) ----
+
+   Every light a placed block or decoration solid carries (a CPlugTreeLight
+   node: CPlugLight -> GxLightSpot / GxLightBall / GxLightPoint), as the game
+   has it after loading the map: one CHmsLight per tree light. A light file
+   of the same name in the mood's folder replaces the one the solid names
+   (the fid parameters: e.g. Stadium Sunset's StadiumspotBig). They light
+   the cars (vertex lights, HemiSpec highlights) and draw lens flares; the
+   lightmaps have them baked in already.
+
+   Which lights reach an object (CHmsZoneVPacker::AddInteractLights): those
+   whose flags include the pass's bit and whose sphere's box (position +-
+   the pass's radius on each axis) meets the object's world box.
+   - The car's vertex lights (vs Light8Spots/Balls, at most 8 of each):
+     flag DIFFUSE, radius [0]; spots only when their outer cone reaches the
+     car box's bounding sphere (angle to its centre minus asin(its radius /
+     distance) <= outer half angle). This picks exactly the 7 spots of the
+     A01 trace. Their constants, positions and directions moved into the car
+     part's frame:
+       Light8*_Rgb_IRad2      = (diffuse_rgb, 1 / radius[0]^2)
+       Light8Spots_Pos_ICosR  = (position, 1 / (cos_inner - cos_outer))
+       Light8Spots_Dir_CosOt  = (direction, cos_outer)
+       Light8Balls_Pos_Rad2   = (position, radius[0]^2)
+   - HemiSpec (the car's highlights): flag SPECULAR, radius [1]; quad
+     colour specular_rgb * k, k = (1 - d^2 / radius[1]^2) * spot factor
+     (^ falloff), d from the car box's centre.
+   - Lens flares: flag LENS_FLARE, within radius [3] of the camera. */
+
+enum {
+  TMUF_LIGHT_POINT = 0, /* GxLightPoint */
+  TMUF_LIGHT_BALL = 1,  /* GxLightBall: omni within a radius */
+  TMUF_LIGHT_SPOT = 2,  /* GxLightSpot: a ball limited to a cone */
+  TMUF_LIGHT_OTHER = 3, /* another GxLight (frustum, ...): only the GxLight fields are set */
+};
+
+/* GxLight flags (+0x14) */
+enum {
+  TMUF_LIGHT_FLAG_DIFFUSE = 1u << 0,    /* lights (vertex lighting), radius[0] */
+  TMUF_LIGHT_FLAG_RADIUS2 = 1u << 2,    /* radius[2] takes part in its box */
+  TMUF_LIGHT_FLAG_SPECULAR = 1u << 3,   /* specular highlights (HemiSpec), radius[1] */
+  TMUF_LIGHT_FLAG_LENS_FLARE = 1u << 4, /* HasLensFlare */
+};
+
+typedef struct tmuf_light {
+  uint32_t kind;  /* TMUF_LIGHT_* */
+  /* GxLight flags as the game ends up with them: a map tree light gets
+     SPECULAR and LENS_FLARE forced on (CPlugTreeLight::ApplyFidParameters),
+     except a night-only light on a day map, which gets both cleared */
+  uint32_t flags;
+  uint32_t archived_flags; /* the flags as stored */
+  int night_only;          /* CPlugLight flag bit 0 (NightOnly) */
+  uint32_t plug_flags;     /* the CPlugLight's flag word */
+  /* where it is: world (map lights), or the frame of the part `block`
+     (tmuf_vehicle_visuals.lights); a spot shines along the location's +Z */
+  tmuf_iso4 location;
+  float position[3], direction[3]; /* location.t and its +Z axis (r column 2) */
+  float rgb[3];              /* +0x18 */
+  float intensity;           /* +0x24 */
+  float diffuse_intensity;   /* +0x28 */
+  float specular_intensity;  /* +0x58 */
+  float specular_power;      /* +0x54 */
+  float diffuse_rgb[3];      /* rgb * intensity * diffuse_intensity */
+  float specular_rgb[3];     /* rgb * intensity * specular_intensity (GetSpecularRGB) */
+  float flare_intensity;     /* +0x50: lens flare target = flare_intensity * intensity */
+  float flare_size;          /* GxLightPoint +0x5c: the flare's half size (m) */
+  float flare_bias_z;        /* +0x60: occlusion point moved this far toward the camera */
+  /* GxLightBall radii: [0] diffuse, [1] specular, [2] (flag RADIUS2), [3]
+     lens flare range */
+  float radius[4];
+  /* GxLightSpot: full cone angles (degrees) and the cosines of their
+     halves (UpdateCosHalfAngles); falloff: the HemiSpec cone exponent */
+  float angle_inner, angle_outer, angle_flare;
+  float cos_inner, cos_outer, cos_flare;
+  float falloff;
+  /* the lens flare picture (CPlugLight BitmapFlare's image; the renderer's
+     default flare when both are NULL) */
+  const char *flare_file, *flare_pack_file;
+  const char *file;  /* the CPlugLight's file (pack path), "" when inline */
+  uint32_t block;    /* as tmuf_visual_instance.block; vehicle lights: the part */
+  float lod_near, lod_far; /* camera distances of its tree (visual mips) */
+  /* under a decoration tree whose decorator doesn't draw it at the highest
+     quality (the Stadium's "Low" stands, whose lamps mostly repeat the
+     "High" ones'). Information only: the game keeps these lights (at max
+     settings the A01 car is lit by the Low tree's StadiumspotBig lamps) */
+  int decorator_hidden;
+} tmuf_light;
+
+/* The map's lights, NULL/0 unless the track was loaded with
+   TMUF_TRACK_VISUALS. Owned by the track. */
+TMUF_API uint32_t tmuf_track_lights(const tmuf_track *track, const tmuf_light **lights);
+
+/* CHmsCorpusLight::ComputeBBoxInWorld: the box (centre, half extents, in
+   the frame of `location`'s parent) the game files the light under in its
+   light octree, for radius `which` (0..3), or, for which >= 4 (what the
+   octree uses), the largest radius of its flags (DIFFUSE: [0], SPECULAR:
+   [1], RADIUS2: [2]). A ball's box is its sphere's; a spot's the box of its
+   outer cone cut at the radius (GmBoxAligned::SetFromConeAndRadius). The
+   per-object query itself tests the sphere's box (see above). */
+TMUF_API void tmuf_light_box(const tmuf_light *light, uint32_t which, float box[6]);
+
 /* ---- the weather: time of day and the light it gives (TMUF_TRACK_VISUALS) ----
 
    The map's decoration names a mood (CGameCtnDecorationMood: latitude and
@@ -428,6 +528,14 @@ typedef struct tmuf_weather {
   uint32_t skin_entry_count;
   const tmuf_weather_skin_entry *skin_entries;
   tmuf_day_time start; /* the mood's start time: the one the game shows */
+  /* the fid parameter IsNight (CGameCtnDecoration::Init): !(0.25 <
+     remapped_start_day_time < 0.75); Stadium's Sunset (0.75) is night. It
+     switches the cars' lights on and the maps' night-only lights */
+  int is_night;
+  /* the sun has a lens flare (flare_sun, half angle flare_size_sun): the
+     day state is not night and there is a flare picture; the moon never
+     has one (CMotionManagerWeathers::UpdateAsync) */
+  int sun_flare;
   tmuf_weather_sky_clouds sky_clouds; /* the 3D clouds (CFuncClouds' solids) */
 } tmuf_weather;
 
@@ -541,12 +649,58 @@ typedef struct tmuf_vehicle_visual_level {
   const tmuf_vehicle_visual_light *lights;
 } tmuf_vehicle_visual_level;
 
+/* What the car's shaders sample besides its textures, rendered by the game
+   each frame (car_light_spec): the HemiSpec sphere map of the lights'
+   highlights and the LightFromMap view of the lightmapped ground under the
+   car. Values as the car's bitmaps archive them (CPlugBitmapRenderHemisphere,
+   CPlugBitmapRenderLightFromMap), the game's defaults where they don't. */
+typedef struct tmuf_vehicle_lighting {
+  /* the car's box (CPlugTree::UpdateBoundingBox of the vehicle solid's tree:
+     centre, half extents) in the car's frame; HemiSpec's reference point is
+     its centre, LightFromMap's view is built on it */
+  float box[6];
+  int has_hemisphere;
+  /* HemiSpec: each light adds colour * pow(d, exp_l) to rgb and
+     k * pow(d, exp_a) to alpha */
+  float hemi_exp_l, hemi_exp_a;
+  uint32_t hemi_layout;
+  int has_light_from_map;
+  /* LightFromMap's atlas: grid cells per side to start with, at most
+     (doubled while cells^2 < cars) */
+  uint32_t lfm_grid, lfm_grid_max;
+  /* its camera (ComputeCamera_DovObjectY): orthographic, from the car's
+     origin down its -Y, over box x/z centre +- footprint * box half extents
+     (footprint = 1 + 1.5 / 2), depth d (= -y in the car's frame) from
+     -cy - hy + 2 hy * lfm_top to -cy + hy + lfm_depth; the lightmap fades
+     to white as sat((d - (hy - cy + lfm_white * lfm_depth)) /
+     ((1 - lfm_white) * lfm_depth)) */
+  float lfm_footprint;
+  float lfm_top;   /* +0x88 */
+  float lfm_depth; /* +0x8c */
+  float lfm_white; /* +0x90 (not archived: 0.5) */
+  /* as archived: +0x94, +0x98 (a min, max range: the shaders'
+     LightFromMap_ScaleRGB_TransRGB (1, -0) on Stadium comes from this (0, 1)
+     one), +0x9c, +0xa0, +0xa4, +0xa8 (two more ranges the game turns into
+     scale/translation pairs when the zone has no lightmap) */
+  float lfm_values[6];
+  float lfm_up_min; /* +0xac (not archived: 0.8): a second, world-down view
+                       when the car's up vector's y is below it */
+} tmuf_vehicle_lighting;
+
 typedef struct tmuf_vehicle_visuals {
   /* instances: location in the frame of the part `block` */
   tmuf_visuals visuals;
   uint32_t part_count, level_count;
   const tmuf_vehicle_part *parts; /* parents before their children */
   const tmuf_vehicle_visual_level *levels;
+  /* the lights its trees carry (CPlugTreeLight parts, e.g. StadiumCar's
+     1RRLight): location in the frame of the part `block` (the light's own
+     tree: its iso is the part's location). The game sets their intensity
+     each frame (CSceneVehicle::VisualUpdateAsync): IsNight ? 0.5 + 0.5 brake
+     : 0.5 brake, brake = brake input > 0.3 */
+  uint32_t light_count;
+  const tmuf_light *lights;
+  tmuf_vehicle_lighting lighting;
 } tmuf_vehicle_visuals;
 
 /* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the

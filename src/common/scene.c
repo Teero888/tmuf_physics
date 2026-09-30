@@ -252,6 +252,29 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
       v->corpus = s->corpus_count ? s->corpus_count - 1 : 0;
     }
   }
+  /* CPlugTreeLight: the light it places (the game adds one CHmsLight per
+     tree light of the corpus) */
+  if (s->collect_visuals && cls == 0x09062000u && t->light && !s->helper_depth && !s->current_trigger) {
+    if (s->light_count == s->light_cap) {
+      uint32_t cap = s->light_cap ? s->light_cap * 2 : 256;
+      tmuf_scene_light *l = realloc(s->lights, sizeof *l * cap);
+      if (l) {
+        s->lights = l;
+        s->light_cap = cap;
+      }
+    }
+    if (s->light_count < s->light_cap) {
+      tmuf_scene_light *l = &s->lights[s->light_count++];
+      l->owner = ta;
+      l->light = t->light;
+      l->iso = world;
+      l->tag = s->current_block;
+      l->lod_near = lod_near;
+      l->lod_far = lod_far;
+      l->hidden = s->decorator_hidden_depth > 0 || t->decorator_hidden;
+    }
+  }
+  s->decorator_hidden_depth += t->decorator_hidden;
   for (uint32_t i = 0; i < t->child_count; i++) {
     /* CPlugTreeVisualMip level k: drawn from the previous level's distance
        to its own */
@@ -264,6 +287,7 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
     }
     emit_tree_lod(s, ta, t->children[i], &world, depth + 1, n, f);
   }
+  s->decorator_hidden_depth -= t->decorator_hidden;
 }
 
 static void emit_tree(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent, int depth) {
@@ -982,6 +1006,7 @@ static void apply_decorator(tmuf_scene *s, tmuf_asset *da, tmuf_asset *owner, tm
       continue;
     int collide = decorator_condition(d->show, 2) && decorator_condition(d->collision, 2);
     t->flags = collide ? (t->flags | 0x80u) : (t->flags & ~0x80u);
+    t->decorator_hidden = !decorator_condition(d->visible, 2);
     if (debug_enabled())
       fprintf(stderr, "decorator: tree %s collision %d\n", d->tree_id ? d->tree_id : "(root)", collide);
   }
@@ -1120,6 +1145,7 @@ int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower,
 void tmuf_scene_free(tmuf_scene *s) {
   free(s->visuals);
   free(s->visual_remaps);
+  free(s->lights);
   free(s->water_ground_tags);
   free(s->water.cells);
   free(s->triangles);

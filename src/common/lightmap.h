@@ -21,4 +21,8 @@ typedef struct tmuf_lightmap_data {
 int tmuf_lightmap_build(tmuf_lightmap_data *out, tmuf_scene *scene, uint32_t size);
 void tmuf_lightmap_free(tmuf_lightmap_data *lm);
 
+/* CPlugTree::UpdateBoundingBox: a tree's box (centre, half extents) in its
+   parent's frame; returns whether the game counts it valid */
+int tmuf_tree_box(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, float out[6]);
+
 #endif

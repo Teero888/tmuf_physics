@@ -517,6 +517,10 @@ void tmuf_lightmap_place(const tmuf_lightmap *lightmap, uint32_t size, tmuf_ligh
 
 /* ---- the scene's lightmapped corpora ---- */
 
+int tmuf_tree_box(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, float out[6]) {
+  return tree_box(s, owner, tree, out, 0);
+}
+
 int tmuf_lightmap_build(tmuf_lightmap_data *out, tmuf_scene *s, uint32_t size) {
   memset(out, 0, sizeof *out);
   out->scene_corpus_count = s->corpus_count;
