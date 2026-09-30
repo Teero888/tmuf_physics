@@ -171,7 +171,29 @@ typedef struct tmuf_visual_mesh {
   uint32_t sprite_flags;
   uint16_t sprite_atlas[2];
   float sprite_axis[3], sprite_offset[2];
+  /* sub-visuals (CPlugVisual chunk 0x09006005: the frames of a vertex
+     animation, e.g. the Stadium's flags): per sub-visual its first vertex,
+     first index and index count (3 words each). The indices then cover
+     one sub-visual, relative to its first vertex. */
+  uint32_t sub_visual_count;
+  const uint32_t *sub_visuals;
 } tmuf_visual_mesh;
+
+/* Which sub-visual a placed mesh shows over time
+   (CFuncTreeSubVisualSequence, run by the game's CMotionTrackTree on the
+   engine clock T in ms; the Stadium's flags):
+     P = round(1000 period), u = (T + round(P phase)) mod P, t = u / P
+     tk = t key_times[key_count - 1]; a: the key with key_times[a] <= tk < key_times[a + 1]
+     w = rint(255 (tk - key_times[a]) / (key_times[a + 1] - key_times[a])) / 255
+   and the game draws sub-visual key_values[a] tweened toward
+   key_values[a + 1] by w (vertex = (1 - w) first + w second, normals
+   renormalised) */
+typedef struct tmuf_visual_sequence {
+  float period, phase;
+  uint32_t key_count;
+  const float *key_times;
+  const uint32_t *key_values;
+} tmuf_visual_sequence;
 
 /* A texture a material's shader samples: the sampler's name (e.g.
    "Diffuse") and its image file (DDS or TGA): on disk under GameData, or
@@ -410,6 +432,8 @@ typedef struct tmuf_visual_instance {
      tmuf_visuals.mips (UINT32_MAX for none: always drawn) and the level
      (0: the most detailed) */
   uint32_t mip, mip_level;
+  /* its vertex animation (the mesh's sub-visuals), NULL for none */
+  const tmuf_visual_sequence *sequence;
 } tmuf_visual_instance;
 
 /* ---- visual mips: the one level the game draws ----

@@ -495,9 +495,36 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
   m->binormals = pv->binormals;
   m->index_count = pv->index_count - pv->index_count % 3u;
   m->indices = pv->indices;
+  m->sub_visual_count = pv->sub_visual_count;
+  m->sub_visuals = pv->sub_visuals;
   memcpy(m->bounds, pv->bbox, sizeof m->bounds);
   *slot = b->mesh_count++;
   return *slot;
+}
+
+/* a tree's CFuncTreeSubVisualSequence as the public sequence, NULL for none */
+static const tmuf_visual_sequence *sequence_of(builder *b, const tmuf_scene_visual *v) {
+  tmuf_asset *fa = NULL;
+  tmuf_gbx_node *fn = v->func ? tmuf_assets_follow(&b->scene->assets, v->owner, v->func, &fa) : NULL;
+  if (node_class(fn) != 0x05031000u || !fn->data)
+    return NULL;
+  const tmuf_func_tree_sequence *f = fn->data;
+  const tmuf_func_keys *keys = f->has_inline_keys ? &f->inline_keys : NULL;
+  if (!keys && f->keys) {
+    tmuf_gbx_node *kn = tmuf_assets_follow(&b->scene->assets, fa, f->keys, NULL);
+    keys = kn && kn->data ? kn->data : NULL;
+  }
+  if (!f->has_period || !keys || keys->x_count < 2 || keys->natural_count < keys->x_count)
+    return NULL;
+  tmuf_visual_sequence *s = TMUF_ARENA_ARRAY(b->arena, tmuf_visual_sequence, 1);
+  if (!s)
+    return NULL;
+  s->period = f->period;
+  s->phase = f->phase;
+  s->key_count = keys->x_count;
+  s->key_times = keys->xs;
+  s->key_values = keys->naturals;
+  return s;
 }
 
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
@@ -539,6 +566,7 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
     /* only the scene's visuals have mips (tmuf_visuals_build) */
     in->mip = list == scene->visuals ? v->mip : UINT32_MAX;
     in->mip_level = list == scene->visuals ? v->mip_level : 0;
+    in->sequence = b.meshes[mesh].sub_visual_count ? sequence_of(&b, v) : NULL;
   }
   map_free(&b.mesh_map);
   map_free(&b.material_map);

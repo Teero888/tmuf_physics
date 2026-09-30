@@ -292,6 +292,11 @@ static void c09050003(tmuf_gbx *g, void *node, uint32_t id) {
   ((tmuf_plug_tree *)node)->surface = tmuf_gbx_noderef(g);
 }
 
+static void c0904f011(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_plug_tree *)node)->func = tmuf_gbx_noderef(g);
+}
+
 static const tmuf_gbx_chunk TREE_CHUNKS[] = {
     NOPAY(0x0904f000),
     NOPAY(0x0904f001),
@@ -310,7 +315,7 @@ static const tmuf_gbx_chunk TREE_CHUNKS[] = {
     READ(0x0904f00e, c0904f00e),
     NOPAY(0x0904f00f),
     READ(0x0904f010, c0904f010),
-    READ(0x0904f011, skip_noderef),
+    READ(0x0904f011, c0904f011),
     READ(0x0904f012, c0904f012),
     NOPAY(0x0904f013),
     READ(0x0904f014, c0904f014),
@@ -380,9 +385,22 @@ static const tmuf_gbx_class TREE_LIGHT = {0x09062000, "CPlugTreeLight", sizeof(t
 /* ---- CPlugVisual family ---- */
 
 static void c09006005(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  skip_counted(g, 12);
+  tmuf_plug_visual *v = node;
+  const uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "sub-visual count %u", n);
+    return;
+  }
+  uint32_t *s = TMUF_ARENA_ARRAY(g->arena, uint32_t, 3u * (n ? n : 1u));
+  if (!s) {
+    tmuf_gbx_fail(g, "out of memory");
+    return;
+  }
+  for (uint32_t i = 0; i < 3u * n && !g->error; i++)
+    s[i] = tmuf_gbx_u32(g);
+  v->sub_visual_count = n;
+  v->sub_visuals = s;
 }
 
 static void c0900600b(tmuf_gbx *g, void *node, uint32_t id) {
@@ -1884,10 +1902,30 @@ static void c05006001(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_gbx_skip(g, (size_t)n * 28);
 }
 
+/* CFuncKeysNatural: its values (naturals) */
+static void c05030000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_keys *f = node;
+  const uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x100000u) {
+    tmuf_gbx_fail(g, "natural key count %u", n);
+    return;
+  }
+  uint32_t *v = TMUF_ARENA_ARRAY(g->arena, uint32_t, n ? n : 1u);
+  if (!v) {
+    tmuf_gbx_fail(g, "out of memory");
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    v[i] = tmuf_gbx_u32(g);
+  f->natural_count = n;
+  f->naturals = v;
+}
+
 static const tmuf_gbx_chunk FUNC_KEYS_CHUNKS[] = {
     READ(0x05002000, c05002000), READ(0x05002001, c05002001), READ(0x05002002, c05002002),
     READ(0x05002003, c05002003), READ(0x0501a000, c0501a000), READ(0x0501a001, c0501a001),
-    READ(0x05006000, c05006000), READ(0x05006001, c05006001), READ(0x05030000, c05002001),
+    READ(0x05006000, c05006000), READ(0x05006001, c05006001), READ(0x05030000, c05030000),
 };
 static const tmuf_gbx_class FUNC_KEYS = {0x05002000, "CFuncKeys", sizeof(tmuf_func_keys), FUNC_KEYS_CHUNKS,
                                          COUNT(FUNC_KEYS_CHUNKS), NULL};
@@ -1978,6 +2016,38 @@ static const tmuf_gbx_chunk FUNC_PLUG_CHUNKS[] = {
     READ(0x05014000, noderef_array),
 };
 static const tmuf_gbx_class FUNC_PLUG = {0x0500b000, "CFuncPlug", 1, FUNC_PLUG_CHUNKS, COUNT(FUNC_PLUG_CHUNKS), NULL};
+
+/* CFuncTreeSubVisualSequence (0x05031000) */
+static void c0500b005_seq(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_tree_sequence *f = node;
+  f->period = tmuf_gbx_f32(g);
+  f->phase = tmuf_gbx_f32(g);
+  f->has_period = 1;
+  f->auto_motion = tmuf_gbx_bool(g) != 0;
+  tmuf_gbx_bool(g);
+  tmuf_gbx_id(g, NULL);
+}
+
+static void c05031000_seq(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_tree_sequence *f = node;
+  tmuf_gbx_node_body_as(g, &FUNC_KEYS, 0x05030000u, &f->inline_keys); /* CFuncKeysNatural */
+  f->has_inline_keys = !g->error;
+}
+
+static void c05031002_seq(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_func_tree_sequence *)node)->keys = tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk FUNC_TREE_SEQUENCE_CHUNKS[] = {
+    READ(0x0500b005, c0500b005_seq), READ(0x05031000, c05031000_seq), READ(0x05031001, skip_id),
+    READ(0x05031002, c05031002_seq), READ(0x05031003, skip12),
+};
+static const tmuf_gbx_class FUNC_TREE_SEQUENCE = {0x05031000, "CFuncTreeSubVisualSequence",
+                                                  sizeof(tmuf_func_tree_sequence), FUNC_TREE_SEQUENCE_CHUNKS,
+                                                  COUNT(FUNC_TREE_SEQUENCE_CHUNKS), &FUNC_PLUG};
 
 /* ---- CMotion (0x08001000) family ---- */
 
@@ -3146,5 +3216,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
     &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV, &FUNC_SHADERS,
+    &FUNC_TREE_SEQUENCE,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

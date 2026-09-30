@@ -93,6 +93,7 @@ typedef struct tmuf_scene_visual {
   tmuf_asset *owner;
   tmuf_gbx_node *visual;
   tmuf_gbx_node *material, *shader; /* the tree's own, either may be NULL */
+  tmuf_gbx_node *func;              /* the tree's function (CPlugTree 0x0904f011), NULL for none */
   tmuf_iso iso;
   uint32_t tag; /* as tmuf_scene_corpus.tag */
   float lod_near, lod_far; /* camera distances it is drawn at (visual mips) */

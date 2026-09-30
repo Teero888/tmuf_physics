@@ -39,6 +39,7 @@ typedef struct tmuf_plug_tree {
   const float *mip_far_z;
   const uint32_t *mip_level_of;
   tmuf_gbx_node *light; /* CPlugTreeLight: its CPlugLight (chunk 0x09062004) */
+  tmuf_gbx_node *func;  /* chunk 0x0904f011: its function (a CFuncTreeSubVisualSequence) */
   /* set by the scene: a decoration tree its decorator doesn't show at the
      highest quality (CPlugDecoratorTree visible condition) */
   uint8_t decorator_hidden;
@@ -103,6 +104,10 @@ typedef struct tmuf_plug_visual {
   uint32_t index_count;
   const uint16_t *indices;
   tmuf_gbx_node *material;
+  /* chunk 0x09006005: its sub-visuals (SSubVisual: first vertex, first
+     index, index count; 3 words each) */
+  uint32_t sub_visual_count;
+  const uint32_t *sub_visuals;
   /* CPlugVisualSprite (0x09010005, 0x09010006) */
   uint32_t sprite_flags;       /* +0xb0 */
   float sprite_axis[3];        /* +0x98 */
@@ -354,7 +359,20 @@ typedef struct tmuf_func_keys {
   uint32_t mode;
   float range[2];
   tmuf_gbx_node *skeleton; /* CFuncKeysSkel */
+  uint32_t natural_count;  /* CFuncKeysNatural chunk 0x05030000: its values */
+  const uint32_t *naturals;
 } tmuf_func_keys;
+
+/* CFuncTreeSubVisualSequence (0x05031000): which sub-visual of its tree's
+   visual shows, by the keys' natural values over time */
+typedef struct tmuf_func_tree_sequence {
+  int has_period;
+  float period, phase; /* CFuncPlug +0x20, +0x24 (s) */
+  int auto_motion;     /* +0x14 */
+  tmuf_gbx_node *keys; /* chunk 0x05031002: a CFuncKeysNatural */
+  int has_inline_keys; /* the old chunk 0x05031000: the keys inline */
+  tmuf_func_keys inline_keys;
+} tmuf_func_tree_sequence;
 
 typedef struct tmuf_func_skel {
   uint32_t bone_count;

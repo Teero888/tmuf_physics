@@ -331,6 +331,7 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
       v->visual = t->visual;
       v->material = t->material;
       v->shader = t->shader;
+      v->func = t->func;
       v->iso = world;
       v->tag = s->current_block;
       v->lod_near = lod_near;
