@@ -545,11 +545,14 @@ tmuf_gbx_node *tmuf_scene_material_shader(tmuf_scene *s, tmuf_asset *owner, tmuf
     if (cn && cn->data && cn->cls && cn->cls->id == 0x0903a000u)
       *custom = cn->data;
   }
+  /* the device sets of the material, else of its model's model (e.g. a
+     Bay material on IslandSeaGround on a Techno material) */
   const tmuf_plug_material *sets = m;
   tmuf_asset *sets_owner = ma;
-  if (m->model) {
-    tmuf_gbx_node *mm = tmuf_assets_follow(&s->assets, ma, m->model, &sets_owner);
-    if (!mm || !mm->data || !mm->cls || mm->cls->id != 0x09079000u)
+  for (int depth = 0; sets->model && (depth == 0 || !sets->device_count); depth++) {
+    tmuf_asset *from = sets_owner;
+    tmuf_gbx_node *mm = tmuf_assets_follow(&s->assets, from, sets->model, &sets_owner);
+    if (depth > 8 || !mm || !mm->data || !mm->cls || mm->cls->id != 0x09079000u)
       return NULL;
     sets = mm->data;
   }

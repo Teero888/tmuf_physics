@@ -196,6 +196,12 @@ typedef struct tmuf_visual_texture {
      rgb, occlusion in alpha, on the uv set of its "Occlusion"); texcoord,
      generate and transform are then unset */
   int unbound;
+  /* CPlugBitmapAddress's 4x4 texcoord matrix (chunk 0x09047007 flag 2, a
+     GmMat4 as stored, rows of 4), when has_matrix: the generated
+     coordinates are transformed by it (e.g. the Fresnel lookups of the
+     PX2 shaders) */
+  int has_matrix;
+  float matrix[16];
 } tmuf_visual_texture;
 
 /* The shader the game draws a surface with (CPlugMaterial's supported

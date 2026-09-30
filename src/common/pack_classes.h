@@ -161,6 +161,8 @@ typedef struct tmuf_plug_bitmap_address {
   uint32_t address_flags; /* bits 15..19: texcoord set, 31 generated from the position */
   int has_transform;
   float transform[6];
+  int has_matrix; /* a GmMat4 texcoord transform (chunk 0x09047007 flag 2) */
+  float matrix[16];
 } tmuf_plug_bitmap_address;
 
 /* CPlugBitmap: the render it is updated by (pixel update Render), if any */

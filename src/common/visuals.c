@@ -163,6 +163,8 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
     t[n].generate = ad->has_address ? ad->address_flags & 0xffu : 0u;
     t[n].has_transform = ad->has_transform;
     memcpy(t[n].transform, ad->transform, sizeof t[n].transform);
+    t[n].has_matrix = ad->has_matrix;
+    memcpy(t[n].matrix, ad->matrix, sizeof t[n].matrix);
     if (bitmap)
       bitmap_file(b, bowner, bitmap, &t[n], ad->has_address && (ad->address_flags & 0x1000u));
     n++;

@@ -1044,14 +1044,19 @@ static void c09047007(tmuf_gbx *g, void *node, uint32_t id) {
   a->address_flags = tmuf_gbx_u32(g);
   a->has_address = 1;
   tmuf_gbx_noderef(g);
+  /* CPlugBitmapAddress::Chunk 0x09047007: bit 0 a GmIso3 (2x3), bit 1 a
+     GmMat4 texcoord transform, archived in that order */
   uint8_t has_transform = tmuf_gbx_u8(g);
-  if (has_transform > 1) {
+  if (has_transform > 3) {
     tmuf_gbx_fail(g, "bitmap address transform flag %u", has_transform);
     return;
   }
-  a->has_transform = has_transform;
-  for (int i = 0; i < 6 && has_transform; i++)
+  a->has_transform = has_transform & 1;
+  for (int i = 0; i < 6 && a->has_transform; i++)
     a->transform[i] = tmuf_gbx_f32(g);
+  a->has_matrix = (has_transform >> 1) & 1;
+  for (int i = 0; i < 16 && a->has_matrix; i++)
+    a->matrix[i] = tmuf_gbx_f32(g);
 }
 
 static const tmuf_gbx_chunk BITMAP_SAMPLER_CHUNKS[] = {
@@ -1120,11 +1125,37 @@ static void bitmap_u32_array(tmuf_gbx *g, void *node, uint32_t id) {
    an inline image the render updating it */
 static void bitmap_image(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_plug_bitmap *b = node;
-  tmuf_gbx_node *image = tmuf_gbx_noderef(g);
-  b->image = image;
-  tmuf_gbx_skip(g, 24);
-  if ((id == 0x09011018 || id == 0x09011022) && image && !image->external)
+  b->image = tmuf_gbx_noderef(g);
+  uint8_t data[8];
+  tmuf_gbx_read(g, data, 8);
+  tmuf_gbx_skip(g, 16);
+  if (id != 0x09011018 && id != 0x09011022)
+    return;
+  /* CPlugBitmap::ArchivePixelUpdateOld22, by the pixel update mode (the
+     second byte of the 8 at +0x4c): 4 the render updating it, 7 specular
+     highlights, 8 a natural */
+  switch (data[1]) {
+  case 4:
     b->render = tmuf_gbx_noderef(g);
+    break;
+  case 5:
+    tmuf_gbx_fail(g, "bitmap pixel update 5");
+    break;
+  case 7: {
+    uint32_t n = tmuf_gbx_u32(g);
+    if (n > 0x10000u) {
+      tmuf_gbx_fail(g, "bitmap highlights %u", n);
+      return;
+    }
+    tmuf_gbx_skip(g, (size_t)n * 16);
+    break;
+  }
+  case 8:
+    tmuf_gbx_skip(g, 4);
+    break;
+  default:
+    break;
+  }
 }
 
 static const tmuf_gbx_chunk BITMAP_CHUNKS[] = {
@@ -1875,6 +1906,8 @@ static const tmuf_gbx_chunk FUNC_PLUG_CHUNKS[] = {
     READ(0x0500b003, skip12),    READ(0x0500b004, skip16),   READ(0x0500b005, skip16_id),
     READ(0x05031000, c05031000), READ(0x05031001, skip_id),  READ(0x05031002, skip_noderef),
     READ(0x05031003, skip12),
+    /* CFuncShaders::Chunk: its CFuncShader nodes */
+    READ(0x05014000, noderef_array),
 };
 static const tmuf_gbx_class FUNC_PLUG = {0x0500b000, "CFuncPlug", 1, FUNC_PLUG_CHUNKS, COUNT(FUNC_PLUG_CHUNKS), NULL};
 
