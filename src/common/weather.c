@@ -654,20 +654,6 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
     }
   }
 
-  /* the clouds' colours as the mood's skin has them (its CloudsMinColor and
-     CloudsMaxColor in place of the weather's CloudsMin/MaxRGBCloudy): the
-     mood's FuncClouds names the Day folder's pictures, but the game's clouds
-     take the mood's (Sunset's are pink) */
-  for (uint32_t i = 0; i < b.entry_count; i++) {
-    const tmuf_weather_skin_entry *e = &b.entries[i];
-    if (!e->file.file && !e->file.pack_file)
-      continue;
-    if (ieq(e->name, "CloudsMinColor"))
-      w->clouds_min = e->file;
-    else if (ieq(e->name, "CloudsMaxColor"))
-      w->clouds_max = e->file;
-  }
-
   /* the clouds map's layer: the skin's "Clouds" CFuncShaderLayerUV */
   for (uint32_t i = 0; i < b.entry_count && !w->has_clouds_layer; i++) {
     const tmuf_weather_skin_entry *e = &b.entries[i];
