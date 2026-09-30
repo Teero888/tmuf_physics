@@ -22,6 +22,21 @@ int tmuf_zlib_uncompress(const uint8_t *in, size_t in_size, uint8_t *out, size_t
   return ok;
 }
 
+int tmuf_inflate_raw(const uint8_t *in, size_t in_size, uint8_t *out, size_t out_size) {
+  z_stream z;
+  memset(&z, 0, sizeof z);
+  if (in_size > 0xffffffffu || out_size > 0xffffffffu || inflateInit2(&z, -MAX_WBITS) != Z_OK)
+    return 0;
+  z.next_in = (Bytef *)(uintptr_t)in;
+  z.avail_in = (uInt)in_size;
+  z.next_out = out;
+  z.avail_out = (uInt)out_size;
+  int status = inflate(&z, Z_FINISH);
+  int ok = status == Z_STREAM_END && z.avail_out == 0;
+  inflateEnd(&z);
+  return ok;
+}
+
 /* ---- LZO1X ---- */
 
 int tmuf_lzo1x_decompress(const uint8_t *in, size_t in_size, uint8_t *out, size_t out_size) {

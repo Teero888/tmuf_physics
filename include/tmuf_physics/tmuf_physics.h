@@ -390,6 +390,11 @@ TMUF_API void *tmuf_replay_write(const tmuf_track *track, const tmuf_input *inpu
 /* Frees memory the library returned (tmuf_replay_write). */
 TMUF_API void tmuf_free(void *p);
 
+/* A file of a zip archive (the game's skins and lightmap caches), by its
+   name inside it (case-insensitive): its bytes (free them with tmuf_free), or
+   NULL when it is not there or cannot be read. */
+TMUF_API void *tmuf_zip_extract(const void *zip, size_t size, const char *name, size_t *out_size);
+
 #ifdef __cplusplus
 }
 #endif

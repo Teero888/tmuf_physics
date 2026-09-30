@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common/compress.h"
 #include "common/controls.h"
 
 void tmuf_set_error(char *err, size_t err_size, const char *fmt, ...) {
@@ -239,4 +240,66 @@ void tmuf_track_base_free(tmuf_track_base *b) {
   tmuf_arena_free(&b->arena);
   free(b->map_data);
   memset(b, 0, sizeof *b);
+}
+
+/* ---- zip archives (skins, lightmap caches) ---- */
+
+static uint32_t zip_u32(const uint8_t *p) { return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24; }
+static uint32_t zip_u16(const uint8_t *p) { return (uint32_t)p[0] | (uint32_t)p[1] << 8; }
+
+static int zip_name_eq(const uint8_t *a, uint32_t n, const char *b) {
+  if (strlen(b) != n)
+    return 0;
+  for (uint32_t i = 0; i < n; i++) {
+    int x = a[i], y = (unsigned char)b[i];
+    if (x >= 'A' && x <= 'Z') x += 32;
+    if (y >= 'A' && y <= 'Z') y += 32;
+    if (x != y)
+      return 0;
+  }
+  return 1;
+}
+
+void *tmuf_zip_extract(const void *zip, size_t size, const char *name, size_t *out_size) {
+  const uint8_t *z = zip;
+  if (!z || size < 22 || !name)
+    return NULL;
+  /* the end of central directory record, within its comment's reach */
+  size_t eocd = size - 22;
+  for (;; eocd--) {
+    if (zip_u32(z + eocd) == 0x06054b50u)
+      break;
+    if (eocd == 0 || size - eocd > 22 + 65535)
+      return NULL;
+  }
+  const uint32_t entries = zip_u16(z + eocd + 10), cd = zip_u32(z + eocd + 16);
+  size_t at = cd;
+  for (uint32_t i = 0; i < entries; i++) {
+    if (at + 46 > size || zip_u32(z + at) != 0x02014b50u)
+      return NULL;
+    const uint32_t method = zip_u16(z + at + 10), csize = zip_u32(z + at + 20), usize = zip_u32(z + at + 24);
+    const uint32_t nlen = zip_u16(z + at + 28), xlen = zip_u16(z + at + 30), clen = zip_u16(z + at + 32);
+    const uint32_t local = zip_u32(z + at + 42);
+    if (at + 46 + nlen > size)
+      return NULL;
+    if (zip_name_eq(z + at + 46, nlen, name)) {
+      if ((size_t)local + 30 > size || zip_u32(z + local) != 0x04034b50u)
+        return NULL;
+      const size_t data = (size_t)local + 30 + zip_u16(z + local + 26) + zip_u16(z + local + 28);
+      if (data + csize > size || (method != 0 && method != 8))
+        return NULL;
+      uint8_t *out = malloc(usize ? usize : 1);
+      if (!out)
+        return NULL;
+      if (method == 0 ? (csize == usize && (memcpy(out, z + data, usize), 1))
+                      : tmuf_inflate_raw(z + data, csize, out, usize)) {
+        *out_size = usize;
+        return out;
+      }
+      free(out);
+      return NULL;
+    }
+    at += 46 + nlen + xlen + clen;
+  }
+  return NULL;
 }
