@@ -97,7 +97,22 @@ typedef struct tmuf_scene_visual {
   uint32_t tag; /* as tmuf_scene_corpus.tag */
   float lod_near, lod_far; /* camera distances it is drawn at (visual mips) */
   uint32_t corpus; /* index into tmuf_scene.corpora */
+  /* the innermost CPlugTreeVisualMip level it belongs to: index into
+     tmuf_scene.mips (UINT32_MAX for none) and the level */
+  uint32_t mip, mip_level;
 } tmuf_scene_visual;
+
+/* A placed CPlugTreeVisualMip (only with TMUF_SCENE_VISUALS), see
+   tmuf_visual_mip */
+typedef struct tmuf_scene_mip {
+  uint32_t corpus;
+  uint32_t parent, parent_level; /* the mip level holding it, UINT32_MAX for none */
+  uint32_t rule;                 /* TMUF_VISUAL_MIP_* */
+  float box[6];                  /* the tree's box (CPlugTree+0x34) in world */
+  float sphere[4];               /* its lowest level's packed box: centre, half diagonal */
+  uint32_t level_count;
+  const float *far_z;
+} tmuf_scene_mip;
 
 /* A light a placed solid's tree carries (CPlugTreeLight, only with
    TMUF_SCENE_VISUALS): its CPlugLight reference (in the asset holding the
@@ -130,6 +145,9 @@ typedef struct tmuf_scene {
   tmuf_scene_visual *visuals; /* only with TMUF_SCENE_VISUALS */
   uint32_t light_count, light_cap;
   tmuf_scene_light *lights; /* only with TMUF_SCENE_VISUALS */
+  uint32_t mip_count, mip_cap;
+  tmuf_scene_mip *mips;                    /* only with TMUF_SCENE_VISUALS */
+  uint32_t current_mip, current_mip_level; /* while emitting */
   int decorator_hidden_depth;
   uint32_t *water_ground_tags; /* geometry water, while building: per cell the tag of the
                                   ground block of a wet zone, UINT32_MAX if none */

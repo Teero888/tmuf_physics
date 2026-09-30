@@ -33,6 +33,11 @@ typedef struct tmuf_plug_tree {
      distance it applies from */
   uint32_t mip_first, mip_count;
   const float *mip_distances;
+  /* all its archived levels, the empty ones included (the game keeps them):
+     their far Zs (CPlugTreeVisualMip+0xb4) and, per child above, its level */
+  uint32_t mip_levels;
+  const float *mip_far_z;
+  const uint32_t *mip_level_of;
   tmuf_gbx_node *light; /* CPlugTreeLight: its CPlugLight (chunk 0x09062004) */
   /* set by the scene: a decoration tree its decorator doesn't show at the
      highest quality (CPlugDecoratorTree visible condition) */

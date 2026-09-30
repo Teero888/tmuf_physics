@@ -232,19 +232,119 @@ typedef struct tmuf_visual_instance {
   uint32_t block;    /* the map block that placed it, or a tag with the top bit set */
   /* level of detail (CPlugTreeVisualMip): the game draws it while the
      camera is between these distances (0 and FLT_MAX when it has no
-     levels); the levels of one mip share their placement */
+     levels); the levels of one mip share their placement. A rough
+     guide: the game picks the level per frame from the mip's nearest
+     depth, see tmuf_visual_mip */
   float lod_near, lod_far;
   /* the corpus that places it in the lightmap atlas: index into
      tmuf_lightmap.corpora, UINT32_MAX when it has none */
   uint32_t lightmap;
+  /* the innermost CPlugTreeVisualMip level it is part of: index into
+     tmuf_visuals.mips (UINT32_MAX for none: always drawn) and the level
+     (0: the most detailed) */
+  uint32_t mip, mip_level;
 } tmuf_visual_instance;
+
+/* ---- visual mips: the one level the game draws ----
+
+   A CPlugTreeVisualMip holds levels of detail of the same thing, level 0
+   the most detailed, each with a far Z. The game draws exactly one level
+   of each placed mip per frame (none of the others), chosen from a depth z:
+
+     level = tmuf_visual_mip_level(mip, z)
+
+   (CPlugTreeVisualMip::SetQualityFromMinZ: z is first scaled by
+   GeomLodScaleZ, 1 at the highest quality and without automatic LOD; pass
+   z * scale otherwise). The mapping is SetDistributionFromFarZs's: with
+   n levels and far Zs F[0..n-1] (F[n-1] is never read)
+
+     n <= 1: level 0
+     n == 2: level 0 up to F[0] (+ 1e-5), then 1
+     n == 3: level 0 up to F[0] (+ 1e-5 of F[1] - F[0]), 1 up to F[1]
+             (- 1e-5 of it), then 2
+     n >= 4: t = (z - F[0]) / (F[n-2] - F[0]); t < 1e-5: level 0;
+             t > 0.99999: n - 1; else bin i = round_even(5 t - 0.5) (about
+             floor(5 t)) and level table[i]: the smallest L >= 1 (at most
+             n - 1) with F[L] >= F[0] + i (F[n-2] - F[0]) / 5, i.e. the
+             level whose range holds the bin's near edge: the levels
+             between the first and the last switch only at fifths of the
+             range
+
+   in binary32 with the game's operation order (z0, scale, table below).
+   z is the mip's nearest depth (view space, along the camera's forward
+   axis, positive in front) times f = (top - bottom) / 2 of the frustum at
+   unit depth: tan(fov_y / 2) for a centred perspective (the game's
+   GmFrustum +0x14 - +0x08 halved; RenderStaticTrees passes the same
+   factor), 1 (tree rule) or 0 (packed rule: every mip then at level 0) for
+   an orthographic camera. The depth depends on how the mip is drawn
+   (rule):
+
+   TMUF_VISUAL_MIP_TREE (CHmsViewport::RenderTree ->
+   CPlugTreeVisualMip::RenderBefore; dynamic solids, and mips inside the
+   upper levels of a packed mip): the box (GmBoxAligned::SetMult of the
+   mip tree's box into view space; here in world, as the game's box is in
+   the parent's frame: the same for the blocks' quarter turns) and its
+   smallest z:  z = (c.z - h.z) * f.
+
+   TMUF_VISUAL_MIP_PACKED (the static solids' mips, CHmsZoneVPacker): the
+   sphere around the box of the objects of the mip's lowest level (the
+   level the packer merges into its cells), centre c and radius r in
+   world; with the frustum's near plane, depth d(c) of the centre:
+     z = ((d(c) - near) - r) * f
+   (CHmsZoneVPacker::CellAreAllMipLow, the world plane of the near clip
+   plane: -(plane . c + w) - r). The packer also draws every mip of an
+   octree cell at its lowest level when the cell's own sphere (the box of
+   all its objects) gives z >= the largest F[n-2] of its mips; that early
+   out isn't modelled here (its cells come from the zone's loose octree),
+   it only differs from the per-mip rule close to the lowest level's
+   distance.
+
+   TMUF_VISUAL_MIP_HIDDEN: the game never draws it (a static one-level
+   mip, or a mip inside a packed mip's lowest level).
+
+   The viewport's flags force a level for all (0x04 or 0x100: level 0,
+   0x80: the lowest); mips nest: a visual is drawn when its mip's chosen
+   level is its mip_level, and its mip's parent's chosen level is the
+   mip's parent_level, and so on. */
+enum {
+  TMUF_VISUAL_MIP_TREE = 0,
+  TMUF_VISUAL_MIP_PACKED = 1,
+  TMUF_VISUAL_MIP_HIDDEN = 2,
+};
+
+typedef struct tmuf_visual_mip {
+  uint32_t rule;                 /* TMUF_VISUAL_MIP_* */
+  uint32_t parent, parent_level; /* the mip level holding it; UINT32_MAX for none */
+  float box[6];                  /* TREE: the mip tree's box in world (centre, half extents) */
+  float sphere[4];               /* PACKED: centre and radius in world */
+  uint32_t level_count;          /* archived levels, empty ones included */
+  const float *far_z;            /* level_count far Zs */
+  /* SetDistributionFromFarZs: t = (z - z0) * scale, then the table */
+  float z0, scale;
+  uint32_t table_count;
+  uint32_t table[5];
+  uint32_t block; /* as tmuf_visual_instance.block */
+} tmuf_visual_mip;
 
 typedef struct tmuf_visuals {
   uint32_t mesh_count, material_count, instance_count;
   const tmuf_visual_mesh *meshes;
   const tmuf_visual_material *materials;
   const tmuf_visual_instance *instances;
+  uint32_t mip_count; /* the map's (0 for the vehicle and the clouds) */
+  const tmuf_visual_mip *mips;
 } tmuf_visuals;
+
+/* CPlugTreeVisualMip::SetQualityFromMinZ: the level the game draws at depth
+   z (see above), 0 .. level_count - 1 */
+TMUF_API uint32_t tmuf_visual_mip_level(const tmuf_visual_mip *mip, float z);
+
+/* The depth the game feeds tmuf_visual_mip_level for a camera: view_z maps
+   a world point to its depth along the camera's forward axis (depth =
+   view_z[0] x + view_z[1] y + view_z[2] z + view_z[3]), near_z the near
+   plane, f as above. By the mip's rule (the level for HIDDEN is
+   meaningless). */
+TMUF_API float tmuf_visual_mip_z(const tmuf_visual_mip *mip, const float view_z[4], float near_z, float f);
 
 /* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the
    track. */

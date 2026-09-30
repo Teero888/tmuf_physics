@@ -517,6 +517,10 @@ void tmuf_lightmap_place(const tmuf_lightmap *lightmap, uint32_t size, tmuf_ligh
 
 /* ---- the scene's lightmapped corpora ---- */
 
+void tmuf_box_mult(float out[6], const float b[6], const tmuf_iso *iso) { box_mult(out, b, iso); }
+
+void tmuf_box_union(float a[6], const float b[6]) { box_union(a, b); }
+
 int tmuf_tree_box(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, float out[6]) {
   return tree_box(s, owner, tree, out, 0);
 }

@@ -14,6 +14,7 @@ typedef struct tmuf_visuals_data {
   tmuf_visual_mesh *meshes;
   tmuf_visual_material *materials;
   tmuf_visual_instance *instances;
+  tmuf_visual_mip *mips;
 } tmuf_visuals_data;
 
 /* Mesh data points into the scene's assets, strings into arena: both must

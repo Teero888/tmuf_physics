@@ -25,4 +25,9 @@ void tmuf_lightmap_free(tmuf_lightmap_data *lm);
    parent's frame; returns whether the game counts it valid */
 int tmuf_tree_box(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, float out[6]);
 
+/* GmBoxAligned::SetMult (box by iso) and Union, in the game's operation
+   order */
+void tmuf_box_mult(float out[6], const float b[6], const tmuf_iso *iso);
+void tmuf_box_union(float a[6], const float b[6]);
+
 #endif

@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "common/lightmap.h"
 #include "common/pack_classes.h"
 
 /* ---- GmIso4 math, in the game's operation order ---- */
@@ -190,6 +191,91 @@ int tmuf_scene_raise_mesh(const tmuf_plug_surface_geom *geom, uint32_t raise, fl
   return 1;
 }
 
+/* A placed CPlugTreeVisualMip: where the game's two level choices read
+   their distance from (see tmuf_visual_mip). */
+static uint32_t add_mip(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_plug_tree *t, const tmuf_iso *parent) {
+  if (!s->collect_visuals || s->helper_depth || s->current_trigger)
+    return UINT32_MAX;
+  if (s->mip_count == s->mip_cap) {
+    uint32_t cap = s->mip_cap ? s->mip_cap * 2 : 256;
+    tmuf_scene_mip *m = realloc(s->mips, sizeof *m * cap);
+    if (!m)
+      return UINT32_MAX;
+    s->mips = m;
+    s->mip_cap = cap;
+  }
+  tmuf_scene_mip *m = &s->mips[s->mip_count];
+  m->corpus = s->corpus_count ? s->corpus_count - 1 : 0;
+  m->parent = s->current_mip;
+  m->parent_level = s->current_mip == UINT32_MAX ? UINT32_MAX : s->current_mip_level;
+  m->level_count = t->mip_levels;
+  m->far_z = t->mip_far_z;
+  /* CPlugTree+0x34 (UpdateBoundingBox: in the parent's frame), taken to
+     world by the parent's location */
+  float box[6];
+  tmuf_tree_box(s, owner, tree_node, box);
+  tmuf_box_mult(m->box, box, parent);
+  m->sphere[0] = m->sphere[1] = m->sphere[2] = m->sphere[3] = 0.0f;
+  /* CHmsZoneVPacker::AddTree packs the static corpora: a mip of at least
+     two levels that isn't inside a packed mip's lowest level has its lowest
+     level packed and the others drawn as trees; a one-level mip, or any mip
+     inside a packed lowest level, is never drawn. Mips of dynamic corpora
+     and those inside a packed mip's upper levels are drawn by
+     CHmsViewport::RenderTree. */
+  const int is_static = m->corpus < s->corpus_count && s->corpora[m->corpus].is_static;
+  uint32_t packed_parent = 0, in_packed_lowest = 0;
+  for (uint32_t p = m->parent, level = m->parent_level; p != UINT32_MAX; level = s->mips[p].parent_level, p = s->mips[p].parent)
+    if (s->mips[p].rule == TMUF_VISUAL_MIP_PACKED) {
+      packed_parent = 1;
+      in_packed_lowest = level + 1 == s->mips[p].level_count;
+      break;
+    }
+  if (is_static && (in_packed_lowest || (!packed_parent && t->mip_levels < 2)))
+    m->rule = TMUF_VISUAL_MIP_HIDDEN;
+  else if (is_static && !packed_parent)
+    m->rule = TMUF_VISUAL_MIP_PACKED;
+  else
+    m->rule = TMUF_VISUAL_MIP_TREE;
+  return s->mip_count++;
+}
+
+/* The box CHmsZoneVPacker::AddTree gathers for a packed mip
+   (STreeMipLocated): the union of the world boxes of the objects of its
+   lowest level (a visual with a shader: the visual's box by its tree's
+   location), or, when that level adds none, the mip tree's box by the
+   mip's own location (CHmsZoneVPacker::AddNewSolid);
+   CHmsVPackerCell::AddTreeMip keeps its centre and half diagonal. */
+static void mip_packed_sphere(tmuf_scene *s, uint32_t mip, uint32_t first_visual, tmuf_asset *owner, tmuf_gbx_node *tree_node,
+                              const tmuf_iso *location) {
+  tmuf_scene_mip *m = &s->mips[mip];
+  if (m->rule != TMUF_VISUAL_MIP_PACKED)
+    return;
+  float box[6] = {0.0f, 0.0f, 0.0f, -1.0f, -1.0f, -1.0f};
+  uint32_t objects = 0;
+  for (uint32_t i = first_visual; i < s->visual_count; i++) {
+    const tmuf_scene_visual *v = &s->visuals[i];
+    if (v->mip != mip || v->mip_level + 1 != m->level_count || (!v->material && !v->shader))
+      continue;
+    tmuf_asset *va;
+    tmuf_gbx_node *vn = tmuf_assets_follow(&s->assets, v->owner, v->visual, &va);
+    if (!vn || !vn->data || !vn->cls || vn->cls->id != 0x09006000u)
+      continue;
+    float vb[6];
+    tmuf_box_mult(vb, ((const tmuf_plug_visual *)vn->data)->bbox, &v->iso);
+    tmuf_box_union(box, vb);
+    objects++;
+  }
+  if (!objects) {
+    float tb[6];
+    tmuf_tree_box(s, owner, tree_node, tb);
+    tmuf_box_mult(box, tb, location);
+  }
+  memcpy(m->sphere, box, 3 * sizeof *box);
+  float r = box[4] * box[4] + box[3] * box[3];
+  r = r + box[5] * box[5];
+  m->sphere[3] = sqrtf(r);
+}
+
 static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_node, const tmuf_iso *parent, int depth,
                           float lod_near, float lod_far) {
   if (depth > 64)
@@ -250,6 +336,8 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
       v->lod_near = lod_near;
       v->lod_far = lod_far;
       v->corpus = s->corpus_count ? s->corpus_count - 1 : 0;
+      v->mip = s->current_mip;
+      v->mip_level = s->current_mip_level;
     }
   }
   /* CPlugTreeLight: the light it places (the game adds one CHmsLight per
@@ -275,18 +363,29 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
     }
   }
   s->decorator_hidden_depth += t->decorator_hidden;
+  const uint32_t mip = cls == 0x09015000u ? add_mip(s, owner, tree_node, t, parent) : UINT32_MAX;
+  const uint32_t first_visual = s->visual_count;
   for (uint32_t i = 0; i < t->child_count; i++) {
     /* CPlugTreeVisualMip level k: drawn from the previous level's distance
        to its own */
     float n = lod_near, f = lod_far;
+    const uint32_t outer_mip = s->current_mip, outer_level = s->current_mip_level;
     if (t->mip_count && i >= t->mip_first) {
       const uint32_t k = i - t->mip_first;
       const float from = k ? t->mip_distances[k - 1] : 0.0f, to = t->mip_distances[k];
       n = from > n ? from : n;
       f = to < f ? to : f;
+      if (mip != UINT32_MAX) {
+        s->current_mip = mip;
+        s->current_mip_level = t->mip_level_of[k];
+      }
     }
     emit_tree_lod(s, ta, t->children[i], &world, depth + 1, n, f);
+    s->current_mip = outer_mip;
+    s->current_mip_level = outer_level;
   }
+  if (mip != UINT32_MAX)
+    mip_packed_sphere(s, mip, first_visual, owner, tree_node, &world);
   s->decorator_hidden_depth -= t->decorator_hidden;
 }
 
@@ -1020,6 +1119,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   s->collect_triangles = (flags & TMUF_SCENE_TRIANGLES) != 0;
   s->collect_visuals = (flags & TMUF_SCENE_VISUALS) != 0;
   s->rand_state = 1;
+  s->current_mip = UINT32_MAX;
   tmuf_assets_init(&s->assets, set);
   /* the map's own collection holds its blocks and zones; the decoration
      may come from another one (e.g. a Stadium map on a Bay decoration) */
@@ -1149,6 +1249,7 @@ void tmuf_scene_free(tmuf_scene *s) {
   free(s->visuals);
   free(s->visual_remaps);
   free(s->lights);
+  free(s->mips);
   free(s->water_ground_tags);
   free(s->water.cells);
   free(s->triangles);

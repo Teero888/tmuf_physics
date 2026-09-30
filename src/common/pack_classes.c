@@ -342,14 +342,21 @@ static void c09015002(tmuf_gbx *g, void *node, uint32_t id) {
     memcpy(children, t->children, sizeof *children * t->child_count);
   t->children = children;
   float *distances = TMUF_ARENA_ARRAY(g->arena, float, n ? n : 1);
+  float *far_z = TMUF_ARENA_ARRAY(g->arena, float, n ? n : 1);
+  uint32_t *level_of = TMUF_ARENA_ARRAY(g->arena, uint32_t, n ? n : 1);
   t->mip_first = t->child_count;
   t->mip_count = 0;
   t->mip_distances = distances;
+  t->mip_levels = 0;
+  t->mip_far_z = far_z;
+  t->mip_level_of = level_of;
   for (uint32_t i = 0; i < n && !g->error; i++) {
     float d;
     read_floats(g, &d, 1);
     tmuf_gbx_node *c = tmuf_gbx_noderef(g);
+    far_z[t->mip_levels++] = d;
     if (c) {
+      level_of[t->mip_count] = i;
       distances[t->mip_count++] = d;
       t->children[t->child_count++] = c;
     }

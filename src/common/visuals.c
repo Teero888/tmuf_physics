@@ -335,6 +335,9 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
     in->lod_near = v->lod_near;
     in->lod_far = v->lod_far;
     in->lightmap = lightmap_of_corpus && v->corpus < scene->corpus_count ? lightmap_of_corpus[v->corpus] : UINT32_MAX;
+    /* only the scene's visuals have mips (tmuf_visuals_build) */
+    in->mip = list == scene->visuals ? v->mip : UINT32_MAX;
+    in->mip_level = list == scene->visuals ? v->mip_level : 0;
   }
   map_free(&b.mesh_map);
   map_free(&b.material_map);
@@ -354,9 +357,96 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
   return 1;
 }
 
+/* CPlugTreeVisualMip::SetDistributionFromFarZs (the bin count, a static of
+   the game, is 5) */
+#define MIP_BINS 5u
+
+static void mip_distribution(tmuf_visual_mip *m) {
+  const uint32_t n = m->level_count;
+  const float *far_z = m->far_z;
+  m->table_count = 1;
+  if (n <= 2) {
+    m->table[0] = 0;
+    m->z0 = n <= 1 ? (float)0x1.9999986666660p+124 : far_z[0];
+    m->scale = 100000.0f;
+    return;
+  }
+  m->z0 = far_z[0];
+  if (n == 3) {
+    m->table[0] = 1;
+    m->scale = 1.0f / (far_z[1] - far_z[0]);
+    return;
+  }
+  const float range = far_z[n - 2] - far_z[0];
+  m->scale = 1.0f / range;
+  m->table_count = MIP_BINS;
+  uint32_t level = 1;
+  for (uint32_t i = 0; i < MIP_BINS; i++) {
+    const float z = (float)i * range / (float)MIP_BINS + m->z0;
+    while (level + 1 < n && far_z[level] < z)
+      level++;
+    m->table[i] = level;
+  }
+}
+
+uint32_t tmuf_visual_mip_level(const tmuf_visual_mip *mip, float z) {
+  const uint32_t n = mip->level_count;
+  const float t = (z - mip->z0) * mip->scale;
+  if (!(t >= 1e-5f) && !isnan(t))
+    return 0;
+  if ((double)t > 0x1.fffebp-1 || isnan(t))
+    return n ? n - 1 : 0;
+  const float bin = (float)mip->table_count * t - 0.5f;
+  const long i = lrintf(bin);
+  uint32_t level = i >= 0 && (unsigned long)i < mip->table_count ? mip->table[i] : 0;
+  if (level >= n)
+    level = n ? n - 1 : 0;
+  return level;
+}
+
+float tmuf_visual_mip_z(const tmuf_visual_mip *mip, const float view_z[4], float near_z, float f) {
+  if (mip->rule == TMUF_VISUAL_MIP_PACKED) {
+    /* the near clip plane in world: normal -forward, -(plane . c + w) */
+    const float *c = mip->sphere;
+    const float p0 = -view_z[0], p1 = -view_z[1], p2 = -view_z[2], w = near_z - view_z[3];
+    const float d = -(((p1 * c[1] + p0 * c[0]) + p2 * c[2]) + w);
+    return (d - mip->sphere[3]) * f;
+  }
+  /* GmBoxAligned::SetMult's z row, then the box's smallest z */
+  const float *b = mip->box;
+  const float cz = ((view_z[1] * b[1] + view_z[0] * b[0]) + view_z[2] * b[2]) + view_z[3];
+  const float hz = (fabsf(view_z[1]) * b[4] + fabsf(view_z[0]) * b[3]) + fabsf(view_z[2]) * b[5];
+  return (cz - hz) * f;
+}
+
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
                        tmuf_arena *arena) {
-  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL);
+  if (!build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0, 1, NULL))
+    return 0;
+  if (!scene->mip_count)
+    return 1;
+  tmuf_visual_mip *mips = calloc(scene->mip_count, sizeof *mips);
+  if (!mips) {
+    tmuf_visuals_free(out);
+    return 0;
+  }
+  for (uint32_t i = 0; i < scene->mip_count; i++) {
+    const tmuf_scene_mip *sm = &scene->mips[i];
+    tmuf_visual_mip *m = &mips[i];
+    m->rule = sm->rule;
+    m->parent = sm->parent;
+    m->parent_level = sm->parent_level;
+    memcpy(m->box, sm->box, sizeof m->box);
+    memcpy(m->sphere, sm->sphere, sizeof m->sphere);
+    m->level_count = sm->level_count;
+    m->far_z = sm->far_z;
+    m->block = sm->corpus < scene->corpus_count ? scene->corpora[sm->corpus].tag : 0;
+    mip_distribution(m);
+  }
+  out->mips = mips;
+  out->view.mip_count = scene->mip_count;
+  out->view.mips = mips;
+  return 1;
 }
 
 /* ---- the vehicle ---- */
@@ -747,6 +837,7 @@ int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmu
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {
+  free(v->mips);
   free(v->meshes);
   free(v->materials);
   free(v->instances);
