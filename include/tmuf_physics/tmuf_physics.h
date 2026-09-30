@@ -782,7 +782,7 @@ typedef struct tmuf_weather {
   /* pictures (ramps over the day time, see above) */
   tmuf_weather_file light_ambient, light_sun, light_moon, light_double_sided;
   tmuf_weather_file fog_color, sea_color, sky_gradient;
-  tmuf_weather_file flare_sun, flare_moon;
+  tmuf_weather_file flare_sun, flare_moon; /* their images (the bitmaps' .dds) */
   float flare_size_sun, flare_size_moon; /* angular sizes */
   tmuf_weather_file sky_materials[4];    /* MaterialSky_Night, _SunRise, _Day, _SunFall */
   tmuf_weather_file sea_materials[2];

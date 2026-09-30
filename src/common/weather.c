@@ -233,6 +233,26 @@ static tmuf_weather_file skinned(const wbuild *b, tmuf_weather_file f) {
 
 static tmuf_weather_file picture(wbuild *b, tmuf_asset *owner, tmuf_gbx_node *n) { return skinned(b, node_file(b, owner, n)); }
 
+/* a CPlugBitmap's image (the flares' pictures are Texture.Gbx bitmaps):
+   the image its bitmap names, the node's own file when it is no bitmap */
+static tmuf_weather_file bitmap_picture(wbuild *b, tmuf_asset *owner, tmuf_gbx_node *n) {
+  tmuf_weather_file f = picture(b, owner, n);
+  tmuf_asset *ba = NULL;
+  tmuf_gbx_node *bn = n ? tmuf_assets_follow(&b->scene->assets, owner, n, &ba) : NULL;
+  if (!bn || !ba || !bn->data || !bn->cls || bn->cls->id != 0x09011000u)
+    return f;
+  const tmuf_plug_bitmap *bm = bn->data;
+  if (!bm->image || !bm->image->external)
+    return f;
+  char path[1200];
+  tmuf_weather_file img = {NULL, NULL};
+  if (tmuf_packset_resolve(b->set, &ba->gbx, bm->image, ba->path, path, sizeof path).pack >= 0)
+    img.pack_file = dup(b->arena, path);
+  else if (tmuf_packset_resolve_file(b->set, &ba->gbx, bm->image, ba->path, path, sizeof path))
+    img.file = dup(b->arena, path);
+  return img.file || img.pack_file ? img : f;
+}
+
 /* an external node of a file whose name ends with suffix */
 static tmuf_gbx_node *find_external(tmuf_asset *a, const char *suffix) {
   if (!a)
@@ -606,9 +626,9 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
     w->fog_color = picture(&b, fa, f->fog_color);
     w->sea_color = picture(&b, fa, f->sea_color);
     w->sky_gradient = picture(&b, fa, f->sky_gradient);
-    w->flare_sun = picture(&b, fa, f->flare_sun);
+    w->flare_sun = bitmap_picture(&b, fa, f->flare_sun);
     w->sun_flare = w->start.state != TMUF_DAY_NIGHT && f->flare_sun != NULL;
-    w->flare_moon = picture(&b, fa, f->flare_moon);
+    w->flare_moon = bitmap_picture(&b, fa, f->flare_moon);
     w->flare_size_sun = f->flare_size_sun;
     w->flare_size_moon = f->flare_size_moon;
     for (int i = 0; i < 4; i++)
