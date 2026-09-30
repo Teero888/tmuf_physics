@@ -186,6 +186,8 @@ typedef struct tmuf_scene {
   tmuf_asset *decoration_asset, *decoration_scene_asset;
   const tmuf_collection *collection_info; /* the map's collection */
   char error[600];
+  uint32_t block_skin_count; /* per map block (NULL file: none) */
+  tmuf_block_skin *block_skins;
 } tmuf_scene;
 
 /* flags */

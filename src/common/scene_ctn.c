@@ -183,6 +183,58 @@ static int block_type(uint32_t class_id) {
 
 static ctn_info *info_for(ctn *c, tmuf_asset *a);
 
+/* The skins of the map's blocks: each one's pack, and the rules of its
+   block info's CPlugGameSkin (the collector's header chunk 0x03031000:
+   version, folder, two strings, then per rule the class of what it
+   replaces, the name in the pack, the replaced file and a word; a word
+   after them) */
+static void block_skins(tmuf_scene *s, const tmuf_challenge *map, ctn_info **infos) {
+  if (!s->collect_visuals || !map->block_count)
+    return;
+  s->block_skins = TMUF_ARENA_ARRAY(&s->assets.arena, tmuf_block_skin, map->block_count);
+  if (!s->block_skins)
+    return;
+  memset(s->block_skins, 0, sizeof *s->block_skins * map->block_count);
+  s->block_skin_count = map->block_count;
+  for (uint32_t i = 0; i < map->block_count; i++) {
+    if (!map->blocks[i].skin_file || !infos[i] || !infos[i]->asset)
+      continue;
+    const tmuf_gbx *g = &infos[i]->asset->gbx;
+    for (uint32_t h = 0; h < g->header_chunk_count; h++) {
+      const tmuf_gbx_header_chunk *hc = &g->header_chunks[h];
+      if (hc->id != 0x03031000u || !hc->data)
+        continue;
+      tmuf_mem_source src;
+      tmuf_mem_source_init(&src, hc->data, hc->size);
+      tmuf_gbx r;
+      tmuf_gbx_init(&r, &src.base, &s->assets.arena, NULL, 0);
+      if (tmuf_gbx_u8(&r) != 4u)
+        break;
+      tmuf_block_skin *k = &s->block_skins[i];
+      k->directory = tmuf_gbx_string(&r);
+      tmuf_gbx_string(&r);
+      tmuf_gbx_string(&r);
+      const uint8_t n = tmuf_gbx_u8(&r);
+      tmuf_block_skin_rule *rules = TMUF_ARENA_ARRAY(&s->assets.arena, tmuf_block_skin_rule, n ? n : 1);
+      uint32_t count = 0;
+      for (uint32_t j = 0; rules && j < n && !r.error; j++) {
+        tmuf_gbx_u32(&r); /* class (CPlugFileImg) */
+        rules[count].pattern = tmuf_gbx_string(&r);
+        rules[count].target = tmuf_gbx_string(&r);
+        tmuf_gbx_u32(&r);
+        if (!r.error)
+          count++;
+      }
+      if (r.error || !count)
+        break;
+      k->file = map->blocks[i].skin_file;
+      k->rules = rules;
+      k->rule_count = count;
+      break;
+    }
+  }
+}
+
 static ctn_info *info_from_node(ctn *c, tmuf_asset *owner, tmuf_gbx_node *n) {
   tmuf_asset *a;
   tmuf_gbx_node *t = tmuf_assets_follow(&c->s->assets, owner, n, &a);
@@ -1659,6 +1711,7 @@ int ctn_build(tmuf_scene *s, const tmuf_challenge *map, tmuf_asset *ca, ctn_resu
         fprintf(stderr, "missing block info %s\n", map->blocks[i].name ? map->blocks[i].name : "?");
     }
   }
+  block_skins(s, map, infos);
 
   /* ChallengeFieldUnits::Build: terrain top markers, then the units of the
      placed mobils with their ground/air family */

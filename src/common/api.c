@@ -256,6 +256,13 @@ uint32_t tmuf_track_lights(const tmuf_track *track, const tmuf_light **lights) {
   return b->lights.count;
 }
 
+const tmuf_block_skin *tmuf_track_block_skin(const tmuf_track *track, uint32_t block) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (!b || block >= b->scene.block_skin_count || !b->scene.block_skins[block].file)
+    return NULL;
+  return &b->scene.block_skins[block];
+}
+
 const tmuf_scenery_light *tmuf_track_scenery_light(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals && b->scenery.found ? &b->scenery.view : NULL;

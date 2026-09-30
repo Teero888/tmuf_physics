@@ -661,6 +661,30 @@ typedef struct tmuf_light {
    TMUF_TRACK_VISUALS. Owned by the track. */
 TMUF_API uint32_t tmuf_track_lights(const tmuf_track *track, const tmuf_light **lights);
 
+/* A map block's skin (CGameCtnBlockSkin: e.g. the Island signs' arrows):
+   its pack, a zip of pictures (file, as the map stores it, e.g.
+   "Skins\\Island\\Signs\\LeftRed.zip", relative to GameData or the
+   player's documents), and what the block info's CPlugGameSkin replaces
+   with them: per rule the picture of the block's materials (target, a
+   GameData path, e.g. "Island\\Media\\Texture\\Image\\IslandSigns.dds")
+   and the name of the pack's file that replaces it (pattern: a leading
+   '*' matches anything, e.g. "*image" for "image.dds"). */
+typedef struct tmuf_block_skin_rule {
+  const char *pattern;
+  const char *target;
+} tmuf_block_skin_rule;
+
+typedef struct tmuf_block_skin {
+  const char *file;
+  const char *directory; /* the block info's skins folder, e.g. "Island\\Signs\\" */
+  uint32_t rule_count;
+  const tmuf_block_skin_rule *rules;
+} tmuf_block_skin;
+
+/* The skin of the map's block `block` (tmuf_visual_instance.block), NULL
+   when it has none (or the track was loaded without TMUF_TRACK_VISUALS). */
+TMUF_API const tmuf_block_skin *tmuf_track_block_skin(const tmuf_track *track, uint32_t block);
+
 /* CHmsCorpusLight::ComputeBBoxInWorld: the box (centre, half extents, in
    the frame of `location`'s parent) the game files the light under in its
    light octree, for radius `which` (0..3), or, for which >= 4 (what the

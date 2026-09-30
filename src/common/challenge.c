@@ -24,13 +24,15 @@ static void ident(tmuf_gbx *g, const char *out[3]) {
 }
 
 /* CSystemPackDesc file reference. */
-static void pack_desc(tmuf_gbx *g) {
+/* a pack desc (CSystemPackDesc): its path */
+static const char *pack_desc(tmuf_gbx *g) {
   uint8_t version = tmuf_gbx_u8(g);
   if (version >= 3)
     tmuf_gbx_skip(g, 32);
   const char *path = tmuf_gbx_string(g);
   if ((path[0] && version >= 1) || version >= 3)
     tmuf_gbx_string(g);
+  return path;
 }
 
 /* ---- CGameCtnCollectorList (0x0301b000): puzzle block stock ---- */
@@ -131,28 +133,30 @@ static const tmuf_gbx_class PARAMS = {
     sizeof PARAMS_CHUNKS / sizeof PARAMS_CHUNKS[0], NULL,
 };
 
-/* ---- CGameCtnBlockSkin (0x03059000) ---- */
+/* ---- CGameCtnBlockSkin (0x03059000): its text and packs ---- */
+
+typedef struct block_skin {
+  const char *file, *parent;
+} block_skin;
 
 static void c03059000(tmuf_gbx *g, void *node, uint32_t id) {
-  (void)node;
   (void)id;
   tmuf_gbx_string(g);
-  tmuf_gbx_string(g);
+  ((block_skin *)node)->file = tmuf_gbx_string(g);
 }
 
 static void c03059001(tmuf_gbx *g, void *node, uint32_t id) {
-  (void)node;
   (void)id;
   tmuf_gbx_string(g);
-  pack_desc(g);
+  ((block_skin *)node)->file = pack_desc(g);
 }
 
 static void c03059002(tmuf_gbx *g, void *node, uint32_t id) {
-  (void)node;
   (void)id;
+  block_skin *k = node;
   tmuf_gbx_string(g);
-  pack_desc(g);
-  pack_desc(g);
+  k->file = pack_desc(g);
+  k->parent = pack_desc(g);
 }
 
 static const tmuf_gbx_chunk SKIN_CHUNKS[] = {
@@ -160,7 +164,7 @@ static const tmuf_gbx_chunk SKIN_CHUNKS[] = {
     {0x03059001, 0, c03059001},
     {0x03059002, 0, c03059002},
 };
-static const tmuf_gbx_class SKIN = {0x03059000, "CGameCtnBlockSkin", 1, SKIN_CHUNKS, 3, NULL};
+static const tmuf_gbx_class SKIN = {0x03059000, "CGameCtnBlockSkin", sizeof(block_skin), SKIN_CHUNKS, 3, NULL};
 
 /* ---- CGameCtnChallenge (0x03043000) ---- */
 
@@ -229,7 +233,9 @@ static void c0304301f(tmuf_gbx *g, void *node, uint32_t id) {
        info for it and skips it, and ignores TMUnlimiter's own chunks. */
     if (b->flags & TMUF_BLOCK_FLAG_SKIN) {
       b->skin_author = id_text(g);
-      tmuf_gbx_noderef(g);
+      const tmuf_gbx_node *skin = tmuf_gbx_noderef(g);
+      const block_skin *k = skin ? skin->data : NULL;
+      b->skin_file = k && k->file && k->file[0] ? k->file : NULL;
     }
   }
   /* Everything after the blocks (MediaTracker clips, music, ...) is not

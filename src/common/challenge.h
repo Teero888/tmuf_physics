@@ -18,6 +18,7 @@ typedef struct tmuf_challenge_block {
   uint8_t x, y, z;
   uint32_t flags; /* raw archive flags */
   const char *skin_author;
+  const char *skin_file; /* its CGameCtnBlockSkin's pack (e.g. "Skins\\Island\\Signs\\LeftRed.zip"), NULL none */
 } tmuf_challenge_block;
 
 typedef struct tmuf_challenge {
