@@ -128,6 +128,9 @@ typedef struct tmuf_scene {
   tmuf_scene_corpus *corpora; /* in the order the game adds them */
   tmuf_scene_catalog_entry *catalog;
   tmuf_scene_water water;
+  /* the decoration (CGameCtnDecoration) and its scene (CScene3d) files,
+     NULL if not found */
+  tmuf_asset *decoration_asset, *decoration_scene_asset;
   char error[600];
 } tmuf_scene;
 

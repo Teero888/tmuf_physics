@@ -49,6 +49,10 @@ tmuf_pack_ref tmuf_packset_find(const tmuf_packset *set, const char *plain_path)
 int tmuf_packset_resolve_file(const tmuf_packset *set, const tmuf_gbx *g, const tmuf_gbx_node *node, const char *from,
                               char *out, size_t out_size);
 
+/* A plain path (relative to GameData, '\\'-separated) on disk under the
+   installation's GameData: its path in out. 0 if there is no such file. */
+int tmuf_packset_find_file(const tmuf_packset *set, const char *plain, char *out, size_t out_size);
+
 tmuf_pack_ref tmuf_packset_resolve(const tmuf_packset *set, const tmuf_gbx *g, const tmuf_gbx_node *node,
                                    const char *from, char *plain_out, size_t plain_out_size);
 

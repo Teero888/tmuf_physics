@@ -34,6 +34,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/lightmap.h
   src/common/visuals.c
   src/common/visuals.h
+  src/common/weather.c
+  src/common/weather.h
   src/common/replay.h
   src/common/compress.c
   src/common/compress.h
@@ -188,6 +190,8 @@ if(TMUF_PHYSICS_TOOLS)
   target_link_libraries(tmuf_rewrite PRIVATE tmuf_physics)
   add_executable(tmuf_visuals tools/sim/tmuf_visuals.c)
   target_link_libraries(tmuf_visuals PRIVATE tmuf_physics)
+  add_executable(tmuf_weather tools/sim/tmuf_weather.c)
+  target_link_libraries(tmuf_weather PRIVATE tmuf_physics m)
   add_executable(tmuf_bench tools/sim/tmuf_bench.c)
   target_link_libraries(tmuf_bench PRIVATE tmuf_physics)
   if(TMUF_PHYSICS_BACKEND STREQUAL "reference")

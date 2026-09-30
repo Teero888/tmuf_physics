@@ -277,6 +277,145 @@ TMUF_API const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track);
 TMUF_API void tmuf_lightmap_place(const tmuf_lightmap *lightmap, uint32_t size, tmuf_lightmap_corpus *corpora,
                                   tmuf_lightmap *out);
 
+/* ---- the weather: time of day and the light it gives (TMUF_TRACK_VISUALS) ----
+
+   The map's decoration names a mood (CGameCtnDecorationMood: latitude and
+   start time) and its scene the environment's CMotionManagerWeathers, whose
+   CFuncWeather holds the pictures the light comes from: each is a ramp over
+   the time of day, sampled once (tmuf_picture_sample) at
+   (tmuf_day_time.remapped, 0). The mood's skin (CPlugGameSkin) swaps
+   pictures and funcs for the files of the same entry name in the mood's
+   folder; the files here are the ones the game ends up using.
+
+   Per frame the game's weather (CMotionManagerWeathers::UpdateAsync) sets:
+     GbxDayTime            (time, remapped, 0, 1)
+     sun or moon           tmuf_day_time_light: direction and which picture
+     GbxLightDirRgb0       light_sun (or light_moon) at the time, rgb / 255
+     GbxLightDirRgbDblSided0  light_double_sided at the time; the sun picture
+                           when there is none
+     GbxLightAmbient       light_ambient at the time; w = 1 - (r + g + b) / 3
+     GbxCloudsRgbMin/Max   clouds_min / clouds_max at the time
+     fog                   tmuf_weather_at; its colour is fog_color's picture
+                           at the time when there is one
+     light specular        tmuf_weather_at
+   The time does not run: the game stops its clock after setting the mood's
+   start (CGameCtnDecoration::LoadScene3d). */
+
+/* A file: on disk under GameData (file), or inside the packs (pack_file,
+   read with tmuf_packs_read). Both NULL for none. */
+typedef struct tmuf_weather_file {
+  const char *file;
+  const char *pack_file;
+} tmuf_weather_file;
+
+/* GxFogGlobal: linear fog on view depth */
+typedef struct tmuf_weather_fog {
+  float rgb[3];
+  float start, end, density;
+  uint32_t flags;
+} tmuf_weather_fog;
+
+/* CGameCtnDecorationMood */
+typedef struct tmuf_weather_mood {
+  float latitude;                /* degrees: the sun's path (tmuf_day_time) */
+  float remapped_start_day_time; /* the start time, as tmuf_day_time_at takes it */
+  /* sunrise and sunset (ms of the day) the mood file names; the weather
+     does not use them (it keeps 6h and 18h) */
+  uint32_t time_sun_rise, time_sun_fall;
+  const char *folder; /* e.g. "Stadium\\Media\\Moods\\Sunset\\", its files replace the skin's */
+  uint32_t shadow_count_car_human, shadow_count_car_opponent;
+  float shadow_car_intensity;
+  int shadow_scene, background_is_locally_lighted;
+  tmuf_weather_file pack_light_map; /* CHmsPackLightMap settings */
+} tmuf_weather_mood;
+
+/* An entry of the mood's skin (CPlugGameSkin): the file the environment
+   names (default_file) and the one used: the mood folder's
+   <name><extension of the default> when it exists, else the default. */
+typedef struct tmuf_weather_skin_entry {
+  const char *name;  /* e.g. "LightSun", "SkyColor", "Clouds" */
+  uint32_t class_id; /* class of the node it replaces */
+  tmuf_weather_file default_file, file;
+} tmuf_weather_skin_entry;
+
+enum {
+  TMUF_DAY_NIGHT = 0,
+  TMUF_DAY_SUNRISE = 1,
+  TMUF_DAY_DAY = 2,
+  TMUF_DAY_SUNSET = 3,
+};
+
+/* The time of day, as the game's weather computes it with its roundings. */
+typedef struct tmuf_day_time {
+  uint32_t ms;        /* the clock: ms of the day (the game's timer) */
+  float time;         /* ms / 86400000: GbxDayTime.x */
+  float remapped;     /* the day time the pictures are sampled at: GbxDayTime.y;
+                         0..0.25 night, ..0.5 sunrise, ..0.75 day, ..1 sunset */
+  uint32_t state;     /* TMUF_DAY_* */
+  int is_day;         /* state TMUF_DAY_DAY (CMotionDayTime switches on it) */
+  float sun_position; /* 0 at sunrise .. 1 at sunset (0 or 1 at night) */
+  float night, day;   /* blend weights of the night and day values, day = 1 - night */
+  float sun_dir[3];   /* direction the sun's light travels (world) */
+  float moon_dir[3];  /* the moon's */
+} tmuf_day_time;
+
+typedef struct tmuf_weather {
+  tmuf_weather_mood mood;
+  const char *manager; /* the CMotionManagerWeathers file (pack path) */
+  const char *name;    /* the CFuncWeather's name, e.g. "Sunny" */
+  tmuf_weather_fog fogs[2];                /* night, day */
+  float spec_intensity[2], spec_power[2]; /* LDirSpecIntens / LDirSpecPower: night, day */
+  /* pictures (ramps over the day time, see above) */
+  tmuf_weather_file light_ambient, light_sun, light_moon, light_double_sided;
+  tmuf_weather_file fog_color, sea_color, sky_gradient;
+  tmuf_weather_file flare_sun, flare_moon;
+  float flare_size_sun, flare_size_moon; /* angular sizes */
+  tmuf_weather_file sky_materials[4];    /* MaterialSky_Night, _SunRise, _Day, _SunFall */
+  tmuf_weather_file sea_materials[2];
+  /* CFuncClouds: its file (none when inline) and its colours GbxCloudsRgbMin/Max */
+  tmuf_weather_file clouds, clouds_min, clouds_max;
+  /* the clouds map (the skin's "Clouds" CFuncShaderLayerUV): world position
+     p -> uv, with ph = frac(seconds / clouds_period):
+       u = clouds_scale[0] * (-p.y + p.z) / sqrt 2      + clouds_offset[0] + ph * clouds_speed[0]
+       v = clouds_scale[1] * (2 p.x + p.y - p.z) / sqrt 6 + clouds_offset[1] + ph * clouds_speed[1]
+     (EGxUVGenerate Hack1Vertex, then the layer's transform) */
+  int has_clouds_layer;
+  tmuf_weather_file clouds_layer;
+  float clouds_scale[2], clouds_speed[2], clouds_offset[2], clouds_period;
+  uint32_t skin_entry_count;
+  const tmuf_weather_skin_entry *skin_entries;
+  tmuf_day_time start; /* the mood's start time: the one the game shows */
+} tmuf_weather;
+
+/* NULL unless the track was loaded with TMUF_TRACK_VISUALS (or its weather
+   was not found). Owned by the track. */
+TMUF_API const tmuf_weather *tmuf_track_weather(const tmuf_track *track);
+
+/* The time of day of a remapped start time (tmuf_weather_mood's), at a
+   latitude: CMotionManagerWeathers::JumpToTimeRemapped then UpdateAsync. */
+TMUF_API void tmuf_day_time_at(float remapped_start_day_time, float latitude, tmuf_day_time *out);
+
+/* The fog (colour: the night and day colours blended) and the light's
+   specular intensity and power at a time of day. Any output may be NULL. */
+TMUF_API void tmuf_weather_at(const tmuf_weather *weather, const tmuf_day_time *time, tmuf_weather_fog *fog,
+                              float *spec_intensity, float *spec_power);
+
+/* The directional light: the moon's when its colour (moon picture at the
+   time) is at least as bright as the sun's (|rgb|^2), else the sun's.
+   Writes its direction to dir (may be NULL); returns 1 for the moon. */
+TMUF_API int tmuf_day_time_light(const tmuf_day_time *time, const uint8_t sun_rgb[3], const uint8_t moon_rgb[3],
+                                 float dir[3]);
+
+/* CPlugFileImg::FilterWrappedPixel: the colour of a picture at (u, v), as
+   the weather samples its ramps: bilinear between texel centres, wrapping
+   (at v = 0 the first and last rows mix half and half), each channel
+   truncated to a byte. pixels: height rows of width pixels of pixel_bytes
+   bytes, in the order the game keeps them (TGA rows as stored in the file,
+   whatever its origin bit; DDS flipped). out gets pixel_bytes bytes, in the
+   pixels' channel order. */
+TMUF_API void tmuf_picture_sample(const uint8_t *pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes,
+                                  float u, float v, uint8_t *out);
+
 /* The car as the game draws it: the trees of the vehicle's solid (parts)
    and the rig CSceneVehicleStruct lays over them, one level per visual
    quality. The game shows the parts of one level (the player's car: the

@@ -198,6 +198,7 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
       return 0;
     }
     b->has_visuals = 1;
+    tmuf_weather_build(&b->weather, &b->scene, &b->arena);
     free(b->scene.visuals); /* the list is not needed any more */
     b->scene.visuals = NULL;
     b->scene.visual_count = b->scene.visual_cap = 0;
@@ -226,6 +227,11 @@ const char *tmuf_track_decoration(const tmuf_track *track) {
 const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals ? &b->visuals.view : NULL;
+}
+
+const tmuf_weather *tmuf_track_weather(const tmuf_track *track) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  return b && b->has_visuals && b->weather.found ? &b->weather.view : NULL;
 }
 
 const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track) {

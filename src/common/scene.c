@@ -978,8 +978,10 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
   /* decoration scene (added to the zone before the map) */
   tmuf_asset *sa;
   tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, dsa, dsize->scene, &sa);
+  s->decoration_asset = da;
   if (sn && sn->data && sn->class_id == 0x0a003000u) {
     const tmuf_scene3d *sc = sn->data;
+    s->decoration_scene_asset = sa;
     for (uint32_t i = 0; i < sc->mobil_count && i < sc->loc_count; i++) {
       if (!sc->mobils[i] || !sc->mobils[i]->model)
         continue;

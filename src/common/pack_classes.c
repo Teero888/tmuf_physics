@@ -2648,6 +2648,212 @@ static const tmuf_gbx_chunk VEHICLE_ENV_CHUNKS[] = {READ(0x0a033000, skip4), NOP
 static const tmuf_gbx_class VEHICLE_ENV = {0x0a033000, "CSceneVehicleEnvironment", 1, VEHICLE_ENV_CHUNKS,
                                            COUNT(VEHICLE_ENV_CHUNKS), NULL};
 
+/* ---- the weather: CGameCtnDecorationMood, CMotionManagerWeathers,
+   CFuncWeather, CFuncClouds, CFuncShaderLayerUV ---- */
+
+/* CGameCtnDecorationMood::Chunk_Crypted / Chunk (0x0303a000..005) */
+static void c0303a000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_mood *m = node;
+  m->latitude = tmuf_gbx_f32(g);
+  m->real18 = tmuf_gbx_f32(g);
+  m->real1c = tmuf_gbx_f32(g);
+  m->time_sun_rise = tmuf_gbx_u32(g);
+  m->time_sun_fall = tmuf_gbx_u32(g);
+}
+
+static void c0303a001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_mood *m = node;
+  m->remapped_start_day_time = tmuf_gbx_f32(g);
+  m->light_map = tmuf_gbx_noderef(g);
+  m->folder = tmuf_gbx_string(g);
+}
+
+static void c0303a002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_mood *m = node;
+  m->shadow_count_car_human = tmuf_gbx_u32(g);
+  m->shadow_count_car_opponent = tmuf_gbx_u32(g);
+  m->shadow_car_intensity = tmuf_gbx_f32(g);
+  m->shadow_scene = tmuf_gbx_bool(g);
+  m->background_is_locally_lighted = tmuf_gbx_bool(g);
+}
+
+static void c0303a004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_mood *)node)->pack_light_map = tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk MOOD_CHUNKS[] = {
+    READ(0x0303a000, c0303a000), READ(0x0303a001, c0303a001), READ(0x0303a002, c0303a002),
+    READ(0x0303a003, skip4),     READ(0x0303a004, c0303a004), READ(0x0303a005, skip_noderef),
+};
+static const tmuf_gbx_class MOOD = {0x0303a000, "CGameCtnDecorationMood", sizeof(tmuf_mood), MOOD_CHUNKS,
+                                    COUNT(MOOD_CHUNKS), NULL};
+
+/* CMotionManagerWeathers::Chunk */
+static void c08053000(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_motion_weathers *w = node;
+  fast_buffer_nod(g, &w->weathers);
+  if (id == 0x08053001u)
+    w->specular_dir = tmuf_gbx_noderef(g);
+}
+
+static const tmuf_gbx_chunk MOTION_WEATHERS_CHUNKS[] = {READ(0x08053000, c08053000), READ(0x08053001, c08053000)};
+static const tmuf_gbx_class MOTION_WEATHERS = {0x08053000, "CMotionManagerWeathers", sizeof(tmuf_motion_weathers),
+                                               MOTION_WEATHERS_CHUNKS, COUNT(MOTION_WEATHERS_CHUNKS), NULL};
+
+/* CFuncWeather::Chunk, the chunks of the game's files */
+static void c0503400b(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_weather *w = node;
+  for (int i = 0; i < 4; i++)
+    w->sky_materials[i] = tmuf_gbx_noderef(g);
+  for (int i = 0; i < 2; i++)
+    w->sea_materials[i] = tmuf_gbx_noderef(g);
+}
+
+static void c0503400d(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_weather *w = node;
+  /* 0x05034006: +0xe8, +0xd4, +0xdc, six reals +0x108..+0x11c */
+  read_floats(g, w->vec_e8, 2);
+  read_floats(g, w->spec_intensity, 2);
+  read_floats(g, w->spec_power, 2);
+  read_floats(g, w->reals108, 6);
+  read_floats(g, w->vec_f0, 2);
+  read_floats(g, w->vec_f8, 2);
+  read_floats(g, w->vec_100, 2);
+}
+
+static void c0503400e(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_weather *w = node;
+  for (int i = 0; i < 2; i++) { /* GxFogGlobal::ArchiveFog: 0x1c bytes */
+    read_floats(g, w->fogs[i].rgb, 3);
+    w->fogs[i].start = tmuf_gbx_f32(g);
+    w->fogs[i].end = tmuf_gbx_f32(g);
+    w->fogs[i].density = tmuf_gbx_f32(g);
+    w->fogs[i].flags = tmuf_gbx_u32(g) & 0xfu;
+  }
+  w->name = id_text(g);
+  w->light_ambient = tmuf_gbx_noderef(g);
+  w->light_sun = tmuf_gbx_noderef(g);
+  w->light_moon = tmuf_gbx_noderef(g);
+  w->flare_sun = tmuf_gbx_noderef(g);
+  w->flare_moon = tmuf_gbx_noderef(g);
+  w->flare_size_sun = tmuf_gbx_f32(g);
+  w->flare_size_moon = tmuf_gbx_f32(g);
+  read_floats(g, w->reals_c4, 3);
+  w->real_d0 = tmuf_gbx_f32(g);
+  w->nodes_bc[0] = tmuf_gbx_noderef(g);
+  w->nodes_bc[1] = tmuf_gbx_noderef(g);
+}
+
+#define WEATHER_REF(fn, field) \
+  static void fn(tmuf_gbx *g, void *node, uint32_t id) { \
+    UNUSED(id); \
+    ((tmuf_func_weather *)node)->field = tmuf_gbx_noderef(g); \
+  }
+WEATHER_REF(c0503400f, light_double_sided)
+WEATHER_REF(c05034011, sky_gradient)
+WEATHER_REF(c05034013, fog_color)
+WEATHER_REF(c05034014, sea_color)
+WEATHER_REF(c05034016, clouds)
+WEATHER_REF(c05034017, fog_blender)
+
+static const tmuf_gbx_chunk FUNC_WEATHER_CHUNKS[] = {
+    NOPAY(0x05034007),           READ(0x0503400b, c0503400b), READ(0x0503400d, c0503400d),
+    READ(0x0503400e, c0503400e), READ(0x0503400f, c0503400f), READ(0x05034011, c05034011),
+    READ(0x05034013, c05034013), READ(0x05034014, c05034014), READ(0x05034016, c05034016),
+    READ(0x05034017, c05034017),
+};
+static const tmuf_gbx_class FUNC_WEATHER = {0x05034000, "CFuncWeather", sizeof(tmuf_func_weather),
+                                            FUNC_WEATHER_CHUNKS, COUNT(FUNC_WEATHER_CHUNKS), NULL};
+
+/* CFuncClouds::Chunk */
+static void c0503a000(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_func_clouds *c = node;
+  read_node_list(g, &c->solids);
+  c->real3c = tmuf_gbx_f32(g);
+  c->real4c = tmuf_gbx_f32(g);
+  c->color_min = tmuf_gbx_noderef(g);
+  c->color_max = tmuf_gbx_noderef(g);
+  c->nat54 = tmuf_gbx_u32(g);
+  if (id == 0x0503a001u) /* scaled at load by the double at 0xb5b9c0 */
+    c->real50 = (float)((double)tmuf_gbx_f32(g) * 1.9438400268554688);
+  else if (id == 0x0503a004u)
+    c->real50 = tmuf_gbx_f32(g);
+}
+
+static void c0503a002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_clouds *c = node;
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x10000u) {
+    tmuf_gbx_fail(g, "cloud key count %u", n);
+    return;
+  }
+  c->keys = (float(*)[2])tmuf_arena_alloc(g->arena, sizeof(float[2]) * (n ? n : 1));
+  c->key_count = n;
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    read_floats(g, c->keys[i], 2);
+}
+
+static void c0503a003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_clouds *c = node;
+  c->nat30 = tmuf_gbx_u32(g);
+  c->real34 = tmuf_gbx_f32(g);
+  c->real38 = tmuf_gbx_f32(g);
+}
+
+static const tmuf_gbx_chunk FUNC_CLOUDS_CHUNKS[] = {
+    READ(0x0503a000, c0503a000), READ(0x0503a002, c0503a002), READ(0x0503a003, c0503a003),
+    READ(0x0503a004, c0503a000),
+};
+static const tmuf_gbx_class FUNC_CLOUDS = {0x0503a000, "CFuncClouds", sizeof(tmuf_func_clouds), FUNC_CLOUDS_CHUNKS,
+                                           COUNT(FUNC_CLOUDS_CHUNKS), NULL};
+
+/* CFuncShaderLayerUV::Chunk (and CFuncPlug::Chunk 0x0500b005 for its period) */
+static void c0500b005_layer(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_layer_uv *f = node;
+  f->period = tmuf_gbx_f32(g);
+  f->phase = tmuf_gbx_f32(g);
+  f->has_period = 1;
+  tmuf_gbx_bool(g);
+  tmuf_gbx_bool(g);
+  tmuf_gbx_id(g, NULL);
+}
+
+static void c05015005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_func_layer_uv *f = node;
+  f->layer = tmuf_gbx_string(g);
+  f->signal = tmuf_gbx_u32(g) & 0xffu;
+}
+
+static void c0501500d(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_func_layer_uv *f = node;
+  read_floats(g, f->vec28, 2);
+  if (id == 0x0501500bu)
+    return;
+  read_floats(g, f->vec30, 2);
+  if (id == 0x05015009u)
+    return;
+  read_floats(g, f->vec38, 2);
+}
+
+static const tmuf_gbx_chunk FUNC_LAYER_UV_CHUNKS[] = {
+    READ(0x0500b005, c0500b005_layer), READ(0x05015005, c05015005), READ(0x05015009, c0501500d),
+    READ(0x0501500a, c0501500d),       READ(0x0501500b, c0501500d), READ(0x0501500d, c0501500d),
+    READ(0x05015013, c0501500d),
+};
+static const tmuf_gbx_class FUNC_LAYER_UV = {0x05015000, "CFuncShaderLayerUV", sizeof(tmuf_func_layer_uv),
+                                             FUNC_LAYER_UV_CHUNKS, COUNT(FUNC_LAYER_UV_CHUNKS), &FUNC_PLUG};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &LIGHT,           &DECORATOR_SOLID, &DECORATOR_TREE, &MATERIAL, &MATERIAL_CUSTOM, &SHADER, &SHADER_PASS, &BITMAP_SAMPLER,
@@ -2657,5 +2863,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
+    &MOOD,            &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

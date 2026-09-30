@@ -410,6 +410,82 @@ typedef struct tmuf_decoration_size {
   tmuf_gbx_node *scene; /* CScene3d */
 } tmuf_decoration_size;
 
+/* ---- the weather (time of day) ---- */
+
+/* CGameCtnDecorationMood (0x0303a000): a decoration's time of day */
+typedef struct tmuf_mood {
+  /* 0x0303a000 */
+  float latitude;                        /* +0x14, degrees */
+  float real18, real1c;                  /* +0x18, +0x1c */
+  uint32_t time_sun_rise, time_sun_fall; /* +0x20, +0x24, ms of the day */
+  /* 0x0303a001 */
+  float remapped_start_day_time; /* +0x28 */
+  tmuf_gbx_node *light_map;      /* +0x2c */
+  const char *folder;            /* +0x30, e.g. "Stadium\\Media\\Moods\\Sunset\\" */
+  /* 0x0303a002 */
+  uint32_t shadow_count_car_human, shadow_count_car_opponent; /* +0x34, +0x38 */
+  float shadow_car_intensity;                                 /* +0x3c */
+  int shadow_scene, background_is_locally_lighted;            /* +0x40, +0x44 */
+  tmuf_gbx_node *pack_light_map;                              /* 0x0303a004: +0x4c */
+} tmuf_mood;
+
+/* GxFogGlobal as CFuncWeather archives it (28 bytes) */
+typedef struct tmuf_fog_global {
+  float rgb[3];
+  float start, end, density;
+  uint32_t flags;
+} tmuf_fog_global;
+
+/* CFuncWeather (0x05034000) */
+typedef struct tmuf_func_weather {
+  tmuf_gbx_node *sky_materials[4]; /* MaterialSky_Night, _SunRise, _Day, _SunFall */
+  tmuf_gbx_node *sea_materials[2];
+  float vec_e8[2];
+  float spec_intensity[2], spec_power[2]; /* LDirSpecIntens, LDirSpecPower: night, day */
+  float reals108[6];
+  float vec_f0[2], vec_f8[2], vec_100[2];
+  tmuf_fog_global fogs[2]; /* night (+0x30), day (+0x4c) */
+  const char *name;        /* +0x14, e.g. "Sunny" */
+  tmuf_gbx_node *light_ambient, *light_sun, *light_moon; /* ImageLightAmb, ImageLightDirSun, ImageLightDirMoon */
+  tmuf_gbx_node *flare_sun, *flare_moon;
+  float flare_size_sun, flare_size_moon;
+  float reals_c4[3], real_d0;
+  tmuf_gbx_node *nodes_bc[2];
+  tmuf_gbx_node *light_double_sided; /* ImageLightDirDblSided */
+  tmuf_gbx_node *sky_gradient;       /* BitmapSkyGradV */
+  tmuf_gbx_node *fog_color;          /* ImageFogColor */
+  tmuf_gbx_node *sea_color;          /* ImageSeaColor */
+  tmuf_gbx_node *clouds;             /* CFuncClouds */
+  tmuf_gbx_node *fog_blender;        /* GxFogBlender */
+} tmuf_func_weather;
+
+/* CFuncClouds (0x0503a000) */
+typedef struct tmuf_func_clouds {
+  tmuf_node_list solids;                /* +0x24 */
+  float real3c, real4c, real50;         /* +0x3c, +0x4c, +0x50 */
+  tmuf_gbx_node *color_min, *color_max; /* +0x14, +0x1c: pictures sampled at the day time */
+  uint32_t nat54;
+  uint32_t key_count;
+  float (*keys)[2]; /* +0x40: (distance, value) */
+  uint32_t nat30;
+  float real34, real38;
+} tmuf_func_clouds;
+
+/* CMotionManagerWeathers (0x08053000) */
+typedef struct tmuf_motion_weathers {
+  tmuf_node_list weathers;     /* +0x64: CFuncWeather */
+  tmuf_gbx_node *specular_dir; /* +0x60: BitmapSpecularDir */
+} tmuf_motion_weathers;
+
+/* CFuncShaderLayerUV (0x05015000) with CFuncPlug's timing */
+typedef struct tmuf_func_layer_uv {
+  int has_period;
+  float period, phase; /* CFuncPlug +0x20, +0x24 (s) */
+  const char *layer;   /* +0x44: the shader layer it drives */
+  uint32_t signal;     /* +0x4c low byte: 4 = scale + scrolling translation */
+  float vec28[2], vec30[2], vec38[2]; /* signal 4: offset, speed, scale */
+} tmuf_func_layer_uv;
+
 extern const tmuf_gbx_class *const tmuf_pack_classes[];
 extern const size_t tmuf_pack_class_count;
 

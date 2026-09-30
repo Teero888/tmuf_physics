@@ -319,6 +319,28 @@ static int find_below(const char *dir, const char *rel, int depth, char *out, si
 #endif
 }
 
+int tmuf_packset_find_file(const tmuf_packset *set, const char *plain, char *out, size_t out_size) {
+  char base[1100];
+  snprintf(base, sizeof base, "%s", set->dir);
+  size_t bl = strlen(base);
+  while (bl > 0 && (base[bl - 1] == '/' || base[bl - 1] == '\\'))
+    base[--bl] = 0;
+  while (bl > 0 && base[bl - 1] != '/' && base[bl - 1] != '\\')
+    bl--;
+  snprintf(base + bl, sizeof base - bl, "GameData");
+  char full[1200];
+  int n = snprintf(full, sizeof full, "%s/%s", base, plain);
+  if (n < 0 || (size_t)n >= sizeof full)
+    return 0;
+  for (char *c = full + strlen(base); *c; c++)
+    if (*c == '\\')
+      *c = '/';
+  if (!find_on_disk(full, sizeof full, strlen(base)))
+    return 0;
+  snprintf(out, out_size, "%s", full);
+  return 1;
+}
+
 int tmuf_packset_resolve_file(const tmuf_packset *set, const tmuf_gbx *g, const tmuf_gbx_node *node, const char *from,
                               char *out, size_t out_size) {
   if (!node || !node->external)
