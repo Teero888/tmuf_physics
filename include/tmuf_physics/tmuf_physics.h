@@ -142,6 +142,11 @@ TMUF_API uint32_t tmuf_track_triangles(const tmuf_track *track, const tmuf_trian
 enum {
   TMUF_VISUAL_NORMAL = 1u << 0, /* vertices carry a packed normal (u32) after the position */
   TMUF_VISUAL_COLOR = 1u << 1,  /* vertices carry a colour (u32, BGRA) after position and normal */
+  /* CPlugVisualSprite (only in tmuf_weather's clouds): each vertex is a
+     sprite, 24 bytes: centre (3 floats), size (float), atlas index (u32),
+     aspect (float); no indices. The game turns every sprite into a quad
+     facing the camera each frame (see tmuf_weather_sky_clouds). */
+  TMUF_VISUAL_SPRITES = 1u << 2,
 };
 
 /* A CPlugVisual3D indexed triangle list, in its own frame. */
@@ -159,6 +164,13 @@ typedef struct tmuf_visual_mesh {
   /* the tangent and binormal of each vertex (normal-mapped surfaces), packed
      like the normals; NULL when the mesh has none */
   const uint32_t *tangents, *binormals;
+  /* TMUF_VISUAL_SPRITES: CPlugVisualSprite's flags (0x40: vertices name an
+     atlas cell; 0x08: size scaled with depth; 0x20: turn about sprite_axis;
+     0x10: set on the clouds), its atlas grid (columns, rows) and its
+     axis and centre offset */
+  uint32_t sprite_flags;
+  uint16_t sprite_atlas[2];
+  float sprite_axis[3], sprite_offset[2];
 } tmuf_visual_mesh;
 
 /* A texture a material's shader samples: the sampler's name (e.g.
@@ -359,6 +371,37 @@ typedef struct tmuf_day_time {
   float moon_dir[3];  /* the moon's */
 } tmuf_day_time;
 
+/* The 3D clouds in the sky: CFuncClouds' solids, which a CSceneMobilClouds
+   lays out in a grid that follows the camera and drifts with the wind
+   (tmuf_weather_clouds_place). Each solid is a set of pieces (the child
+   trees of its root), placed one by one. */
+typedef struct tmuf_weather_cloud_piece {
+  uint32_t solid;    /* index of its solid (0 .. solid_count - 1) */
+  uint32_t instance; /* its mesh and material: index into sky_clouds.visuals.instances,
+                        whose location is the piece's own rotation (no translation) */
+  float center[3];   /* its mesh's bounding box centre (the placement's reference point) */
+} tmuf_weather_cloud_piece;
+
+typedef struct tmuf_weather_sky_clouds {
+  uint32_t solid_count, piece_count; /* 0: no clouds */
+  const tmuf_weather_cloud_piece *pieces; /* by solid, in tree order */
+  tmuf_visuals visuals;                   /* the pieces' meshes and materials */
+  /* CSceneMobilClouds (its defaults: the game sets none of them) */
+  float grid_size[2]; /* GridSizeXZ: one grid cell per instance */
+  float wind_speed;   /* units per second: CFuncClouds' speed * WindSpeed */
+  float wind_dir;     /* WindDir (radians): the clouds move along (-sin, 0, -cos) */
+  int view_dependent; /* IsViewDep: the grid wraps around the camera */
+  /* CFuncClouds: the pieces' height over the horizontal distance from the
+     camera, or from center (x, z) when has_center: from (0, height0)
+     through keys (distance, height) to (camera far, height_far),
+     extrapolated linearly past the last point */
+  int has_center;
+  float center[2];
+  float height0, height_far;
+  uint32_t key_count;
+  const float (*keys)[2];
+} tmuf_weather_sky_clouds;
+
 typedef struct tmuf_weather {
   tmuf_weather_mood mood;
   const char *manager; /* the CMotionManagerWeathers file (pack path) */
@@ -385,6 +428,7 @@ typedef struct tmuf_weather {
   uint32_t skin_entry_count;
   const tmuf_weather_skin_entry *skin_entries;
   tmuf_day_time start; /* the mood's start time: the one the game shows */
+  tmuf_weather_sky_clouds sky_clouds; /* the 3D clouds (CFuncClouds' solids) */
 } tmuf_weather;
 
 /* NULL unless the track was loaded with TMUF_TRACK_VISUALS (or its weather
@@ -415,6 +459,35 @@ TMUF_API int tmuf_day_time_light(const tmuf_day_time *time, const uint8_t sun_rg
    pixels' channel order. */
 TMUF_API void tmuf_picture_sample(const uint8_t *pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes,
                                   float u, float v, uint8_t *out);
+
+/* A cloud piece placed for a frame: mesh -> world. */
+typedef struct tmuf_cloud_draw {
+  uint32_t piece; /* index into sky_clouds.pieces */
+  tmuf_iso4 location;
+} tmuf_cloud_draw;
+
+/* The clouds where the game draws them for a camera at eye with its far
+   distance (the race camera: 50000) at a time of its clock, in ms
+   (CSceneMobilClouds::BuildInstances and OnRenderBefore): a grid of
+   instances enough to span 2 * far, solids assigned in turn, every other
+   instance turned a quarter; each piece moved by the wind, wrapped into the
+   grid around the camera and lifted to its height. Writes up to cap draws
+   to out (in the game's order: instance by instance, pieces in turn) and
+   returns how many there are. The game draws them back to front (distance
+   from the eye to the piece's bounding box centre). */
+/* A cloud sprite as the game draws it (CLoadGeomDynaSprite::LoadSprite,
+   each frame): a quad facing the camera. right and up: the camera's axes
+   in the piece mesh's frame (unit vectors). Corners 0..3: bottom left,
+   bottom right, top left, top right, half a size up and down and half a
+   size times the sprite's aspect left and right; uv the sprite's atlas
+   cell, (u0, v0) at the bottom left (v as the game keeps the picture:
+   DDS rows flipped at load). Draw both triangles (0, 1, 2), (2, 1, 3)
+   without culling. */
+TMUF_API void tmuf_cloud_sprite_quad(const tmuf_visual_mesh *mesh, uint32_t sprite, const float right[3],
+                                    const float up[3], float corners[4][3], float uv[4][2]);
+
+TMUF_API uint32_t tmuf_weather_clouds_place(const tmuf_weather *weather, const float eye[3], float far_distance,
+                                           uint32_t time_ms, tmuf_cloud_draw *out, uint32_t cap);
 
 /* The car as the game draws it: the trees of the vehicle's solid (parts)
    and the rig CSceneVehicleStruct lays over them, one level per visual

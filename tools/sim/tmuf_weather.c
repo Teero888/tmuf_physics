@@ -2,7 +2,10 @@
    gives at its start time, the pictures sampled as the game does (TGA
    pictures only).
 
-   tmuf_weather PACKS MAP.Challenge.Gbx... */
+   tmuf_weather PACKS MAP.Challenge.Gbx...
+
+   TMUF_WEATHER_CLOUDS="EYEX EYEY EYEZ FAR MS" also lists the 3D clouds as
+   placed for that camera and clock. */
 
 #include <math.h>
 #include <stdio.h>
@@ -102,6 +105,49 @@ static void sample(const tmuf_packs *packs, const char *what, const tmuf_weather
          name_of(f));
 }
 
+static void print_sky_clouds(const tmuf_weather *w) {
+  const tmuf_weather_sky_clouds *k = &w->sky_clouds;
+  printf("sky clouds: %u solids, %u pieces, grid %g x %g, wind %g/s dir %g, center %s (%g, %g), heights %g .. %g\n", k->solid_count, k->piece_count,
+         (double)k->grid_size[0], (double)k->grid_size[1], (double)k->wind_speed, (double)k->wind_dir, k->has_center ? "yes" : "no",
+         (double)k->center[0], (double)k->center[1], (double)k->height0, (double)k->height_far);
+  for (uint32_t i = 0; i < k->key_count; i++)
+    printf("  key distance %g height %g\n", (double)k->keys[i][0], (double)k->keys[i][1]);
+  for (uint32_t i = 0; i < k->piece_count; i++) {
+    const tmuf_weather_cloud_piece *p = &k->pieces[i];
+    const tmuf_visual_instance *in = &k->visuals.instances[p->instance];
+    const tmuf_visual_mesh *m = &k->visuals.meshes[in->mesh];
+    const tmuf_visual_material *mat = in->material < k->visuals.material_count ? &k->visuals.materials[in->material] : NULL;
+    printf("  piece %u solid %u mesh %u (%u sprites, flags %x, atlas %ux%u, axis (%g %g %g) offset (%g %g)) center (%g, %g, "
+           "%g) half (%g, %g, %g) material %s",
+           i, p->solid, in->mesh, m->vertex_count, m->sprite_flags, m->sprite_atlas[0], m->sprite_atlas[1], (double)m->sprite_axis[0],
+           (double)m->sprite_axis[1], (double)m->sprite_axis[2], (double)m->sprite_offset[0], (double)m->sprite_offset[1], (double)p->center[0],
+           (double)p->center[1], (double)p->center[2], (double)m->bounds[3], (double)m->bounds[4], (double)m->bounds[5], mat ? mat->name : "-");
+    for (uint32_t t = 0; mat && t < mat->texture_count; t++)
+      printf(" [%s %s]", mat->textures[t].sampler ? mat->textures[t].sampler : "-",
+             mat->textures[t].pack_file ? mat->textures[t].pack_file
+             : mat->textures[t].file    ? mat->textures[t].file
+                                        : "generated");
+    printf("\n");
+  }
+  const char *env = getenv("TMUF_WEATHER_CLOUDS");
+  float eye[3], far_distance;
+  unsigned ms;
+  if (!env || sscanf(env, "%f %f %f %f %u", &eye[0], &eye[1], &eye[2], &far_distance, &ms) != 5)
+    return;
+  const uint32_t n = tmuf_weather_clouds_place(w, eye, far_distance, ms, NULL, 0);
+  tmuf_cloud_draw *d = malloc(sizeof *d * (n ? n : 1));
+  if (!d)
+    return;
+  tmuf_weather_clouds_place(w, eye, far_distance, ms, d, n);
+  for (uint32_t i = 0; i < n; i++) {
+    const tmuf_iso4 *l = &d[i].location;
+    printf("  draw %u piece %u t (%.2f, %.2f, %.2f) r (%g %g %g | %g %g %g | %g %g %g)\n", i, d[i].piece, (double)l->t.x, (double)l->t.y,
+           (double)l->t.z, (double)l->r.m[0][0], (double)l->r.m[0][1], (double)l->r.m[0][2], (double)l->r.m[1][0], (double)l->r.m[1][1],
+           (double)l->r.m[1][2], (double)l->r.m[2][0], (double)l->r.m[2][1], (double)l->r.m[2][2]);
+  }
+  free(d);
+}
+
 int main(int argc, char **argv) {
   if (argc < 3) {
     fprintf(stderr, "usage: tmuf_weather PACKS MAP...\n");
@@ -189,6 +235,7 @@ int main(int argc, char **argv) {
       printf("  clouds rows u (0, %.9g, %.9g) v (%.9g, %.9g, %.9g)\n", -w->clouds_scale[0] / s2, w->clouds_scale[0] / s2, 2 * w->clouds_scale[1] / s6,
              w->clouds_scale[1] / s6, -w->clouds_scale[1] / s6);
     }
+    print_sky_clouds(w);
     tmuf_track_free(track);
   }
   tmuf_packs_close(packs);

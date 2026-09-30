@@ -22,6 +22,10 @@ typedef struct tmuf_visuals_data {
    tmuf_lightmap (or NULL) */
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
                        tmuf_arena *arena);
+/* The visuals of a list of scene visuals (not the scene's), sprite visuals
+   included (TMUF_VISUAL_SPRITES meshes). */
+int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
+                            tmuf_arena *arena);
 void tmuf_visuals_free(tmuf_visuals_data *v);
 
 typedef struct tmuf_vehicle_visuals_data {

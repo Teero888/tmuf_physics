@@ -467,6 +467,22 @@ static void c0906a001(tmuf_gbx *g, void *node, uint32_t id) {
   v->indices = b.indices;
 }
 
+/* CPlugVisualSprite::Chunk */
+static void c09010005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_visual *v = node;
+  v->sprite_flags = tmuf_gbx_u32(g);
+  read_floats(g, v->sprite_axis, 3);
+  read_floats(g, v->sprite_offset, 2);
+}
+
+static void c09010006(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_visual *v = node;
+  v->sprite_atlas[0] = tmuf_gbx_u16(g);
+  v->sprite_atlas[1] = tmuf_gbx_u16(g);
+}
+
 static const tmuf_gbx_chunk VISUAL_CHUNKS[] = {
     NOPAY(0x09006000),
     READ(0x09006001, skip_id),
@@ -492,8 +508,8 @@ static const tmuf_gbx_chunk VISUAL_CHUNKS[] = {
     /* CPlugVisualIndexed */
     READ(0x0906a001, c0906a001),
     /* CPlugVisualSprite */
-    READ(0x09010005, skip24),
-    READ(0x09010006, skip4),
+    READ(0x09010005, c09010005),
+    READ(0x09010006, c09010006),
 };
 static const tmuf_gbx_class VISUAL = {0x09006000, "CPlugVisual", sizeof(tmuf_plug_visual), VISUAL_CHUNKS,
                                       COUNT(VISUAL_CHUNKS), NULL};

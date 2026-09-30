@@ -248,6 +248,7 @@ void tmuf_track_base_free(tmuf_track_base *b) {
   tmuf_visuals_free(&b->visuals);
   tmuf_vehicle_visuals_free(&b->vehicle_visuals);
   tmuf_lightmap_free(&b->lightmap);
+  tmuf_weather_free(&b->weather);
   free(b->triangles);
   tmuf_scene_free(&b->scene);
   tmuf_arena_free(&b->arena);

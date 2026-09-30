@@ -50,6 +50,11 @@ typedef struct tmuf_plug_visual {
   uint32_t index_count;
   const uint16_t *indices;
   tmuf_gbx_node *material;
+  /* CPlugVisualSprite (0x09010005, 0x09010006) */
+  uint32_t sprite_flags;       /* +0xb0 */
+  float sprite_axis[3];        /* +0x98 */
+  float sprite_offset[2];      /* +0xa4 */
+  uint16_t sprite_atlas[2];    /* +0xb4, +0xb6: atlas columns, rows */
 } tmuf_plug_visual;
 
 typedef struct tmuf_plug_surface_material {

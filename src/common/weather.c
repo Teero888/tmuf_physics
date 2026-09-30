@@ -1,6 +1,7 @@
 #include "common/weather.h"
 
 #include <ctype.h>
+#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -287,6 +288,241 @@ static tmuf_asset *load_pack_file(wbuild *b, tmuf_weather_file f, uint32_t class
   return a && a->root && a->class_id == class_id ? a : NULL;
 }
 
+/* ---- the 3D clouds (CSceneMobilClouds) ---- */
+
+/* CMotionWeather::ChangeClouds loads CFuncClouds' solids; BuildInstances
+   duplicates their trees, whose children OnRenderBefore places one by one. */
+static void build_sky_clouds(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena, tmuf_asset *ca, const tmuf_func_clouds *c) {
+  tmuf_weather_sky_clouds *k = &wd->view.sky_clouds;
+  k->grid_size[0] = k->grid_size[1] = 16000.0f; /* CSceneMobilClouds::CSceneMobilClouds (0xb9fd28) */
+  k->wind_speed = c->real50;                    /* * WindSpeed 1 */
+  k->wind_dir = 0.0f;
+  k->view_dependent = 1;
+  k->has_center = c->nat30 != 0;
+  k->center[0] = c->real34;
+  k->center[1] = c->real38;
+  k->height0 = c->real3c;
+  k->height_far = c->real4c;
+  k->key_count = c->key_count;
+  k->keys = (const float (*)[2])c->keys;
+  k->solid_count = c->solids.count;
+
+  tmuf_scene_visual *list = NULL;
+  tmuf_weather_cloud_piece *pieces = NULL;
+  uint32_t n = 0, cap = 0;
+  for (uint32_t i = 0; i < c->solids.count; i++) {
+    tmuf_asset *sa;
+    tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, ca, c->solids.nodes[i], &sa);
+    for (int d = 0; d < 8 && sn && sn->data && sn->class_id == 0x09005000u && ((const tmuf_plug_solid *)sn->data)->use_model; d++)
+      sn = tmuf_assets_follow(&s->assets, sa, ((const tmuf_plug_solid *)sn->data)->model, &sa);
+    if (!sn || !sn->data || sn->class_id != 0x09005000u)
+      continue;
+    tmuf_asset *ra;
+    tmuf_gbx_node *rn = tmuf_assets_follow(&s->assets, sa, ((const tmuf_plug_solid *)sn->data)->tree, &ra);
+    if (!rn || !rn->data || !rn->cls || (rn->cls->id != 0x0904f000u && rn->cls->id != 0x09015000u && rn->cls->id != 0x09062000u))
+      continue;
+    const tmuf_plug_tree *root = rn->data;
+    for (uint32_t j = 0; j < root->child_count; j++) {
+      tmuf_asset *ta, *va;
+      tmuf_gbx_node *tn = tmuf_assets_follow(&s->assets, ra, root->children[j], &ta);
+      if (!tn || !tn->data || !tn->cls || (tn->cls->id != 0x0904f000u && tn->cls->id != 0x09015000u && tn->cls->id != 0x09062000u))
+        continue;
+      const tmuf_plug_tree *t = tn->data;
+      tmuf_gbx_node *vn = t->visual ? tmuf_assets_follow(&s->assets, ta, t->visual, &va) : NULL;
+      if (!vn || !vn->data || !vn->cls || vn->cls->id != 0x09006000u)
+        continue; /* OnRenderBefore places the children with a visual */
+      if (n == cap) {
+        cap = cap ? cap * 2 : 64;
+        tmuf_scene_visual *l = realloc(list, sizeof *l * cap);
+        tmuf_weather_cloud_piece *p = realloc(pieces, sizeof *p * cap);
+        if (l)
+          list = l;
+        if (p)
+          pieces = p;
+        if (!l || !p)
+          break;
+      }
+      tmuf_scene_visual *v = &list[n];
+      memset(v, 0, sizeof *v);
+      v->owner = ta;
+      v->visual = t->visual;
+      v->material = t->material;
+      v->shader = t->shader;
+      /* the child's own rotation stays; its translation is the placement's */
+      tmuf_iso local = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, {0, 0, 0}};
+      if (t->has_iso)
+        tmuf_iso_from_archive(&local, t->iso);
+      local.t[0] = local.t[1] = local.t[2] = 0.0f;
+      v->iso = local;
+      v->tag = n;
+      v->lod_near = 0.0f;
+      v->lod_far = FLT_MAX;
+      const tmuf_plug_visual *pv = vn->data;
+      pieces[n].solid = i;
+      pieces[n].instance = UINT32_MAX;
+      memcpy(pieces[n].center, pv->bbox, sizeof pieces[n].center);
+      n++;
+    }
+  }
+  /* the pieces' meshes and materials, as the track's own visuals */
+  const int ok = n && tmuf_visuals_build_list(&wd->cloud_visuals, s, list, n, arena);
+  free(list);
+  if (!ok) {
+    free(pieces);
+    k->solid_count = 0;
+    return;
+  }
+  tmuf_weather_cloud_piece *kept = TMUF_ARENA_ARRAY(arena, tmuf_weather_cloud_piece, n);
+  if (kept) {
+    const tmuf_visuals *vis = &wd->cloud_visuals.view;
+    for (uint32_t i = 0; i < vis->instance_count; i++)
+      if (vis->instances[i].block < n)
+        pieces[vis->instances[i].block].instance = i;
+    uint32_t m = 0;
+    for (uint32_t i = 0; i < n; i++)
+      if (pieces[i].instance != UINT32_MAX)
+        kept[m++] = pieces[i];
+    k->pieces = kept;
+    k->piece_count = m;
+    k->visuals = *vis;
+  }
+  free(pieces);
+}
+
+void tmuf_weather_free(tmuf_weather_data *wd) {
+  if (wd->cloud_visuals.view.mesh_count || wd->cloud_visuals.meshes)
+    tmuf_visuals_free(&wd->cloud_visuals);
+  memset(&wd->cloud_visuals, 0, sizeof wd->cloud_visuals);
+}
+
+#define D(x) ((double)(x))
+
+static float frac_positive(float x) {
+  /* modf, then +1 when negative (OnRenderBefore's table lookup on the sign) */
+  double ip;
+  const float f = (float)modf(D(x), &ip);
+  return (float)(D(f < 0.0f ? 1.0f : 0.0f) + D(f));
+}
+
+/* ((frac(x / tile + 0.5) - 0.5) * tile: the wrap into [-tile/2, tile/2) */
+static float wrap(float x, float tile) {
+  const float a = (float)(D((float)(D(x) / D(tile))) + 0.5);
+  return (float)((D(frac_positive(a)) - 0.5) * D(tile));
+}
+
+uint32_t tmuf_weather_clouds_place(const tmuf_weather *w, const float eye[3], float far_distance, uint32_t time_ms, tmuf_cloud_draw *out,
+                                   uint32_t cap) {
+  const tmuf_weather_sky_clouds *k = w ? &w->sky_clouds : NULL;
+  if (!k || !k->solid_count || !k->piece_count)
+    return 0;
+  /* OnRenderBefore: AutoSizeFarZ sets the instance counts from the far
+     distance (fistp: round to nearest) */
+  const double twice = 2.0 * D(far_distance);
+  const uint32_t nz = (uint32_t)(int64_t)nearbyint(D((float)(D((float)(twice / D(k->grid_size[1]))) + 0.5))) + 1;
+  const uint32_t nx = (uint32_t)(int64_t)nearbyint(D((float)(D((float)(twice / D(k->grid_size[0]))) + 0.5))) + 1;
+  const float tile_x = (float)(D(nx) * D(k->grid_size[0])), tile_z = (float)(D(nz) * D(k->grid_size[1]));
+  /* the wind: WindSpeed * CFuncClouds' speed * ms * 0.001 */
+  const float drift = (float)(D(k->wind_speed) * D(time_ms) * 0.0010000000474974513);
+  const float wind[3] = {(float)(D(drift) * -D((float)sin(D(k->wind_dir)))), 0.0f, (float)(D(drift) * -D((float)cos(D(k->wind_dir))))};
+  uint32_t count = 0, solid = 0;
+  for (uint32_t iz = 0; iz < nz; iz++) {
+    for (uint32_t ix = 0; ix < nx; ix++) {
+      /* BuildInstances: RotateY(((iz & 1) + 2 (ix & 1)) * pi / 2), cell origin */
+      const float a = (float)(D((iz & 1u) + 2u * (ix & 1u)) * 3.1415927410125732 * 0.5);
+      const float ca = (float)cos(D(a)), sa = (float)sin(D(a));
+      const float r[3][3] = {{ca, 0.0f, sa}, {0.0f, 1.0f, 0.0f}, {-sa, 0.0f, ca}};
+      const float t[3] = {(float)(D(ix) * D(k->grid_size[0])), 0.0f, (float)(D(iz) * D(k->grid_size[1]))};
+      /* IsViewDep: relative to the camera horizontally */
+      const float tr[3] = {k->view_dependent ? (float)(D(t[0]) - D(eye[0])) : t[0], t[1], k->view_dependent ? (float)(D(t[2]) - D(eye[2])) : t[2]};
+      for (uint32_t pi = 0; pi < k->piece_count; pi++) {
+        if (k->pieces[pi].solid != solid)
+          continue;
+        const float *c = k->pieces[pi].center;
+        float p[3], q[3];
+        for (int i = 0; i < 3; i++)
+          p[i] = (float)(D(r[i][1]) * D(c[1]) + D(c[0]) * D(r[i][0]) + D(r[i][2]) * D(c[2]) + D(tr[i]));
+        for (int i = 0; i < 3; i++)
+          q[i] = (float)(D(p[i]) + D(wind[i]));
+        q[0] = wrap(q[0], tile_x);
+        q[2] = wrap(q[2], tile_z);
+        float d[3], dl[3];
+        for (int i = 0; i < 3; i++)
+          d[i] = (float)(D(q[i]) - D(p[i]));
+        for (int i = 0; i < 3; i++) /* into the instance's frame */
+          dl[i] = (float)(D(r[0][i]) * D(d[0]) + D(r[1][i]) * D(d[1]) + D(r[2][i]) * D(d[2]));
+        /* the height over the horizontal distance */
+        float hx = q[0], hz = q[2];
+        if (k->has_center) {
+          if (k->view_dependent) {
+            hx = (float)(D(hx) + D(eye[0]));
+            hz = (float)(D(hz) + D(eye[2]));
+          }
+          hx = (float)(D(hx) - D(k->center[0]));
+          hz = (float)(D(hz) - D(k->center[1]));
+        }
+        const float dist = (float)sqrt(D((float)(D(hx) * D(hx) + D(hz) * D(hz))));
+        float prev[2] = {0.0f, k->height0}, next[2] = {far_distance, k->height_far};
+        uint32_t ki = 0;
+        while (ki < k->key_count && !(k->keys[ki][0] > dist)) {
+          prev[0] = k->keys[ki][0];
+          prev[1] = k->keys[ki][1];
+          ki++;
+        }
+        if (ki < k->key_count) {
+          next[0] = k->keys[ki][0];
+          next[1] = k->keys[ki][1];
+        }
+        const float f = (float)((D(dist) - D(prev[0])) / (D(next[0]) - D(prev[0])));
+        dl[1] = (float)(D(prev[1]) + (D(next[1]) - D(prev[1])) * D(f));
+        if (out && count < cap) {
+          tmuf_cloud_draw *o = &out[count];
+          o->piece = pi;
+          const tmuf_iso4 *own = &k->visuals.instances[k->pieces[pi].instance].location;
+          for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+              o->location.r.m[i][j] = (float)(D(r[i][0]) * D(own->r.m[0][j]) + D(r[i][1]) * D(own->r.m[1][j]) + D(r[i][2]) * D(own->r.m[2][j]));
+          float tw[3];
+          for (int i = 0; i < 3; i++)
+            tw[i] = (float)(D(r[i][0]) * D(dl[0]) + D(r[i][1]) * D(dl[1]) + D(r[i][2]) * D(dl[2]) + D(t[i]));
+          o->location.t = (tmuf_vec3){tw[0], tw[1], tw[2]};
+        }
+        count++;
+      }
+      solid = solid + 1 >= k->solid_count ? 0 : solid + 1;
+    }
+  }
+  return count;
+}
+
+void tmuf_cloud_sprite_quad(const tmuf_visual_mesh *mesh, uint32_t sprite, const float right[3], const float up[3], float corners[4][3],
+                            float uv[4][2]) {
+  const uint8_t *v = mesh->vertices + (size_t)sprite * mesh->vertex_stride;
+  float pos[3], size, aspect;
+  uint32_t cell;
+  memcpy(pos, v, sizeof pos);
+  memcpy(&size, v + 12, 4);
+  memcpy(&cell, v + 16, 4);
+  memcpy(&aspect, v + 20, 4);
+  /* CLoadGeomDynaSprite::LoadSprite, flags 0x40 (atlas cell, no roll):
+     A = 0.5 size up, B = 0.5 size aspect left (the camera's first axis) */
+  const float a = (float)(0.5 * D(size)), b = (float)(0.5 * D(size) * D(aspect));
+  static const float sa[4] = {-1, -1, 1, 1}, sb[4] = {1, -1, 1, -1};
+  for (int c = 0; c < 4; c++)
+    for (int i = 0; i < 3; i++)
+      corners[c][i] = (float)(D(pos[i]) + D(sa[c]) * D(a) * D(up[i]) - D(sb[c]) * D(b) * D(right[i]));
+  /* CPlugVisualSprite::UpdateAtlasTexCoords: cell = row * columns + column */
+  const uint32_t cols = mesh->sprite_atlas[0] ? mesh->sprite_atlas[0] : 1u, rows = mesh->sprite_atlas[1] ? mesh->sprite_atlas[1] : 1u;
+  if (!(mesh->sprite_flags & 0x40u) || cell >= cols * rows)
+    cell = 0;
+  const float u0 = (float)(D(cell % cols) / D(cols)), u1 = (float)(D(cell % cols + 1) / D(cols));
+  const float v0 = (float)(D(cell / cols) / D(rows)), v1 = (float)(D(cell / cols + 1) / D(rows));
+  const float us[4] = {u0, u1, u0, u1}, vs[4] = {v0, v0, v1, v1};
+  for (int c = 0; c < 4; c++) {
+    uv[c][0] = us[c];
+    uv[c][1] = vs[c];
+  }
+}
+
 int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) {
   memset(wd, 0, sizeof *wd);
   tmuf_weather *w = &wd->view;
@@ -374,6 +610,7 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
       const tmuf_func_clouds *c = cn->data;
       w->clouds_min = picture(&b, ca, c->color_min);
       w->clouds_max = picture(&b, ca, c->color_max);
+      build_sky_clouds(wd, s, arena, ca, c);
     }
   }
 

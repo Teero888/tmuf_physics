@@ -55,6 +55,7 @@ typedef struct builder {
   uint32_t mesh_count, material_count;
   ptr_map mesh_map, material_map;
   int oom;
+  int sprites; /* also take sprite visuals (vertices without indices) */
 } builder;
 
 /* the image file a bitmap loads: on disk, else inside the packs */
@@ -220,7 +221,8 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
   if (found)
     return *slot;
   const tmuf_plug_visual *pv = vn->data;
-  if (!pv->vertices || !pv->indices || pv->index_count < 3) {
+  const int sprite = vn->class_id == 0x09010000u; /* CPlugVisualSprite */
+  if (!pv->vertices || (!(sprite && b->sprites) && (!pv->indices || pv->index_count < 3))) {
     *slot = UINT32_MAX;
     return UINT32_MAX;
   }
@@ -229,7 +231,15 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
   m->vertex_count = pv->vertex_count;
   m->vertex_stride = pv->vertex_stride;
   m->vertices = pv->vertices;
-  m->flags = ((pv->flags & 0x20u) ? TMUF_VISUAL_NORMAL : 0u) | ((pv->flags & 0x40u) ? TMUF_VISUAL_COLOR : 0u);
+  m->flags = sprite ? TMUF_VISUAL_SPRITES
+                    : ((pv->flags & 0x20u) ? TMUF_VISUAL_NORMAL : 0u) | ((pv->flags & 0x40u) ? TMUF_VISUAL_COLOR : 0u);
+  if (sprite) {
+    m->sprite_flags = pv->sprite_flags;
+    m->sprite_atlas[0] = pv->sprite_atlas[0];
+    m->sprite_atlas[1] = pv->sprite_atlas[1];
+    memcpy(m->sprite_axis, pv->sprite_axis, sizeof m->sprite_axis);
+    memcpy(m->sprite_offset, pv->sprite_offset, sizeof m->sprite_offset);
+  }
   m->uv_set_count = pv->texcoord_count;
   for (uint32_t i = 0; i < pv->texcoord_count && i < TMUF_VISUAL_MAX_UV_SETS; i++) {
     m->uv_sets[i] = pv->texcoords[i];
@@ -245,9 +255,9 @@ static uint32_t mesh_of(builder *b, tmuf_gbx_node *vn) {
 }
 
 static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
-                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena) {
+                      const uint32_t *lightmap_of_corpus, tmuf_arena *arena, int sprites) {
   memset(out, 0, sizeof *out);
-  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0};
+  builder b = {scene, arena, NULL, NULL, 0, 0, {0}, {0}, 0, sprites};
   b.meshes = malloc(sizeof *b.meshes * (n ? n : 1));
   b.materials = malloc(sizeof *b.materials * (n ? 3u * n : 1));
   tmuf_visual_instance *instances = malloc(sizeof *instances * (n ? n : 1));
@@ -298,7 +308,7 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
 
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus,
                        tmuf_arena *arena) {
-  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena);
+  return build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 0);
 }
 
 /* ---- the vehicle ---- */
@@ -393,7 +403,7 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
   memset(out, 0, sizeof *out);
   vehicle_builder b = {scene, arena, NULL, 0, 0, NULL, 0, 0, 0};
   vehicle_tree(&b, vehicle->solid_owner, vehicle->solid_tree, TMUF_VEHICLE_NO_PART, 0, 0.0f, FLT_MAX);
-  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena)) {
+  if (b.oom || !build_list(&out->visuals, scene, b.list, b.count, NULL, arena, 0)) {
     free(b.parts);
     free(b.list);
     return 0;
@@ -465,6 +475,11 @@ void tmuf_vehicle_visuals_free(tmuf_vehicle_visuals_data *v) {
   tmuf_visuals_free(&v->visuals);
   free(v->parts);
   memset(v, 0, sizeof *v);
+}
+
+int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,
+                            tmuf_arena *arena) {
+  return build_list(out, scene, list, n, NULL, arena, 1);
 }
 
 void tmuf_visuals_free(tmuf_visuals_data *v) {
