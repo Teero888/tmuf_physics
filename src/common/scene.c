@@ -1134,6 +1134,7 @@ int tmuf_scene_build(tmuf_scene *s, const tmuf_packset *set, const tmuf_challeng
     return 0;
   }
   const tmuf_collection *coll = ca->root;
+  s->collection_info = coll;
   s->collection = coll->name;
   s->default_vehicle = coll->vehicle[0];
   s->square_size = coll->square_size;

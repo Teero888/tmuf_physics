@@ -33,6 +33,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/lightmap.c
   src/common/lightmap.h
   src/common/visuals.c
+  src/common/scenery.c
+  src/common/scenery.h
   src/common/visuals.h
   src/common/weather.c
   src/common/weather.h

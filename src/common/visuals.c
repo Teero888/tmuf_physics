@@ -13,7 +13,7 @@
 #include <string.h>
 
 enum { CLS_VISUAL = 0x09006000u, CLS_SHADER = 0x09002000u, CLS_MATERIAL = 0x09079000u, CLS_SAMPLER = 0x0907e000u,
-       CLS_BITMAP = 0x09011000u };
+       CLS_BITMAP = 0x09011000u, CLS_SHADER_PASS = 0x09067000u };
 
 static uint32_t node_class(const tmuf_gbx_node *n) { return n && n->cls ? n->cls->id : 0; }
 
@@ -134,7 +134,8 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
    no address names (the game's programs sample them by name, e.g. a block's
    "Lighting") */
 static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa, const tmuf_plug_shader *sh,
-                            const tmuf_plug_material_custom *custom, tmuf_asset *ca) {
+                            const tmuf_plug_material_custom *custom, tmuf_asset *ca, const tmuf_plug_bitmap **first) {
+  *first = NULL;
   const uint32_t cap = sh->address_count + (custom ? custom->bitmap_count : 0u);
   tmuf_visual_texture *t = TMUF_ARENA_ARRAY(b->arena, tmuf_visual_texture, cap ? cap : 1);
   if (!t) {
@@ -167,6 +168,11 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
     memcpy(t[n].matrix, ad->matrix, sizeof t[n].matrix);
     if (bitmap)
       bitmap_file(b, bowner, bitmap, &t[n], ad->has_address && (ad->address_flags & 0x1000u));
+    if (i == 0 && bitmap) {
+      tmuf_gbx_node *bn = tmuf_assets_follow(&b->scene->assets, bowner, bitmap, NULL);
+      if (node_class(bn) == CLS_BITMAP && bn->data)
+        *first = bn->data;
+    }
     n++;
   }
   for (uint32_t k = 0; custom && k < custom->bitmap_count; k++) {
@@ -186,6 +192,152 @@ static void shader_textures(builder *b, tmuf_visual_material *m, tmuf_asset *sa,
   }
   m->textures = t;
   m->texture_count = n;
+}
+
+/* CPlugBitmap::UsageIsBumpNormal */
+static int usage_is_bump(uint32_t usage) {
+  switch (usage) {
+  case 5:
+  case 6:
+  case 10:
+  case 11:
+  case 19:
+  case 20:
+  case 24:
+  case 25:
+  case 26:
+  case 27:
+  case 28:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+/* How the game draws a material's shader (see tmuf_visual_material):
+   CPlugShaderApply::OnNodLoaded and ComputeRequireAlphaBlending at load,
+   the delayed render lists, CDx9ShaderKeeper::Undirty's render states.
+   alpha_bitmap: the bitmap of the shader's first texture (its output alpha
+   texture), NULL for none. */
+static void material_draw_state(tmuf_visual_material *m, uint32_t cls, const tmuf_plug_shader *sh, const tmuf_plug_bitmap *alpha_bitmap) {
+  const int apply = cls == 0x09026000u || cls == 0x09068000u || cls == 0x09069000u;
+  const uint32_t st = sh->has_apply_state ? sh->apply_state[0] : 0u;
+  const uint32_t src = st & 31u, dst = (st >> 5) & 31u, op = (st >> 10) & 7u, func = (st >> 24) & 7u;
+  const uint32_t usage = alpha_bitmap && alpha_bitmap->has_usage ? alpha_bitmap->usage : 0u;
+  uint32_t f = sh->has_flags ? sh->flags[0] : 0u;
+  m->shader_class = cls;
+  m->alpha_texture = alpha_bitmap && sh->address_count ? 0u : UINT32_MAX;
+  m->alpha_texture_usage = usage;
+  m->has_generic_flags = sh->has_generic;
+  m->generic_flags = sh->generic_flags;
+  if (apply && sh->has_apply_state) {
+    /* CPlugShaderApply::ComputeRequireAlphaBlending */
+    if (op == 0 && dst == 5) {
+      f |= 0x180u;
+      if (!(st & 0x10000000u) && alpha_bitmap && (usage & 0xffu) != 7u && !usage_is_bump(usage & 0xffu) && (usage & 0x200000u))
+        f &= ~0x100u;
+    } else if (op == 0 && src == 1 && dst == 0) {
+      f &= ~0x100u;
+      f = func != 6u ? f | 0x80u : f & ~0x80u;
+    } else {
+      f |= 0x180u;
+    }
+    /* OnNodLoaded: AlphaToCoverage */
+    m->alpha_to_coverage =
+        !(st & 0x400000u) && src == 4 && dst == 5 && op == 0 && alpha_bitmap && alpha_bitmap->has_flags && (alpha_bitmap->flags & 0x1000000u);
+  }
+  m->draw_flags = f;
+  const uint32_t f1 = sh->has_flags ? sh->flags[1] : 0u;
+  m->static_shadow = (f1 >> 21) & 1u;
+  m->shadow_caster_disable = (f1 >> 18) & 1u;
+  m->shadow_depth_bias_extra = (f1 >> 16) & 1u;
+  m->double_sided = (f >> 10) & 1u;
+  /* the delayed render list and the prepass (CVisionViewport) */
+  if (f & 0x40000u) {
+    m->draw_list = TMUF_DRAW_SORT_CUSTOM;
+    m->sort_position = (f >> 26) & 3u;
+    m->prepass = m->sort_position < 2;
+  } else {
+    m->draw_list = (f & 0x100u) ? TMUF_DRAW_BLENDED : (f & 0x80u) ? TMUF_DRAW_ALPHA_TEST : TMUF_DRAW_OPAQUE;
+    m->prepass = m->draw_list != TMUF_DRAW_BLENDED && !m->static_shadow;
+  }
+  /* CDx9ShaderKeeper::Undirty */
+  const int bit21 = (f & 0x80u) && alpha_bitmap && (usage & 0x200000u);
+  uint32_t bsrc = src;
+  m->alpha_test = 0;
+  m->alpha_ref = 0;
+  m->alpha_func = TMUF_CMP_ALWAYS;
+  if (f & 0x100u) {
+    if (bit21 && !(st & 0x10000000u)) {
+      if (src == 4 && dst == 5) {
+        m->alpha_test = 1;
+        m->alpha_ref = 128;
+        m->alpha_func = TMUF_CMP_GREATER;
+        if (func == 6u)
+          bsrc = 1;
+      }
+    } else if ((src == 0 || src == 4) && (dst == 1 || dst == 5)) {
+      m->alpha_test = 1;
+      m->alpha_ref = 0;
+      m->alpha_func = TMUF_CMP_NOT_EQUAL;
+    }
+    m->alpha_blend = 1;
+  } else {
+    m->alpha_blend = 0;
+    if (bit21 && src == 4) {
+      m->alpha_test = 1;
+      m->alpha_ref = 128; /* the viewport's reference */
+      m->alpha_func = TMUF_CMP_GREATER;
+    }
+  }
+  m->blend_src = bsrc;
+  m->blend_dst = dst;
+  m->blend_op = op;
+  if (sh->has_apply_state && func != 6u) {
+    m->alpha_test = 1;
+    m->alpha_ref = (st >> 14) & 0xffu;
+    m->alpha_func = func + 2u;
+  }
+}
+
+/* the shader's passes: their GPU programs' files and constants */
+static void shader_passes(builder *b, tmuf_visual_material *m, tmuf_asset *sa, const tmuf_plug_shader *sh) {
+  if (!sh->pass_count)
+    return;
+  tmuf_visual_pass *p = TMUF_ARENA_ARRAY(b->arena, tmuf_visual_pass, sh->pass_count);
+  if (!p) {
+    b->oom = 1;
+    return;
+  }
+  memset(p, 0, sizeof *p * sh->pass_count);
+  uint32_t n = 0;
+  for (uint32_t i = 0; i < sh->pass_count; i++) {
+    tmuf_asset *pa;
+    tmuf_gbx_node *pn = tmuf_assets_follow(&b->scene->assets, sa, sh->passes[i], &pa);
+    if (node_class(pn) != CLS_SHADER_PASS || !pn->data)
+      continue;
+    const tmuf_plug_shader_pass *sp = pn->data;
+    for (int k = 0; k < 2; k++) {
+      const tmuf_plug_gpu_program *g = &sp->programs[k];
+      tmuf_visual_program *v = k ? &p[n].pixel : &p[n].vertex;
+      if (g->file) {
+        char path[1200];
+        if (g->file->external) {
+          v->file = dup(b->arena, g->file->file);
+          if (pa && tmuf_packset_resolve(b->scene->assets.set, &pa->gbx, g->file, pa->path, path, sizeof path).pack >= 0)
+            v->pack_file = dup(b->arena, path);
+        }
+      }
+      v->constant_count = g->constant_count;
+      for (uint32_t c = 0; c < g->constant_count; c++) {
+        v->constant_names[c] = dup(b->arena, g->constant_names[c]);
+        memcpy(v->constants[c], g->constants[c], sizeof v->constants[c]);
+      }
+    }
+    n++;
+  }
+  m->passes = p;
+  m->pass_count = n;
 }
 
 /* the replacement the game loads for a material reference of a remapped
@@ -247,7 +399,12 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
       m->has_render_state = sh->has_apply_state;
       m->render_state[0] = sh->apply_state[0];
       m->render_state[1] = sh->apply_state[1];
-      shader_textures(b, m, sa, sh, custom, ca);
+      const tmuf_plug_bitmap *alpha_bitmap;
+      shader_textures(b, m, sa, sh, custom, ca, &alpha_bitmap);
+      material_draw_state(m, sn->class_id, sh, alpha_bitmap);
+      shader_passes(b, m, sa, sh);
+    } else {
+      m->alpha_texture = UINT32_MAX;
     }
     m->lightmap_uv = UINT32_MAX;
     for (uint32_t t = 0; t < m->texture_count; t++)
@@ -531,6 +688,13 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
   out->flare_size = g->point[0];
   out->flare_bias_z = g->point[1];
   memcpy(out->radius, g->radius, sizeof out->radius);
+  if (out->kind == TMUF_LIGHT_BALL || out->kind == TMUF_LIGHT_SPOT) {
+    /* ball[]: +0x80, +0x78, +0x7c, +0x84, +0x88, +0x8c */
+    out->ball_flags = g->ball_flags;
+    out->attenuation[0] = g->ball[1];
+    out->attenuation[1] = g->ball[2];
+    memcpy(out->ambient_rgb, g->ball + 3, sizeof out->ambient_rgb);
+  }
   if (out->kind == TMUF_LIGHT_SPOT) {
     out->angle_inner = g->spot[0];
     out->angle_outer = g->spot[1];

@@ -666,6 +666,14 @@ static void gx_light_spot(tmuf_gbx *g, void *node, uint32_t id) {
   l->chunks |= 16u;
 }
 
+/* GxLightAmbient::Chunk 0x04005000: HeightMin, HeightMax */
+static void c04005000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_gx_light *l = node;
+  read_floats(g, l->ambient_height, 2);
+  l->chunks |= 32u;
+}
+
 static const tmuf_gbx_chunk LIGHT_CHUNKS[] = {
     NOPAY(0x04001000), NOPAY(0x04001001), NOPAY(0x04001002), NOPAY(0x04001003), NOPAY(0x04001004), NOPAY(0x04001005),
     NOPAY(0x04001006), NOPAY(0x04001007), NOPAY(0x04001008), READ(0x04001009, c04001009),
@@ -674,7 +682,7 @@ static const tmuf_gbx_chunk LIGHT_CHUNKS[] = {
     READ(0x04002006, gx_light_ball), READ(0x0400b000, gx_light_spot), READ(0x0400b001, gx_light_spot),
     READ(0x0400b002, gx_light_spot),
     /* GxLightAmbient */
-    READ(0x04005000, skip8),
+    READ(0x04005000, c04005000),
     /* GxLightDirectional */
     READ(0x04007000, skip12), READ(0x04007001, skip16), READ(0x04007002, skip24), READ(0x04007003, skip12),
     READ(0x04007004, skip16), READ(0x04007005, skip8),
@@ -928,9 +936,20 @@ static void noderef_array(tmuf_gbx *g, void *node, uint32_t id) {
     tmuf_gbx_noderef(g);
 }
 
+/* CPlugShader::Chunk 0x0900200e: the func shader (+0x34), the passes
+   (+0x2c), then more references */
 static void c0900200e(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_plug_shader *s = node;
   tmuf_gbx_noderef(g);
-  noderef_array(g, node, id);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x10000u) {
+    tmuf_gbx_fail(g, "shader pass count %u", n);
+    return;
+  }
+  s->pass_count = n;
+  s->passes = TMUF_ARENA_ARRAY(g->arena, tmuf_gbx_node *, n ? n : 1);
+  for (uint32_t i = 0; i < n && !g->error; i++)
+    s->passes[i] = tmuf_gbx_noderef(g);
   tmuf_gbx_noderef(g);
   noderef_array(g, node, id);
 }
@@ -983,14 +1002,25 @@ static void c09026008(tmuf_gbx *g, void *node, uint32_t id) {
   s->has_apply_state = 1;
 }
 
+/* CPlugShaderGeneric::Chunk 0x09004001..3: its 0x58-byte block (+0x38),
+   whose last word is its flags +0x8c (masked as the game does) */
 static void c09004003(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
-  UNUSED(id);
-  tmuf_gbx_skip(g, 0x58);
+  tmuf_plug_shader *s = node;
+  uint8_t block[0x58];
+  tmuf_gbx_read(g, block, sizeof block);
+  uint32_t f = (uint32_t)block[0x54] | (uint32_t)block[0x55] << 8 | (uint32_t)block[0x56] << 16 | (uint32_t)block[0x57] << 24;
+  f &= 0x7ffu;
+  if (id == 0x09004001u)
+    f = (f & 0x4ffu) | 0x200u;
+  else if (id == 0x09004002u)
+    f = (f & 0x5ffu) | 0x200u;
+  s->generic_flags = f;
+  s->has_generic = 1;
 }
 
 static const tmuf_gbx_chunk SHADER_CHUNKS[] = {
-    READ(0x0900200e, c0900200e), READ(0x09002016, c09002016), READ(0x09004003, c09004003),
+    READ(0x0900200e, c0900200e), READ(0x09002016, c09002016), READ(0x09004001, c09004003),
+    READ(0x09004002, c09004003), READ(0x09004003, c09004003),
     READ(0x09026002, c09026002), READ(0x09026004, c09026004), READ(0x09026008, c09026008),
 };
 static const tmuf_gbx_class SHADER = {0x09002000, "CPlugShader", sizeof(tmuf_plug_shader), SHADER_CHUNKS,
@@ -998,10 +1028,12 @@ static const tmuf_gbx_class SHADER = {0x09002000, "CPlugShader", sizeof(tmuf_plu
 
 /* ---- CPlugShaderPass (0x09067000) ---- */
 
-static void gpu_pipeline(tmuf_gbx *g) {
-  int enabled = tmuf_gbx_bool(g);
-  tmuf_gbx_noderef(g);
-  if (!enabled)
+/* a GPU program: enabled, its file, then (enabled) the constants it
+   loads: their names (each with 4 words), then their values (float4) */
+static void gpu_pipeline(tmuf_gbx *g, tmuf_plug_gpu_program *p) {
+  p->enabled = tmuf_gbx_bool(g);
+  p->file = tmuf_gbx_noderef(g);
+  if (!p->enabled)
     return;
   uint32_t n = tmuf_gbx_u32(g);
   if (n > 0x100000u) {
@@ -1009,15 +1041,29 @@ static void gpu_pipeline(tmuf_gbx *g) {
     return;
   }
   for (uint32_t i = 0; i < n && !g->error; i++) {
-    tmuf_gbx_id(g, NULL);
+    const char *name = tmuf_gbx_id(g, NULL);
+    if (i < TMUF_PASS_MAX_CONSTANTS)
+      p->constant_names[i] = name ? name : "";
     tmuf_gbx_skip(g, 16);
   }
-  skip_counted(g, 16);
+  uint32_t m = tmuf_gbx_u32(g);
+  if (m > 0x100000u) {
+    tmuf_gbx_fail(g, "gpu load fx value count %u", m);
+    return;
+  }
+  for (uint32_t i = 0; i < m && !g->error; i++) {
+    float v[4];
+    read_floats(g, v, 4);
+    if (i < TMUF_PASS_MAX_CONSTANTS)
+      memcpy(p->constants[i], v, sizeof v);
+  }
+  n = n < m ? n : m;
+  p->constant_count = n < TMUF_PASS_MAX_CONSTANTS ? n : TMUF_PASS_MAX_CONSTANTS;
 }
 
 static void c0906700a(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
+  tmuf_plug_shader_pass *pass = node;
   uint32_t n = tmuf_gbx_u32(g);
   if (n > 0x100000u) {
     tmuf_gbx_fail(g, "pipeline id count %u", n);
@@ -1025,15 +1071,15 @@ static void c0906700a(tmuf_gbx *g, void *node, uint32_t id) {
   }
   for (uint32_t i = 0; i < n && !g->error; i++)
     tmuf_gbx_id(g, NULL);
-  gpu_pipeline(g);
-  gpu_pipeline(g);
+  gpu_pipeline(g, &pass->programs[0]);
+  gpu_pipeline(g, &pass->programs[1]);
 }
 
 static const tmuf_gbx_chunk SHADER_PASS_CHUNKS[] = {
     READ(0x09067006, noderef_array), READ(0x09067007, skip4), READ(0x0906700a, c0906700a),
 };
-static const tmuf_gbx_class SHADER_PASS = {0x09067000, "CPlugShaderPass", 1, SHADER_PASS_CHUNKS,
-                                           COUNT(SHADER_PASS_CHUNKS), NULL};
+static const tmuf_gbx_class SHADER_PASS = {0x09067000, "CPlugShaderPass", sizeof(tmuf_plug_shader_pass),
+                                           SHADER_PASS_CHUNKS, COUNT(SHADER_PASS_CHUNKS), NULL};
 
 /* ---- CPlugBitmapSampler family (0x0907e000: Address, Apply) ---- */
 
@@ -1135,6 +1181,8 @@ static void bitmap_image(tmuf_gbx *g, void *node, uint32_t id) {
   b->image = tmuf_gbx_noderef(g);
   uint8_t data[8];
   tmuf_gbx_read(g, data, 8);
+  b->usage = (uint32_t)data[0] | (uint32_t)data[1] << 8 | (uint32_t)data[2] << 16 | (uint32_t)data[3] << 24;
+  b->has_usage = 1;
   tmuf_gbx_skip(g, 16);
   if (id != 0x09011018 && id != 0x09011022)
     return;
@@ -1506,18 +1554,24 @@ static const tmuf_gbx_chunk HMS_ITEM_CHUNKS[] = {
 static const tmuf_gbx_class HMS_ITEM = {0x06003000, "CHmsItem", sizeof(tmuf_hms_item), HMS_ITEM_CHUNKS,
                                         COUNT(HMS_ITEM_CHUNKS), NULL};
 
+/* CHmsLight::Chunk: 0x0600c000 flags and the GxLight; each later version
+   first archives the one before, then 0x0600c001 +0x70 (a kind 4 light
+   only: none of the game's), 0x0600c002 +0x68, 0x0600c003 +0x6c */
 static void hms_light(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
-  int refs = id == 0x0600c003 ? 3 : id == 0x0600c002 ? 2 : 1;
-  tmuf_gbx_skip(g, 4);
-  while (refs--)
-    tmuf_gbx_noderef(g);
+  tmuf_hms_light *l = node;
+  l->flags = tmuf_gbx_u32(g) & 3u;
+  l->light = tmuf_gbx_noderef(g);
+  if (id >= 0x0600c002u)
+    l->bitmaps[0] = tmuf_gbx_noderef(g);
+  if (id >= 0x0600c003u)
+    l->bitmaps[1] = tmuf_gbx_noderef(g);
 }
 
 static const tmuf_gbx_chunk HMS_LIGHT_CHUNKS[] = {
     READ(0x0600c000, hms_light), READ(0x0600c001, hms_light), READ(0x0600c002, hms_light), READ(0x0600c003, hms_light),
 };
-static const tmuf_gbx_class HMS_LIGHT = {0x0600c000, "CHmsLight", 1, HMS_LIGHT_CHUNKS, COUNT(HMS_LIGHT_CHUNKS), NULL};
+static const tmuf_gbx_class HMS_LIGHT = {0x0600c000, "CHmsLight", sizeof(tmuf_hms_light), HMS_LIGHT_CHUNKS,
+                                         COUNT(HMS_LIGHT_CHUNKS), NULL};
 
 static void c0600d005(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(node);
@@ -1559,10 +1613,10 @@ static void c0a011005(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static void c0a00b000(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  uint8_t dummy;
-  tmuf_gbx_node_body(g, &HMS_LIGHT, &dummy);
+  tmuf_scene_object *o = node;
+  o->has_light = 1;
+  tmuf_gbx_node_body(g, &HMS_LIGHT, &o->light);
 }
 
 static void c0a00e000(tmuf_gbx *g, void *node, uint32_t id) {
@@ -2452,6 +2506,21 @@ static void c0303301e(tmuf_gbx *g, void *node, uint32_t id) {
   c->default_water = tmuf_gbx_bool(g);
 }
 
+/* CGameCtnCollection::Chunk 0x03033024: +0x84, +0x90, +0x8c, +0x88,
+   +0xac VertexLighting, +0xb0 ColorVertexMin, +0xb4 ColorVertexMax */
+static void c03033024(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_collection *c = node;
+  c->shadow_mode = tmuf_gbx_u32(g);
+  c->shadow_90 = tmuf_gbx_u32(g);
+  c->shadow_8c = tmuf_gbx_bool(g);
+  c->shadow_88 = tmuf_gbx_f32(g);
+  c->vertex_lighting = tmuf_gbx_u32(g);
+  c->color_vertex_min = tmuf_gbx_f32(g);
+  c->color_vertex_max = tmuf_gbx_f32(g);
+  c->has_lighting = 1;
+}
+
 static void c03033022(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
   tmuf_collection *c = node;
@@ -2477,18 +2546,12 @@ static void skip48(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_gbx_skip(g, 48);
 }
 
-static void skip28(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
-  UNUSED(id);
-  tmuf_gbx_skip(g, 28);
-}
-
 static const tmuf_gbx_chunk COLLECTION_CHUNKS[] = {
     READ(0x03033009, c03033009), READ(0x0303300c, skip8),   READ(0x0303300d, c0303300d),
     READ(0x0303300e, skip4),     READ(0x03033011, skip4),   READ(0x03033019, skip4),
     READ(0x0303301a, skip48),    READ(0x0303301d, c0303301d), READ(0x0303301e, c0303301e),
     READ(0x0303301f, count4_array), READ(0x03033020, c03033020), READ(0x03033021, c03033021),
-    READ(0x03033022, c03033022),     READ(0x03033023, skip4),   READ(0x03033024, skip28),
+    READ(0x03033022, c03033022),     READ(0x03033023, skip4),   READ(0x03033024, c03033024),
 };
 static const tmuf_gbx_class COLLECTION = {0x03033000, "CGameCtnCollection", sizeof(tmuf_collection),
                                           COLLECTION_CHUNKS, COUNT(COLLECTION_CHUNKS), NULL};
@@ -2680,7 +2743,7 @@ static void c0a003013(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 /* CScene::InternalArchiveSceneObjectBuffer */
-static void scene_object_buffer(tmuf_gbx *g, tmuf_scene3d *sc, int mobils) {
+static void scene_object_buffer(tmuf_gbx *g, tmuf_scene3d *sc, int mobils, tmuf_node_list *objects) {
   uint32_t count;
   tmuf_mobil_instance **list = NULL;
   if (mobils) {
@@ -2696,6 +2759,8 @@ static void scene_object_buffer(tmuf_gbx *g, tmuf_scene3d *sc, int mobils) {
     tmuf_node_list l = {0};
     fast_buffer_nod(g, &l);
     count = l.count;
+    if (objects)
+      *objects = l;
   }
   uint32_t locs = tmuf_gbx_u32(g);
   if (locs > 0x100000u) {
@@ -2721,9 +2786,9 @@ static void c0a003016(tmuf_gbx *g, void *node, uint32_t id) {
   fast_buffer_nod(g, &sc->sectors);
   if (version > 2)
     tmuf_gbx_u32(g);
-  scene_object_buffer(g, sc, version > 2);
-  for (int i = 0; i < 5 && !g->error; i++)
-    scene_object_buffer(g, sc, 0);
+  scene_object_buffer(g, sc, version > 2, &sc->objects[0]);
+  for (int i = 1; i <= 5 && !g->error; i++)
+    scene_object_buffer(g, sc, 0, &sc->objects[i]);
   if (version > 1)
     c_fast_buffer_nod(g, node, id); /* gates */
   c_fast_buffer_nod(g, node, id);   /* paths */
@@ -2858,12 +2923,31 @@ static void c0303a004(tmuf_gbx *g, void *node, uint32_t id) {
   ((tmuf_mood *)node)->pack_light_map = tmuf_gbx_noderef(g);
 }
 
+static void c0303a005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_mood *)node)->ambient_occ = tmuf_gbx_noderef(g);
+}
+
 static const tmuf_gbx_chunk MOOD_CHUNKS[] = {
     READ(0x0303a000, c0303a000), READ(0x0303a001, c0303a001), READ(0x0303a002, c0303a002),
-    READ(0x0303a003, skip4),     READ(0x0303a004, c0303a004), READ(0x0303a005, skip_noderef),
+    READ(0x0303a003, skip4),     READ(0x0303a004, c0303a004), READ(0x0303a005, c0303a005),
 };
 static const tmuf_gbx_class MOOD = {0x0303a000, "CGameCtnDecorationMood", sizeof(tmuf_mood), MOOD_CHUNKS,
                                     COUNT(MOOD_CHUNKS), NULL};
+
+/* CHmsAmbientOcc::Chunk 0x06026000 */
+static void c06026000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_ambient_occ *a = node;
+  a->radius = tmuf_gbx_f32(g);
+  a->power = tmuf_gbx_f32(g);
+  a->blur_texels = tmuf_gbx_u32(g);
+  read_floats(g, a->mid_gray, 3);
+}
+
+static const tmuf_gbx_chunk AMBIENT_OCC_CHUNKS[] = {READ(0x06026000, c06026000)};
+static const tmuf_gbx_class AMBIENT_OCC = {0x06026000, "CHmsAmbientOcc", sizeof(tmuf_ambient_occ), AMBIENT_OCC_CHUNKS,
+                                           COUNT(AMBIENT_OCC_CHUNKS), NULL};
 
 /* CMotionManagerWeathers::Chunk */
 static void c08053000(tmuf_gbx *g, void *node, uint32_t id) {
@@ -3037,6 +3121,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
-    &MOOD,            &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV,
+    &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

@@ -204,6 +204,61 @@ typedef struct tmuf_visual_texture {
   float matrix[16];
 } tmuf_visual_texture;
 
+/* A GPU program of a shader pass: its file (e.g. "Diff X2 2Sided Trans
+   PC3.PHlsl.Txt": the family of the material's HLSL) and the constants the
+   pass loads into it by name (e.g. SeaTransPC3: BumpScaleUV 0.05,
+   RefracPertubPC3 0.1). */
+#define TMUF_VISUAL_MAX_CONSTANTS 16
+
+typedef struct tmuf_visual_program {
+  const char *file;      /* the file's name as stored, NULL for none */
+  const char *pack_file; /* its path inside the packs, NULL when not found */
+  uint32_t constant_count;
+  const char *constant_names[TMUF_VISUAL_MAX_CONSTANTS];
+  float constants[TMUF_VISUAL_MAX_CONSTANTS][4];
+} tmuf_visual_program;
+
+typedef struct tmuf_visual_pass {
+  tmuf_visual_program vertex, pixel;
+} tmuf_visual_pass;
+
+/* The render list a material's surfaces go to (CVisionViewport, by its
+   shader's flags) */
+enum {
+  TMUF_DRAW_OPAQUE = 0,      /* opaque: drawn in the prepass, then the main pass */
+  TMUF_DRAW_ALPHA_TEST = 1,  /* alpha tested (draw_flags 0x80): same */
+  TMUF_DRAW_BLENDED = 2,     /* alpha blended (draw_flags 0x100): after the opaque ones, sorted, no prepass */
+  TMUF_DRAW_SORT_CUSTOM = 3, /* SortCustom (flag 0x40000): its own list by sort_position */
+};
+
+/* CPlugShaderApply blend factors (render_state bits 0..4 source, 5..9
+   destination): the D3DBLEND the game sets */
+enum {
+  TMUF_BLEND_ZERO = 0,
+  TMUF_BLEND_ONE = 1,
+  TMUF_BLEND_SRC_COLOR = 2,
+  TMUF_BLEND_INV_SRC_COLOR = 3,
+  TMUF_BLEND_SRC_ALPHA = 4,
+  TMUF_BLEND_INV_SRC_ALPHA = 5,
+  TMUF_BLEND_DST_COLOR = 6,
+  TMUF_BLEND_INV_DST_COLOR = 7,
+  TMUF_BLEND_DST_ALPHA = 8,
+  TMUF_BLEND_INV_DST_ALPHA = 9,
+  TMUF_BLEND_SRC_ALPHA_SAT = 10,
+};
+
+/* alpha test functions (D3DCMPFUNC) */
+enum {
+  TMUF_CMP_NEVER = 1,
+  TMUF_CMP_LESS = 2,
+  TMUF_CMP_EQUAL = 3,
+  TMUF_CMP_LESS_EQUAL = 4,
+  TMUF_CMP_GREATER = 5,
+  TMUF_CMP_NOT_EQUAL = 6,
+  TMUF_CMP_GREATER_EQUAL = 7,
+  TMUF_CMP_ALWAYS = 8,
+};
+
 /* The shader the game draws a surface with (CPlugMaterial's supported
    device set, the material's custom bitmaps substituted). */
 typedef struct tmuf_visual_material {
@@ -221,6 +276,75 @@ typedef struct tmuf_visual_material {
   /* the uv set its "PreLightGen" sampler (the lightmap atlas, see
      tmuf_lightmap) reads, UINT32_MAX when it samples none */
   uint32_t lightmap_uv;
+
+  /* ---- how the game draws it ----
+     The shader's flags as the game ends up with them at load
+     (CPlugShaderApply::ComputeRequireAlphaBlending, for CPlugShaderApply
+     and its subclasses; CPlugShaderGeneric keeps the archived ones):
+     with op 0 and destination INV_SRC_ALPHA it is blended (0x180) unless
+     its alpha texture's bitmap has usage bit 21 (0x200000; not a bump or
+     usage 7 bitmap, and not ForceIsAlphaBlend, render_state bit 28), which
+     makes it alpha tested (0x80) instead; ONE / ZERO is opaque, alpha
+     tested when the apply's alpha test function is not 6 (none); anything
+     else is blended. */
+  uint32_t shader_class;  /* the shader's class id (0x09004000 CPlugShaderGeneric,
+                             0x09026000 CPlugShaderApply, ...), 0 if none */
+  uint32_t draw_flags;    /* shader_flags[0] after load: 0x100 blended, 0x80 alpha
+                             tested, 0x400 double sided, 0x40000 SortCustom
+                             (sort position in bits 26..27), bit 31 Alpha01SoftEdges */
+  uint32_t draw_list;     /* TMUF_DRAW_* */
+  uint32_t sort_position; /* TMUF_DRAW_SORT_CUSTOM: 0..3 */
+  /* in the depth / face normal prepass (and so shadowed by the deferred
+     mask and occluded by the SSAO): opaque and alpha tested surfaces and
+     SortCustom positions 0 and 1, except shaders with
+     ShadowImageSpaceDisable (CVisionViewport's prepass skips them) */
+  int prepass;
+  /* shader_flags[1] bit 21, ShadowImageSpaceDisable: the shader reads the
+     static shadow map itself (one PCF lookup) instead of the deferred
+     mask, and has no SSAO (Island's double-sided foliage). The blended
+     surfaces, not in the prepass either, do the same in the traces (Bay's
+     "Trans" glass) */
+  int static_shadow;
+  int shadow_caster_disable;   /* shader_flags[1] bit 18: casts no shadow */
+  int shadow_depth_bias_extra; /* shader_flags[1] bit 16: pushed 2 m along the light in the caster pass */
+  int double_sided;            /* shader_flags[0] bit 10 (0x400): no culling */
+  /* the render states CDx9ShaderKeeper::Undirty sets from them:
+     - blended: blending (blend_src, blend_dst); alpha test 128 GREATER when
+       the alpha texture's bitmap has usage bit 21 (src SRC_ALPHA, dst
+       INV_SRC_ALPHA, not forced; the source becomes ONE when the apply has
+       no alpha test), else alpha test 0 NOT_EQUAL for sources ZERO /
+       SRC_ALPHA and destinations ONE / INV_SRC_ALPHA;
+     - not blended: no blending; alpha test GREATER than the viewport's
+       reference (128) when the alpha texture's bitmap has usage bit 21
+       and the source is SRC_ALPHA;
+     - then the apply's own alpha test (render_state bits 14..21 reference,
+       24..26 function f: TMUF_CMP f + 2) when f is not 6. */
+  int alpha_blend;
+  uint32_t blend_src, blend_dst; /* TMUF_BLEND_* */
+  uint32_t blend_op;             /* render_state bits 10..12 (0: add) */
+  int alpha_test;
+  uint32_t alpha_ref;  /* 0..255 */
+  uint32_t alpha_func; /* TMUF_CMP_* */
+  /* the texture whose alpha it outputs (CPlugShaderApply::
+     GetTextureApplyOutputAlpha: the shader's first texture unless its pixel
+     program names another), index into textures, UINT32_MAX for none */
+  uint32_t alpha_texture;
+  uint32_t alpha_texture_usage; /* its bitmap's usage word (+0x4c) */
+  /* render_state bit 27, AlphaToCoverage (CPlugShaderApply::OnNodLoaded):
+     SRC_ALPHA / INV_SRC_ALPHA, op 0, no BlendFromOpacityMap (bit 22), an
+     alpha texture whose bitmap has flag bit 24 (+0x57 bit 0) and whose
+     image has 4 bytes per pixel (not checked here). Only used with
+     multisampling: then the game turns alpha to coverage on and blending
+     off for a surface that is not blended */
+  int alpha_to_coverage;
+  /* CPlugShaderGeneric's lighting flags (+0x8c): bit 0 ambient, bit 1
+     ambient from the vertex colour, bit 2 diffuse, bit 3 diffuse from the
+     vertex colour; the prelight bake (tmuf_scenery_prelight) takes the
+     cube and gradient only with bit 2 */
+  int has_generic_flags;
+  uint32_t generic_flags;
+  uint32_t pass_count;
+  const tmuf_visual_pass *passes;
 } tmuf_visual_material;
 
 /* A mesh placed in the world: world = location.r * p + location.t, with
@@ -469,6 +593,12 @@ typedef struct tmuf_light {
   float angle_inner, angle_outer, angle_flare;
   float cos_inner, cos_outer, cos_flare;
   float falloff;
+  /* GxLightBall: flags (+0x64; 0x38: falloff 1 - (d / r)^2, else
+     1 / (1 + k1 d + k2 d^2)), attenuation k1 (+0x78), k2 (+0x7c) and its
+     ambient colour (+0x84: added unlit by the prelight bake) */
+  uint32_t ball_flags;
+  float attenuation[2];
+  float ambient_rgb[3];
   /* the lens flare picture (CPlugLight BitmapFlare's image; the renderer's
      default flare when both are NULL) */
   const char *flare_file, *flare_pack_file;
@@ -533,6 +663,19 @@ typedef struct tmuf_weather_fog {
   uint32_t flags;
 } tmuf_weather_fog;
 
+/* CHmsAmbientOcc: the screen-space ambient occlusion's parameters (the
+   SSAO's radius and power, its depth-aware blur's texel count and
+   GbxAmbientOccMidGray = (mid_gray, 1)) */
+typedef struct tmuf_ambient_occlusion {
+  /* the mood names a CHmsAmbientOcc (file); else these are the class's
+     defaults: 0.024, 3, 15, (0.5, 0.5, 0.5) */
+  int from_file;
+  tmuf_weather_file file;
+  float radius, power;
+  uint32_t blur_texels;
+  float mid_gray[3];
+} tmuf_ambient_occlusion;
+
 /* CGameCtnDecorationMood */
 typedef struct tmuf_weather_mood {
   float latitude;                /* degrees: the sun's path (tmuf_day_time) */
@@ -545,6 +688,7 @@ typedef struct tmuf_weather_mood {
   float shadow_car_intensity;
   int shadow_scene, background_is_locally_lighted;
   tmuf_weather_file pack_light_map; /* CHmsPackLightMap settings */
+  tmuf_ambient_occlusion ambient_occlusion; /* chunk 0x0303a005 */
 } tmuf_weather_mood;
 
 /* An entry of the mood's skin (CPlugGameSkin): the file the environment
@@ -702,6 +846,108 @@ TMUF_API void tmuf_cloud_sprite_quad(const tmuf_visual_mesh *mesh, uint32_t spri
 
 TMUF_API uint32_t tmuf_weather_clouds_place(const tmuf_weather *weather, const float eye[3], float far_distance,
                                            uint32_t time_ms, tmuf_cloud_draw *out, uint32_t cap);
+
+/* ---- scenery lighting of the vertex-lit environments (TMUF_TRACK_VISUALS) ----
+
+   Island, Coast, Bay, Alpine (Snow), Rally and Speed (Desert) light their
+   static scenery by vertex colours the game computes once at load
+   (CHmsZoneVPacker, the collection's VertexLighting 1); Stadium bakes
+   lightmaps instead (VertexLighting 2, tmuf_lightmap). At the highest
+   shader level each prelit vertex carries two colours:
+     COLOR1  the mesh's own vertex colour
+     COLOR0  the bake: tmuf_scenery_prelight (ambient cube and height
+             gradient, plus the lamps; the sun is not baked)
+   and the vertex shader (DGbxGenCodePC3_PrelightCV) makes of them
+     ModCV = sat(prelight_scale * COLOR1.rgb + prelight_trans)
+     C0    = ModCV * COLOR0.a * COLOR0.rgb                 (in shadow)
+     C1    = ModCV * COLOR0.a * sat(COLOR0.rgb + sun * max(0, N . -L))   (lit)
+   (the double-sided foliage adds GbxLightDirRgbDblSided0 instead of the
+   N . L term). */
+
+/* CGameCtnCollection +0x84 (GetShadowEnable): which blocks cast */
+enum {
+  TMUF_SHADOW_RECEIVE = 0,
+  TMUF_SHADOW_ALL_BUT_LANDSCAPE = 1,
+  TMUF_SHADOW_ALL_BUT_WATER_OR_UNDERGROUND = 2,
+  TMUF_SHADOW_CAST_AND_RECEIVE = 3,
+};
+
+typedef struct tmuf_scenery_light {
+  /* the map's collection (chunk 0x03033024) */
+  uint32_t vertex_lighting;                 /* 0 none, 1 prelit vertices, 2 lightmaps */
+  float color_vertex_min, color_vertex_max; /* +0xb0, +0xb4 */
+  /* GbxPrelight_ScaleTrans: (max - min, min), each clamped to [0, 1] */
+  float prelight_scale, prelight_trans;
+  uint32_t shadow_mode; /* +0x84, TMUF_SHADOW_* */
+  /* the chunk's other fields, as stored: +0x88 (1.0 in the game's files),
+     +0x8c, +0x90 (0 Island/Coast/Bay, 1 Alpine/Rally/Speed, 2 Stadium) */
+  float shadow_88;
+  uint32_t shadow_8c, shadow_90;
+
+  /* the decoration scene's ambient light (a CSceneLight's CHmsLight whose
+     GxLight is a GxLightAmbient): what the bake starts from */
+  int has_ambient;
+  float ambient_rgb[3];         /* GxLight rgb */
+  float ambient_intensity;      /* GxLight intensity */
+  uint32_t ambient_flags;       /* GxLight flags */
+  float height_min, height_max; /* GxLightAmbient: the gradient spans these world heights */
+  /* its bitmaps' images: the cube (DefaultAmbientCube.dds) and the height
+     gradient (DefaultAmbientGrad.dds), or the files the mood's skin swaps
+     them for ("AmbCube", "AmbGrad": e.g. Island\Media\Moods\Day\
+     AmbCube.dds, a 64^2 cube); none for none */
+  tmuf_weather_file ambient_cube, ambient_gradient;
+  /* their pixels as the bake reads them (RGB, 3 bytes each; NULL when not
+     read: only uncompressed 24 and 32 bit DDS are): the cube's 6 faces
+     (+X, -X, +Y, -Y, +Z, -Z) of cube_size^2 texels at mip 0, rows as in the
+     file (the game does not flip cube maps); the gradient's row 0 as the
+     game keeps the picture (DDS flipped at load: the file's last row) */
+  uint32_t cube_size;
+  const uint8_t *cube_pixels;
+  uint32_t gradient_width;
+  const uint8_t *gradient_row;
+
+  /* the world box (centre, half extents) of the zone's static packed
+     objects, the map's blocks and terrain (the placed meshes' boxes,
+     GmBoxAligned::SetMult), without the decoration: the static shadow
+     map's box (CHmsShadowGroup, Shadow_CreateVolumes) */
+  float static_box[6];
+} tmuf_scenery_light;
+
+/* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the
+   track. */
+TMUF_API const tmuf_scenery_light *tmuf_track_scenery_light(const tmuf_track *track);
+
+/* COLOR0 of a scenery vertex (CHmsZoneVPacker::PrecalcLighting): its world
+   position and world normal (the mesh normal turned by the placement, not
+   renormalised), the shader's generic_flags (tmuf_visual_material):
+     bit 2 set:  c = cube(n) * 2 * gradient(t), t = (y - height_min) /
+                 (height_max - height_min); cube point sampled at mip 0
+                 with D3D's face selection, gradient point sampled at
+                 x = trunc(clamp(t, 0, 0.9999) * width) (no cube: 1; no
+                 gradient: 0.5)
+     bit 2 clear, or neither picture: c = ambient_rgb * ambient_intensity
+   then the lamps (lights, light_count: e.g. tmuf_track_lights; those with
+   the DIFFUSE flag, balls and spots, count), within radius[0]:
+     att = ball_flags & 0x38 ? 1 - (d / r)^2 : 1 / (1 + k1 d + k2 d^2)
+     ball, intensity >= 0: c += att * intensity * ambient_rgb + f * diffuse_rgb
+     ball, intensity < 0:  a *= sat(1 - att sat(1 - ambient_rgb.r)) sat(1 - f sat(1 - rgb.r))
+     spot: att times 0 outside the outer cone, ((cos - cos_outer) /
+           (cos_inner - cos_outer))^falloff inside it (1 inside the inner
+           one); c += f * diffuse_rgb when att > 1e-4
+   with f = att * max(0, n . l) when bit 2 is set, else att. Writes
+   trunc(255 sat(c)) and trunc(255 sat(a)) as B, G, R, A (the game's
+   D3DCOLOR). */
+TMUF_API void tmuf_scenery_prelight(const tmuf_scenery_light *scenery, uint32_t generic_flags, const float position[3], const float normal[3],
+                                    const tmuf_light *lights, uint32_t light_count, uint8_t bgra[4]);
+
+/* COLOR0 of every vertex of a placed mesh (tmuf_visual_instance: its
+   material's generic_flags; the track's lights but the NightOnly ones on a
+   day map, whose light the game drops: CPlugTreeLight::
+   ApplyFidParameters' global DAT_00d16c08 is 1 and never written), as
+   tmuf_scenery_prelight;
+   bgra gets 4 bytes per mesh vertex. Returns the vertex count, 0 when the
+   track has no scenery light or the mesh has no normals. */
+TMUF_API uint32_t tmuf_track_prelight_instance(const tmuf_track *track, uint32_t instance, uint8_t *bgra);
 
 /* The car as the game draws it: the trees of the vehicle's solid (parts)
    and the rig CSceneVehicleStruct lays over them, one level per visual

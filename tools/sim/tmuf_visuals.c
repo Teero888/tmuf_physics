@@ -108,6 +108,26 @@ int main(int argc, char **argv) {
       printf("material %u (%u uses) %s state %d %08x flags %08x %08x alpha test %u ref %u\n", i, uses, m->name, m->has_render_state, m->render_state[0], m->shader_flags[0],
              m->shader_flags[1], m->has_render_state ? (m->render_state[0] >> 24) & 7u : 9u,
              (m->render_state[0] >> 14) & 0xffu);
+      static const char *lists[] = {"opaque", "alpha-test", "blended", "sort-custom"};
+      printf("  draw: class %08x flags %08x list %s%s%s%s%s blend %d %u/%u op %u, alpha test %d ref %u func %u, alpha "
+             "texture %d usage %08x%s, generic %d %x",
+             m->shader_class, m->draw_flags, lists[m->draw_list & 3u], m->prepass ? " prepass" : "", m->static_shadow ? " static-shadow" : "",
+             m->double_sided ? " double-sided" : "", m->shadow_caster_disable ? " no-caster" : "", m->alpha_blend, m->blend_src, m->blend_dst,
+             m->blend_op, m->alpha_test, m->alpha_ref, m->alpha_func, (int)m->alpha_texture, m->alpha_texture_usage,
+             m->alpha_to_coverage ? " atoc" : "", m->has_generic_flags, m->generic_flags);
+      if (m->shadow_depth_bias_extra)
+        printf(" bias-extra");
+      printf("\n");
+      for (uint32_t k = 0; k < m->pass_count; k++) {
+        const tmuf_visual_program *pr[2] = {&m->passes[k].vertex, &m->passes[k].pixel};
+        for (int j = 0; j < 2; j++) {
+          printf("  pass %u %s %s", k, j ? "ps" : "vs", pr[j]->file ? pr[j]->file : "-");
+          for (uint32_t c = 0; c < pr[j]->constant_count; c++)
+            printf(" %s=(%g %g %g %g)", pr[j]->constant_names[c], (double)pr[j]->constants[c][0], (double)pr[j]->constants[c][1],
+                   (double)pr[j]->constants[c][2], (double)pr[j]->constants[c][3]);
+          printf("\n");
+        }
+      }
       for (uint32_t k = 0; k < m->texture_count; k++)
       {
         const tmuf_visual_texture *t = &m->textures[k];

@@ -180,12 +180,37 @@ int main(int argc, char **argv) {
       tmuf_track_free(track);
       continue;
     }
+    const tmuf_scenery_light *sl = tmuf_track_scenery_light(track);
+    if (sl) {
+      printf("scenery: vertex lighting %u color vertex %g..%g scale/trans (%g, %g) shadow %u (+88 %g +8c %u +90 %u)\n", sl->vertex_lighting,
+             (double)sl->color_vertex_min, (double)sl->color_vertex_max, (double)sl->prelight_scale, (double)sl->prelight_trans, sl->shadow_mode,
+             (double)sl->shadow_88, sl->shadow_8c, sl->shadow_90);
+      printf("  ambient %d: rgb (%g, %g, %g) intensity %g flags %x heights %g..%g cube %s (%u) gradient %s (%u)\n", sl->has_ambient,
+             (double)sl->ambient_rgb[0], (double)sl->ambient_rgb[1], (double)sl->ambient_rgb[2], (double)sl->ambient_intensity, sl->ambient_flags,
+             (double)sl->height_min, (double)sl->height_max, name_of(&sl->ambient_cube), sl->cube_size, name_of(&sl->ambient_gradient),
+             sl->gradient_width);
+      const float *b = sl->static_box;
+      printf("  static box x %g..%g y %g..%g z %g..%g\n", (double)(b[0] - b[3]), (double)(b[0] + b[3]), (double)(b[1] - b[4]), (double)(b[1] + b[4]),
+             (double)(b[2] - b[5]), (double)(b[2] + b[5]));
+      const float up[3] = {0, 1, 0}, side[3] = {0, 0, 1};
+      for (float y = 0.0f; y <= 160.0f; y += 40.0f) {
+        const float pos[3] = {100.0f, y, 100.0f};
+        uint8_t c[4], d[4];
+        tmuf_scenery_prelight(sl, 4u, pos, up, NULL, 0, c);
+        tmuf_scenery_prelight(sl, 4u, pos, side, NULL, 0, d);
+        printf("  prelight at y %g: up (%u, %u, %u, %u) side +z (%u, %u, %u)\n", (double)y, c[2], c[1], c[0], c[3], d[2], d[1], d[0]);
+      }
+    }
     const tmuf_weather_mood *m = &w->mood;
     printf("mood: latitude %g start %g (sunrise %gh sunset %gh, unused) folder %s\n", (double)m->latitude, (double)m->remapped_start_day_time,
            m->time_sun_rise / 3.6e6, m->time_sun_fall / 3.6e6, m->folder);
     printf("  shadows: human %u opponent %u intensity %g scene %d background locally lighted %d; pack lightmap %s\n", m->shadow_count_car_human,
            m->shadow_count_car_opponent, (double)m->shadow_car_intensity, m->shadow_scene, m->background_is_locally_lighted,
            name_of(&m->pack_light_map));
+    const tmuf_ambient_occlusion *ao = &m->ambient_occlusion;
+    printf("  ambient occlusion%s %s: radius %g power %g blur %u mid gray (%g, %g, %g)\n", ao->from_file ? "" : " (defaults)",
+           ao->from_file ? name_of(&ao->file) : "-", (double)ao->radius, (double)ao->power, ao->blur_texels, (double)ao->mid_gray[0],
+           (double)ao->mid_gray[1], (double)ao->mid_gray[2]);
     printf("manager %s weather %s\n", w->manager ? w->manager : "-", w->name ? w->name : "-");
     for (int i = 0; i < 2; i++)
       printf("  fog %s: rgb (%g, %g, %g) start %g end %g density %g flags %x\n", i ? "day  " : "night", (double)w->fogs[i].rgb[0],

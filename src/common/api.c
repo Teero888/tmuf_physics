@@ -197,7 +197,9 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     if (!tmuf_lightmap_build(&b->lightmap, &b->scene, 2048) ||
         !tmuf_visuals_build(&b->visuals, &b->scene, b->lightmap.of_scene_corpus, &b->arena) ||
         !tmuf_vehicle_visuals_build(&b->vehicle_visuals, &b->scene, &b->vehicle, is_night, mood_folder, &b->arena) ||
-        !tmuf_track_lights_build(&b->lights, &b->scene, is_night, mood_folder, &b->arena)) {
+        !tmuf_track_lights_build(&b->lights, &b->scene, is_night, mood_folder, &b->arena) ||
+        !tmuf_scenery_build(&b->scenery, &b->scene, &b->visuals.view, b->weather.found ? &b->weather.view : NULL,
+                            b->lights.lights, b->lights.count, &b->arena)) {
       tmuf_set_error(err, err_size, "out of memory");
       return 0;
     }
@@ -252,6 +254,44 @@ uint32_t tmuf_track_lights(const tmuf_track *track, const tmuf_light **lights) {
   if (lights)
     *lights = b->lights.lights;
   return b->lights.count;
+}
+
+const tmuf_scenery_light *tmuf_track_scenery_light(const tmuf_track *track) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  return b && b->has_visuals && b->scenery.found ? &b->scenery.view : NULL;
+}
+
+uint32_t tmuf_track_prelight_instance(const tmuf_track *track, uint32_t instance, uint8_t *bgra) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (!b || !b->has_visuals || !b->scenery.found || instance >= b->visuals.view.instance_count)
+    return 0;
+  const tmuf_visuals *v = &b->visuals.view;
+  const tmuf_visual_instance *in = &v->instances[instance];
+  if (in->mesh >= v->mesh_count)
+    return 0;
+  const tmuf_visual_mesh *m = &v->meshes[in->mesh];
+  if (!(m->flags & TMUF_VISUAL_NORMAL) || (m->flags & TMUF_VISUAL_SPRITES))
+    return 0;
+  const uint32_t flags = in->material < v->material_count ? v->materials[in->material].generic_flags : 0u;
+  const float (*r)[3] = in->location.r.m;
+  const float t[3] = {in->location.t.x, in->location.t.y, in->location.t.z};
+  for (uint32_t i = 0; i < m->vertex_count; i++) {
+    const uint8_t *vx = m->vertices + (size_t)i * m->vertex_stride;
+    float p[3], packed_n[3], wp[3], wn[3];
+    uint32_t pn;
+    memcpy(p, vx, sizeof p);
+    memcpy(&pn, vx + 12, sizeof pn);
+    for (int k = 0; k < 3; k++) {
+      const int32_t c = (int32_t)(pn << (22 - 10 * k)) >> 22;
+      packed_n[k] = (float)c / 511.0f;
+    }
+    for (int k = 0; k < 3; k++) {
+      wp[k] = r[k][0] * p[0] + r[k][1] * p[1] + r[k][2] * p[2] + t[k];
+      wn[k] = r[k][0] * packed_n[0] + r[k][1] * packed_n[1] + r[k][2] * packed_n[2];
+    }
+    tmuf_scenery_prelight(&b->scenery.view, flags, wp, wn, b->scenery.lamps, b->scenery.lamp_count, bgra + (size_t)i * 4u);
+  }
+  return m->vertex_count;
 }
 
 const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track) {

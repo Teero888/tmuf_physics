@@ -16,6 +16,7 @@
 #include "common/vehicle.h"
 #include "common/lightmap.h"
 #include "common/visuals.h"
+#include "common/scenery.h"
 #include "common/weather.h"
 
 struct tmuf_packs {
@@ -50,6 +51,7 @@ typedef struct tmuf_track_base {
   tmuf_lightmap_data lightmap; /* with TMUF_TRACK_VISUALS */
   tmuf_weather_data weather;   /* with TMUF_TRACK_VISUALS */
   tmuf_lights_data lights;     /* with TMUF_TRACK_VISUALS */
+  tmuf_scenery_data scenery;   /* with TMUF_TRACK_VISUALS */
 } tmuf_track_base;
 
 void tmuf_set_error(char *err, size_t err_size, const char *fmt, ...);

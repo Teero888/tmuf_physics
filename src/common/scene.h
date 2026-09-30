@@ -184,6 +184,7 @@ typedef struct tmuf_scene {
   /* the decoration (CGameCtnDecoration) and its scene (CScene3d) files,
      NULL if not found */
   tmuf_asset *decoration_asset, *decoration_scene_asset;
+  const tmuf_collection *collection_info; /* the map's collection */
   char error[600];
 } tmuf_scene;
 

@@ -546,6 +546,24 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
   w->mood.shadow_scene = mood->shadow_scene;
   w->mood.background_is_locally_lighted = mood->background_is_locally_lighted;
   w->mood.pack_light_map = node_file(&b, ma, mood->pack_light_map);
+  /* its ambient occlusion (CHmsAmbientOcc's defaults when it names none) */
+  tmuf_ambient_occlusion *ao = &w->mood.ambient_occlusion;
+  ao->radius = 0.024f;
+  ao->power = 3.0f;
+  ao->blur_texels = 15;
+  ao->mid_gray[0] = ao->mid_gray[1] = ao->mid_gray[2] = 0.5f;
+  if (mood->ambient_occ) {
+    tmuf_gbx_node *an = tmuf_assets_follow(&s->assets, ma, mood->ambient_occ, NULL);
+    if (an && an->data && an->class_id == 0x06026000u) {
+      const tmuf_ambient_occ *o = an->data;
+      ao->from_file = 1;
+      ao->file = node_file(&b, ma, mood->ambient_occ);
+      ao->radius = o->radius;
+      ao->power = o->power;
+      ao->blur_texels = o->blur_texels;
+      memcpy(ao->mid_gray, o->mid_gray, sizeof ao->mid_gray);
+    }
+  }
   b.folder = w->mood.folder;
   tmuf_day_time_at(w->mood.remapped_start_day_time, w->mood.latitude, &w->start);
   w->is_night = !(0.25f < w->mood.remapped_start_day_time && w->mood.remapped_start_day_time < 0.75f);

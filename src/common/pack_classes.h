@@ -74,7 +74,19 @@ typedef struct tmuf_gx_light {
   /* GxLightSpot +0x94 inner angle, +0x98 outer angle (degrees, full), +0x9c
      flare angle, +0xa0, +0xa4, +0xa8 falloff */
   float spot[6];
+  /* GxLightAmbient (0x04005000): +0x5c HeightMin, +0x60 HeightMax (bit 5 of chunks) */
+  float ambient_height[2];
 } tmuf_gx_light;
+
+/* CHmsLight (0x0600c000): the GxLight it places (+0x88), its flag bits
+   (+0x8c & 3) and its bitmaps: +0x68 (0x0600c002: "BitmapFlare", the
+   ambient light's cube), +0x6c (0x0600c003: "BitmapSprite", the ambient
+   light's height gradient), +0x70 (0x0600c001, a kind 4 light's) */
+typedef struct tmuf_hms_light {
+  uint32_t flags;
+  tmuf_gbx_node *light;
+  tmuf_gbx_node *bitmaps[3]; /* +0x68, +0x6c, +0x70 */
+} tmuf_hms_light;
 
 #define TMUF_VISUAL_MAX_TEXCOORDS 8
 
@@ -156,7 +168,31 @@ typedef struct tmuf_plug_shader {
   uint32_t apply_state[2];
   uint32_t address_count;
   tmuf_gbx_node **addresses;
+  /* chunk 0x0900200e: its passes (CPlugShaderPass, +0x2c) */
+  uint32_t pass_count;
+  tmuf_gbx_node **passes;
+  /* CPlugShaderGeneric's flags +0x8c (the last word of the 0x58-byte
+     block of chunks 0x09004001..3): bit 0 ambient lighting, bit 1 ambient
+     from the vertex colour, bit 2 diffuse lighting, bit 3 diffuse from
+     the vertex colour (SetClassicVertexLighting) */
+  int has_generic;
+  uint32_t generic_flags;
 } tmuf_plug_shader;
+
+/* A GPU program of a CPlugShaderPass (0x0906700a): its file (a
+ *.VHlsl.Txt / *.PHlsl.Txt text) and the named constants it loads */
+#define TMUF_PASS_MAX_CONSTANTS 16
+typedef struct tmuf_plug_gpu_program {
+  int enabled;
+  tmuf_gbx_node *file;
+  uint32_t constant_count;
+  const char *constant_names[TMUF_PASS_MAX_CONSTANTS];
+  float constants[TMUF_PASS_MAX_CONSTANTS][4];
+} tmuf_plug_gpu_program;
+
+typedef struct tmuf_plug_shader_pass {
+  tmuf_plug_gpu_program programs[2]; /* vertex, pixel */
+} tmuf_plug_shader_pass;
 
 /* CPlugBitmapSampler/Address: sampler name and bitmap */
 typedef struct tmuf_plug_bitmap_address {
@@ -182,6 +218,11 @@ typedef struct tmuf_plug_bitmap {
   int has_flags;
   uint32_t flags;
   tmuf_gbx_node *render;
+  /* the word at +0x4c (chunks 0x09011014..22): usage in the low byte, the
+     pixel update mode in the next; bit 21 (0x200000) makes a src-alpha /
+     inv-src-alpha blend an alpha test */
+  int has_usage;
+  uint32_t usage;
 } tmuf_plug_bitmap;
 
 /* CPlugBitmapRender subclasses the car's shaders use */
@@ -248,6 +289,8 @@ typedef struct tmuf_scene_object {
   tmuf_node_list children;
   int has_item;
   tmuf_hms_item item;
+  int has_light; /* CSceneLight (0x0a00b000) */
+  tmuf_hms_light light;
   /* CSceneVehicle / CSceneVehicleCar */
   tmuf_gbx_node *vehicle_tunings, *vehicle_materials, *vehicle_struct;
   int has_physical_params;
@@ -402,6 +445,13 @@ typedef struct tmuf_collection {
   int has_geometry_water, geometry_water_planes; /* 0x03033022: water from block water planes */
   const char *folders[4]; /* block infos, ?, decorations, menu textures */
   const char *display_name;
+  /* 0x03033024: shadows (+0x84 enum, +0x90, +0x8c, +0x88) and vertex
+     lighting (+0xac mode, +0xb0 ColorVertexMin, +0xb4 ColorVertexMax) */
+  int has_lighting;
+  uint32_t shadow_mode, shadow_90, shadow_8c;
+  float shadow_88;
+  uint32_t vertex_lighting;
+  float color_vertex_min, color_vertex_max;
 } tmuf_collection;
 
 /* CGameCtnDecorationTerrainModifier (0x0303c000): the skin applied to the
@@ -460,6 +510,10 @@ typedef struct tmuf_scene3d {
   tmuf_mobil_instance **mobils; /* NULL entries for null pointers */
   uint32_t loc_count;
   tmuf_scene_loc *locs; /* one per mobil */
+  /* its object buffers (CScene::InternalArchiveSceneObjectBuffer) but
+     the mobils: [0] the first when it is not the mobils (old versions),
+     then the others (lights, sounds, ...) */
+  tmuf_node_list objects[6];
 } tmuf_scene3d;
 
 typedef struct tmuf_decoration_size {
@@ -485,7 +539,15 @@ typedef struct tmuf_mood {
   float shadow_car_intensity;                                 /* +0x3c */
   int shadow_scene, background_is_locally_lighted;            /* +0x40, +0x44 */
   tmuf_gbx_node *pack_light_map;                              /* 0x0303a004: +0x4c */
+  tmuf_gbx_node *ambient_occ;                                 /* 0x0303a005: +0x54 CHmsAmbientOcc */
 } tmuf_mood;
+
+/* CHmsAmbientOcc (0x06026000) */
+typedef struct tmuf_ambient_occ {
+  float radius, power;  /* +0x14, +0x18 */
+  uint32_t blur_texels; /* +0x1c */
+  float mid_gray[3];    /* +0x20 */
+} tmuf_ambient_occ;
 
 /* GxFogGlobal as CFuncWeather archives it (28 bytes) */
 typedef struct tmuf_fog_global {
