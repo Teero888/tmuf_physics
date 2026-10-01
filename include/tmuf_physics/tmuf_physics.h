@@ -135,7 +135,7 @@ TMUF_API uint32_t tmuf_track_triangles(const tmuf_track *track, const tmuf_trian
 
 /* The first point of start + t * seg (t in [0, 1]) on the track's collision
    (group 4: the static octree and the non-static decoration corpora,
-   collidable trees only), either face, as the race camera's ground probe
+   collidable trees only) facing it, as the race camera's ground probe
    asks (CHmsCollisionManager::SZone::IntersectSegment). 1 and *t on a hit. */
 TMUF_API int tmuf_track_segment_cast(const tmuf_track *track, const float start[3], const float seg[3], float *t);
 
