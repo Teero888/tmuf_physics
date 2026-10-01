@@ -299,6 +299,11 @@ typedef struct tmuf_visual_texture {
      stored) when has_transform */
   uint32_t texcoord;
   uint32_t generate; /* EGxUVGenerate: how generated coordinates are made (0: none) */
+  /* how the game addresses it in u and v, as D3DTEXTUREADDRESS (1 wrap, 2
+     mirror, 3 clamp): its CPlugBitmap's word at +0x4c, bits 25..26 and
+     27..28, plus 1 (the Coast and Snow traces: CoastRoad mirrored, the
+     tree atlases clamped); 1 when the bitmap has none */
+  uint8_t address[2];
   int has_transform;
   float transform[6];
   /* a bitmap of the material that no sampler of its shader names: the game's

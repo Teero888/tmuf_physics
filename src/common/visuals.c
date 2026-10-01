@@ -67,6 +67,7 @@ typedef struct builder {
 static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tmuf_visual_texture *t,
                         int use_tc_scale) {
   t->file = t->pack_file = NULL;
+  t->address[0] = t->address[1] = 1;
   tmuf_asset *ba;
   tmuf_gbx_node *bn = tmuf_assets_follow(&b->scene->assets, owner, bitmap, &ba);
   if (node_class(bn) != CLS_BITMAP || !bn->data) {
@@ -107,6 +108,10 @@ static void bitmap_file(builder *b, tmuf_asset *owner, tmuf_gbx_node *bitmap, tm
   }
   if (bm->has_flags && (bm->flags & 0x8000u) && t->texcoord == TMUF_TEXCOORD_GENERATED)
     t->generate = (bm->flags >> 16) & 0xffu;
+  if (bm->has_usage) {
+    t->address[0] = (uint8_t)(((bm->usage >> 25) & 3u) + 1u);
+    t->address[1] = (uint8_t)(((bm->usage >> 27) & 3u) + 1u);
+  }
   char path[1200];
   if (bm->image && bm->image->external &&
       tmuf_packset_resolve(b->scene->assets.set, &ba->gbx, bm->image, ba->path, path, sizeof path).pack >= 0) {
