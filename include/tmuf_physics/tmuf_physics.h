@@ -903,6 +903,11 @@ typedef struct tmuf_weather_skin_entry {
   const char *name;  /* e.g. "LightSun", "SkyColor", "Clouds" */
   uint32_t class_id; /* class of the node it replaces */
   tmuf_weather_file default_file, file;
+  /* a bitmap's entry (class 0x09011000, a .Texture.Gbx): the images the
+     default's and the used bitmap name (the materials sample those: the
+     mood's "Clouds", BayFXClouds.dds, in place of DefaultClouds.dds);
+     none for other classes */
+  tmuf_weather_file default_image, image;
 } tmuf_weather_skin_entry;
 
 enum {

@@ -308,6 +308,21 @@ static tmuf_asset *load_pack_file(wbuild *b, tmuf_weather_file f, uint32_t class
   return a && a->root && a->class_id == class_id ? a : NULL;
 }
 
+/* the image a bitmap file (a .Texture.Gbx in the packs) names */
+static tmuf_weather_file bitmap_file_image(wbuild *b, tmuf_weather_file f) {
+  tmuf_weather_file img = {NULL, NULL};
+  tmuf_asset *ba = load_pack_file(b, f, 0x09011000u);
+  const tmuf_plug_bitmap *bm = ba ? ba->root : NULL;
+  if (!bm || !bm->image || !bm->image->external)
+    return img;
+  char path[1200];
+  if (tmuf_packset_resolve(b->set, &ba->gbx, bm->image, ba->path, path, sizeof path).pack >= 0)
+    img.pack_file = dup(b->arena, path);
+  else if (tmuf_packset_resolve_file(b->set, &ba->gbx, bm->image, ba->path, path, sizeof path))
+    img.file = dup(b->arena, path);
+  return img;
+}
+
 /* ---- the 3D clouds (CSceneMobilClouds) ---- */
 
 /* CMotionWeather::ChangeClouds loads CFuncClouds' solids; BuildInstances
@@ -674,6 +689,14 @@ int tmuf_weather_build(tmuf_weather_data *wd, tmuf_scene *s, tmuf_arena *arena) 
     memcpy(w->clouds_speed, l->vec30, sizeof w->clouds_speed);
     memcpy(w->clouds_scale, l->vec38, sizeof w->clouds_scale);
     w->clouds_period = l->has_period ? l->period : 1.0f;
+  }
+  /* the bitmaps' entries: the images their bitmaps name */
+  for (uint32_t i = 0; i < b.entry_count; i++) {
+    tmuf_weather_skin_entry *e = &b.entries[i];
+    if (e->class_id != 0x09011000u)
+      continue;
+    e->default_image = bitmap_file_image(&b, e->default_file);
+    e->image = bitmap_file_image(&b, e->file);
   }
   wd->found = 1;
   return 1;
