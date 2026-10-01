@@ -384,6 +384,15 @@ typedef struct tmuf_particle_type_def {
   uint32_t sort_sprites, use_game_timer;
 } tmuf_particle_type_def;
 
+/* CPlugPointsInSphereOpt (0x09066000): packs of unit vectors spread over
+   the sphere (Std.PointsInSphere.Gbx): pack i is points[first, first + count) */
+typedef struct tmuf_points_in_sphere {
+  uint32_t pack_count;
+  const uint32_t *packs; /* per pack: count, first */
+  uint32_t point_count;
+  const float *points;   /* 3 each */
+} tmuf_points_in_sphere;
+
 /* CSceneVehicleMaterial (0x0a031000) */
 typedef struct tmuf_vehicle_material {
   tmuf_gbx_node *fake_bitmap;

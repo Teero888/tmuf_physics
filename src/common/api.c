@@ -244,6 +244,37 @@ const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track) {
   return b && b->has_visuals ? &b->lightmap.view : NULL;
 }
 
+/* Std.PointsInSphere.Gbx (CPlugPointsInSphereOpt) as the pack */
+#define POINTS_IN_SPHERE_FILE "Techno\\Media\\529F0C306598AC140409474EA21F378A3F"
+
+uint32_t tmuf_track_sphere_points(const tmuf_track *track, uint32_t count, const float **points) {
+  tmuf_track_base *b = track ? (tmuf_track_base *)tmuf_track_base_of(track) : NULL;
+  if (points)
+    *points = NULL;
+  if (!b)
+    return 0;
+  tmuf_asset *a = tmuf_assets_load_path(&b->scene.assets, POINTS_IN_SPHERE_FILE);
+  const tmuf_points_in_sphere *p = a && a->root && a->class_id == 0x09066000u ? a->root : NULL;
+  if (!p || !p->pack_count)
+    return 0;
+  /* GetPointsInSphereCloseCount: lo the last pack below count, hi the first
+     at or above it; the closer one, lo on a tie */
+  uint32_t hi = 0;
+  while (hi < p->pack_count && p->packs[2 * hi] < count)
+    hi++;
+  uint32_t k = hi;
+  if (hi == p->pack_count)
+    k = p->pack_count - 1;
+  else if (hi > 0 && count - p->packs[2 * (hi - 1)] <= p->packs[2 * hi] - count)
+    k = hi - 1;
+  const uint32_t n = p->packs[2 * k], first = p->packs[2 * k + 1];
+  if ((uint64_t)first + n > p->point_count)
+    return 0;
+  if (points)
+    *points = p->points + 3u * first;
+  return n;
+}
+
 uint32_t tmuf_track_lights(const tmuf_track *track, const tmuf_light **lights) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   if (!b || !b->has_visuals) {

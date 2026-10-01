@@ -2480,6 +2480,31 @@ static const tmuf_gbx_chunk PARTICLE_TYPE_CHUNKS[] = {
 static const tmuf_gbx_class PARTICLE_TYPE = {0x0805a000, "CMotionParticleType", sizeof(tmuf_particle_type_def),
                                              PARTICLE_TYPE_CHUNKS, COUNT(PARTICLE_TYPE_CHUNKS), NULL};
 
+/* ---- CPlugPointsInSphereOpt (0x09066000): CFastBuffer<SPack>, CFastBuffer<GmVec3> ---- */
+
+static void c09066000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_points_in_sphere *p = node;
+  const uint32_t np = tmuf_gbx_u32(g);
+  if (g->error || np > 0x10000u) {
+    tmuf_gbx_fail(g, "points in sphere: %u packs", np);
+    return;
+  }
+  uint32_t *packs = TMUF_ARENA_ARRAY(g->arena, uint32_t, 2u * np + 1u);
+  tmuf_gbx_read(g, packs, (size_t)np * 8u);
+  const uint32_t n = tmuf_gbx_u32(g);
+  if (g->error || n > 0x1000000u) {
+    tmuf_gbx_fail(g, "points in sphere: %u points", n);
+    return;
+  }
+  float *pts = TMUF_ARENA_ARRAY(g->arena, float, 3u * n + 1u);
+  tmuf_gbx_read(g, pts, (size_t)n * 12u);
+  p->pack_count = np, p->packs = packs, p->point_count = n, p->points = pts;
+}
+static const tmuf_gbx_chunk POINTS_IN_SPHERE_CHUNKS[] = {READ(0x09066000, c09066000)};
+static const tmuf_gbx_class POINTS_IN_SPHERE = {0x09066000, "CPlugPointsInSphereOpt", sizeof(tmuf_points_in_sphere),
+                                                POINTS_IN_SPHERE_CHUNKS, COUNT(POINTS_IN_SPHERE_CHUNKS), NULL};
+
 /* ---- CSceneVehicleMaterial (0x0a031000) ---- */
 
 static void c0a031004(tmuf_gbx *g, void *node, uint32_t id) {
@@ -3399,6 +3424,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
     &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV, &FUNC_SHADERS,
-    &FUNC_TREE_SEQUENCE, &FUNC_ENVELOPE, &FUNC_GRADIENT, &PARTICLE_MODEL, &PARTICLE_TYPE,
+    &FUNC_TREE_SEQUENCE, &FUNC_ENVELOPE, &FUNC_GRADIENT, &PARTICLE_MODEL, &PARTICLE_TYPE, &POINTS_IN_SPHERE,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

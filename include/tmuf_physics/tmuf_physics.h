@@ -590,6 +590,13 @@ typedef struct tmuf_lightmap {
    2048-texel atlas of the shipped caches. Owned by the track. */
 TMUF_API const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track);
 
+/* The game's points spread over the unit sphere (Std.PointsInSphere.Gbx,
+   CPlugPointsInSphereOpt): the pack whose count is closest to `count` (the
+   smaller on a tie; GetPointsInSphereCloseCount), as unit vectors (3 floats
+   each, the file's order, owned by the track). Returns its count, 0 when
+   the file cannot be read. The lightmap bake's light directions. */
+TMUF_API uint32_t tmuf_track_sphere_points(const tmuf_track *track, uint32_t count, const float **points);
+
 /* Places a copy of a lightmap's corpora (corpora, lightmap->corpus_count of
    them) for an atlas of `size` texels (2048, 4096, 8192: the game's
    lightmap qualities), filling in their column, row, scale and offset and
