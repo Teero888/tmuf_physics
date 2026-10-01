@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "common/gbx.h"
+#include "common/media.h"
 
 #define MAX_BLOCKS 0x100000u
 
@@ -168,6 +169,16 @@ static const tmuf_gbx_class SKIN = {0x03059000, "CGameCtnBlockSkin", sizeof(bloc
 
 /* ---- CGameCtnChallenge (0x03043000) ---- */
 
+/* the challenge as read, and as it was after the blocks: what follows them
+   (MediaTracker, music, ...) is read only for the in-game clips and never
+   changes the rest */
+typedef struct challenge_node {
+  tmuf_challenge c;
+  tmuf_challenge at_blocks;
+  int has_blocks;
+  const tmuf_gbx_node *ingame_group;
+} challenge_node;
+
 static void c0304300d(tmuf_gbx *g, void *node, uint32_t id) {
   (void)id;
   ident(g, ((tmuf_challenge *)node)->vehicle);
@@ -238,19 +249,71 @@ static void c0304301f(tmuf_gbx *g, void *node, uint32_t id) {
       b->skin_file = k && k->file && k->file[0] ? k->file : NULL;
     }
   }
-  /* Everything after the blocks (MediaTracker clips, music, ...) is not
-     needed for simulation. */
+  if (!g->error) {
+    challenge_node *n = node;
+    n->at_blocks = *c;
+    n->has_blocks = 1;
+  }
+}
+
+/* 0x020 (old): the intro clip, two clips, the in-game and end race clip
+   groups; 0x021: the intro clip, the in-game and end race groups. Nothing
+   after them is needed. */
+static void c03043020(tmuf_gbx *g, void *node, uint32_t id) {
+  challenge_node *n = node;
+  tmuf_gbx_noderef(g);
+  if ((id & 0xfffu) == 0x20) {
+    tmuf_gbx_noderef(g);
+    tmuf_gbx_noderef(g);
+  }
+  n->ingame_group = tmuf_gbx_noderef(g);
+  tmuf_gbx_noderef(g);
   g->stop = 1;
+}
+
+/* the chunks that may come before them: 0x022 a natural, 0x023 / 0x025 the
+   map coord origin (and target), 0x024 the music, 0x026 the global clip,
+   0x027 the thumbnail camera (0x028 and the comments), 0x02a simple
+   editor */
+static void c03043022(tmuf_gbx *g, void *node, uint32_t id) {
+  (void)node;
+  switch (id & 0xfffu) {
+  case 0x22:
+  case 0x2a:
+    tmuf_gbx_u32(g);
+    break;
+  case 0x23:
+    tmuf_gbx_skip(g, 8);
+    break;
+  case 0x24:
+    pack_desc(g);
+    break;
+  case 0x25:
+    tmuf_gbx_skip(g, 16);
+    break;
+  case 0x26:
+    tmuf_gbx_noderef(g);
+    break;
+  default: /* 0x27, 0x28 */
+    if (tmuf_gbx_bool(g))
+      tmuf_gbx_skip(g, 1 + 36 + 12 + 12);
+    if ((id & 0xfffu) == 0x28)
+      tmuf_gbx_string(g);
+    break;
+  }
 }
 
 static const tmuf_gbx_chunk CHALLENGE_CHUNKS[] = {
     {0x0304300d, 0, c0304300d},
     {0x03043011, 0, c03043011},
     {0x03043018, 1, c03043018},
-    {0x0304301f, 0, c0304301f},
+    {0x0304301f, 0, c0304301f}, {0x03043020, 0, c03043020}, {0x03043021, 0, c03043020},
+    {0x03043022, 0, c03043022}, {0x03043023, 0, c03043022}, {0x03043024, 0, c03043022},
+    {0x03043025, 0, c03043022}, {0x03043026, 0, c03043022}, {0x03043027, 0, c03043022},
+    {0x03043028, 0, c03043022}, {0x0304302a, 0, c03043022},
 };
 static const tmuf_gbx_class CHALLENGE = {
-    0x03043000, "CGameCtnChallenge", sizeof(tmuf_challenge), CHALLENGE_CHUNKS,
+    0x03043000, "CGameCtnChallenge", sizeof(challenge_node), CHALLENGE_CHUNKS,
     sizeof CHALLENGE_CHUNKS / sizeof CHALLENGE_CHUNKS[0], NULL,
 };
 
@@ -273,27 +336,45 @@ static uint32_t header_play_mode(const tmuf_gbx *g) {
 }
 
 static const tmuf_gbx_class *const CHALLENGE_CLASSES[] = {&CHALLENGE, &COLLECTOR_LIST, &PARAMS, &SKIN};
+#define CHALLENGE_CLASS_COUNT (sizeof CHALLENGE_CLASSES / sizeof CHALLENGE_CLASSES[0])
 
 int tmuf_challenge_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_challenge *out, char *err,
                          size_t err_size) {
   memset(out, 0, sizeof *out);
+  const tmuf_gbx_class **classes =
+      TMUF_ARENA_ARRAY(arena, const tmuf_gbx_class *, CHALLENGE_CLASS_COUNT + TMUF_MEDIA_CLASS_COUNT);
+  if (!classes) {
+    if (err && err_size)
+      snprintf(err, err_size, "out of memory");
+    return 0;
+  }
+  memcpy(classes, CHALLENGE_CLASSES, sizeof CHALLENGE_CLASSES);
+  memcpy(classes + CHALLENGE_CLASS_COUNT, TMUF_MEDIA_CLASSES, sizeof *classes * TMUF_MEDIA_CLASS_COUNT);
   tmuf_mem_source src;
   tmuf_mem_source_init(&src, data, size);
   tmuf_gbx g;
-  tmuf_gbx_init(&g, &src.base, arena, CHALLENGE_CLASSES, sizeof CHALLENGE_CLASSES / sizeof CHALLENGE_CLASSES[0]);
-  tmuf_challenge *c = NULL;
+  tmuf_gbx_init(&g, &src.base, arena, classes, CHALLENGE_CLASS_COUNT + TMUF_MEDIA_CLASS_COUNT);
   if (tmuf_gbx_read_header(&g))
-    c = tmuf_gbx_read_root(&g);
-  if (!g.error && c && !c->blocks)
+    tmuf_gbx_read_root(&g);
+  const challenge_node *n = g.nodes && g.nodes[0].cls == &CHALLENGE ? g.nodes[0].data : NULL;
+  /* past the blocks a failure only drops the clips */
+  const int clips_ok = !g.error;
+  if (n && n->has_blocks)
+    g.error = 0;
+  if (!g.error && n && !n->c.blocks)
     tmuf_gbx_fail(&g, "challenge has no block chunk");
-  if (g.error || !c) {
+  if (g.error || !n) {
     if (err && err_size)
       snprintf(err, err_size, "%s", g.message);
     return 0;
   }
-  *out = *c;
+  *out = n->at_blocks;
   if (!out->has_time_limit)
     out->time_limit = 60000; /* CGameCtnChallengeParameters' default */
   out->play_mode = header_play_mode(&g);
+  if (clips_ok && !tmuf_media_ingame_clips(n->ingame_group, arena, &out->ingame_clips, &out->ingame_clip_count)) {
+    out->ingame_clips = NULL;
+    out->ingame_clip_count = 0;
+  }
   return 1;
 }

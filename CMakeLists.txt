@@ -52,6 +52,8 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/packset.h
   src/common/blowfish_tables.h
   src/common/challenge.c
+  src/common/media.c
+  src/common/media.h
   src/common/challenge_info.c
   src/common/controls.c
   src/common/controls.h
@@ -198,6 +200,8 @@ if(TMUF_PHYSICS_TOOLS)
   target_link_libraries(tmuf_weather PRIVATE tmuf_physics m)
   add_executable(tmuf_lights tools/sim/tmuf_lights.c)
   target_link_libraries(tmuf_lights PRIVATE tmuf_physics m)
+  add_executable(tmuf_clips tools/sim/tmuf_clips.c)
+  target_link_libraries(tmuf_clips PRIVATE tmuf_physics)
   add_executable(tmuf_bench tools/sim/tmuf_bench.c)
   target_link_libraries(tmuf_bench PRIVATE tmuf_physics)
   if(TMUF_PHYSICS_BACKEND STREQUAL "reference")

@@ -250,7 +250,7 @@ static const tmuf_gbx_chunk CTN_GHOST_CHUNKS[] = {
     {0x03092019, 0, c03092019},
 };
 
-static const tmuf_gbx_class CTN_GHOST = {
+const tmuf_gbx_class TMUF_CTN_GHOST = {
     0x03092000,
     "CGameCtnGhost",
     sizeof(tmuf_ghost),
@@ -283,7 +283,7 @@ static void read_ghosts(tmuf_gbx *g, tmuf_replay_file *r) {
   r->ghosts = TMUF_ARENA_ARRAY(g->arena, tmuf_ghost *, r->ghost_count ? r->ghost_count : 1);
   for (uint32_t i = 0; i < r->ghost_count && !g->error; i++) {
     tmuf_gbx_node *n = tmuf_gbx_noderef(g);
-    if (!g->error && (!n || n->cls != &CTN_GHOST))
+    if (!g->error && (!n || n->cls != &TMUF_CTN_GHOST))
       tmuf_gbx_fail(g, "ghost %u is not a CGameCtnGhost", i);
     else if (n)
       r->ghosts[i] = n->data;
@@ -341,7 +341,7 @@ static const tmuf_gbx_class REPLAY = {
     sizeof REPLAY_CHUNKS / sizeof REPLAY_CHUNKS[0], NULL,
 };
 
-static const tmuf_gbx_class *const REPLAY_CLASSES[] = {&REPLAY, &CTN_GHOST};
+static const tmuf_gbx_class *const REPLAY_CLASSES[] = {&REPLAY, &TMUF_CTN_GHOST};
 
 int tmuf_replay_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_replay_file *out, char *err,
                       size_t err_size) {

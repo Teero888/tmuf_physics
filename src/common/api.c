@@ -271,6 +271,23 @@ int tmuf_track_camera_water(const tmuf_track *track, tmuf_camera_water *out) {
   return 1;
 }
 
+uint32_t tmuf_track_ingame_clips(const tmuf_track *track, const tmuf_ingame_clip **clips) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (clips)
+    *clips = b && b->map.ingame_clip_count ? b->map.ingame_clips : NULL;
+  return b ? b->map.ingame_clip_count : 0;
+}
+
+/* CGameCtnChallenge::GetCoordFromPos: the collection's SquareSize (x, z) and
+   SquareHeight (y) */
+void tmuf_track_trigger_cell_size(const tmuf_track *track, float *xz, float *y) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (xz)
+    *xz = b ? b->scene.square_size : 0.0f;
+  if (y)
+    *y = b ? b->scene.square_height : 0.0f;
+}
+
 const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals ? &b->lightmap.view : NULL;

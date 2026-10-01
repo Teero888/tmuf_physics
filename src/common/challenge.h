@@ -1,12 +1,15 @@
 #ifndef TMUF_COMMON_CHALLENGE_H
 #define TMUF_COMMON_CHALLENGE_H
 
-/* Maps (CGameCtnChallenge), up to and including the block list. */
+/* Maps (CGameCtnChallenge), up to and including the block list, and the
+   in-game MediaTracker clips. */
 
 #include <stddef.h>
 #include <stdint.h>
 
 #include "common/arena.h"
+
+struct tmuf_ingame_clip;
 
 /* Block flags (0x0304301f). */
 #define TMUF_BLOCK_FLAG_SKIN 0x8000u
@@ -40,6 +43,9 @@ typedef struct tmuf_challenge {
   uint32_t time_limit, author_score;          /* stunts */
   int has_time_limit;
   uint32_t play_mode; /* header 0x03043002: 0 race, 1 platform, 2 puzzle, 3 crazy, 4 shortcut, 5 stunts */
+  /* 0x03043021's in-game clip group (none if it cannot be read) */
+  uint32_t ingame_clip_count;
+  const struct tmuf_ingame_clip *ingame_clips;
 } tmuf_challenge;
 
 int tmuf_challenge_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_challenge *out, char *err,

@@ -164,6 +164,63 @@ typedef struct tmuf_camera_water {
 
 TMUF_API int tmuf_track_camera_water(const tmuf_track *track, tmuf_camera_water *out);
 
+/* ---- MediaTracker in-game clips ----
+   The map's in-game clip group (CGameCtnChallenge chunk 0x03043021,
+   CGameCtnMediaClipGroup): each clip with its trigger (the cells that start
+   it, CGameRace::MediaClipCheckInGameTriggers) and its camera blocks. A map
+   whose clips cannot be read has none; its track loads as without them. */
+
+enum { TMUF_CLIP_CAMERA_GAME = 0, TMUF_CLIP_CAMERA_CUSTOM = 1 };
+
+/* A CGameCtnMediaBlockCameraCustom key (0x030A2005, key version 5: 96 bytes
+   in TMUF; the older versions are read into the same shape) */
+typedef struct tmuf_clip_custom_key {
+  float time;
+  uint32_t interp; /* 0 none, 1 hermite, 2 linear, 3 fixed tangent */
+  float pos[3], pitch, yaw, roll, fov; /* radians, degrees */
+  uint32_t anchor_rot;
+  int32_t anchor; /* -1 or a clip entity */
+  uint32_t anchor_vis;
+  int32_t target; /* -1 (pitch, yaw, roll), else the clip entity looked at (0: the local player) */
+  float target_pos[3], left_tangent[3], right_tangent[3];
+} tmuf_clip_custom_key;
+
+typedef struct tmuf_clip_camera {
+  uint32_t kind;      /* TMUF_CLIP_CAMERA_* */
+  float start, end;   /* seconds in the clip (CameraCustom: its first and last key) */
+  int keep;           /* the last block of a keep-playing track: active from start on (t >= start) */
+  const char *id;     /* CameraGame: the camera id ("Internal", "<Default>", "Behind", ...), "" if none */
+  /* CameraGame of an old map (chunks 0x03084000/1): the camera's index in
+     the vehicle's camera set, whose id the game takes when the clip plays
+     (CGameCtnMediaClipPlayer::CompatConvertOldCameraBlocks; no camera
+     there: camera 0); id is then "Close" for 1 and "Internal" for 2, the
+     same in every set, else "". -1 otherwise. */
+  int32_t cam_index;
+  int32_t entity; /* CameraGame: the clip entity it follows (0: the local player) */
+  uint32_t key_count; /* CameraCustom */
+  const tmuf_clip_custom_key *keys;
+} tmuf_clip_camera;
+
+typedef struct tmuf_ingame_clip {
+  uint32_t cell_count;
+  const uint32_t (*cells)[3]; /* trigger cells (x, y, z) */
+  /* 0 none, 1 race time (s) < value, 2 >, 3 clip round(value) already
+     triggered, 4 speed (km/h) <, 5 >, 6 not yet triggered, 7+ never */
+  uint32_t condition;
+  float condition_value;
+  int keep_playing; /* any track keep-playing: the clip never ends by itself */
+  float end;        /* the latest block end (s), over every block class */
+  uint32_t camera_count;
+  const tmuf_clip_camera *cameras; /* CameraGame and CameraCustom blocks, in track order, then block order */
+} tmuf_ingame_clip;
+
+/* the map's in-game clips, in the group's order (clip i's trigger is the
+   group's trigger i); 0 if none */
+TMUF_API uint32_t tmuf_track_ingame_clips(const tmuf_track *track, const tmuf_ingame_clip **clips);
+/* the size of a trigger cell: the collection's square size (x and z) and
+   height (y); a position's cell is (trunc(x / xz), trunc(y / y), trunc(z / xz)) */
+TMUF_API void tmuf_track_trigger_cell_size(const tmuf_track *track, float *xz, float *y);
+
 /* ---- scene data for rendering (TMUF_TRACK_VISUALS) ----
    What the game draws, as plain data read from its files: nothing is
    decoded or interpreted beyond that (image files are named, not read). */

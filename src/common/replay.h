@@ -68,6 +68,10 @@ typedef struct tmuf_replay_file {
   size_t body_size;
 } tmuf_replay_file;
 
+/* the CGameCtnGhost reader (also for the ghosts of MediaTracker blocks) */
+struct tmuf_gbx_class;
+extern const struct tmuf_gbx_class TMUF_CTN_GHOST;
+
 /* Everything is allocated from arena. On failure returns 0 and writes a
    message to err. */
 int tmuf_replay_parse(const uint8_t *data, size_t size, tmuf_arena *arena, tmuf_replay_file *out, char *err,
