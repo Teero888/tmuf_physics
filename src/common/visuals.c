@@ -581,6 +581,8 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
     in->lod_near = v->lod_near;
     in->lod_far = v->lod_far;
     in->lightmap = lightmap_of_corpus && v->corpus < scene->corpus_count ? lightmap_of_corpus[v->corpus] : UINT32_MAX;
+    in->is_static = list == scene->visuals && v->corpus < scene->corpus_count && scene->corpora[v->corpus].is_static &&
+                    !scene->corpora[v->corpus].trigger;
     /* only the scene's visuals have mips (tmuf_visuals_build) */
     in->mip = list == scene->visuals ? v->mip : UINT32_MAX;
     in->mip_level = list == scene->visuals ? v->mip_level : 0;

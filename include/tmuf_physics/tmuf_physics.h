@@ -445,6 +445,9 @@ typedef struct tmuf_visual_instance {
   uint32_t mip, mip_level;
   /* its vertex animation (the mesh's sub-visuals), NULL for none */
   const tmuf_visual_sequence *sequence;
+  /* part of a static corpus of the zone (its item's static flag): what the
+     lightmap bake casts shadows with (CHmsZoneVPacker::AllTreesHq) */
+  int is_static;
 } tmuf_visual_instance;
 
 /* ---- visual mips: the one level the game draws ----
