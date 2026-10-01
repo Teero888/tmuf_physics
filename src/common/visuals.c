@@ -1026,7 +1026,7 @@ typedef struct scan_type {
   const tmuf_particle_type_def *def;
   uint32_t entry; /* its material's entry in the list, UINT32_MAX for none */
   const tmuf_func_gradient *gradient;
-  const tmuf_func_envelope *size, *transparency;
+  const tmuf_func_envelope *size, *transparency, *size_x, *intensity_filter;
 } scan_type;
 
 typedef struct scan_model {
@@ -1088,6 +1088,8 @@ static uint32_t scan_model_of(vehicle_builder *b, particle_scan *s, tmuf_scene *
     t->gradient = follow_class(scene, ta, td->color_gradient, CLS_GRADIENT, NULL);
     t->size = follow_class(scene, ta, td->size_over_life, CLS_ENVELOPE, NULL);
     t->transparency = follow_class(scene, ta, td->transparency_over_life, CLS_ENVELOPE, NULL);
+    t->size_x = follow_class(scene, ta, td->size_x_over_life, CLS_ENVELOPE, NULL);
+    t->intensity_filter = follow_class(scene, ta, td->intensity_filter, CLS_ENVELOPE, NULL);
     t->entry = UINT32_MAX;
     tmuf_gbx_node *mat = td->material ? td->material : td->shader;
     if (mat) {
@@ -1179,6 +1181,35 @@ static int particles_finish(tmuf_vehicle_visuals *view, const particle_scan *s, 
     t->color_gradient_use = d->color_gradient_use;
     t->async_link = d->multi_state_async_link != 0;
     t->use_game_timer = d->use_game_timer != 0;
+    t->ref_pos[0] = d->ref_pos[0], t->ref_pos[1] = d->ref_pos[1];
+    t->pitch = d->pitch[0], t->pitch_variation = d->pitch[1];
+    t->yaw = d->yaw[0], t->yaw_variation = d->yaw[1];
+    t->roll = d->roll[0], t->roll_variation = d->roll[1];
+    t->roll_speed = d->roll_speed[0], t->roll_speed_variation = d->roll_speed[1];
+    t->fluid_friction = d->fluid_friction[0], t->fluid_friction_variation = d->fluid_friction[1];
+    t->fluid_friction_intensity_base = d->fluid_friction_intensity_base;
+    t->fluid_friction_use_intensity = d->fluid_friction_use_intensity != 0;
+    t->color_modulate_with_transparency = d->color_modulate_with_transparency != 0;
+    t->size_use_size_x = d->size_use_size_x != 0;
+    t->size_use_intensity = d->size_use_intensity != 0;
+    t->color_use_intensity = d->color_use_intensity != 0;
+    t->transparency_use_intensity = d->transparency_use_intensity != 0;
+    t->birth_pos_type = d->birth_pos_type;
+    memcpy(t->birth_pos, d->birth_pos, sizeof t->birth_pos);
+    t->vert_per_part_count = d->vert_per_part_count;
+    t->splash_part_count = d->splash_part_count;
+    memcpy(t->splash, d->splash, sizeof t->splash);
+    for (int k = 0; k < 4; k++)
+      t->texture_atlas[k] = d->texture_atlas[k];
+    t->sort_sprites = d->sort_sprites != 0;
+    if (st->size_x) {
+      t->has_size_x_over_life = 1;
+      curve_of(st->size_x, &t->size_x_over_life);
+    }
+    if (st->intensity_filter) {
+      t->has_intensity_filter = 1;
+      curve_of(st->intensity_filter, &t->intensity_filter);
+    }
     if (st->gradient) {
       t->has_color_gradient = 1;
       memcpy(t->color_gradient.c, st->gradient->c, sizeof t->color_gradient.c);

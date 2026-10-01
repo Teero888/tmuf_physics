@@ -138,6 +138,10 @@ TMUF_API uint32_t tmuf_track_triangles(const tmuf_track *track, const tmuf_trian
    collidable trees only) facing it, as the race camera's ground probe
    asks (CHmsCollisionManager::SZone::IntersectSegment). 1 and *t on a hit. */
 TMUF_API int tmuf_track_segment_cast(const tmuf_track *track, const float start[3], const float seg[3], float *t);
+/* the same with the surface's material hit (EPlugSurfaceMaterialId, e.g. 13
+   Water: the car's water spray, IntersectSegment3) */
+TMUF_API int tmuf_track_segment_hit(const tmuf_track *track, const float start[3], const float seg[3], float *t,
+                                    uint32_t *material);
 
 /* ---- scene data for rendering (TMUF_TRACK_VISUALS) ----
    What the game draws, as plain data read from its files: nothing is
@@ -1192,6 +1196,28 @@ typedef struct tmuf_particle_type {
   int has_color_gradient, has_size_over_life, has_transparency_over_life;
   tmuf_particle_gradient color_gradient;
   tmuf_particle_curve size_over_life, transparency_over_life;
+  /* a sprite's anchor in its quad (RefPos: (0, -1) its bottom edge) */
+  float ref_pos[2];
+  /* its birth rotation (degrees) and roll speed (rad/s), each with its
+     variation (value + variation * rand(-1, 1)) */
+  float pitch, pitch_variation, yaw, yaw_variation, roll, roll_variation, roll_speed, roll_speed_variation;
+  /* the drag toward rest (1/s), scaled by lerp(base, 1, intensity) when it uses the intensity */
+  float fluid_friction, fluid_friction_variation, fluid_friction_intensity_base;
+  int fluid_friction_use_intensity;
+  int color_modulate_with_transparency;
+  int size_use_size_x, size_use_intensity, color_use_intensity, transparency_use_intensity;
+  int has_size_x_over_life, has_intensity_filter;
+  tmuf_particle_curve size_x_over_life, intensity_filter;
+  uint32_t birth_pos_type; /* 0 fixed, 1 random in zone, 2 scale zone, 3 random in ellipsoid, 4 random on circle xy */
+  float birth_pos[3];
+  uint32_t vert_per_part_count; /* a strip's vertices per particle (grass marks 2, light trail 6) */
+  /* the splash burst (BirthStepType 3): part count; radius, its variation,
+     the speed's angle from vertical (degrees) and its variation, the
+     centre scale min and max, the velocity and its variation */
+  uint32_t splash_part_count;
+  float splash[8];
+  uint32_t texture_atlas[4]; /* 0 none, 1 fixed, 2 random; cells across, down; the fixed cell */
+  int sort_sprites;          /* back to front by view depth every frame */
 } tmuf_particle_type;
 
 typedef struct tmuf_particle_model {

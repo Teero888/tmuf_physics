@@ -77,8 +77,14 @@ static int seg_tri(const seg *s, const float *a, const float *b, const float *c,
   return 1;
 }
 
-/* the first hit on a surface, in its own frame */
-static int seg_surface(const tmuf_surface *sf, const seg *s, float best, float *t_out) {
+/* a surface's local material as an EPlugSurfaceMaterialId */
+static uint32_t material_of(const tmuf_surface *sf, uint32_t local) {
+  return local < sf->material_count && sf->material_ids ? sf->material_ids[local] : local;
+}
+
+/* the first hit on a surface, in its own frame, and its material */
+static int seg_surface(const tmuf_surface *sf, const seg *s, float best, float *t_out, uint32_t *mat) {
+  *mat = material_of(sf, sf->material);
   switch (sf->type) {
   case TMUF_SURFACE_BOX:
     return seg_box(s, sf->params, sf->params + 3, best, t_out);
@@ -119,12 +125,15 @@ static int seg_surface(const tmuf_surface *sf, const seg *s, float best, float *
       }
       if (tri >= 0 && (uint32_t)tri < sf->triangle_count) {
         uint32_t idx[3];
+        uint16_t local;
         memcpy(idx, sf->triangles + (size_t)tri * 32 + 16, 12);
+        memcpy(&local, sf->triangles + (size_t)tri * 32 + 28, 2);
         if (idx[0] < sf->vertex_count && idx[1] < sf->vertex_count && idx[2] < sf->vertex_count) {
           float t;
           if (seg_tri(s, sf->vertices + 3 * idx[0], sf->vertices + 3 * idx[1], sf->vertices + 3 * idx[2], best, &t)) {
             best = t;
             *t_out = t;
+            *mat = material_of(sf, local);
             hit = 1;
           }
         }
@@ -138,7 +147,7 @@ static int seg_surface(const tmuf_surface *sf, const seg *s, float best, float *
   }
 }
 
-static int cast_world(const tmuf_static_world *w, const seg *ws, float *best) {
+static int cast_world(const tmuf_static_world *w, const seg *ws, float *best, uint32_t *material) {
   int hit = 0;
   for (uint32_t ci = 0; ci < w->cell_count;) {
     const tmuf_static_cell *cell = &w->cells[ci];
@@ -158,8 +167,10 @@ static int cast_world(const tmuf_static_world *w, const seg *ws, float *best) {
           ls.d[k] = m->m[0][k] * ws->d[0] + m->m[1][k] * ws->d[1] + m->m[2][k] * ws->d[2];
         }
         float t;
-        if (seg_surface(rec->surf, &ls, *best, &t)) {
+        uint32_t mat;
+        if (seg_surface(rec->surf, &ls, *best, &t, &mat)) {
           *best = t;
+          *material = mat;
           hit = 1;
         }
       }
@@ -169,15 +180,23 @@ static int cast_world(const tmuf_static_world *w, const seg *ws, float *best) {
   return hit;
 }
 
-int tmuf_track_segment_cast(const tmuf_track *track, const float start[3], const float seg_v[3], float *t_out) {
+int tmuf_track_segment_hit(const tmuf_track *track, const float start[3], const float seg_v[3], float *t_out,
+                           uint32_t *material_out) {
   const tmuf_sim *sim = track ? tmuf_track_sim(track) : NULL;
   if (!sim)
     return 0;
   const seg ws = {{start[0], start[1], start[2]}, {seg_v[0], seg_v[1], seg_v[2]}};
   float best = 1.0f;
-  int hit = cast_world(&sim->world, &ws, &best);
-  hit |= cast_world(&sim->nonstatic, &ws, &best);
+  uint32_t material = UINT32_MAX;
+  int hit = cast_world(&sim->world, &ws, &best, &material);
+  hit |= cast_world(&sim->nonstatic, &ws, &best, &material);
   if (hit && t_out)
     *t_out = best;
+  if (hit && material_out)
+    *material_out = material;
   return hit;
+}
+
+int tmuf_track_segment_cast(const tmuf_track *track, const float start[3], const float seg_v[3], float *t_out) {
+  return tmuf_track_segment_hit(track, start, seg_v, t_out, NULL);
 }
