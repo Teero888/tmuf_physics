@@ -805,6 +805,10 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
     out->cos_inner = cos_half_degrees(out->angle_inner);
     out->cos_outer = cos_half_degrees(out->angle_outer);
     out->cos_flare = cos_half_degrees(out->angle_flare);
+    out->angle_inner2 = (g->spot_flags & 2u) ? g->spot[3] : g->spot[0];
+    out->angle_outer2 = (g->spot_flags & 2u) ? g->spot[4] : g->spot[1];
+    out->cos_inner2 = cos_half_degrees(out->angle_inner2);
+    out->cos_outer2 = cos_half_degrees(out->angle_outer2);
   }
   if (pl->flare) {
     tmuf_visual_texture t;

@@ -762,6 +762,12 @@ typedef struct tmuf_light {
   float angle_inner, angle_outer, angle_flare;
   float cos_inner, cos_outer, cos_flare;
   float falloff;
+  /* GxLightSpot +0xa0, +0xa4: a second inner and outer cone (the inner and
+     outer ones unless spot flag bit 1), and the cosines of their halves;
+     the cars' shadows take a spot whose second outer cone holds the car
+     (Shadow_CreateVolumes: +0xbc) */
+  float angle_inner2, angle_outer2;
+  float cos_inner2, cos_outer2;
   /* GxLightBall: flags (+0x64; 0x38: falloff 1 - (d / r)^2, else
      1 / (1 + k1 d + k2 d^2)), attenuation k1 (+0x78), k2 (+0x7c) and its
      ambient colour (+0x84: added unlit by the prelight bake) */
