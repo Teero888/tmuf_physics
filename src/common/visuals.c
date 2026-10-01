@@ -790,6 +790,7 @@ static int light_fill(builder *b, tmuf_asset *owner, tmuf_gbx_node *ref, const t
   if (out->kind == TMUF_LIGHT_BALL || out->kind == TMUF_LIGHT_SPOT) {
     /* ball[]: +0x80, +0x78, +0x7c, +0x84, +0x88, +0x8c */
     out->ball_flags = g->ball_flags;
+    out->size = g->ball[0];
     out->attenuation[0] = g->ball[1];
     out->attenuation[1] = g->ball[2];
     memcpy(out->ambient_rgb, g->ball + 3, sizeof out->ambient_rgb);

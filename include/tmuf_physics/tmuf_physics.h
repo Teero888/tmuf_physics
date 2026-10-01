@@ -768,6 +768,9 @@ typedef struct tmuf_light {
   uint32_t ball_flags;
   float attenuation[2];
   float ambient_rgb[3];
+  /* GxLightBall +0x80: the emitter's half size (m); the lightmap bake
+     jitters a spot over a 7 x 7 grid this wide when it is above 0.01 */
+  float size;
   /* the lens flare picture (CPlugLight BitmapFlare's image; the renderer's
      default flare when both are NULL) */
   const char *flare_file, *flare_pack_file;
