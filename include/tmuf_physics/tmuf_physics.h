@@ -724,7 +724,7 @@ enum {
 /* GxLight flags (+0x14) */
 enum {
   TMUF_LIGHT_FLAG_DIFFUSE = 1u << 0,    /* lights (vertex lighting), radius[0] */
-  TMUF_LIGHT_FLAG_RADIUS2 = 1u << 2,    /* radius[2] takes part in its box */
+  TMUF_LIGHT_FLAG_RADIUS2 = 1u << 2,    /* radius[2] takes part in its box; the light casts the cars' shadows (Shadow_CreateVolumes: the nearest for radius[2]) */
   TMUF_LIGHT_FLAG_SPECULAR = 1u << 3,   /* specular highlights (HemiSpec), radius[1] */
   TMUF_LIGHT_FLAG_LENS_FLARE = 1u << 4, /* HasLensFlare */
 };
