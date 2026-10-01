@@ -265,9 +265,51 @@ static int usage_is_bump(uint32_t usage) {
    the delayed render lists, CDx9ShaderKeeper::Undirty's render states.
    alpha_bitmap: the bitmap of the shader's first texture (its output alpha
    texture), NULL for none. */
-static void material_draw_state(tmuf_visual_material *m, uint32_t cls, const tmuf_plug_shader *sh, const tmuf_plug_bitmap *alpha_bitmap) {
+/* whether a texture's image has an alpha channel (a DDS with alpha pixels or
+   DXT2..5, a TGA with alpha bits): the image's format class
+   CPlugShaderApply::BlendFromOpacityMapUpdate tests; -1 when unknown */
+static int image_has_alpha(builder *b, const tmuf_visual_texture *t) {
+  uint8_t *data = NULL;
+  size_t size = 0;
+  if (t->file) {
+    FILE *f = fopen(t->file, "rb");
+    if (!f)
+      return -1;
+    data = malloc(128);
+    size = data ? fread(data, 1, 128, f) : 0;
+    fclose(f);
+  } else if (t->pack_file) {
+    const tmuf_pack_ref ref = tmuf_packset_find(b->scene->assets.set, t->pack_file);
+    if (ref.pack < 0 || !tmuf_pack_extract(&b->scene->assets.set->packs[ref.pack], ref.file, &data, &size))
+      return -1;
+  } else {
+    return -1;
+  }
+  int alpha = -1;
+  if (data && size >= 128 && memcmp(data, "DDS ", 4) == 0) {
+    const uint32_t pf_flags = (uint32_t)data[80] | (uint32_t)data[81] << 8 | (uint32_t)data[82] << 16 | (uint32_t)data[83] << 24;
+    if (pf_flags & 4u) /* a four-cc */
+      alpha = memcmp(data + 84, "DXT2", 4) == 0 || memcmp(data + 84, "DXT3", 4) == 0 ||
+              memcmp(data + 84, "DXT4", 4) == 0 || memcmp(data + 84, "DXT5", 4) == 0;
+    else
+      alpha = (pf_flags & 1u) != 0; /* alpha pixels */
+  } else if (data && size >= 18) { /* a TGA: 32 bits, or alpha bits in its descriptor */
+    alpha = data[16] == 32 || (data[17] & 15u) != 0;
+  }
+  free(data);
+  return alpha;
+}
+
+static void material_draw_state(tmuf_visual_material *m, uint32_t cls, const tmuf_plug_shader *sh, const tmuf_plug_bitmap *alpha_bitmap,
+                                int alpha_image) {
   const int apply = cls == 0x09026000u || cls == 0x09068000u || cls == 0x09069000u;
-  const uint32_t st = sh->has_apply_state ? sh->apply_state[0] : 0u;
+  uint32_t st = sh->has_apply_state ? sh->apply_state[0] : 0u;
+  /* CPlugShaderApply::BlendFromOpacityMapUpdate: with BlendFromOpacityMap
+     (bit 22) the blending is on (SetBlending: SRC_ALPHA / INV_SRC_ALPHA)
+     when the output alpha's image has alpha (A06's trace: the stands'
+     glass, DXT5, drawn blended; the stands themselves, DXT1, opaque) */
+  if (apply && sh->has_apply_state && (st & 0x400000u) && alpha_image == 1)
+    st = (st & ~0x3ffu) | 4u | 5u << 5;
   const uint32_t src = st & 31u, dst = (st >> 5) & 31u, op = (st >> 10) & 7u, func = (st >> 24) & 7u;
   const uint32_t usage = alpha_bitmap && alpha_bitmap->has_usage ? alpha_bitmap->usage : 0u;
   uint32_t f = sh->has_flags ? sh->flags[0] : 0u;
@@ -457,7 +499,12 @@ static uint32_t material_of(builder *b, const tmuf_scene_visual *v, tmuf_asset *
       m->hidden = (sh->visible_id & 0x100u) != 0;
       const tmuf_plug_bitmap *alpha_bitmap;
       shader_textures(b, m, sa, sh, custom, ca, &alpha_bitmap);
-      material_draw_state(m, sn->class_id, sh, alpha_bitmap);
+      /* (only BlendFromOpacityMap reads the alpha texture's format) */
+      const int alpha_image = sh->has_apply_state && (sh->apply_state[0] & 0x400000u) && alpha_bitmap &&
+                                      m->texture_count
+                                  ? image_has_alpha(b, &m->textures[0])
+                                  : -1;
+      material_draw_state(m, sn->class_id, sh, alpha_bitmap, alpha_image);
       shader_passes(b, m, sa, sh);
     } else {
       m->alpha_texture = UINT32_MAX;
