@@ -557,7 +557,7 @@ static int build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scen
       entry_material[i] = UINT32_MAX;
     if (!v->visual) {
       static const tmuf_plug_visual none;
-      if (entry_material && v->material)
+      if (entry_material && (v->material || v->shader))
         entry_material[i] = material_of(&b, v, v->owner, &none, (uint8_t)TMUF_REMAP_SET_NONE);
       continue;
     }
