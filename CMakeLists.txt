@@ -28,6 +28,7 @@ set(TMUF_PHYSICS_COMMON_SOURCES
   src/common/gbx.h
   src/common/replay.c
   src/common/replay_write.c
+  src/common/segment.c
   src/common/stunts.c
   src/common/stunts.h
   src/common/lightmap.c
