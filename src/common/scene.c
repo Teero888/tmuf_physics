@@ -483,8 +483,15 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   s->current_item_flags = m->has_item ? m->item.physics_flags : 0;
   const char *saved_mobil = s->current_mobil;
   s->current_mobil = m->name;
+  /* the decorations' far-clip sheets (BayFarClip45x45, 45x45FarClip, ...:
+     the only items with flag bit 26) are never drawn: none of Bay's trace
+     passes has one, and its zone-wide sheet at the water would cover the
+     sea's refraction; their collision is kept */
+  const int hidden = m->has_item && (m->item.physics_flags & 0x04000000u) ? 1 : 0;
+  s->decorator_hidden_depth += hidden;
   if (m->has_item && m->item.solid)
     emit_solid(s, ma, m->item.solid, world, 0);
+  s->decorator_hidden_depth -= hidden;
   s->current_mobil = saved_mobil;
   for (uint32_t i = 0; i < m->children.count; i++) {
     tmuf_asset *la;
