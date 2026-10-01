@@ -230,7 +230,7 @@ TMUF_API void tmuf_track_trigger_cell_size(const tmuf_track *track, float *xz, f
 enum {
   TMUF_VISUAL_NORMAL = 1u << 0, /* vertices carry a packed normal (u32) after the position */
   TMUF_VISUAL_COLOR = 1u << 1,  /* vertices carry a colour (u32, BGRA) after position and normal */
-  /* CPlugVisualSprite (only in tmuf_weather's clouds): each vertex is a
+  /* CPlugVisualSprite (tmuf_weather's clouds, Rally's tree crowns): each vertex is a
      sprite, 24 bytes: centre (3 floats), size (float), atlas index (u32),
      aspect (float); no indices. The game turns every sprite into a quad
      facing the camera each frame (see tmuf_weather_sky_clouds). */
