@@ -797,6 +797,14 @@ typedef struct tmuf_light {
      "High" ones'). Information only: the game keeps these lights (at max
      settings the A01 car is lit by the Low tree's StadiumspotBig lamps) */
   int decorator_hidden;
+  /* the plane its fake ground reflection mirrors it about (CPlugLight flag
+     bit 1, plug_flags & 2: CHmsLight::SetReflectPlaneIsEnable), in the world
+     (n . p + d = 0, n up; CSceneMobil::ParseTreeLight): the y = 0 plane of
+     the child of its solid's root tree whose name starts with
+     "PlaneReflect", else the plane
+     across the root's up axis its tree's own height (its location's y,
+     CPlugTree +0x84) below the light: through its parent's origin */
+  float reflect_plane[4];
 } tmuf_light;
 
 /* The map's lights, NULL/0 unless the track was loaded with

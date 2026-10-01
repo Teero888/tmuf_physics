@@ -125,6 +125,7 @@ typedef struct tmuf_scene_light {
   uint32_t tag;
   float lod_near, lod_far;
   uint8_t hidden; /* below a decorator tree not shown at the highest quality */
+  float reflect_plane[4]; /* tmuf_light.reflect_plane */
 } tmuf_scene_light;
 
 typedef struct tmuf_scene_catalog_entry {
@@ -156,6 +157,9 @@ typedef struct tmuf_scene {
   tmuf_static_triangle *triangles; /* only with TMUF_SCENE_TRIANGLES */
   uint32_t blocks_placed, blocks_missing;
   uint32_t current_block;
+  int current_has_reflect_plane; /* while emitting a solid's tree: its "PlaneReflect" */
+  float current_reflect_plane[4];
+  float current_root_up[3]; /* and its root's up axis (world) */
   const char *current_mobil; /* name of the mobil being placed */
   uint8_t current_lightmap_cells;
   uint8_t current_trigger;

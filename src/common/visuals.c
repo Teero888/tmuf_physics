@@ -858,6 +858,7 @@ static int lights_build(tmuf_lights_data *out, tmuf_scene *scene, const tmuf_sce
     l->lod_near = list[i].lod_near;
     l->lod_far = list[i].lod_far;
     l->decorator_hidden = list[i].hidden;
+    memcpy(l->reflect_plane, list[i].reflect_plane, sizeof l->reflect_plane);
     out->count++;
   }
   return 1;

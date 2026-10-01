@@ -363,6 +363,14 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
       l->lod_near = lod_near;
       l->lod_far = lod_far;
       l->hidden = s->decorator_hidden_depth > 0 || t->decorator_hidden;
+      if (s->current_has_reflect_plane) {
+        memcpy(l->reflect_plane, s->current_reflect_plane, sizeof l->reflect_plane);
+      } else {
+        /* across the root's up axis, the tree's height below the light */
+        const float *n = s->current_root_up, h = t->has_iso ? t->iso[10] : 0.0f;
+        memcpy(l->reflect_plane, n, 3 * sizeof(float));
+        l->reflect_plane[3] = -(n[0] * (world.t[0] - h * n[0]) + n[1] * (world.t[1] - h * n[1]) + n[2] * (world.t[2] - h * n[2]));
+      }
     }
   }
   s->decorator_hidden_depth += t->decorator_hidden;
@@ -435,6 +443,51 @@ static void add_corpus(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree, co
   }
 }
 
+/* CSceneMobil::ParseTreeLight: the lights' fake ground reflection plane, the
+   y = 0 plane of the root tree's first direct child whose name starts with
+   "PlaneReflect" ("PlaneReflect-1_3" too) */
+static int reflect_plane(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *root_node, const tmuf_iso *world,
+                         float plane[4]) {
+  tmuf_asset *ra;
+  tmuf_gbx_node *rn = tmuf_assets_follow(&s->assets, owner, root_node, &ra);
+  if (!rn || !rn->data || !rn->cls ||
+      (rn->cls->id != 0x0904f000u && rn->cls->id != 0x09015000u && rn->cls->id != 0x09062000u))
+    return 0;
+  const tmuf_plug_tree *root = rn->data;
+  tmuf_iso at = *world;
+  if (root->has_iso) {
+    tmuf_iso local;
+    tmuf_iso_from_archive(&local, root->iso);
+    tmuf_iso_mult(&at, &local, world);
+  }
+  for (uint32_t i = 0; i < root->child_count; i++) {
+    tmuf_asset *ca;
+    tmuf_gbx_node *cn = tmuf_assets_follow(&s->assets, ra, root->children[i], &ca);
+    if (!cn || !cn->data || !cn->cls ||
+        (cn->cls->id != 0x0904f000u && cn->cls->id != 0x09015000u && cn->cls->id != 0x09062000u))
+      continue;
+    const tmuf_plug_tree *c = cn->data;
+    if (!c->name || strncmp(c->name, "PlaneReflect", 12) != 0) /* its first 12 letters (CFastString::Compare) */
+      continue;
+    tmuf_iso w = at;
+    if (c->has_iso) {
+      tmuf_iso local;
+      tmuf_iso_from_archive(&local, c->iso);
+      tmuf_iso_mult(&w, &local, &at);
+    }
+    /* its local y axis and origin in the world */
+    float n[3] = {w.m[0][1], w.m[1][1], w.m[2][1]};
+    const float l = sqrtf(n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
+    if (l <= 0.0f)
+      return 0;
+    for (int k = 0; k < 3; k++)
+      plane[k] = n[k] / l;
+    plane[3] = -(plane[0] * w.t[0] + plane[1] * w.t[1] + plane[2] * w.t[2]);
+    return 1;
+  }
+  return 0;
+}
+
 static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_node, const tmuf_iso *world, int depth) {
   tmuf_asset *sa;
   tmuf_gbx_node *sn = tmuf_assets_follow(&s->assets, owner, solid_node, &sa);
@@ -455,7 +508,18 @@ static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_no
   }
   if (solid->tree) {
     add_corpus(s, sa, solid->tree, world);
+    const int had = s->current_has_reflect_plane;
+    float plane[4], up[3];
+    memcpy(plane, s->current_reflect_plane, sizeof plane);
+    memcpy(up, s->current_root_up, sizeof up);
+    s->current_has_reflect_plane = s->collect_visuals && reflect_plane(s, sa, solid->tree, world, s->current_reflect_plane);
+    const float l = sqrtf(world->m[0][1] * world->m[0][1] + world->m[1][1] * world->m[1][1] + world->m[2][1] * world->m[2][1]);
+    for (int k = 0; k < 3; k++)
+      s->current_root_up[k] = l > 0.0f ? world->m[k][1] / l : (k == 1);
     emit_tree(s, sa, solid->tree, world, 0);
+    s->current_has_reflect_plane = had;
+    memcpy(s->current_reflect_plane, plane, sizeof plane);
+    memcpy(s->current_root_up, up, sizeof up);
   }
 }
 
