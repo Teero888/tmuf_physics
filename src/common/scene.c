@@ -312,8 +312,10 @@ static void emit_tree_lod(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *tree_
   if (t->surface)
     emit_surface(s, ta, t->surface, &world);
   /* CPlugTree::SFlags bit 3: IsVisible; editor helpers and race triggers are
-     never drawn */
-  if (s->collect_visuals && t->visual && (t->flags & 8u) && !s->helper_depth && !s->current_trigger) {
+     never drawn, nor the decorator's trees not shown at the highest quality
+     (the Stadium's "Low" decoration under its "High" one) */
+  if (s->collect_visuals && t->visual && (t->flags & 8u) && !s->helper_depth && !s->current_trigger &&
+      !s->decorator_hidden_depth && !t->decorator_hidden) {
     if (s->visual_count == s->visual_cap) {
       uint32_t cap = s->visual_cap ? s->visual_cap * 2 : 1024;
       tmuf_scene_visual *v = realloc(s->visuals, sizeof *v * cap);
@@ -1119,7 +1121,8 @@ static void apply_decorator(tmuf_scene *s, tmuf_asset *da, tmuf_asset *owner, tm
     t->flags = collide ? (t->flags | 0x80u) : (t->flags & ~0x80u);
     t->decorator_hidden = !decorator_condition(d->visible, 2);
     if (debug_enabled())
-      fprintf(stderr, "decorator: tree %s collision %d\n", d->tree_id ? d->tree_id : "(root)", collide);
+      fprintf(stderr, "decorator: tree %s show %u visible %u collision %u -> collide %d hidden %d\n",
+              d->tree_id ? d->tree_id : "(root)", d->show, d->visible, d->collision, collide, t->decorator_hidden);
   }
 }
 
