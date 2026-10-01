@@ -175,8 +175,10 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     return 0;
   }
   /* the car: asked for, else the map's, else the environment's; a vehicle
-     the packs lack (custom ids) runs as the environment's car */
-  const char *name = options && options->vehicle && options->vehicle[0] ? options->vehicle
+     the packs lack (custom ids) runs as the environment's car; the asked
+     name copied (the caller's, a replay's, may go once the track is made) */
+  const char *name = options && options->vehicle && options->vehicle[0]
+                         ? tmuf_arena_strndup(&b->arena, options->vehicle, strlen(options->vehicle))
                      : b->map.vehicle[0] && b->map.vehicle[0][0]      ? b->map.vehicle[0]
                                                                       : b->scene.default_vehicle;
   if (!name || !tmuf_vehicle_load(&b->vehicle, &b->scene.assets, name, e, sizeof e)) {
