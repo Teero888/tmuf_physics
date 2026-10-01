@@ -182,6 +182,10 @@ typedef struct tmuf_scene {
   tmuf_scene_corpus *corpora; /* in the order the game adds them */
   tmuf_scene_catalog_entry *catalog;
   tmuf_scene_water water;
+  /* the distinct water planes of the corpora (Zone_UpdateWaterHeights; geometry
+     water only): their levels, -d, in the order the cells' index + 1 names */
+  uint32_t water_plane_count;
+  float water_plane_level[255];
   /* the decoration (CGameCtnDecoration) and its scene (CScene3d) files,
      NULL if not found */
   tmuf_asset *decoration_asset, *decoration_scene_asset;

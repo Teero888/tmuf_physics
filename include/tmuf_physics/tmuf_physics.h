@@ -143,6 +143,27 @@ TMUF_API int tmuf_track_segment_cast(const tmuf_track *track, const float start[
 TMUF_API int tmuf_track_segment_hit(const tmuf_track *track, const float start[3], const float seg[3], float *t,
                                     uint32_t *material);
 
+/* The water map the race camera tests its eye against (CTrackMania::
+   UpdateWaterMap; the camera keeps above the water, see
+   CGameControlCameraFollowAboveWater): per map column (cell (x, z) =
+   trunc((p - origin) / cell_size)) 0 dry, else 1, or in plane mode the index
+   + 1 of the water plane whose level holds there; `outside` beyond the map.
+   top / bottom: the water's surface and floor (the collection's heights over
+   the map's base), cull: below it the camera counts as in water anywhere.
+   Every map has one (no water: cells NULL, all dry). */
+typedef struct tmuf_camera_water {
+  float cell_size[2], origin[2]; /* x, z */
+  uint32_t dims[2];
+  uint8_t outside;
+  const uint8_t *cells; /* dims[0] * dims[1], x fastest; NULL: every column dry */
+  float top, bottom, cull;
+  int plane_mode;
+  uint32_t plane_count;
+  const float *plane_levels;
+} tmuf_camera_water;
+
+TMUF_API int tmuf_track_camera_water(const tmuf_track *track, tmuf_camera_water *out);
+
 /* ---- scene data for rendering (TMUF_TRACK_VISUALS) ----
    What the game draws, as plain data read from its files: nothing is
    decoded or interpreted beyond that (image files are named, not read). */

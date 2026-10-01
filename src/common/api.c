@@ -241,6 +241,36 @@ const tmuf_weather *tmuf_track_weather(const tmuf_track *track) {
   return b && b->has_visuals && b->weather.found ? &b->weather.view : NULL;
 }
 
+int tmuf_track_camera_water(const tmuf_track *track, tmuf_camera_water *out) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (!out)
+    return 0;
+  memset(out, 0, sizeof *out);
+  const tmuf_scene *s = b ? &b->scene : NULL;
+  const tmuf_collection *coll = s ? s->collection_info : NULL;
+  if (!coll)
+    return 0;
+  const tmuf_scene_water *w = &s->water;
+  /* UpdateWaterMap: the collection's square, the map's size, the heights
+     over (base + 1) squares (the cull height as it is); outside wet for a
+     default-water collection without plane water */
+  const float base = (float)(s->base_height + 1u) * s->square_height;
+  out->cell_size[0] = out->cell_size[1] = s->square_size;
+  out->dims[0] = w->enabled ? w->dims[0] : s->size[0];
+  out->dims[1] = w->enabled ? w->dims[1] : s->size[2];
+  out->outside = coll->default_water && !coll->geometry_water_planes ? 1 : 0;
+  out->cells = w->enabled ? w->cells : NULL;
+  out->top = base + coll->water_surface;
+  out->bottom = base + coll->water_secondary;
+  out->cull = coll->water_render_cull;
+  /* plane mode: the zone's water from its blocks' planes (zone+0x108 =
+     SquareHeight) */
+  out->plane_mode = coll->geometry_water_planes && s->water_plane_count > 0;
+  out->plane_count = s->water_plane_count;
+  out->plane_levels = s->water_plane_level;
+  return 1;
+}
+
 const tmuf_lightmap *tmuf_track_lightmap(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals ? &b->lightmap.view : NULL;

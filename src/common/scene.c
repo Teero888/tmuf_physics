@@ -800,6 +800,9 @@ static void finish_geometry_water(tmuf_scene *s) {
       plane_count++;
     }
   }
+  s->water_plane_count = plane_count;
+  for (uint32_t k = 0; k < plane_count; k++)
+    s->water_plane_level[k] = -planes[k][3];
   size_t n = (size_t)s->water.dims[0] * s->water.dims[1];
   for (size_t i = 0; i < n; i++) {
     if (tags[i] == UINT32_MAX)
