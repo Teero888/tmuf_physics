@@ -721,10 +721,10 @@ float tmuf_visual_mip_z(const tmuf_visual_mip *mip, const float view_z[4], float
 }
 
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus, int is_night,
-                       tmuf_arena *arena) {
+                       tmuf_arena *arena, uint32_t *entry_material) {
   /* with the sprite visuals (Rally's tree crowns: RallyTreeSpriteAlpha) */
   if (!build_list(out, scene, scene->visuals, scene->visual_count, lightmap_of_corpus, arena, 1, 1, NULL, is_night,
-                  NULL))
+                  entry_material))
     return 0;
   if (!scene->mip_count)
     return 1;

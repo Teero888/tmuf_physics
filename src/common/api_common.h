@@ -47,6 +47,8 @@ typedef struct tmuf_track_base {
   uint32_t laps;
   int has_visuals;
   tmuf_visuals_data visuals; /* with TMUF_TRACK_VISUALS */
+  int has_leaves;
+  tmuf_leaves leaves; /* with TMUF_TRACK_VISUALS, emitters in the arena */
   tmuf_vehicle_visuals_data vehicle_visuals;
   tmuf_lightmap_data lightmap; /* with TMUF_TRACK_VISUALS */
   tmuf_weather_data weather;   /* with TMUF_TRACK_VISUALS */

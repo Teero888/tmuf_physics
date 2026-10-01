@@ -134,6 +134,14 @@ typedef struct tmuf_scene_catalog_entry {
   uint8_t tag;
 } tmuf_scene_catalog_entry;
 
+/* A CMotionEmitterLeaves placed with its mobil (only with
+   TMUF_SCENE_VISUALS): the ellipsoid's centre in world, its half extents
+   (world axes) */
+typedef struct tmuf_scene_leaf_emitter {
+  float center[3], half[3];
+  uint32_t tag;
+} tmuf_scene_leaf_emitter;
+
 typedef struct tmuf_scene {
   tmuf_assets assets;
   const char *collection;
@@ -149,6 +157,11 @@ typedef struct tmuf_scene {
   tmuf_scene_light *lights; /* only with TMUF_SCENE_VISUALS */
   uint32_t mip_count, mip_cap;
   tmuf_scene_mip *mips;                    /* only with TMUF_SCENE_VISUALS */
+  uint32_t leaf_emitter_count, leaf_emitter_cap;
+  tmuf_scene_leaf_emitter *leaf_emitters; /* only with TMUF_SCENE_VISUALS */
+  /* the first emitter's manager model (its CMotionManagerLeaves) */
+  tmuf_asset *leaf_manager_owner;
+  tmuf_gbx_node *leaf_manager;
   uint32_t current_mip, current_mip_level; /* while emitting */
   int decorator_hidden_depth;
   uint32_t *water_ground_tags; /* geometry water, while building: per cell the tag of the

@@ -22,8 +22,11 @@ typedef struct tmuf_visuals_data {
 /* lightmap_of_corpus: per scene corpus, its index in the track's
    tmuf_lightmap (or NULL). is_night: the map's (tmuf_weather), the fid
    parameter IsNight that picks each material's day or night shader. */
+/* entry_material: when not NULL, per entry of the scene's list the
+   material of an entry without a visual (a material alone), UINT32_MAX
+   for the others */
 int tmuf_visuals_build(tmuf_visuals_data *out, tmuf_scene *scene, const uint32_t *lightmap_of_corpus, int is_night,
-                       tmuf_arena *arena);
+                       tmuf_arena *arena, uint32_t *entry_material);
 /* The visuals of a list of scene visuals (not the scene's), sprite visuals
    included (TMUF_VISUAL_SPRITES meshes). */
 int tmuf_visuals_build_list(tmuf_visuals_data *out, tmuf_scene *scene, const tmuf_scene_visual *list, uint32_t n,

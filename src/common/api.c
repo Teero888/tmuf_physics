@@ -152,6 +152,76 @@ uint32_t tmuf_replay_inputs(const tmuf_replay *r, const tmuf_input **inputs) {
 
 /* ---- tracks (backend independent part) ---- */
 
+/* The scene's CSceneMobilLeaves: its first leaf emitter's manager model
+   (CMotionManagerLeaves, Rally\MotionManagerLeaves\RallyLeafManager.Gbx)
+   and the leaf mobil it holds; NULL without emitters */
+static const tmuf_scene_mobil_leaves *leaf_mobil(tmuf_scene *s) {
+  if (!s->leaf_emitter_count || !s->leaf_manager)
+    return NULL;
+  tmuf_asset *ma;
+  tmuf_gbx_node *mn = tmuf_assets_follow(&s->assets, s->leaf_manager_owner, s->leaf_manager, &ma);
+  if (!mn || !mn->data || mn->class_id != 0x0804d000u)
+    return NULL;
+  const tmuf_motion_manager_leaves *m = mn->data;
+  tmuf_asset *la;
+  tmuf_gbx_node *ln = m->mobil ? tmuf_assets_follow(&s->assets, ma, m->mobil, &la) : NULL;
+  if (!ln || !ln->data || ln->class_id != 0x0a05e000u)
+    return NULL;
+  s->leaf_manager_owner = la; /* the shader's references are the leaf mobil's file's */
+  return ln->data;
+}
+
+static int add_material_entry(tmuf_scene *s, const tmuf_scene_mobil_leaves *l) {
+  if (s->visual_count == s->visual_cap) {
+    const uint32_t cap = s->visual_cap ? s->visual_cap + 1 : 1;
+    tmuf_scene_visual *v = realloc(s->visuals, sizeof *v * cap);
+    if (!v)
+      return 0;
+    s->visuals = v;
+    s->visual_cap = cap;
+  }
+  tmuf_scene_visual *v = &s->visuals[s->visual_count++];
+  memset(v, 0, sizeof *v);
+  v->owner = s->leaf_manager_owner;
+  v->shader = l->shader;
+  tmuf_iso_identity(&v->iso);
+  v->corpus = UINT32_MAX;
+  v->mip = UINT32_MAX;
+  return 1;
+}
+
+static int leaves_fill(tmuf_leaves *out, const tmuf_scene *s, const tmuf_scene_mobil_leaves *l, uint32_t material,
+                       tmuf_arena *arena) {
+  tmuf_leaf_emitter *e = TMUF_ARENA_ARRAY(arena, tmuf_leaf_emitter, s->leaf_emitter_count);
+  if (!e)
+    return 0;
+  for (uint32_t i = 0; i < s->leaf_emitter_count; i++) {
+    memcpy(e[i].center, s->leaf_emitters[i].center, sizeof e[i].center);
+    memcpy(e[i].half, s->leaf_emitters[i].half, sizeof e[i].half);
+    e[i].block = s->leaf_emitters[i].tag;
+  }
+  *out = (tmuf_leaves){material,
+                       l->radius,
+                       l->radius_random,
+                       l->max_count,
+                       l->emitter_max_count,
+                       l->fall,
+                       l->fall_random,
+                       l->alpha_speed_max,
+                       l->beta_speed_max,
+                       l->swing_rate,
+                       l->swing_rate_random,
+                       l->swing_radius,
+                       l->swing_radius_random,
+                       {l->wind[0], l->wind[1], l->wind[2]},
+                       l->respawn_period,
+                       l->far_z,
+                       l->curvature,
+                       s->leaf_emitter_count,
+                       e};
+  return 1;
+}
+
 int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void *map, size_t size,
                          const tmuf_track_options *options, char *err, size_t err_size) {
   memset(b, 0, sizeof *b);
@@ -196,8 +266,23 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
     tmuf_weather_build(&b->weather, &b->scene, &b->arena);
     const int is_night = b->weather.found && b->weather.view.is_night;
     const char *mood_folder = b->weather.found ? b->weather.view.mood.folder : NULL;
-    if (!tmuf_lightmap_build(&b->lightmap, &b->scene, 2048) ||
-        !tmuf_visuals_build(&b->visuals, &b->scene, b->lightmap.of_scene_corpus, is_night, &b->arena) ||
+    /* the leaf mobil's shader as a material of the map's visuals: an entry
+       without a visual at the end of the list */
+    const tmuf_scene_mobil_leaves *leaves = leaf_mobil(&b->scene);
+    uint32_t leaf_entry = UINT32_MAX, *entry_material = NULL;
+    if (leaves && leaves->shader && add_material_entry(&b->scene, leaves)) {
+      leaf_entry = b->scene.visual_count - 1;
+      entry_material = malloc(sizeof *entry_material * b->scene.visual_count);
+    }
+    const int built = tmuf_lightmap_build(&b->lightmap, &b->scene, 2048) &&
+                      tmuf_visuals_build(&b->visuals, &b->scene, b->lightmap.of_scene_corpus, is_night, &b->arena,
+                                         entry_material);
+    if (built && leaves)
+      b->has_leaves = leaves_fill(&b->leaves, &b->scene, leaves,
+                                  entry_material && leaf_entry != UINT32_MAX ? entry_material[leaf_entry] : UINT32_MAX,
+                                  &b->arena);
+    free(entry_material);
+    if (!built ||
         !tmuf_vehicle_visuals_build(&b->vehicle_visuals, &b->scene, &b->vehicle, is_night, mood_folder, &b->arena) ||
         !tmuf_track_lights_build(&b->lights, &b->scene, is_night, mood_folder, &b->arena) ||
         !tmuf_scenery_build(&b->scenery, &b->scene, &b->visuals.view, b->weather.found ? &b->weather.view : NULL,
@@ -234,6 +319,11 @@ const char *tmuf_track_decoration(const tmuf_track *track) {
 const tmuf_visuals *tmuf_track_visuals(const tmuf_track *track) {
   const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
   return b && b->has_visuals ? &b->visuals.view : NULL;
+}
+
+const tmuf_leaves *tmuf_track_leaves(const tmuf_track *track) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  return b && b->has_visuals && b->has_leaves ? &b->leaves : NULL;
 }
 
 const tmuf_weather *tmuf_track_weather(const tmuf_track *track) {

@@ -1147,6 +1147,41 @@ typedef struct tmuf_scenery_light {
    track. */
 TMUF_API const tmuf_scenery_light *tmuf_track_scenery_light(const tmuf_track *track);
 
+/* ---- falling leaves (Rally: CSceneMobilLeaves) ----
+   The tree blocks' mobils carry emitters (CMotionEmitterLeaves): ellipsoids
+   the leaves spawn in. One leaf mobil per scene holds max_count slots; each
+   rendered frame (CSceneMobilLeaves::OnRenderBefore) the slots whose leaf
+   is dead or whose spawn point left the camera's box respawn at once, in
+   an emitter seen by the camera, at most emitter_max_count per emitter.
+   A leaf's life is a closed-form fall, drawn as a folded quad: see the
+   frametee module (tmuf_leaves.c) for the whole rule. */
+typedef struct tmuf_leaf_emitter {
+  float center[3]; /* world: the mobil's location x the emitter's centre */
+  float half[3];   /* the ellipsoid's half extents along the world axes */
+  uint32_t block;  /* as tmuf_visual_instance.block */
+} tmuf_leaf_emitter;
+
+typedef struct tmuf_leaves {
+  /* LeafShader: index into tmuf_visuals.materials, UINT32_MAX for none */
+  uint32_t material;
+  float size, size_random;                  /* +0x58, +0x5c: the quad's half size, m */
+  uint32_t max_count, emitter_max_count;    /* +0x60, +0x64 */
+  float fall, fall_random;                  /* +0x68, +0x6c: m/s */
+  float alpha_speed_max, beta_speed_max;    /* +0x70, +0x74: spin rates' bounds, rad/s */
+  float swing_rate, swing_rate_random;      /* +0x78, +0x7c (named OscillationPeriod): rad/s */
+  float swing_radius, swing_radius_random;  /* +0x80, +0x84 (named OscillationAmplitude): m */
+  float wind[3];                            /* +0x88: never read by the game */
+  float respawn_period;                     /* +0x94: a leaf's life, ms */
+  float far_z;                              /* +0x98: the view box's depth and the fade's end, m */
+  float curvature;                          /* +0x9c: the quad's fold, m */
+  uint32_t emitter_count;
+  const tmuf_leaf_emitter *emitters;        /* in the order the game adds them */
+} tmuf_leaves;
+
+/* NULL unless the track was loaded with TMUF_TRACK_VISUALS and has leaf
+   emitters with a manager (Rally's trees). Owned by the track. */
+TMUF_API const tmuf_leaves *tmuf_track_leaves(const tmuf_track *track);
+
 /* COLOR0 of a scenery vertex (CHmsZoneVPacker::PrecalcLighting): its world
    position and world normal (the mesh normal turned by the placement, not
    renormalised), the shader's generic_flags (tmuf_visual_material):

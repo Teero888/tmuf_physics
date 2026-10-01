@@ -99,6 +99,27 @@ int main(int argc, char **argv) {
          tmuf_track_name(track), v->instance_count, v->mesh_count, (unsigned long long)triangles,
          (unsigned long long)near_triangles,
          (unsigned long long)vertices, v->material_count, no_textures, no_material, textures, found);
+  const tmuf_leaves *lv = tmuf_track_leaves(track);
+  if (lv) {
+    const tmuf_visual_material *lm = lv->material < v->material_count ? &v->materials[lv->material] : NULL;
+    printf("leaves: %u emitters, material %u %s (%u textures, blend %d %u/%u, alpha test %d %u, double sided %d, "
+           "generic %08x); size %g+-%g, max %u, per emitter %u, fall %g+-%g, spin %g %g, swing rate %g+-%g radius "
+           "%g+-%g, wind %g %g %g, life %g ms, far %g, curvature %g\n",
+           lv->emitter_count, lv->material, lm ? lm->name : "-", lm ? lm->texture_count : 0, lm ? lm->alpha_blend : 0,
+           lm ? lm->blend_src : 0, lm ? lm->blend_dst : 0, lm ? lm->alpha_test : 0, lm ? lm->alpha_ref : 0,
+           lm ? lm->double_sided : 0, lm ? lm->generic_flags : 0, (double)lv->size, (double)lv->size_random,
+           lv->max_count, lv->emitter_max_count, (double)lv->fall, (double)lv->fall_random,
+           (double)lv->alpha_speed_max, (double)lv->beta_speed_max, (double)lv->swing_rate,
+           (double)lv->swing_rate_random, (double)lv->swing_radius, (double)lv->swing_radius_random,
+           (double)lv->wind[0], (double)lv->wind[1], (double)lv->wind[2], (double)lv->respawn_period,
+           (double)lv->far_z, (double)lv->curvature);
+    for (uint32_t k = 0; lm && k < lm->texture_count; k++)
+      printf("  leaf texture %u %s\n", k, lm->textures[k].file ? lm->textures[k].file : "-");
+    for (uint32_t i = 0; i < lv->emitter_count && i < 4; i++)
+      printf("  emitter %u block %08x centre %g %g %g half %g %g %g\n", i, lv->emitters[i].block,
+             (double)lv->emitters[i].center[0], (double)lv->emitters[i].center[1], (double)lv->emitters[i].center[2],
+             (double)lv->emitters[i].half[0], (double)lv->emitters[i].half[1], (double)lv->emitters[i].half[2]);
+  }
   if (argc > 3 && strcmp(argv[3], "--materials") == 0)
     for (uint32_t i = 0; i < v->material_count; i++) {
       const tmuf_visual_material *m = &v->materials[i];

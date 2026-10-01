@@ -1745,6 +1745,54 @@ static const tmuf_gbx_chunk SCENE_OBJECT_CHUNKS[] = {
 static const tmuf_gbx_class SCENE_OBJECT = {0x0a005000, "CSceneObject", sizeof(tmuf_scene_object),
                                             SCENE_OBJECT_CHUNKS, COUNT(SCENE_OBJECT_CHUNKS), NULL};
 
+/* CSceneMobilLeaves::Chunk: 0x0a05e000 (the oldest, some values dropped),
+   001, 002 (+ curvature), 003 (+ the emitter's cap); the others keep the
+   ctor's defaults */
+static void c0a05e000(tmuf_gbx *g, void *node, uint32_t id) {
+  tmuf_scene_mobil_leaves *l = node;
+  *l = (tmuf_scene_mobil_leaves){l->object, NULL, 0.05f, 0.03f, 100, 20, 1.0f, 0.5f, 4.0f, 4.0f, 0.5f, 0.5f,
+                                 1.0f, 1.0f, {0.0f, 0.0f, 0.0f}, 3500.0f, 50.0f, 0.2f};
+  l->shader = tmuf_gbx_noderef(g);
+  l->radius = tmuf_gbx_f32(g);
+  l->radius_random = tmuf_gbx_f32(g);
+  if (id == 0x0a05e000u) {
+    tmuf_gbx_skip(g, 8);
+    l->max_count = tmuf_gbx_u32(g);
+    l->fall = tmuf_gbx_f32(g);
+    l->alpha_speed_max = tmuf_gbx_f32(g);
+    l->beta_speed_max = tmuf_gbx_f32(g);
+    tmuf_gbx_skip(g, 12);
+    for (int k = 0; k < 3; k++)
+      l->wind[k] = tmuf_gbx_f32(g);
+    tmuf_gbx_skip(g, 16);
+    l->respawn_period = tmuf_gbx_f32(g);
+    tmuf_gbx_skip(g, 4);
+    return;
+  }
+  l->max_count = tmuf_gbx_u32(g);
+  if (id == 0x0a05e003u)
+    l->emitter_max_count = tmuf_gbx_u32(g);
+  l->fall = tmuf_gbx_f32(g);
+  l->fall_random = tmuf_gbx_f32(g);
+  l->alpha_speed_max = tmuf_gbx_f32(g);
+  l->beta_speed_max = tmuf_gbx_f32(g);
+  l->swing_radius = tmuf_gbx_f32(g);
+  l->swing_radius_random = tmuf_gbx_f32(g);
+  l->swing_rate = tmuf_gbx_f32(g);
+  l->swing_rate_random = tmuf_gbx_f32(g);
+  for (int k = 0; k < 3; k++)
+    l->wind[k] = tmuf_gbx_f32(g);
+  l->respawn_period = tmuf_gbx_f32(g);
+  l->far_z = tmuf_gbx_f32(g);
+  if (id != 0x0a05e001u)
+    l->curvature = tmuf_gbx_f32(g);
+}
+
+static const tmuf_gbx_chunk MOBIL_LEAVES_CHUNKS[] = {READ(0x0a05e000, c0a05e000), READ(0x0a05e001, c0a05e000),
+                                                     READ(0x0a05e002, c0a05e000), READ(0x0a05e003, c0a05e000)};
+static const tmuf_gbx_class MOBIL_LEAVES = {0x0a05e000, "CSceneMobilLeaves", sizeof(tmuf_scene_mobil_leaves),
+                                            MOBIL_LEAVES_CHUNKS, COUNT(MOBIL_LEAVES_CHUNKS), &SCENE_OBJECT};
+
 /* ---- CSceneVehicleTunings (0x0a030000) ---- */
 
 static void c0a030000(tmuf_gbx *g, void *node, uint32_t id) {
@@ -2108,10 +2156,25 @@ static void c0802b000(tmuf_gbx *g, void *node, uint32_t id) {
     tmuf_gbx_noderef(g);
 }
 
+/* 0x0804c000: manager, centre, one radius (half = r, r, r); 001: manager,
+   centre, half extents */
 static void c0804c000(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
-  tmuf_gbx_noderef(g);
-  tmuf_gbx_skip(g, id == 0x0804c000u ? 16 : 24);
+  tmuf_motion_emitter_leaves *e = node;
+  e->manager = tmuf_gbx_noderef(g);
+  for (int k = 0; k < 3; k++)
+    e->center[k] = tmuf_gbx_f32(g);
+  if (id == 0x0804c000u) {
+    e->half[0] = e->half[1] = e->half[2] = tmuf_gbx_f32(g);
+    return;
+  }
+  for (int k = 0; k < 3; k++)
+    e->half[k] = tmuf_gbx_f32(g);
+}
+
+/* CMotionManagerLeaves' only chunk (the emitter's class number) */
+static void c0804d_mobil(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_motion_manager_leaves *)node)->mobil = tmuf_gbx_noderef(g);
 }
 
 static void c08055000(tmuf_gbx *g, void *node, uint32_t id) {
@@ -2124,10 +2187,17 @@ static void c08055000(tmuf_gbx *g, void *node, uint32_t id) {
 static const tmuf_gbx_chunk MOTION_CHUNKS[] = {
     READ(0x08001000, skip_id),   READ(0x08028000, noderef_array), READ(0x08028001, noderef_array),
     READ(0x08034000, c08034000), READ(0x08034001, c08034001),     READ(0x08034002, c08034002),
-    READ(0x08034003, c08034002), READ(0x08034004, c08034002),     READ(0x0804c000, c0804c000),
-    READ(0x0804c001, c0804c000), READ(0x08054000, skip_noderef),  READ(0x08055000, c08055000),
+    READ(0x08034003, c08034002), READ(0x08034004, c08034002),     READ(0x08054000, skip_noderef),
+    READ(0x08055000, c08055000),
 };
 static const tmuf_gbx_class MOTION = {0x08001000, "CMotion", 1, MOTION_CHUNKS, COUNT(MOTION_CHUNKS), NULL};
+
+static const tmuf_gbx_chunk EMITTER_LEAVES_CHUNKS[] = {READ(0x0804c000, c0804c000), READ(0x0804c001, c0804c000)};
+static const tmuf_gbx_class EMITTER_LEAVES = {0x0804c000, "CMotionEmitterLeaves", sizeof(tmuf_motion_emitter_leaves),
+                                              EMITTER_LEAVES_CHUNKS, COUNT(EMITTER_LEAVES_CHUNKS), &MOTION};
+static const tmuf_gbx_chunk MANAGER_LEAVES_CHUNKS[] = {READ(0x0804c000, c0804d_mobil)};
+static const tmuf_gbx_class MANAGER_LEAVES = {0x0804d000, "CMotionManagerLeaves", sizeof(tmuf_motion_manager_leaves),
+                                              MANAGER_LEAVES_CHUNKS, COUNT(MANAGER_LEAVES_CHUNKS), &MOTION};
 
 /* CMotionTrack (0x08033000) derives from CMwCmdContainer, not CMotion. */
 static const tmuf_gbx_chunk MOTION_TRACK_CHUNKS[] = {READ(0x0802b000, c0802b000), READ(0x08037000, skip_noderef)};
@@ -3420,7 +3490,7 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &BITMAP,          &BITMAP_RENDER, &FILE_GEN,
     &BLOCK_INFO,      &BLOCK, &BLOCK_UNIT, &SCENE_OBJECT, &TUNINGS, &CAR_TUNING, &FUNC_KEYS,
     &VEHICLE_STRUCT,  &VEHICLE_MATERIAL, &VEHICLE_MATERIAL_GROUP, &VEHICLE_EMITTER, &ZONE,
-    &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &MOTION_CMD_BASE,
+    &OBJECT_LINK,     &COLLECTION, &DECORATION, &FUNC_SKEL, &FUNC_PLUG, &MOTION, &EMITTER_LEAVES, &MANAGER_LEAVES, &MOBIL_LEAVES, &MOTION_CMD_BASE,
     &MOTION_TRACK,    &DECORATION_SIZE, &SCENE3D, &SECTOR, &HMS_ZONE, &REF_BUFFER,
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
     &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV, &FUNC_SHADERS,

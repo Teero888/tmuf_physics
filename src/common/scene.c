@@ -523,6 +523,37 @@ static void emit_solid(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *solid_no
   }
 }
 
+/* CMotionManaged::QueryManager -> CSceneMobilLeaves::AddEmitter: a mobil
+   whose motion is a CMotionEmitterLeaves; its centre placed with the
+   mobil's location (CSceneMobil::GetLocation), its half extents as they
+   are */
+static void add_leaf_emitter(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *motion, const tmuf_iso *world) {
+  tmuf_asset *ea;
+  tmuf_gbx_node *en = tmuf_assets_follow(&s->assets, owner, motion, &ea);
+  if (!en || !en->data || en->class_id != 0x0804c000u)
+    return;
+  const tmuf_motion_emitter_leaves *e = en->data;
+  if (s->leaf_emitter_count == s->leaf_emitter_cap) {
+    const uint32_t cap = s->leaf_emitter_cap ? s->leaf_emitter_cap * 2 : 64;
+    tmuf_scene_leaf_emitter *v = realloc(s->leaf_emitters, sizeof *v * cap);
+    if (!v)
+      return;
+    s->leaf_emitters = v;
+    s->leaf_emitter_cap = cap;
+  }
+  tmuf_scene_leaf_emitter *out = &s->leaf_emitters[s->leaf_emitter_count++];
+  for (int r = 0; r < 3; r++) {
+    out->center[r] = world->m[r][0] * e->center[0] + world->m[r][1] * e->center[1] + world->m[r][2] * e->center[2] +
+                     world->t[r];
+    out->half[r] = e->half[r];
+  }
+  out->tag = s->current_block;
+  if (!s->leaf_manager && e->manager) {
+    s->leaf_manager_owner = ea;
+    s->leaf_manager = e->manager;
+  }
+}
+
 static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_node, const tmuf_iso *world, int depth) {
   if (depth > 16)
     return;
@@ -539,6 +570,8 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   if (!mn->cls || mn->cls->id != 0x0a005000u)
     return;
   const tmuf_scene_object *m = mn->data;
+  if (s->collect_visuals && m->motion)
+    add_leaf_emitter(s, ma, m->motion, world);
   /* CGameCtnBlock::SetMobilAndHelper: the linked trigger mobils */
   uint8_t saved_trigger = s->current_trigger;
   uint32_t saved_flags = s->current_item_flags;
@@ -1334,6 +1367,7 @@ int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower,
 
 void tmuf_scene_free(tmuf_scene *s) {
   free(s->visuals);
+  free(s->leaf_emitters);
   free(s->visual_remaps);
   free(s->lights);
   free(s->mips);

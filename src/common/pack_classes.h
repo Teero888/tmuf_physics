@@ -316,6 +316,37 @@ typedef struct tmuf_scene_object {
   float physical_params[8]; /* 0x0a02b00c: speed cap, reverse speed, water box (center, half) */
 } tmuf_scene_object;
 
+/* CMotionEmitterLeaves (0x0804c000), the motion of a Rally tree mobil: the
+   ellipsoid its falling leaves spawn in (centre in the mobil's frame, half
+   extents along the world axes: the game doesn't rotate them) and the
+   manager model it registers with */
+typedef struct tmuf_motion_emitter_leaves {
+  tmuf_gbx_node *manager; /* +0x28: a CMotionManagerLeaves */
+  float center[3];        /* +0x2c */
+  float half[3];          /* +0x38 */
+} tmuf_motion_emitter_leaves;
+
+/* CMotionManagerLeaves (0x0804d000): the scene's leaf mobil */
+typedef struct tmuf_motion_manager_leaves {
+  tmuf_gbx_node *mobil; /* +0x1c: a CSceneMobilLeaves */
+} tmuf_motion_manager_leaves;
+
+/* CSceneMobilLeaves (0x0a05e000): a CSceneMobil with the leaves'
+   parameters (the ctor's defaults unless a chunk sets them) */
+typedef struct tmuf_scene_mobil_leaves {
+  tmuf_scene_object object; /* its CSceneObject / CSceneMobil chunks */
+  tmuf_gbx_node *shader;    /* +0x48 LeafShader */
+  float radius, radius_random;            /* +0x58, +0x5c: the quad's half size */
+  uint32_t max_count, emitter_max_count;  /* +0x60, +0x64 */
+  float fall, fall_random;                /* +0x68, +0x6c */
+  float alpha_speed_max, beta_speed_max;  /* +0x70, +0x74 */
+  float swing_rate, swing_rate_random;    /* +0x78, +0x7c LeafOscillationPeriod* */
+  float swing_radius, swing_radius_random; /* +0x80, +0x84 LeafOscillationAmplitude* */
+  float wind[3];                          /* +0x88 */
+  float respawn_period;                   /* +0x94 (ms) */
+  float far_z, curvature;                 /* +0x98, +0x9c */
+} tmuf_scene_mobil_leaves;
+
 /* CSceneVehicleMaterialGroup (0x0a015000): EPlugSurfaceMaterialIds */
 typedef struct tmuf_vehicle_material_group {
   uint32_t count;
