@@ -54,6 +54,8 @@ typedef struct tmuf_track_base {
   tmuf_weather_data weather;   /* with TMUF_TRACK_VISUALS */
   tmuf_lights_data lights;     /* with TMUF_TRACK_VISUALS */
   tmuf_scenery_data scenery;   /* with TMUF_TRACK_VISUALS */
+  uint32_t scene_sound_count; /* with TMUF_TRACK_VISUALS */
+  tmuf_scene_sound *scene_sounds;
   /* sounds loaded by tmuf_track_sound */
   uint32_t sound_count, sound_cap;
   struct tmuf_track_sound_entry {

@@ -613,6 +613,9 @@ typedef struct tmuf_car {
   struct {
     int enabled;
     int front_impact, rear_impact, body_impact;
+    /* the race trigger corpus whose checkpoint or lap line the step took,
+       -1 none (tmuf_track_trigger_sound) */
+    int32_t checkpoint_corpus;
   } sound;
   int water_splash_events;
   tmuf_vec3 water_splash_speed;

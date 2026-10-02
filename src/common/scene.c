@@ -554,6 +554,19 @@ static void add_leaf_emitter(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mo
   }
 }
 
+static void add_sound_source(tmuf_scene *s, tmuf_asset *owner, const tmuf_scene_object *m, const tmuf_iso *world) {
+  if (s->sound_source_count == s->sound_source_cap) {
+    const uint32_t cap = s->sound_source_cap ? s->sound_source_cap * 2 : 32;
+    tmuf_scene_sound_source *v = realloc(s->sound_sources, sizeof *v * cap);
+    if (!v)
+      return;
+    s->sound_sources = v;
+    s->sound_source_cap = cap;
+  }
+  s->sound_sources[s->sound_source_count++] =
+      (tmuf_scene_sound_source){*world, owner, &m->sound, m->poc_on != 0, s->current_block};
+}
+
 static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_node, const tmuf_iso *world, int depth) {
   if (depth > 16)
     return;
@@ -572,6 +585,8 @@ static void emit_mobil(tmuf_scene *s, tmuf_asset *owner, tmuf_gbx_node *mobil_no
   const tmuf_scene_object *m = mn->data;
   if (s->collect_visuals && m->motion)
     add_leaf_emitter(s, ma, m->motion, world);
+  if (s->collect_visuals && m->has_sound && m->sound.sound)
+    add_sound_source(s, ma, m, world);
   /* CGameCtnBlock::SetMobilAndHelper: the linked trigger mobils */
   uint8_t saved_trigger = s->current_trigger;
   uint32_t saved_flags = s->current_item_flags;
@@ -1368,6 +1383,7 @@ int tmuf_water_accepts(const tmuf_scene_water *w, float x, float z, float lower,
 void tmuf_scene_free(tmuf_scene *s) {
   free(s->visuals);
   free(s->leaf_emitters);
+  free(s->sound_sources);
   free(s->visual_remaps);
   free(s->lights);
   free(s->mips);

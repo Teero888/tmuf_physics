@@ -151,6 +151,10 @@ uint32_t tmuf_replay_inputs(const tmuf_replay *r, const tmuf_input **inputs) {
   return r->input_count;
 }
 
+uint32_t tmuf_replay_horns(const tmuf_replay *r, uint32_t *ticks, uint32_t max) {
+  return r && r->ghost ? tmuf_control_horns(r->ghost, ticks, max) : 0;
+}
+
 /* ---- tracks (backend independent part) ---- */
 
 /* The scene's CSceneMobilLeaves: its first leaf emitter's manager model
@@ -189,6 +193,57 @@ static int add_material_entry(tmuf_scene *s, const tmuf_scene_mobil_leaves *l) {
   v->corpus = UINT32_MAX;
   v->mip = UINT32_MAX;
   return 1;
+}
+
+/* the scene's sound sources with their sounds (each built once) */
+static void scene_sounds_build(tmuf_track_base *b) {
+  const tmuf_scene *s = &b->scene;
+  b->scene_sound_count = 0;
+  b->scene_sounds = TMUF_ARENA_ARRAY(&b->arena, tmuf_scene_sound, s->sound_source_count ? s->sound_source_count : 1);
+  if (!b->scene_sounds)
+    return;
+  for (uint32_t i = 0; i < s->sound_source_count; i++) {
+    const tmuf_scene_sound_source *src = &s->sound_sources[i];
+    const tmuf_sound *sound = NULL;
+    for (uint32_t j = 0; j < i && !sound; j++)
+      if (s->sound_sources[j].hms->sound == src->hms->sound && s->sound_sources[j].owner == src->owner)
+        sound = b->scene_sounds[j].sound;
+    if (!sound)
+      sound = tmuf_sound_build(&b->scene.assets, src->owner, src->hms->sound, &b->arena);
+    tmuf_scene_sound *out = &b->scene_sounds[b->scene_sound_count++];
+    memset(out, 0, sizeof *out);
+    out->sound = sound;
+    for (int r = 0; r < 3; r++)
+      for (int c = 0; c < 3; c++)
+        out->location.r.m[r][c] = src->iso.m[r][c];
+    out->location.t = (tmuf_vec3){src->iso.t[0], src->iso.t[1], src->iso.t[2]};
+    memcpy(out->volumic_size, src->hms->volumic_size, sizeof out->volumic_size);
+    out->volume = src->hms->has_volume ? src->hms->volume : 1.0f;
+    out->pitch = src->hms->has_volume ? src->hms->pitch : 1.0f;
+    out->on = src->on;
+    out->block_first = 1;
+    for (uint32_t j = 0; j < i && out->block_first; j++)
+      out->block_first = s->sound_sources[j].tag != src->tag;
+    out->block = src->tag;
+  }
+}
+
+uint32_t tmuf_track_scene_sounds(const tmuf_track *track, const tmuf_scene_sound **sounds) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (sounds)
+    *sounds = b && b->has_visuals ? b->scene_sounds : NULL;
+  return b && b->has_visuals ? b->scene_sound_count : 0;
+}
+
+const tmuf_scene_sound *tmuf_track_trigger_sound(const tmuf_track *track, int32_t corpus) {
+  const tmuf_track_base *b = track ? tmuf_track_base_of(track) : NULL;
+  if (!b || !b->has_visuals || corpus < 0 || (uint32_t)corpus >= b->scene.corpus_count)
+    return NULL;
+  const uint32_t tag = b->scene.corpora[corpus].tag;
+  for (uint32_t i = 0; i < b->scene_sound_count; i++)
+    if (b->scene_sounds[i].block == tag && b->scene_sounds[i].block_first && b->scene_sounds[i].sound)
+      return &b->scene_sounds[i];
+  return NULL;
 }
 
 static int leaves_fill(tmuf_leaves *out, const tmuf_scene *s, const tmuf_scene_mobil_leaves *l, uint32_t material,
@@ -291,6 +346,7 @@ int tmuf_track_base_load(tmuf_track_base *b, const tmuf_packs *packs, const void
       tmuf_set_error(err, err_size, "out of memory");
       return 0;
     }
+    scene_sounds_build(b);
     b->has_visuals = 1;
     free(b->scene.visuals); /* the list is not needed any more */
     b->scene.visuals = NULL;
@@ -586,4 +642,5 @@ void tmuf_world_set_sound(tmuf_world *world, int on) {
     return;
   world->sim.car.sound.enabled = on != 0;
   world->sim.car.sound.front_impact = world->sim.car.sound.rear_impact = world->sim.car.sound.body_impact = 0;
+  world->sim.car.sound.checkpoint_corpus = -1;
 }

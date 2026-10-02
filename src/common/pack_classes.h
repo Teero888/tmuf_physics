@@ -97,6 +97,9 @@ typedef struct tmuf_hms_light {
    sound it plays (a CPlugSound or one of its subclasses) */
 typedef struct tmuf_hms_sound {
   tmuf_gbx_node *sound;
+  int has_volume;      /* 0x0600d003: Volume, Pitch (else 1, 1) */
+  float volume, pitch;
+  float volumic_size[3]; /* 0x0600d004: the half extents of the box it sounds from */
 } tmuf_hms_sound;
 
 #define TMUF_VISUAL_MAX_TEXCOORDS 8
@@ -314,7 +317,8 @@ typedef struct tmuf_scene_object {
   tmuf_node_list children;
   int has_item;
   tmuf_hms_item item;
-  int has_sound; /* CSceneSoundSource (0x0a00e000) */
+  uint32_t poc_on; /* CScenePoc (0x0a009000): switched on with the scene */
+  int has_sound;   /* CSceneSoundSource (0x0a00e000) */
   tmuf_hms_sound sound;
   int has_light; /* CSceneLight (0x0a00b000) */
   tmuf_hms_light light;

@@ -1623,9 +1623,27 @@ static void c0600d005(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_gbx_skip(g, 8);
 }
 
+/* Volume, Pitch, RpmOrSpeed */
+static void c0600d003(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_hms_sound *h = node;
+  h->has_volume = 1;
+  h->volume = tmuf_gbx_f32(g);
+  h->pitch = tmuf_gbx_f32(g);
+  tmuf_gbx_skip(g, 4);
+}
+
+/* VolumicSize */
+static void c0600d004(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_hms_sound *h = node;
+  for (int k = 0; k < 3; k++)
+    h->volumic_size[k] = tmuf_gbx_f32(g);
+}
+
 static const tmuf_gbx_chunk HMS_SOUND_CHUNKS[] = {
-    NOPAY(0x0600d000),         READ(0x0600d001, c0600d001), READ(0x0600d002, skip8),
-    READ(0x0600d003, skip12), READ(0x0600d004, skip12),    READ(0x0600d005, c0600d005),
+    NOPAY(0x0600d000),          READ(0x0600d001, c0600d001), READ(0x0600d002, skip8),
+    READ(0x0600d003, c0600d003), READ(0x0600d004, c0600d004), READ(0x0600d005, c0600d005),
     READ(0x0600d006, skip4),
 };
 static const tmuf_gbx_class HMS_SOUND = {0x0600d000, "CHmsSoundSource", sizeof(tmuf_hms_sound), HMS_SOUND_CHUNKS,
@@ -1660,6 +1678,12 @@ static void c0a00b000(tmuf_gbx *g, void *node, uint32_t id) {
   tmuf_scene_object *o = node;
   o->has_light = 1;
   tmuf_gbx_node_body(g, &HMS_LIGHT, &o->light);
+}
+
+/* CScenePoc: whether it is on */
+static void c0a009000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_scene_object *)node)->poc_on = tmuf_gbx_u32(g);
 }
 
 static void c0a00e000(tmuf_gbx *g, void *node, uint32_t id) {
@@ -1742,7 +1766,7 @@ static const tmuf_gbx_chunk SCENE_OBJECT_CHUNKS[] = {
     NOPAY(0x0a02b011),              NOPAY(0x0a02b012),             READ(0x0a02b014, c0a02b014),
     NOPAY(0x01001000),          NOPAY(0x0a005000),         READ(0x0a005001, c0a005001),
     READ(0x0a005002, skip4),    READ(0x0a005003, c0a005003), READ(0x0a005004, skip4),
-    READ(0x0a009000, skip4),    READ(0x0a00b000, c0a00b000), READ(0x0a00e000, c0a00e000),
+    READ(0x0a009000, c0a009000), READ(0x0a00b000, c0a00b000), READ(0x0a00e000, c0a00e000),
     NOPAY(0x0a011000),          NOPAY(0x0a011001),         NOPAY(0x0a011002),
     READ(0x0a011003, c0a011003), NOPAY(0x0a011004),        READ(0x0a011005, c0a011005),
     READ(0x0a011006, skip_noderef),

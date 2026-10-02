@@ -26,6 +26,8 @@ typedef struct tmuf_control_tick {
 
 /* Control ticks of a ghost. Returns the count; *out is malloc'ed. */
 uint32_t tmuf_control_ticks(const tmuf_ghost *ghost, tmuf_control_tick **out);
+/* the ticks (as tmuf_control_ticks counts them) whose input presses the horn */
+uint32_t tmuf_control_horns(const tmuf_ghost *ghost, uint32_t *ticks, uint32_t max);
 
 /* The control tick number `index` (from time 0) of a live run: the race
    starts at TMUF_CONTROL_RACE_START_MS as in every replay. */

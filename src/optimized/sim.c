@@ -235,7 +235,8 @@ static void race_trigger(ref_sim *s, uint32_t corpus) {
       return;
     gm_iso4 current = r->current;
     const gm_iso4 *spawn = r->respawn_current[corpus] ? &current : &r->spawn[corpus];
-    race_internal_checkpoint(s, r->lap_checkpoints, (uint32_t)r->slot[corpus], spawn);
+    if (race_internal_checkpoint(s, r->lap_checkpoints, (uint32_t)r->slot[corpus], spawn) && s->car.sound.enabled)
+      s->car.sound.checkpoint_corpus = (int32_t)corpus;
     return;
   }
   case TMUF_RACE_FINISH:
@@ -245,6 +246,8 @@ static void race_trigger(ref_sim *s, uint32_t corpus) {
       return;
     if (!race_internal_checkpoint(s, r->checkpoint_count, r->checkpoint_count, NULL))
       return;
+    if (s->car.sound.enabled)
+      s->car.sound.checkpoint_corpus = (int32_t)corpus;
     r->completed_laps++;
     if (r->laps != 0 && r->completed_laps >= r->laps) {
       r->completed = 1;

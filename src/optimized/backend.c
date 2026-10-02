@@ -123,8 +123,10 @@ void tmuf_world_tick(tmuf_world *w) {
      (ReplayVehicleSimulation::Start) */
   if (s->first_step)
     car_set_controls(&s->car, tk.gate_a, tk.gate_b, tk.steering);
-  if (s->car.sound.enabled)
+  if (s->car.sound.enabled) {
     s->car.sound.front_impact = s->car.sound.rear_impact = s->car.sound.body_impact = 0;
+    s->car.sound.checkpoint_corpus = -1;
+  }
   ref_sim_step(s, &tk);
   w->tick++;
 }

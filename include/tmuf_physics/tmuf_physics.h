@@ -1504,6 +1504,29 @@ TMUF_API const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track
    kept by the track. Needs TMUF_TRACK_VISUALS; not thread safe. */
 TMUF_API const tmuf_sound *tmuf_track_sound(const tmuf_track *track, const char *plain_path);
 
+/* A sound the map's scene places (a CSceneSoundSource in a block's or the
+   decoration's mobils): Stadium's turbines, Rally's windmill, the
+   checkpoint sounds of Alpine, Rally and Speed blocks. One that is on loops
+   from the start (CScenePoc::SwitchOn); the first of a block's is what the
+   block plays when its checkpoint or lap line is taken (the first link of
+   its mobil, CTrackManiaRace::InternalOnCheckpoint). */
+typedef struct tmuf_scene_sound {
+  const tmuf_sound *sound;
+  tmuf_iso4 location;    /* in the world */
+  float volumic_size[3]; /* half extents of the box it sounds from (its nearest point), in its frame; 0: a point */
+  float volume, pitch;
+  int on;
+  int block_first;  /* the first of its block's */
+  uint32_t block;   /* the map block that placed it (as tmuf_triangle.block) */
+} tmuf_scene_sound;
+
+/* The scene's sounds; NULL / 0 without TMUF_TRACK_VISUALS. Owned by the track. */
+TMUF_API uint32_t tmuf_track_scene_sounds(const tmuf_track *track, const tmuf_scene_sound **sounds);
+/* The sound the block of a race trigger plays when the trigger is taken
+   (sim.car.sound.checkpoint_corpus), NULL when it has none: the game then
+   plays the interface's RaceCheckPoint. */
+TMUF_API const tmuf_scene_sound *tmuf_track_trigger_sound(const tmuf_track *track, int32_t corpus);
+
 /* The track's simulation at time 0, which every world starts as a copy of:
    its static collision (world, triggers), water, race tables and the car's
    definition are the ones all worlds on the track share. */
@@ -1578,6 +1601,10 @@ TMUF_API uint32_t tmuf_replay_checkpoints(const tmuf_replay *replay, const uint3
 /* The ghost's input for every tick from time 0: inputs[i] drives tick i.
    Returns the count; the array is owned by the replay. */
 TMUF_API uint32_t tmuf_replay_inputs(const tmuf_replay *replay, const tmuf_input **inputs);
+/* When the driver pressed the horn (not an input of the physics): the input
+   ticks (as tmuf_replay_inputs indexes them) that read each press, up to max
+   of them into ticks; the count of presses. */
+TMUF_API uint32_t tmuf_replay_horns(const tmuf_replay *replay, uint32_t *ticks, uint32_t max);
 
 /* ---- writing replays ---- */
 

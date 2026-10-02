@@ -142,6 +142,17 @@ typedef struct tmuf_scene_leaf_emitter {
   uint32_t tag;
 } tmuf_scene_leaf_emitter;
 
+/* A CSceneSoundSource placed with its mobil (only with TMUF_SCENE_VISUALS):
+   its world location, its CHmsSoundSource, whether it is on and the block
+   that placed it */
+typedef struct tmuf_scene_sound_source {
+  tmuf_iso iso;
+  tmuf_asset *owner;
+  const tmuf_hms_sound *hms;
+  int on;
+  uint32_t tag;
+} tmuf_scene_sound_source;
+
 typedef struct tmuf_scene {
   tmuf_assets assets;
   const char *collection;
@@ -159,6 +170,8 @@ typedef struct tmuf_scene {
   tmuf_scene_mip *mips;                    /* only with TMUF_SCENE_VISUALS */
   uint32_t leaf_emitter_count, leaf_emitter_cap;
   tmuf_scene_leaf_emitter *leaf_emitters; /* only with TMUF_SCENE_VISUALS */
+  uint32_t sound_source_count, sound_source_cap;
+  tmuf_scene_sound_source *sound_sources; /* only with TMUF_SCENE_VISUALS */
   /* the first emitter's manager model (its CMotionManagerLeaves) */
   tmuf_asset *leaf_manager_owner;
   tmuf_gbx_node *leaf_manager;
