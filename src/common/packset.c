@@ -203,17 +203,22 @@ tmuf_pack_ref tmuf_packset_resolve(const tmuf_packset *set, const tmuf_gbx *g, c
   return none;
 }
 
+#ifdef _WIN32
+/* UTF-8 path as Windows takes it */
+static int wide(const char *path, wchar_t *out, int out_count) {
+  return MultiByteToWideChar(CP_UTF8, 0, path, -1, out, out_count) > 0;
+}
+#endif
+
 /* path (in out, '/' separated) made to exist on disk: each component after
-   the base matched case-insensitively (Windows needs no help) */
+   the base matched case-insensitively (Windows needs no help). A file or a
+   directory. */
 static int find_on_disk(char *out, size_t out_size, size_t base_len) {
 #ifdef _WIN32
   (void)base_len;
   (void)out_size;
-  FILE *f = fopen(out, "rb");
-  if (!f)
-    return 0;
-  fclose(f);
-  return 1;
+  wchar_t w[1200];
+  return wide(out, w, 1200) && GetFileAttributesW(w) != INVALID_FILE_ATTRIBUTES;
 #else
   char built[1200];
   if (base_len >= sizeof built)
@@ -278,21 +283,26 @@ static int find_below(const char *dir, const char *rel, int depth, char *out, si
     return 0;
 #ifdef _WIN32
   char pattern[1200];
+  wchar_t wpattern[1200];
   snprintf(pattern, sizeof pattern, "%s/*", dir);
-  WIN32_FIND_DATAA fd;
-  HANDLE h = FindFirstFileA(pattern, &fd);
+  if (!wide(pattern, wpattern, 1200))
+    return 0;
+  WIN32_FIND_DATAW fd;
+  HANDLE h = FindFirstFileW(wpattern, &fd);
   if (h == INVALID_HANDLE_VALUE)
     return 0;
   int found = 0;
   do {
-    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || fd.cFileName[0] == '.')
+    char name[800];
+    if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || fd.cFileName[0] == L'.' ||
+        WideCharToMultiByte(CP_UTF8, 0, fd.cFileName, -1, name, sizeof name, NULL, NULL) <= 0)
       continue;
     char sub[1200];
-    const int sn = snprintf(sub, sizeof sub, "%s/%s", dir, fd.cFileName);
+    const int sn = snprintf(sub, sizeof sub, "%s/%s", dir, name);
     if (sn < 0 || (size_t)sn >= sizeof sub)
       continue;
     found = find_below(sub, rel, depth - 1, out, out_size);
-  } while (!found && FindNextFileA(h, &fd));
+  } while (!found && FindNextFileW(h, &fd));
   FindClose(h);
   return found;
 #else
