@@ -605,6 +605,15 @@ typedef struct tmuf_car {
     tmuf_vec3 force, impulse;
   } acc;
   uint32_t last_forces_tick;
+  /* What only a step knows that the game's sound code reads
+     (CSceneVehicleCar::VehicleUpdateAsync), recorded when the world's sound
+     is on (tmuf_world_set_sound); left alone otherwise. The step's impacts:
+     the most severe of its sub-steps' (0 none, 1 low, 2 high; the game's
+     severities of the contact totals, which contacts.*_impact keep forever). */
+  struct {
+    int enabled;
+    int front_impact, rear_impact, body_impact;
+  } sound;
   int water_splash_events;
   tmuf_vec3 water_splash_speed;
   const struct tmuf_scene_water *water; /* the zone's water, NULL if none */

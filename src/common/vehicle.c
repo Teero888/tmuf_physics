@@ -153,6 +153,8 @@ int tmuf_vehicle_load(tmuf_vehicle *v, tmuf_assets *assets, const char *name, ch
     return 0;
   }
   const tmuf_scene_object *mobil = ma->root;
+  v->mobil = mobil;
+  v->mobil_owner = ma;
 
   /* solid */
   if (!mobil->has_item) {

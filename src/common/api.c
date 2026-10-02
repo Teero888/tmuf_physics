@@ -1,3 +1,4 @@
+#include "common/sounds.h"
 #include "common/api_common.h"
 
 #include <stdarg.h>
@@ -476,7 +477,36 @@ const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track) 
   return b && b->has_visuals ? &b->vehicle_visuals.view : NULL;
 }
 
+const tmuf_sound *tmuf_track_sound(const tmuf_track *track, const char *plain_path) {
+  /* a cache the const track keeps (as its lazily built data) */
+  tmuf_track_base *b = track ? (tmuf_track_base *)tmuf_track_base_of(track) : NULL;
+  if (!b || !b->has_visuals || !plain_path)
+    return NULL;
+  for (uint32_t i = 0; i < b->sound_count; i++)
+    if (strcmp(b->sounds[i].path, plain_path) == 0)
+      return b->sounds[i].sound;
+  tmuf_asset *a = tmuf_assets_load_path(&b->scene.assets, plain_path);
+  const tmuf_sound *s =
+      a && a->root && a->gbx.node_count ? tmuf_sound_build(&b->scene.assets, a, &a->gbx.nodes[0], &b->arena) : NULL;
+  if (b->sound_count == b->sound_cap) {
+    const uint32_t cap = b->sound_cap ? b->sound_cap * 2 : 16;
+    struct tmuf_track_sound_entry *grown = realloc(b->sounds, sizeof *grown * cap);
+    if (!grown)
+      return s;
+    b->sounds = grown;
+    b->sound_cap = cap;
+  }
+  const size_t n = strlen(plain_path) + 1;
+  char *path = tmuf_arena_alloc(&b->arena, n);
+  if (!path)
+    return s;
+  memcpy(path, plain_path, n);
+  b->sounds[b->sound_count++] = (struct tmuf_track_sound_entry){path, s};
+  return s;
+}
+
 void tmuf_track_base_free(tmuf_track_base *b) {
+  free(b->sounds);
   tmuf_visuals_free(&b->visuals);
   tmuf_vehicle_visuals_free(&b->vehicle_visuals);
   tmuf_lights_free(&b->lights);
@@ -549,4 +579,11 @@ void *tmuf_zip_extract(const void *zip, size_t size, const char *name, size_t *o
     at += 46 + nlen + xlen + clen;
   }
   return NULL;
+}
+
+void tmuf_world_set_sound(tmuf_world *world, int on) {
+  if (!world)
+    return;
+  world->sim.car.sound.enabled = on != 0;
+  world->sim.car.sound.front_impact = world->sim.car.sound.rear_impact = world->sim.car.sound.body_impact = 0;
 }

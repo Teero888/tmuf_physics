@@ -660,6 +660,14 @@ static void update_impact_states(car *c) {
     c->contacts.peak_body = c->contacts.body_impact;
     c->contacts.peak_body_material = c->contacts.last_body_material;
   }
+  if (c->sound.enabled) {
+    c->sound.front_impact = impact_severity(c->contacts.front_bucket, cr->wheel_impact_feedback_low_threshold,
+                                            cr->wheel_impact_feedback_high_threshold, c->sound.front_impact);
+    c->sound.rear_impact = impact_severity(c->contacts.rear_bucket, cr->wheel_impact_feedback_low_threshold,
+                                           cr->wheel_impact_feedback_high_threshold, c->sound.rear_impact);
+    c->sound.body_impact = impact_severity(c->contacts.body_bucket, cr->body_impact_feedback_low_threshold,
+                                           cr->body_impact_feedback_high_threshold, c->sound.body_impact);
+  }
 }
 
 static void apply_special_contact_response(car *c, gm_vec3 force, uint32_t tick, int ground) {

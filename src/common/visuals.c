@@ -2,6 +2,7 @@
    plain data. Meshes and materials are shared between the instances that
    place them; a material names the texture files its shader samples. */
 
+#include "common/sounds.h"
 #include "common/visuals.h"
 
 #include "common/lightmap.h"
@@ -1357,6 +1358,7 @@ int tmuf_vehicle_visuals_build(tmuf_vehicle_visuals_data *out, tmuf_scene *scene
   if (!tmuf_tree_box(scene, vehicle->solid_owner, vehicle->solid_tree, lighting->box))
     memset(lighting->box, 0, sizeof lighting->box);
   out->parts = b.parts;
+  tmuf_car_sounds_build(out->view.sounds, &scene->assets, vehicle->mobil_owner, vehicle->mobil, arena);
   const tmuf_vehicle_struct *st = vehicle->visual_struct;
   const uint32_t level_count = st ? st->visual_vehicle_count : 0;
   tmuf_vehicle_visual_level *levels = TMUF_ARENA_ARRAY(arena, tmuf_vehicle_visual_level, level_count ? level_count : 1);

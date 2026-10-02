@@ -1397,6 +1397,82 @@ typedef struct tmuf_vehicle_emitter {
   float params[14];       /* intensity base, x |v.x|, |v.y|, |v.z|, burnout; emit speed base (3), x v (3), x v burnout (3) */
 } tmuf_vehicle_emitter;
 
+/* ---- Sounds -----------------------------------------------------------------
+   The game's sound descriptors (CPlugSound and its subclasses): their samples
+   on disk (the .wav and .ogg under GameData) and what the game plays them
+   with. How the car drives them each frame is the caller's (the game's
+   CSceneVehicleCar::VehicleUpdateAsync); tmuf_world_set_sound has the step
+   record what only a step knows. */
+
+/* A sample whose volume and pitch follow an input: an engine sound's
+   component over rpm, or a surface's rolling (km/h) or skid (sliding
+   fraction) sound. Volume: MinVolume below FadeIn, rising to MaxVolume over
+   FadeIn, MaxVolume until FadeOut, falling back to MinVolume over FadeOut;
+   pitch: MinPitch rising to MaxPitch over PitchShift. Reverse engine
+   components have negative thresholds (CPlugSoundEngineComponent::ComputeValues). */
+typedef struct tmuf_sound_component {
+  const char *file; /* the sample's path on disk, NULL if not found */
+  float min_volume, max_volume;
+  float fade_in_start, fade_in_end, fade_out_start, fade_out_end;
+  float min_pitch, max_pitch, pitch_shift_start, pitch_shift_end;
+} tmuf_sound_component;
+
+enum { TMUF_SOUND_PLAIN = 0, TMUF_SOUND_ENGINE = 1, TMUF_SOUND_SURFACE = 2, TMUF_SOUND_MULTI = 3 };
+/* how a sound is placed: 2D (not positioned), 3D up to 50 x its reference
+   distance, 3D omni up to its max distance */
+enum { TMUF_SOUND_STATIC_2D = 0, TMUF_SOUND_DYNAMIC_2D = 1, TMUF_SOUND_3D = 2, TMUF_SOUND_3D_OMNI = 3 };
+#define TMUF_SOUND_MATERIALS 31
+
+typedef struct tmuf_sound {
+  uint32_t kind;    /* TMUF_SOUND_* */
+  const char *file; /* its sample's path on disk, NULL if none (engines and surfaces have theirs in parts) */
+  uint32_t mode;    /* TMUF_SOUND_STATIC_2D .. 3D_OMNI */
+  float volume;
+  int looping, continuous;
+  float priority;
+  float ref_distance, max_distance_omni; /* full volume within ref_distance, then ref / distance */
+  int enable_doppler;
+  float doppler_factor;
+  /* TMUF_SOUND_ENGINE: its components (mixed by rpm), and the engine's volume
+     = volume_speed(km/h) x volume_distance(m) x volume_rpm(rpm) x volume_accel(pedal) */
+  float max_rpm;
+  uint32_t component_count;
+  const tmuf_sound_component *components;
+  tmuf_curve volume_speed, volume_distance, volume_rpm, volume_accel;
+  /* TMUF_SOUND_SURFACE: per EPlugSurfaceMaterialId the small and big impact
+     samples (NULL: none) and the rolling and skid components (NULL: none) */
+  float small_impact_attenuation, big_impact_attenuation;
+  struct {
+    const char *small_impact, *big_impact;
+    const tmuf_sound_component *texture, *skid;
+  } materials[TMUF_SOUND_MATERIALS];
+  /* TMUF_SOUND_MULTI: its variants (the first is `file`), one played at a time */
+  uint32_t variant_count;
+  const char *const *variants;
+  int force_random;
+} tmuf_sound;
+
+/* The car's sound slots, in the game's order (CSceneVehicle::RetrieveSounds) */
+enum {
+  TMUF_CAR_SOUND_HORN = 0,
+  TMUF_CAR_SOUND_WHEEL_SURFACE = 1, /* the rear wheels */
+  TMUF_CAR_SOUND_ENGINE = 2,
+  TMUF_CAR_SOUND_TURBO = 3,
+  TMUF_CAR_SOUND_WHEEL_SURFACE_FRONT = 4,
+  TMUF_CAR_SOUND_BRAKES = 5,
+  TMUF_CAR_SOUND_BODY_SURFACE = 6,
+  TMUF_CAR_SOUND_GEAR_CHANGE = 7,
+  TMUF_CAR_SOUND_BRAKE_LIGHTS = 8,
+  TMUF_CAR_SOUND_ROAR = 9,
+  TMUF_CAR_SOUND_VIBRATIONS = 10,
+  TMUF_CAR_SOUND_COUNT = 11
+};
+
+typedef struct tmuf_car_sound {
+  const tmuf_sound *sound; /* NULL: the car has none */
+  tmuf_iso4 location;      /* where it sits, in the car's frame */
+} tmuf_car_sound;
+
 typedef struct tmuf_vehicle_visuals {
   /* instances: location in the frame of the part `block` */
   tmuf_visuals visuals;
@@ -1414,11 +1490,19 @@ typedef struct tmuf_vehicle_visuals {
   /* its particle emitters (the wheels' marks and smoke, splashes, ...) */
   uint32_t emitter_count;
   const tmuf_vehicle_emitter *emitters;
+  /* its sounds (TMUF_CAR_SOUND_*) */
+  tmuf_car_sound sounds[TMUF_CAR_SOUND_COUNT];
 } tmuf_vehicle_visuals;
 
 /* NULL unless the track was loaded with TMUF_TRACK_VISUALS. Owned by the
    track. */
 TMUF_API const tmuf_vehicle_visuals *tmuf_track_vehicle_visuals(const tmuf_track *track);
+
+/* A sound descriptor of the packs by its plain path, e.g.
+   "Interface\\Media\\Audio\\Sound\\RaceGo.Sound.gbx" (the race's and
+   interface's, the ambiences); NULL if there is none. Loaded on first use and
+   kept by the track. Needs TMUF_TRACK_VISUALS; not thread safe. */
+TMUF_API const tmuf_sound *tmuf_track_sound(const tmuf_track *track, const char *plain_path);
 
 /* The track's simulation at time 0, which every world starts as a copy of:
    its static collision (world, triggers), water, race tables and the car's
@@ -1456,6 +1540,10 @@ TMUF_API int tmuf_world_init(tmuf_world *world, const tmuf_track *track);
 TMUF_API int tmuf_world_copy(tmuf_world *to, const tmuf_world *from);
 /* One tick with world->input. */
 TMUF_API void tmuf_world_tick(tmuf_world *world);
+/* Whether the world's ticks record what the game's sound needs from inside a
+   step (sim.car.sound); off by default, and costing nothing then. Copies of
+   the world keep the setting. */
+TMUF_API void tmuf_world_set_sound(tmuf_world *world, int on);
 TMUF_API void tmuf_world_free(tmuf_world *world);
 
 /* ---- replays ---- */

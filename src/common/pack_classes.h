@@ -93,6 +93,12 @@ typedef struct tmuf_hms_light {
   tmuf_gbx_node *bitmaps[3]; /* +0x68, +0x6c, +0x70 */
 } tmuf_hms_light;
 
+/* CHmsSoundSource (0x0600d000), archived inline in a CSceneSoundSource: the
+   sound it plays (a CPlugSound or one of its subclasses) */
+typedef struct tmuf_hms_sound {
+  tmuf_gbx_node *sound;
+} tmuf_hms_sound;
+
 #define TMUF_VISUAL_MAX_TEXCOORDS 8
 
 typedef struct tmuf_plug_visual {
@@ -308,6 +314,8 @@ typedef struct tmuf_scene_object {
   tmuf_node_list children;
   int has_item;
   tmuf_hms_item item;
+  int has_sound; /* CSceneSoundSource (0x0a00e000) */
+  tmuf_hms_sound sound;
   int has_light; /* CSceneLight (0x0a00b000) */
   tmuf_hms_light light;
   /* CSceneVehicle / CSceneVehicleCar */
@@ -758,5 +766,46 @@ typedef struct tmuf_func_shaders {
 
 extern const tmuf_gbx_class *const tmuf_pack_classes[];
 extern const size_t tmuf_pack_class_count;
+
+/* CPlugSoundEngineComponent (0x0908f000): one sample of an engine sound,
+   or a surface's rolling or skid sound: its volume over the input ("rpm"),
+   a trapezoid from MinVolume to MaxVolume and back, and its pitch ramp */
+typedef struct tmuf_sound_component_def {
+  tmuf_gbx_node *file; /* external .wav */
+  float min_volume, max_volume;
+  float fade_in_start, fade_in_end, fade_out_start, fade_out_end;
+  float min_pitch, max_pitch, pitch_shift_start, pitch_shift_end;
+} tmuf_sound_component_def;
+
+#define TMUF_SOUND_SURFACE_MATERIALS 31
+
+/* CPlugSound (0x0901a000) and its subclasses CPlugSoundEngine (0x0908e000),
+   CPlugSoundSurface (0x0905e000), CPlugSoundMulti (0x09064000): one struct
+   for all, each filling its part */
+typedef struct tmuf_plug_sound_def {
+  tmuf_gbx_node *file; /* 0x0901a000: the sample (external .wav / .ogg) */
+  uint32_t mode;       /* 0 Static2d, 1 Dynamic2d, 2 3d, 3 3dOmni */
+  float volume;
+  uint32_t looping, continuous;
+  float priority;
+  float ref_distance, max_distance_omni;
+  uint32_t enable_doppler;
+  float doppler_factor;
+  /* engine: 0x0908e000 components (inline), 0x0908e002 max rpm and the
+     curves Volume_Speed, Volume_Distance, Volume_Rpm, Volume_Accel,
+     Alpha_Speed, Alpha_Distance, Alpha_Rpm, Alpha_Accel */
+  tmuf_node_list components;
+  float max_rpm;
+  tmuf_func_keys curves[8];
+  /* surface (0x0905e000, 0x0905e001): per EPlugSurfaceMaterialId the small and
+     big impact samples (external), the rolling ("texture") and skid
+     components (inline) */
+  float speed_max, small_impact_attenuation, big_impact_attenuation;
+  tmuf_gbx_node *small_impact[TMUF_SOUND_SURFACE_MATERIALS], *big_impact[TMUF_SOUND_SURFACE_MATERIALS];
+  tmuf_gbx_node *texture[TMUF_SOUND_SURFACE_MATERIALS], *skid[TMUF_SOUND_SURFACE_MATERIALS];
+  /* multi (0x09064000): the other variants (a CMwRefBuffer of samples) */
+  tmuf_gbx_node *variants;
+  uint32_t force_random;
+} tmuf_plug_sound_def;
 
 #endif

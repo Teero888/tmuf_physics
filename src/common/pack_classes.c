@@ -1611,20 +1611,25 @@ static const tmuf_gbx_chunk HMS_LIGHT_CHUNKS[] = {
 static const tmuf_gbx_class HMS_LIGHT = {0x0600c000, "CHmsLight", sizeof(tmuf_hms_light), HMS_LIGHT_CHUNKS,
                                          COUNT(HMS_LIGHT_CHUNKS), NULL};
 
-static void c0600d005(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
+static void c0600d001(tmuf_gbx *g, void *node, uint32_t id) {
   UNUSED(id);
-  tmuf_gbx_noderef(g);
+  ((tmuf_hms_sound *)node)->sound = tmuf_gbx_noderef(g);
+}
+
+/* the sound, its priority adjustment and UseLowQuality */
+static void c0600d005(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_hms_sound *)node)->sound = tmuf_gbx_noderef(g);
   tmuf_gbx_skip(g, 8);
 }
 
 static const tmuf_gbx_chunk HMS_SOUND_CHUNKS[] = {
-    NOPAY(0x0600d000),         READ(0x0600d001, skip_noderef), READ(0x0600d002, skip8),
-    READ(0x0600d003, skip12), READ(0x0600d004, skip12),       READ(0x0600d005, c0600d005),
+    NOPAY(0x0600d000),         READ(0x0600d001, c0600d001), READ(0x0600d002, skip8),
+    READ(0x0600d003, skip12), READ(0x0600d004, skip12),    READ(0x0600d005, c0600d005),
     READ(0x0600d006, skip4),
 };
-static const tmuf_gbx_class HMS_SOUND = {0x0600d000, "CHmsSoundSource", 1, HMS_SOUND_CHUNKS, COUNT(HMS_SOUND_CHUNKS),
-                                         NULL};
+static const tmuf_gbx_class HMS_SOUND = {0x0600d000, "CHmsSoundSource", sizeof(tmuf_hms_sound), HMS_SOUND_CHUNKS,
+                                         COUNT(HMS_SOUND_CHUNKS), NULL};
 
 /* ---- CSceneObject (0x0a005000): CScenePoc, CSceneMobil, ... ---- */
 
@@ -1658,10 +1663,10 @@ static void c0a00b000(tmuf_gbx *g, void *node, uint32_t id) {
 }
 
 static void c0a00e000(tmuf_gbx *g, void *node, uint32_t id) {
-  UNUSED(node);
   UNUSED(id);
-  uint8_t dummy;
-  tmuf_gbx_node_body(g, &HMS_SOUND, &dummy);
+  tmuf_scene_object *o = node;
+  o->has_sound = 1;
+  tmuf_gbx_node_body(g, &HMS_SOUND, &o->sound);
 }
 
 static void c_fast_buffer_nod(tmuf_gbx *g, void *node, uint32_t id);
@@ -3483,6 +3488,136 @@ static const tmuf_gbx_chunk FUNC_SHADERS_CHUNKS[] = {READ(0x05014000, c05014000)
 static const tmuf_gbx_class FUNC_SHADERS = {0x05014000, "CFuncShaders", sizeof(tmuf_func_shaders),
                                             FUNC_SHADERS_CHUNKS, COUNT(FUNC_SHADERS_CHUNKS), &FUNC_PLUG};
 
+/* ---- CPlugSound (0x0901a000) and its subclasses (audio_data_spec.md 2-6) ---- */
+
+static void c0901a000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  ((tmuf_plug_sound_def *)node)->file = tmuf_gbx_noderef(g);
+}
+
+static void plug_sound_id(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_id(g, NULL);
+}
+
+/* SoundKind, cone angles, cone outside attenuations (all omnidirectional) */
+static void c0901a00b(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(node);
+  UNUSED(id);
+  tmuf_gbx_skip(g, 20);
+}
+
+static void c0901a00c(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_sound_def *s = node;
+  s->ref_distance = tmuf_gbx_f32(g);
+  if (s->ref_distance <= 1e-5f)
+    s->ref_distance = 1.0f;
+  s->max_distance_omni = tmuf_gbx_f32(g);
+  s->enable_doppler = tmuf_gbx_u32(g);
+  tmuf_gbx_skip(g, 16); /* the volume attenuations (unused by the game) */
+  s->doppler_factor = tmuf_gbx_f32(g);
+  tmuf_gbx_skip(g, 12); /* rolloff, room rolloff, air absorption (unused) */
+}
+
+static void c0901a00d(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_sound_def *s = node;
+  s->mode = tmuf_gbx_u32(g);
+  s->volume = tmuf_gbx_f32(g);
+  s->looping = tmuf_gbx_u32(g);
+  s->continuous = tmuf_gbx_u32(g);
+  s->priority = tmuf_gbx_f32(g);
+}
+
+static void c0908e000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  read_node_list(g, &((tmuf_plug_sound_def *)node)->components);
+}
+
+/* the max rpm, then eight CFuncKeysReal archived through their own Archive
+   (chunks and FACADE, no class id or node index) */
+static void c0908e002(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_sound_def *s = node;
+  s->max_rpm = tmuf_gbx_f32(g);
+  for (int i = 0; i < 8 && !g->error; i++)
+    tmuf_gbx_node_body_as(g, &FUNC_KEYS, 0x0501a000u, &s->curves[i]);
+}
+
+static void c0905e000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_sound_def *s = node;
+  s->speed_max = tmuf_gbx_f32(g);
+  uint32_t n = tmuf_gbx_u32(g);
+  if (n > 0x1000u) {
+    tmuf_gbx_fail(g, "sound surface count %u", n);
+    return;
+  }
+  for (uint32_t i = 0; i < n && !g->error; i++) {
+    tmuf_gbx_node *small = tmuf_gbx_noderef(g), *big = tmuf_gbx_noderef(g);
+    tmuf_gbx_node *texture = tmuf_gbx_noderef(g), *skid = tmuf_gbx_noderef(g);
+    /* any other count leaves the game's 31 arrays empty */
+    if (n != TMUF_SOUND_SURFACE_MATERIALS)
+      continue;
+    s->small_impact[i] = small;
+    s->big_impact[i] = big;
+    s->texture[i] = texture;
+    s->skid[i] = skid;
+  }
+}
+
+static void c0905e001(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_sound_def *s = node;
+  s->big_impact_attenuation = tmuf_gbx_f32(g);
+  s->small_impact_attenuation = tmuf_gbx_f32(g);
+}
+
+static void c09064000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_plug_sound_def *s = node;
+  s->variants = tmuf_gbx_noderef(g);
+  s->force_random = tmuf_gbx_u32(g);
+}
+
+static const tmuf_gbx_chunk PLUG_SOUND_CHUNKS[] = {
+    READ(0x09001000, skip4),     READ(0x09001001, plug_sound_id), READ(0x0901a000, c0901a000),
+    NOPAY(0x0901a001),           READ(0x0901a002, plug_sound_id), READ(0x0901a00b, c0901a00b),
+    READ(0x0901a00c, c0901a00c), READ(0x0901a00d, c0901a00d),     READ(0x0908e000, c0908e000),
+    READ(0x0908e001, skip4),     READ(0x0908e002, c0908e002),     READ(0x0905e000, c0905e000),
+    READ(0x0905e001, c0905e001), READ(0x09064000, c09064000),
+};
+static const tmuf_gbx_class PLUG_SOUND = {0x0901a000, "CPlugSound", sizeof(tmuf_plug_sound_def), PLUG_SOUND_CHUNKS,
+                                          COUNT(PLUG_SOUND_CHUNKS), NULL};
+static const tmuf_gbx_class PLUG_SOUND_ENGINE = {0x0908e000, "CPlugSoundEngine", sizeof(tmuf_plug_sound_def), NULL, 0,
+                                                 &PLUG_SOUND};
+static const tmuf_gbx_class PLUG_SOUND_SURFACE = {0x0905e000, "CPlugSoundSurface", sizeof(tmuf_plug_sound_def), NULL,
+                                                  0, &PLUG_SOUND};
+static const tmuf_gbx_class PLUG_SOUND_MULTI = {0x09064000, "CPlugSoundMulti", sizeof(tmuf_plug_sound_def), NULL, 0,
+                                                &PLUG_SOUND};
+
+static void c0908f000(tmuf_gbx *g, void *node, uint32_t id) {
+  UNUSED(id);
+  tmuf_sound_component_def *c = node;
+  c->file = tmuf_gbx_noderef(g);
+  c->min_volume = tmuf_gbx_f32(g);
+  c->max_volume = tmuf_gbx_f32(g);
+  c->fade_in_start = tmuf_gbx_f32(g);
+  c->fade_in_end = tmuf_gbx_f32(g);
+  c->fade_out_start = tmuf_gbx_f32(g);
+  c->fade_out_end = tmuf_gbx_f32(g);
+  c->min_pitch = tmuf_gbx_f32(g);
+  c->max_pitch = tmuf_gbx_f32(g);
+  c->pitch_shift_start = tmuf_gbx_f32(g);
+  c->pitch_shift_end = tmuf_gbx_f32(g);
+}
+
+static const tmuf_gbx_chunk SOUND_COMPONENT_CHUNKS[] = {READ(0x0908f000, c0908f000)};
+static const tmuf_gbx_class SOUND_COMPONENT = {0x0908f000, "CPlugSoundEngineComponent", sizeof(tmuf_sound_component_def),
+                                              SOUND_COMPONENT_CHUNKS, 1, NULL};
+
 const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &SOLID,           &TREE,  &TREE_MIP,        &TREE_LIGHT, &VISUAL,          &SURFACE, &SURFACE_GEOM,
     &PLUG_LIGHT,      &BITMAP_RENDER_HEMI, &BITMAP_RENDER_LFM,
@@ -3495,5 +3630,6 @@ const tmuf_gbx_class *const tmuf_pack_classes[] = {
     &TRAFFIC_GRAPH,   &VEHICLE_ENV, &TERRAIN_MODIFIER, &GAME_SKIN,
     &MOOD,            &AMBIENT_OCC, &MOTION_WEATHERS, &FUNC_WEATHER, &FUNC_CLOUDS, &FUNC_LAYER_UV, &FUNC_SHADERS,
     &FUNC_TREE_SEQUENCE, &FUNC_ENVELOPE, &FUNC_GRADIENT, &PARTICLE_MODEL, &PARTICLE_TYPE, &POINTS_IN_SPHERE,
+    &PLUG_SOUND,      &PLUG_SOUND_ENGINE, &PLUG_SOUND_SURFACE, &PLUG_SOUND_MULTI, &SOUND_COMPONENT,
 };
 const size_t tmuf_pack_class_count = COUNT(tmuf_pack_classes);

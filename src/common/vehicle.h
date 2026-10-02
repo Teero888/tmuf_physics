@@ -22,6 +22,9 @@ typedef struct tmuf_vehicle {
   tmuf_gbx_node *solid_tree;
   const tmuf_vehicle_struct *visual_struct; /* the visual rig (levels of detail) */
   tmuf_asset *visual_struct_owner;
+  /* the mobil (CSceneVehicleCar): its links hold the sound sources */
+  const tmuf_scene_object *mobil;
+  tmuf_asset *mobil_owner;
   uint32_t wheel_count;
   struct {
     int kills_lateral_speed, front;

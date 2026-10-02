@@ -54,6 +54,12 @@ typedef struct tmuf_track_base {
   tmuf_weather_data weather;   /* with TMUF_TRACK_VISUALS */
   tmuf_lights_data lights;     /* with TMUF_TRACK_VISUALS */
   tmuf_scenery_data scenery;   /* with TMUF_TRACK_VISUALS */
+  /* sounds loaded by tmuf_track_sound */
+  uint32_t sound_count, sound_cap;
+  struct tmuf_track_sound_entry {
+    char *path;
+    const tmuf_sound *sound;
+  } *sounds;
 } tmuf_track_base;
 
 void tmuf_set_error(char *err, size_t err_size, const char *fmt, ...);
