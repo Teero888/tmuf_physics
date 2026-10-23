@@ -1568,6 +1568,16 @@ TMUF_API void tmuf_world_tick(tmuf_world *world);
    the world keep the setting. */
 TMUF_API void tmuf_world_set_sound(tmuf_world *world, int on);
 TMUF_API void tmuf_world_free(tmuf_world *world);
+/* A world's state in a few kB, for keeping many of them (a search): what
+   its ticks change, without what it shares with its track (a world is some
+   20 kB). The size grows with the checkpoints taken. */
+TMUF_API size_t tmuf_world_state_size(const tmuf_world *world);
+/* Writes tmuf_world_state_size(world) bytes to buf. */
+TMUF_API void tmuf_world_save(const tmuf_world *world, void *buf);
+/* world, a world on the track the state was saved on, becomes that state, as
+   tmuf_world_copy from the world it was saved of would make it. 0 if world
+   is empty. */
+TMUF_API int tmuf_world_load(tmuf_world *world, const void *buf);
 
 /* ---- replays ---- */
 

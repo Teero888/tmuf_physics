@@ -114,6 +114,35 @@ int tmuf_world_copy(tmuf_world *to, const tmuf_world *from) {
   return 1;
 }
 
+/* a saved state: the world's clock and input, then the simulation's snapshot */
+typedef struct world_state_head {
+  uint32_t tick;
+  tmuf_input input;
+} world_state_head;
+
+size_t tmuf_world_state_size(const tmuf_world *w) {
+  return w->track ? sizeof(world_state_head) + ref_sim_snapshot_size(&w->sim) : 0;
+}
+
+void tmuf_world_save(const tmuf_world *w, void *buf) {
+  if (!w->track)
+    return;
+  const world_state_head h = {w->tick, w->input};
+  memcpy(buf, &h, sizeof h);
+  ref_sim_save(&w->sim, (unsigned char *)buf + sizeof h);
+}
+
+int tmuf_world_load(tmuf_world *w, const void *buf) {
+  if (!w->track)
+    return 0;
+  world_state_head h;
+  memcpy(&h, buf, sizeof h);
+  ref_sim_load(&w->sim, (const unsigned char *)buf + sizeof h);
+  w->tick = h.tick;
+  w->input = h.input;
+  return 1;
+}
+
 void tmuf_world_tick(tmuf_world *w) {
   ref_sim *s = &w->sim;
   const tmuf_input *in = &w->input;

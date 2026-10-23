@@ -92,6 +92,8 @@ int main(int argc, char **argv) {
   /* TMUF_API_COPY_EVERY=N: continue in the other world every N ticks (0: never) */
   const char *ce = getenv("TMUF_API_COPY_EVERY");
   uint32_t copy_every = ce ? (uint32_t)atoi(ce) : 50u;
+  /* TMUF_API_SAVED=1: continue from a saved state (tmuf_world_save, tmuf_world_load) instead */
+  const int saved = getenv("TMUF_API_SAVED") != NULL;
   while (fgets(line, sizeof line, list)) {
     char rp[2048], op[2048], verdict[64] = "";
     if (sscanf(line, "%2047s %2047s %63s", rp, op, verdict) < 2)
@@ -179,7 +181,16 @@ int main(int argc, char **argv) {
     for (uint32_t i = 0; i < n; i++) {
       if (copy_every && i % copy_every == copy_every / 2) {
         /* continue in the other world */
-        tmuf_world_copy(&worlds[!cur], &worlds[cur]);
+        if (saved) {
+          void *state = malloc(tmuf_world_state_size(&worlds[cur]));
+          tmuf_world_save(&worlds[cur], state);
+          if (!worlds[!cur].track)
+            tmuf_world_init(&worlds[!cur], t);
+          tmuf_world_load(&worlds[!cur], state);
+          free(state);
+        } else {
+          tmuf_world_copy(&worlds[!cur], &worlds[cur]);
+        }
         cur = !cur;
         copies++;
       }
